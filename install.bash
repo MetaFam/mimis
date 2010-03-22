@@ -4,7 +4,6 @@ DATEFMT="%Y-%m-%d@%H:%M:%S.%N"
 AUTHOR="Will Holcomb <mimis@dhappy.org>"
 
 GITSRC="git://github.com/wholcomb/mimis.git"
-GITDEST=~/"public_html"
 
 APT[${#APT[*]}]=emacs-snapshot
 APT[${#APT[*]}]=git-core
@@ -64,7 +63,7 @@ function commit() {
 	STAMP="${KEY}.$(date +"${DATEFMT}")"
 	sudo cp -a "${KEY}" "${STAMP}"
     )
-    sudo ln -sf "$(basename ${SRC})" "$(basename ${KEY})"
+    sudo ln -sf "$(basename ${SRC})" "${KEY}"
     echo "${KEY}"
 }
 
@@ -76,11 +75,11 @@ function clear() {
 
     ls "${KEY}.$(date +"%Y")-"* | tac | (
 	while IFS= read -r FILE; do
-	    echo "$FILE : $NEXT"
+	    # echo "$FILE : $NEXT"
 	    [[ -e "${NEXT}" && -e "${FILE}" ]] && (
 		# diff "${FILE}" "${NEXT}" || (
 		diff "${FILE}" "${NEXT}" > /dev/null && (
-		    echo sudo rm -f "${NEXT}"
+		    # echo sudo rm -f "${NEXT}"
 		    sudo rm -f "${NEXT}"
 		)
 	    )
@@ -98,7 +97,6 @@ GOOGLE_REPO="http://dl.google.com/linux/deb/"
 SRC="/etc/apt/sources.list.d/google-chrome.list"
 [ -e "${SRC}" ] || (
     OUT="$(getMutable ${SRC})"
-    echo "OUT: ${OUT}"
 
     sudo bash -c "eval cat > ${OUT} << EOF
 # Add: Google Chrome Home Repository
@@ -110,23 +108,38 @@ EOF"
 
     commit "${OUT}"
 
-    KEY="${KEY:=https://dl-ssl.google.com/linux/linux_signing_key.pub}"
-    echo "Key: ${KEY}";
-    wget -q -O – "${KEY}" | sudo apt-key add -
+    KEY="https://dl-ssl.google.com/linux/linux_signing_key.pub"
+    echo "Adding Key: ${KEY}";
+    wget -q -O - "${KEY}" | sudo apt-key add -
     
     sudo apt-get update
 )
 
 APT[${#APT[*]}]=apache2
 APT[${#APT[*]}]=google-chrome-unstable
+APT[${#APT[*]}]=maven2
 
 CMD="apt-get install"
 for PKG in "${APT[*]}"; do CMD="${CMD} ${PKG}"; done
 echo "# ${CMD}"
 sudo ${CMD}         # This should rarely happen
 
+cd ~
+
+GITDEST="mimis"
+DESTPATH="${GITDEST}.$(date +"${DATEFMT}")"
 [ -e "${GITDEST}" ] || (
-    git clone "${GITSRC}" "${GITDEST}"
+    git clone "${GITSRC}" "${DESTPATH}"
+    ln -s "${GITDEST}" "${DESTPATH}"
+)
+
+PUBHTML=public_html
+[ -e "${PUBHTML}" ] || (
+    ln -s "${GITDEST}" "${PUBHTML}"
+)
+
+[ -e "${PUBHTML}/.../" ] || (
+    ln -s "${PUBHTML}/..." "${GITDEST}/..."
 )
 
 LOADUSER="/etc/apache2/mods-enabled/userdir.load"
