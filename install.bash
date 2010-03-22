@@ -1,18 +1,14 @@
 #!/bin/bash
 
-SOURCES_LIST=/etc/apt/sources.list
 DATEFMT="%Y-%m-%d@%H:%M:%S.%N"
 AUTHOR="Will Holcomb <mimis@dhappy.org>"
 
 GITSRC="git://github.com/wholcomb/mimis.git"
-GITDEST="public_html"
+GITDEST=~/"public_html"
 
 APT[${#APT[*]}]=emacs-snapshot
 APT[${#APT[*]}]=git-core
 APT[${#APT[*]}]=flashplugin-installer
-
-SRC="${SOURCES_LIST}"
-GOOGLE_REPO=http://dl.google.com/linux/deb/
 
 # Get a source for input
 function getImmutable() {
@@ -98,12 +94,13 @@ function fini() {
     echo -n
 }
 
+GOOGLE_REPO="http://dl.google.com/linux/deb/"
 SRC="/etc/apt/sources.list.d/google-chrome.list"
 [ -e "${SRC}" ] || (
     OUT="$(getMutable ${SRC})"
     echo "OUT: ${OUT}"
 
-    sudo bash -c "eval cat >> ${OUT} << EOF
+    sudo bash -c "eval cat > ${OUT} << EOF
 # Add: Google Chrome Home Repository
 #   By: ${AUTHOR}
 #
@@ -126,29 +123,19 @@ APT[${#APT[*]}]=google-chrome-unstable
 CMD="apt-get install"
 for PKG in "${APT[*]}"; do CMD="${CMD} ${PKG}"; done
 echo "# ${CMD}"
-#sudo bash -c "eval $CMD" # This should rarely happen
+sudo ${CMD}         # This should rarely happen
 
-git clone "${GITSRC}" ~"/${GITDEST}"
+[ -e "${GITDEST}" ] || (
+    git clone "${GITSRC}" "${GITDEST}"
+)
 
-HOSTFILE="${HOSTFILE:=/etc/apache2/sites-enabled/000-default}"
-MIMSHOST="${HOSTFILE}.mimis"
-[ -e "${MIMSHOST}" ] || (
-    IN="$(getImmutable "${HOSTFILE}")"
-    OUT="$(getMutable "${HOSTFILE}")"
-
-    DOCROOT="$(awk '/DocumentRoot/ { print $2 }' "${IN}")"
-    NEWROOT="${HOME}/.../"
-
-    sudo bash -c "eval cat > \"${OUT}\" << EOF
-# Edit: Change default web directory
-#   By: ${AUTHOR}
-
-EOF"
-    sudo bash -c "cat \"${IN}\" | sed -e 's| \+${DOCROOT}/\?| ${NEWROOT}|' >> \"${OUT}\""
-    commit "${OUT}"
-    clear "${HOSTFILE}"
+LOADUSER="/etc/apache2/mods-enabled/userdir.load"
+[ -e "${LOADUSER}" ] || (
+    sudo ln -s "../mods-available/$(basename ${LOADUSER})" "${LOADUSER}"
+    USERCONF="${LOADUSER%.*}.conf"
+    sudo ln -s "../mods-available/$(basename ${USERCONF})" "${USERCONF}"
 
     sudo /etc/init.d/apache2 reload
 )
 
-# #google-chrome http://localhost
+google-chrome "http://localhost/~${USER}/.../"
