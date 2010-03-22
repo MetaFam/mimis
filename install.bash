@@ -4,6 +4,9 @@ SOURCES_LIST=/etc/apt/sources.list
 DATEFMT="%Y-%m-%d@%H:%M:%S.%N"
 AUTHOR="Will Holcomb <mimis@dhappy.org>"
 
+GITSRC="git://github.com/wholcomb/mimis.git"
+GITDEST="public_html"
+
 APT[${#APT[*]}]=emacs-snapshot
 APT[${#APT[*]}]=git-core
 APT[${#APT[*]}]=flashplugin-installer
@@ -118,18 +121,20 @@ EOF"
 )
 
 APT[${#APT[*]}]=apache2
-
 APT[${#APT[*]}]=google-chrome-unstable
+
 CMD="apt-get install"
 for PKG in "${APT[*]}"; do CMD="${CMD} ${PKG}"; done
 echo "# ${CMD}"
 #sudo bash -c "eval $CMD" # This should rarely happen
 
+git clone "${GITSRC}" ~"/${GITDEST}"
+
 HOSTFILE="${HOSTFILE:=/etc/apache2/sites-enabled/000-default}"
 MIMSHOST="${HOSTFILE}.mimis"
 [ -e "${MIMSHOST}" ] || (
     IN="$(getImmutable "${HOSTFILE}")"
-    OUT="$(getMutable "${MIMSHOST}")"
+    OUT="$(getMutable "${HOSTFILE}")"
 
     DOCROOT="$(awk '/DocumentRoot/ { print $2 }' "${IN}")"
     NEWROOT="${HOME}/.../"
@@ -145,6 +150,5 @@ EOF"
 
     sudo /etc/init.d/apache2 reload
 )
-
 
 # #google-chrome http://localhost
