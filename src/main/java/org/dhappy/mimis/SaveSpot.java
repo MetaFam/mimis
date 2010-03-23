@@ -35,25 +35,22 @@ public class SaveSpot extends AbstractSAXTransformer {
     private static final Log log = LogFactory.getLog( SaveSpot.class );
 
     String location;
-    GraphDatabaseService graphDb;
-    Transaction transaction;
     Stack<Node> root = new Stack<Node>();
 
     public enum SaveType implements RelationshipType {
-        FILESYSTEM, DOCUMENT
+        SOCIAL, DOCSYSTEM, DOCUMENT
     }
 
-    public SaveSpot( GraphDatabaseService graphDb ) {
-        this.graphDb = graphDb;
+    public SaveSpot( Node root ) {
+        this.root.push( root );
     }
 
-    public SAXPipelineComponent getSAXPipelineComponent() {
+    public SAXPipelineComponent getSAXPipeline() {
         return this;
     }
 
     public void startDocument() throws SAXException {
         super.startDocument();
-        this.transaction = graphDb.beginTx();
 
         if( location == null ) {
             //DateFormat format = new SimpleDateFormat( "%y/%M/%d %H:(%m - 1):(%s - 1).%S" );
@@ -63,8 +60,6 @@ public class SaveSpot extends AbstractSAXTransformer {
         log.debug( "Starting Document: " + location );
         Stack<String> path = Mimis.getPathDecomposition( location );
 
-        root.push( graphDb.getReferenceNode() );
-        
         int i = 0;
         for( String element : path ) {
             final String name = element;
@@ -73,15 +68,12 @@ public class SaveSpot extends AbstractSAXTransformer {
                         put( "name", name );
                         put( "type", type );
                     }},
-                SaveType.FILESYSTEM );
+                SaveType.DOCSYSTEM );
         }
     }
 
     public Node push( Map<String, Object> state, SaveType type ) {
-        Node nextElement = graphDb.createNode();
-        for( Map.Entry<String, Object> e : state.entrySet() ) {
-            nextElement.setProperty( e.getKey(), e.getValue() );
-        }
+        Node nextElement = Mimis.createNode( state );
         root.peek().createRelationshipTo( nextElement, type );
         root.push( nextElement );
         return nextElement;
@@ -109,16 +101,16 @@ public class SaveSpot extends AbstractSAXTransformer {
 
     public void endDocument() throws SAXException {
         super.endDocument();
-        this.transaction.success();
+        //this.transaction.success();
     }
 
     public void impress( Map<String, Object> config ) {
-        if( config.hasKey( "location" ) ) {
+        if( config.containsKey( "location" ) ) {
             location = config.get( "location" ).toString();
         }
     }
 
     public void finish() {
-        this.transaction.finish();
+        //this.transaction.finish();
     }
 }

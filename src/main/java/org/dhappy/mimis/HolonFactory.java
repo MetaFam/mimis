@@ -37,15 +37,15 @@ public class HolonFactory {
         }
     }
 
-    class NodeWrapper implements Holon {
+    static class NodeWrapper implements Holon {
         Node node;
 
         public NodeWrapper( Node node ) {
             this.node = node;
         }
         
-        public Node self() {
-            return this;
+        public Node getNode() {
+            return node;
         }
 
         public void impress( Map<String, Object> map ) {}

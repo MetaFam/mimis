@@ -87,9 +87,11 @@ public class Mimis {
     public static Holon load( String key, InputStream input, OutputStream output ) throws IOException {
         try {
             Holon mark = HolonFactory.mark( graphDb );
+            SaveSpot recorder = new SaveSpot( mark.getNode() );
             Pipeline<SAXPipelineComponent> pipeline = new NonCachingPipeline<SAXPipelineComponent>();
             pipeline.addComponent( new XMLGenerator( input ));
-            pipeline.addComponent( mark.getSAXPipeline() );
+            
+            pipeline.addComponent( recorder.getSAXPipeline() );
             pipeline.addComponent( new XMLSerializer() );
             
             pipeline.setup( output );
@@ -100,16 +102,12 @@ public class Mimis {
         }
     }
 
-    public static SaveSpot mark() {
-        return new SaveSpot( graphDb );
-    }
-
     public static Listing list() {
         return new OneOffTraverser( new HashMap<String, Object>() {{
                     put( "order", Traverser.Order.DEPTH_FIRST );
                     put( "stop", StopEvaluator.END_OF_GRAPH );
                     put( "return", ReturnableEvaluator.ALL );
-                    put( "type", SaveSpot.SaveType.FILESYSTEM );
+                    put( "type", SaveSpot.SaveType.DOCSYSTEM );
                     put( "direction", Direction.OUTGOING );
                 }} );
     }
@@ -134,9 +132,18 @@ public class Mimis {
                     put( "order", Traverser.Order.DEPTH_FIRST );
                     put( "stop", StopEvaluator.END_OF_GRAPH );
                     put( "return", returnable );
-                    put( "type", SaveSpot.SaveType.FILESYSTEM );
+                    put( "type", SaveSpot.SaveType.DOCSYSTEM );
                     put( "direction", Direction.OUTGOING );
                 }} );
+    }
+
+    public static Node createNode( Map<String, Object> config ) {
+        Node node = graphDb.createNode();
+
+        for( Map.Entry<String, Object> e : config.entrySet() ) {
+            node.setProperty( e.getKey(), e.getValue() );
+        }
+        return node;
     }
 
     public static Stack<String> getPathDecomposition( String key ) {
@@ -321,18 +328,19 @@ public class Mimis {
         }
     }
 
-    static class OneOffTraverser implements Spot, Iterator<Node> {
+    static class OneOffTraverser implements Listing, Iterator<Node> {
         Transaction tx = graphDb.beginTx();
         Traverser traverser;
         
         Iterator<Node> iterator;
+        Node current;
         Node next;
         TraversalPosition currentPosition;
  
         Node start;
         
         public OneOffTraverser( Map<String, Object> config ) {
-            config( config );
+            impress( config );
             if( start == null ) {
                 start = graphDb.getReferenceNode();
             }
@@ -343,7 +351,7 @@ public class Mimis {
                                         (Direction)config.get( "direction" ) );
         }
 
-        public void config( Map<String, Object> config ) {
+        public void impress( Map<String, Object> config ) {
             if( config.containsKey( "start" ) && config.containsKey( "tx" ) ) {
                 if( tx != null ) {
                     tx.finish();
@@ -389,10 +397,22 @@ public class Mimis {
             if( iterator == null ) {
                 prime();
             }
-            Node current = next;
+            current = next;
             currentPosition = traverser.currentPosition();
             next = iterator.hasNext() ? iterator.next() : null;
             return current;
+        }
+
+        public Node getNode() {
+            return current;
+        }
+
+        public Holon top() {
+            final Node current = this.current;
+            return new Holon() {
+                public Node getNode() { return current; }
+                public void impress( Map<String, Object> config ) {}
+            };
         }
     }
 }
