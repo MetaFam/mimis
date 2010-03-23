@@ -61,6 +61,7 @@ public class Mimis {
         //&& ( key []: =
         Listing list = list( key );
         if( ! list.hasNext() && key.startsWith( "/" ) ) {
+            log.debug( "Searching for: " + key );
             //key =: 1 // key = key[1:]
             key = key.substring( 1 );
 
@@ -117,12 +118,50 @@ public class Mimis {
         log.debug( "list:path = " + path );
 
         final ReturnableEvaluator returnable = new ReturnableEvaluator() {
-                Stack<String> elements = Mimis.getPathDecomposition( path );
+                Stack<String> pathList = Mimis.getPathDecomposition( path );
+                Stack<Integer> pathDepth = new Stack<Integer>();
+                int lastDepth = -1; // Traversal depth starts at 0
+
+                {
+                    pathDepth.push( new Integer( 0 ) );
+                }
+
                 public boolean isReturnableNode( TraversalPosition position ) {
                     //return name[depth] == current[name]
-                    log.info( "Shorting Out" );
-                    return false;
-                    //return elements.get( position.depth() ).equals( position.currentNode().getProperty ( "name" ) );
+                    if( position == null ) {
+                        return false;
+                    }
+
+                    String name = "";
+                    try {
+                        name = position.currentNode().getProperty( "name" ).toString();
+                    } catch( NotFoundException nfe ) {
+                    }
+                    log.debug( "Testing: " + name );
+
+                    int delta = position.depth() - lastDepth;
+                    lastDepth = position.depth();
+
+                    log.debug( "list[" + lastDepth + "-" + delta + "]:" + name );
+
+                    if( delta > 1 ) {
+                        log.info( "Unexpected Delta: [" + name + "]: " + delta );
+                    }
+                    if( delta > 0 ) {        // Child of last node
+                        pathDepth.push( pathDepth.peek() + delta );
+                    } else if( delta < 0 ) { // Traversal returning
+                        pathDepth.pop();
+                    } else {                 // Siblings
+                    }
+                    
+                    if( name.length() == 0 ) { // Empty strings push match
+                        pathDepth.push( pathDepth.pop() + 1 );
+                    }
+
+                    log.debug( "list:[" + lastDepth + "/" + pathDepth.peek() + "]:" + name );
+
+                    return ( name.length() == 0 ||
+                             name.equals( pathList.elementAt( pathDepth.peek() ) ) );
                 }
             };
         
@@ -263,7 +302,7 @@ public class Mimis {
                             response.setTo( message.getFrom() );
                             response.setThread( thread );
 
-                            Pattern command = Pattern.compile( "(ls|die)(?:\\s+(.*\\S))?\\s*$" );
+                            Pattern command = Pattern.compile( "(ls|die|load)(?:\\s+(.*\\S))?\\s*$" );
                             Matcher match = command.matcher( body );
                             if( match.matches() ) {
                                 String cmd = match.group( 1 );
@@ -288,6 +327,15 @@ public class Mimis {
                                         }
                                         out.append( msg + "\n" );
                                     }
+                                } else if( "load".equals( cmd ) ) {
+                                    msg = "packet[" + count + "]:load";
+                                    try {
+                                        load( arg );
+                                    } catch( IOException ioe ) {
+                                        msg += " = \\0";
+                                    }
+                                    log.debug( msg );
+                                    out.append( msg + "\n" );
                                 } else if( "die".equals( cmd ) ) {
                                     msg = "packet[" + count + "]:die";
                                     log.debug( msg );
@@ -344,11 +392,14 @@ public class Mimis {
             if( start == null ) {
                 start = graphDb.getReferenceNode();
             }
+            log.debug( "Traverser: " );
             traverser = start.traverse( (Traverser.Order)config.get( "order" ),
                                         (StopEvaluator)config.get( "stop" ),
                                         (ReturnableEvaluator)config.get( "return" ),
                                         (RelationshipType)config.get( "type" ),
                                         (Direction)config.get( "direction" ) );
+            log.debug( "Traverser: " + traverser );
+            log.debug( "LS: " + traverser.getAllNodes().size() );
         }
 
         public void impress( Map<String, Object> config ) {
