@@ -55,7 +55,7 @@ public class Mimis {
     static String dbPath = "var/mimis";
     public final static GraphDatabaseService graphDb = new EmbeddedGraphDatabase( dbPath );
     static Pattern pathSplitter;
-
+    
     public static SaveSpot load( String key ) throws IOException {
         //( key -== "/" ) // key = key[1] == "/" ? key[1:] : key // whole line suceeds or fails
         //&& ( key []: =
@@ -168,6 +168,9 @@ public class Mimis {
 
     public static void main( String[] args ) {
         log.debug( "Starting Mimis" );
+
+        // Used for signalling ending
+        final Object hold = new Object();
     
         int idx = 0;
         String scheme = "jabber";
@@ -254,7 +257,7 @@ public class Mimis {
                             response.setTo( message.getFrom() );
                             response.setThread( thread );
 
-                            Pattern command = Pattern.compile( "(ls|die)(?: (.*))?" );
+                            Pattern command = Pattern.compile( "(ls|die)(?:\\s+(.*\\S))?\\s*$" );
                             Matcher match = command.matcher( body );
                             if( match.matches() ) {
                                 String cmd = match.group( 1 );
@@ -280,8 +283,16 @@ public class Mimis {
                                         out.append( msg + "\n" );
                                     }
                                 } else if( "die".equals( cmd ) ) {
-                                    // Doesn't work
-                                    throw new IllegalStateException( "Command: Die" );
+                                    msg = "packet[" + count + "]:die";
+                                    log.debug( msg );
+                                    out.append( msg + "\n" );
+                                    synchronized (hold) {
+                                        hold.notify();
+                                    }
+                                } else {
+                                    msg = "packet[" + count + "]:" + cmd;
+                                    log.debug( msg );
+                                    out.append( cmd + "\n" );
                                 }
                                 response.setBody( out.toString() );
                             } else {
@@ -291,6 +302,7 @@ public class Mimis {
                             }
                             connection.sendPacket( response );
                         } else {
+                            log.debug( "Packet: " + packet );
                         }
                     } };
             connection.addPacketListener( mimisListener, mimisFilter );
@@ -300,8 +312,10 @@ public class Mimis {
 
         try {
             log.info( "Holding" );
-            System.in.read();
-        } catch( IOException ioe ) {
+            synchronized (hold) {
+                hold.wait();
+            }
+        } catch( InterruptedException ie ) {
         } finally {
             log.info( "Shutting Down" );
             Mimis.shutdown();
