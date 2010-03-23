@@ -117,6 +117,7 @@ EOF"
 
 APT[${#APT[*]}]=apache2
 APT[${#APT[*]}]=google-chrome-unstable
+APT[${#APT[*]}]=sun-java6-jdk
 APT[${#APT[*]}]=maven2
 
 CMD="apt-get install"
@@ -138,8 +139,8 @@ PUBHTML=public_html
     ln -s "${GITDEST}" "${PUBHTML}"
 )
 
-[ -e "${PUBHTML}/.../" ] || (
-    ln -s "${PUBHTML}/..." "${GITDEST}/..."
+[ -e "${PUBHTML}/..." ] || (
+    ln -s "${GITDEST}/..." "${PUBHTML}/..."
 )
 
 LOADUSER="/etc/apache2/mods-enabled/userdir.load"
@@ -151,4 +152,4 @@ LOADUSER="/etc/apache2/mods-enabled/userdir.load"
     sudo /etc/init.d/apache2 reload
 )
 
-google-chrome "http://localhost/~${USER}/.../"
+google-chrome "http://localhost/~${USER}/.../" &

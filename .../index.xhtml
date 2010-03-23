@@ -7,13 +7,20 @@
       xml:lang="en">
   <head>
     <title>Mȉmis HTTP Portal</title>
+    <link rel="stylesheet" type="text/css" href="mimis.css" />
+    <script type="text/javascript" src=".../sys/lib/jquery/dev/dist/jquery.js"/>
+    <script type="text/javascript" src=".../sys/lib/tip/src/$.jquery"/>
     <style type="text/css">
-      iframe { width: 100%; }
-      iframe[class~=hidden] { height: 0; }
+      html, body { margin: 0; padding: 0; }
+      iframe { width: 100%; border: none; }
+      iframe[class~=hidden] { visibility: hidden; }
     </style>
+
   </head>
   <body>
-    <iframe class="hidden" src="mimis.jnlp"></iframe>
+    <h1>Mȉmis</h1>
+    
+    <iframe src="mimis.jnlp"></iframe>
     <iframe src="mimis.html"></iframe>
   </body>
 </html>

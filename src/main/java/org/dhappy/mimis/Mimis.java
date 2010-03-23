@@ -38,6 +38,7 @@ import org.jivesoftware.smack.packet.Message;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Map;
@@ -58,7 +59,7 @@ public class Mimis {
     public static SaveSpot load( String key ) throws IOException {
         //( key -== "/" ) // key = key[1] == "/" ? key[1:] : key // whole line suceeds or fails
         //&& ( key []: =
-        SaveSpot spot = list( key ).element( 1 );
+        Spot spot = list( key ); //.element( 1 );
         if( spot == null && key.startsWith( "/" ) ) {
             //key =: 1 // key = key[1:]
             key = key.substring( 1 );
@@ -69,6 +70,7 @@ public class Mimis {
             
             FileInputStream input = new FileInputStream( key );
         }
+        return load( (InputStream)null );
     }
 
     public static SaveSpot load( InputStream input ) throws IOException {
@@ -103,7 +105,7 @@ public class Mimis {
         return new SaveSpot( graphDb );
     }
 
-    public static Traverser list() {
+    public static Spot list() {
         return new OneOffTraverser( new HashMap<String, Object>() {{
                     put( "order", Traverser.Order.DEPTH_FIRST );
                     put( "stop", StopEvaluator.END_OF_GRAPH );
@@ -113,7 +115,7 @@ public class Mimis {
                 }} );
     }
 
-    public static Traverser list( final Object key ) {
+    public static Spot list( final Object key ) {
         final String path = key == null ? "" : key.toString();
         log.debug( "list:path = " + path );
 
@@ -306,7 +308,7 @@ public class Mimis {
         }
     }
 
-    static class OneOffTraverser implements Traverser, Iterator<Node> {
+    static class OneOffTraverser implements Spot, Iterator<Node> {
         Transaction tx = graphDb.beginTx();
         Traverser traverser;
         

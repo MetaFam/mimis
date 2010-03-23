@@ -1,5 +1,6 @@
 package org.dhappy.mimis;
 
-public interface Spot {
-    public Spot element( int index );
+import org.neo4j.graphdb.Traverser;
+
+public interface Spot extends Traverser {
 }

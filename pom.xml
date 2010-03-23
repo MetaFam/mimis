@@ -28,7 +28,7 @@
   <version>0.1.a</version>
   <name>MÈÂ‰mis</name>
   <description>MÈÂ‰mis cache agent</description>  
-  
+
   <dependencies>
     <dependency>
       <groupId>org.apache.cocoon.servlet</groupId>
@@ -213,29 +213,60 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>2.0.2</version>
         <configuration>
+          <!--<executable>${JAVA_HOME}/bin/javac</executable>-->
           <source>1.5</source>
           <target>1.5</target>
         </configuration>
       </plugin>
-      <plugin>
+    </plugins>
+  </build>
+
+  <!-- mvn exec:exec -D spider -->
+  <profiles>
+    <profile>
+      <id>spider</id>
+      <activation><property><name>spider</name></property></activation>
+      <build><plugins><plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
-        <version>1.1</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>neotraverse</goal>
-            </goals>
-          </execution>
-        </executions>
         <configuration>
-          <mainClass>org.dhappy.test.NeoTraverse</mainClass>
+          <executable>java</executable>
           <arguments>
+            <argument>-classpath</argument><classpath />
+            <argument>org.dhappy.test.NeoTraverse</argument>
           </arguments>
-          <systemProperties>
-          </systemProperties>
         </configuration>
-      </plugin>
-    </plugins>
-  </build>    
+      </plugin></plugins></build>
+    </profile>
+    <profile>
+      <id>traverse</id>
+      <activation><property><name>traverse</name></property></activation>
+      <build><plugins><plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <configuration>
+          <executable>java</executable>
+          <arguments>
+            <argument>-classpath</argument><classpath />
+            <argument>org.dhappy.test.NeoTraverse</argument>
+          </arguments>
+        </configuration>
+      </plugin></plugins></build>
+    </profile>
+    <profile>
+      <id>chatbot</id>
+      <activation><property><name>chatbot</name></property></activation>
+      <build><plugins><plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <configuration>
+          <executable>java</executable>
+          <arguments>
+            <argument>-classpath</argument><classpath />
+            <argument>org.dhappy.mimis.Mimis</argument>
+          </arguments>
+        </configuration>
+      </plugin></plugins></build>
+    </profile>
+  </profiles>
 </project>
