@@ -56,28 +56,27 @@ public class Mimis {
     public final static GraphDatabaseService graphDb = new EmbeddedGraphDatabase( dbPath );
     static Pattern pathSplitter;
     
-    public static SaveSpot load( String key ) throws IOException {
+    public static Holon load( String key ) throws IOException {
         //( key -== "/" ) // key = key[1] == "/" ? key[1:] : key // whole line suceeds or fails
         //&& ( key []: =
-        Spot spot = list( key ); //.element( 1 );
-        if( spot == null && key.startsWith( "/" ) ) {
+        Listing list = list( key );
+        if( ! list.hasNext() && key.startsWith( "/" ) ) {
             //key =: 1 // key = key[1:]
             key = key.substring( 1 );
 
             if( key.startsWith( "~/" ) ) {
                 key = key.substring( 2 ) + System.getProperty( "user.home" );
             }
-            
-            FileInputStream input = new FileInputStream( key );
+            return load( key, new FileInputStream( key ) );
         }
-        return load( (InputStream)null );
+        return list.top();
     }
 
-    public static SaveSpot load( InputStream input ) throws IOException {
+    public static Holon load( String key, InputStream input ) throws IOException {
         FileOutputStream output = null;
         try {
             output = new FileOutputStream( "target/pipeline." + input.hashCode() + ".out" );
-            return load( input, output );
+            return load( key, input, output );
         } finally {
             if( output != null ) {
                 output.close();
@@ -85,12 +84,12 @@ public class Mimis {
         }
     }
     
-    public static SaveSpot load( InputStream input, OutputStream output ) throws IOException {
+    public static Holon load( String key, InputStream input, OutputStream output ) throws IOException {
         try {
-            SaveSpot mark = mark();
+            Holon mark = HolonFactory.mark( graphDb );
             Pipeline<SAXPipelineComponent> pipeline = new NonCachingPipeline<SAXPipelineComponent>();
             pipeline.addComponent( new XMLGenerator( input ));
-            pipeline.addComponent( mark.getSAXPipelineComponent() );
+            pipeline.addComponent( mark.getSAXPipeline() );
             pipeline.addComponent( new XMLSerializer() );
             
             pipeline.setup( output );
@@ -105,7 +104,7 @@ public class Mimis {
         return new SaveSpot( graphDb );
     }
 
-    public static Spot list() {
+    public static Listing list() {
         return new OneOffTraverser( new HashMap<String, Object>() {{
                     put( "order", Traverser.Order.DEPTH_FIRST );
                     put( "stop", StopEvaluator.END_OF_GRAPH );
@@ -115,7 +114,7 @@ public class Mimis {
                 }} );
     }
 
-    public static Spot list( final Object key ) {
+    public static Listing list( final Object key ) {
         final String path = key == null ? "" : key.toString();
         log.debug( "list:path = " + path );
 
@@ -140,19 +139,19 @@ public class Mimis {
                 }} );
     }
 
-    public static Stack<String> getPathDecomposition( String path ) {
-        Stack<String> elements = new Stack<String>();
+    public static Stack<String> getPathDecomposition( String key ) {
+        Stack<String> path = new Stack<String>();
 
         if( pathSplitter == null ) {
             setProperty( "separators", "\\s+|/|:|\\.|,|-" );
         }
-        Matcher match = pathSplitter.matcher( path );
+        Matcher match = pathSplitter.matcher( key );
         while( match.find() ) {
             for( int i = 1; i <= match.groupCount(); i++ ) {
-                elements.push( match.group( i ) );
+                path.push( match.group( i ) );
             }
         }
-        return elements;
+        return path;
     }
 
     public static void setProperty( String name, Object value ) {
@@ -329,7 +328,7 @@ public class Mimis {
         Iterator<Node> iterator;
         Node next;
         TraversalPosition currentPosition;
-
+ 
         Node start;
         
         public OneOffTraverser( Map<String, Object> config ) {

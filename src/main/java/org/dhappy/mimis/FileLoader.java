@@ -25,14 +25,14 @@ public class FileLoader {
         files.setProject(project);
         files.setDir( project.getBaseDir() );
 
-        files.setIncludes( "**ml" );
+        files.setIncludes( "**/*ml" );
 
         log.debug( "Matched " + files.size() + " files" );
 
         for( Iterator iter = files.iterator(); iter.hasNext(); ) {
             Resource resource = (Resource)iter.next();
             try {
-                Mimis.load( resource.getInputStream() );
+                Mimis.load( resource.getName(), resource.getInputStream() );
             } catch( IOException ioe ) {
                 log.error( "Loading: " + resource.getName(), ioe );
             }

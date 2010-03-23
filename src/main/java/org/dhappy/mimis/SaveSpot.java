@@ -77,7 +77,7 @@ public class SaveSpot extends AbstractSAXTransformer {
         }
     }
 
-    public Node push( HashMap<String, Object> state, SaveType type ) {
+    public Node push( Map<String, Object> state, SaveType type ) {
         Node nextElement = graphDb.createNode();
         for( Map.Entry<String, Object> e : state.entrySet() ) {
             nextElement.setProperty( e.getKey(), e.getValue() );
@@ -110,21 +110,11 @@ public class SaveSpot extends AbstractSAXTransformer {
     public void endDocument() throws SAXException {
         super.endDocument();
         this.transaction.success();
-
-        Traverser traverser = graphDb.getReferenceNode().traverse
-            ( Traverser.Order.DEPTH_FIRST,
-              StopEvaluator.END_OF_GRAPH,
-              ReturnableEvaluator.ALL_BUT_START_NODE,
-              SaveType.FILESYSTEM,
-              Direction.OUTGOING );
-        for( Node node : traverser ) {
-            log.info( node.getProperty( "name" ) );
-        }
     }
 
-    public void setProperty( String name, Object value ) {
-        if( "location".equals( name ) ) {
-            location = value.toString();
+    public void impress( Map<String, Object> config ) {
+        if( config.hasKey( "location" ) ) {
+            location = config.get( "location" ).toString();
         }
     }
 
