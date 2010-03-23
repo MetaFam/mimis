@@ -26,8 +26,12 @@
   <artifactId>mimis</artifactId>
   <groupId>org.dhappy.mimis</groupId>
   <version>0.1.a</version>
-  <name>M�mis</name>
-  <description>M�mis cache agent</description>  
+  <name>M𝕚mis</name>
+  <description>M𝕚mis cache agent</description>  
+
+  <properties>
+    <mimis.db.path>var/mimis</mimis.db.path>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -264,6 +268,23 @@
           <arguments>
             <argument>-classpath</argument><classpath />
             <argument>org.dhappy.mimis.Mimis</argument>
+          </arguments>
+        </configuration>
+      </plugin></plugins></build>
+    </profile>
+    <!-- Maven captures input, so loads, but can't be used -->
+    <profile>
+      <id>neoshell</id>
+      <activation><property><name>neoshell</name></property></activation>
+      <build><plugins><plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <configuration>
+          <executable>java</executable>
+          <arguments>
+            <argument>-classpath</argument><classpath />
+            <argument>org.neo4j.shell.StartClient</argument>
+            <argument>-path</argument><argument>${mimis.db.path}</argument>
           </arguments>
         </configuration>
       </plugin></plugins></build>

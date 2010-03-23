@@ -36,11 +36,13 @@ import org.jivesoftware.smack.SASLAuthentication;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Message;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collection;
@@ -59,21 +61,25 @@ public class Mimis {
     public static Holon load( String key ) throws IOException {
         //( key -== "/" ) // key = key[1] == "/" ? key[1:] : key // whole line suceeds or fails
         //&& ( key []: =
-        Listing list = list( key );
-        if( ! list.hasNext() && key.startsWith( "/" ) ) {
-            log.debug( "Searching for: " + key );
-            //key =: 1 // key = key[1:]
+        log.debug( "Searching for: " + key );
+        //key =: 1 // key = key[1:]
+        if( key.startsWith( "/" ) ) { // Load from local filesystem
             key = key.substring( 1 );
-
             if( key.startsWith( "~/" ) ) {
-                key = key.substring( 2 ) + System.getProperty( "user.home" );
+                key = ( System.getProperty( "user.home" ) + File.separator
+                        + key.substring( 2 ) );
             }
-            return load( key, new FileInputStream( key ) );
+            try {
+                return load( key, new FileInputStream( key ) );
+            } catch( FileNotFoundException fnf ) {
+                log.info( "Not Found: " + key );
+            }
         }
-        return list.top();
+        return null;
     }
 
     public static Holon load( String key, InputStream input ) throws IOException {
+        log.debug( "Input: " + key );
         FileOutputStream output = null;
         try {
             output = new FileOutputStream( "target/pipeline." + input.hashCode() + ".out" );
@@ -87,8 +93,11 @@ public class Mimis {
     
     public static Holon load( String key, InputStream input, OutputStream output ) throws IOException {
         try {
-            Holon mark = HolonFactory.mark( graphDb );
-            SaveSpot recorder = new SaveSpot( mark.getNode() );
+            MutableHolon mark = null;
+            log.info( "Loading: " + key );
+            try {
+            mark = new MutableHolon( graphDb );
+            SaveSpot recorder = new SaveSpot( mark );
             Pipeline<SAXPipelineComponent> pipeline = new NonCachingPipeline<SAXPipelineComponent>();
             pipeline.addComponent( new XMLGenerator( input ));
             
@@ -97,6 +106,10 @@ public class Mimis {
             
             pipeline.setup( output );
             pipeline.execute();
+            } catch(Exception e) {
+                log.error( "Load Error: ", e );
+            }
+
             return mark;
         } catch( Exception ex ) {
             throw new IOException( ex );
@@ -113,63 +126,81 @@ public class Mimis {
                 }} );
     }
 
+    static class PathTracker {
+        int lastDepth = -1; // Traversal depth starts at 0
+        Stack<String> pathList;
+        Stack<Integer> pathDepth = new Stack<Integer>();
+        
+        public PathTracker( String key ) {
+            pathList = Mimis.getPathDecomposition( key );
+            pathDepth.push( new Integer( 0 ) );
+        }
+
+        public void step( int depth, Node location ) {
+            String name = "";
+            try {
+                name = location.getProperty( "name" ).toString();
+            } catch( NotFoundException nfe ) {
+            }
+            step( depth, name );
+        }
+
+        public void step( int depth, String name ) {
+            int delta = depth - lastDepth;
+            lastDepth = depth;
+
+            log.debug( "list[" + lastDepth + "-" + delta + "]:" + name );
+
+            if( delta > 1 ) {
+                log.info( "Unexpected Delta: [" + name + "]: " + delta );
+            }
+            
+            // Child of last node and not empty
+            if( delta > 0 && name.length() > 0 ) {
+                pathDepth.push( pathDepth.peek() + delta );
+            } else if( delta < 0 ) { // Traversal returning
+                pathDepth.pop();
+            } else {                 // Siblings
+            }
+
+            log.debug( "list:[" + lastDepth + "/" + pathDepth.peek() + "]:" + name );
+        }
+
+        public boolean returnable() {
+            return pathDepth.peek() == pathList.size();
+        }
+
+        public boolean viable() {
+            return true;
+        }
+    }
+
     public static Listing list( final Object key ) {
         final String path = key == null ? "" : key.toString();
         log.debug( "list:path = " + path );
 
+        final PathTracker tracker = new PathTracker( path );
+
         final ReturnableEvaluator returnable = new ReturnableEvaluator() {
-                Stack<String> pathList = Mimis.getPathDecomposition( path );
-                Stack<Integer> pathDepth = new Stack<Integer>();
-                int lastDepth = -1; // Traversal depth starts at 0
-
-                {
-                    pathDepth.push( new Integer( 0 ) );
-                }
-
                 public boolean isReturnableNode( TraversalPosition position ) {
-                    //return name[depth] == current[name]
-                    if( position == null ) {
-                        return false;
-                    }
-
-                    String name = "";
-                    try {
-                        name = position.currentNode().getProperty( "name" ).toString();
-                    } catch( NotFoundException nfe ) {
-                    }
-                    log.debug( "Testing: " + name );
-
-                    int delta = position.depth() - lastDepth;
-                    lastDepth = position.depth();
-
-                    log.debug( "list[" + lastDepth + "-" + delta + "]:" + name );
-
-                    if( delta > 1 ) {
-                        log.info( "Unexpected Delta: [" + name + "]: " + delta );
-                    }
-                    if( delta > 0 ) {        // Child of last node
-                        pathDepth.push( pathDepth.peek() + delta );
-                    } else if( delta < 0 ) { // Traversal returning
-                        pathDepth.pop();
-                    } else {                 // Siblings
-                    }
-                    
-                    if( name.length() == 0 ) { // Empty strings push match
-                        pathDepth.push( pathDepth.pop() + 1 );
-                    }
-
-                    log.debug( "list:[" + lastDepth + "/" + pathDepth.peek() + "]:" + name );
-
-                    return ( name.length() == 0 ||
-                             name.equals( pathList.elementAt( pathDepth.peek() ) ) );
+                    log.debug( "returnable: " + position.depth() );
+                    tracker.step( position.depth(), position.currentNode() );
+                    return tracker.returnable();
+                }
+            };
+        final StopEvaluator viable = new StopEvaluator() {
+                public boolean isStopNode( TraversalPosition position ) {
+                    log.debug( "viable: " + position.depth() );
+                    tracker.step( position.depth(), position.currentNode() );
+                    log.debug( "viable: " + tracker.viable() );
+                    return tracker.viable();
                 }
             };
         
         log.debug( "list:returnable = " + returnable.toString() );
-        log.debug( "list:returnable:null = " + returnable.isReturnableNode( null ) );
         return new OneOffTraverser( new HashMap<String, Object>() {{
                     put( "order", Traverser.Order.DEPTH_FIRST );
-                    put( "stop", StopEvaluator.END_OF_GRAPH );
+                    put( "stop", viable );
                     put( "return", returnable );
                     put( "type", SaveSpot.SaveType.DOCSYSTEM );
                     put( "direction", Direction.OUTGOING );

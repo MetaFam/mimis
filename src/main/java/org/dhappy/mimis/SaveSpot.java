@@ -35,14 +35,14 @@ public class SaveSpot extends AbstractSAXTransformer {
     private static final Log log = LogFactory.getLog( SaveSpot.class );
 
     String location;
-    Stack<Node> root = new Stack<Node>();
+    MutableHolon root;
 
     public enum SaveType implements RelationshipType {
         SOCIAL, DOCSYSTEM, DOCUMENT
     }
 
-    public SaveSpot( Node root ) {
-        this.root.push( root );
+    public SaveSpot( MutableHolon root ) {
+        this.root = root;
     }
 
     public SAXPipelineComponent getSAXPipeline() {
@@ -53,40 +53,19 @@ public class SaveSpot extends AbstractSAXTransformer {
         super.startDocument();
 
         if( location == null ) {
-            //DateFormat format = new SimpleDateFormat( "%y/%M/%d %H:(%m - 1):(%s - 1).%S" );
+            // Timestamps should have all fields offset from 0
+            //DateFormat format = new SimpleDateFormat( "%y/%M/%d@%H:(%m - 1):(%s - 1).%S" );
             DateFormat format = new SimpleDateFormat( "yyyy/MM/dd HH:mm:ss.SSS" );
             location = format.format( new Date() );
         }
+        root.grow( location, SaveType.DOCSYSTEM );
         log.debug( "Starting Document: " + location );
-        Stack<String> path = Mimis.getPathDecomposition( location );
-
-        int i = 0;
-        for( String element : path ) {
-            final String name = element;
-            final String type = ++i % 2 == 0 ? "separator" : "identifier";
-            push( new HashMap<String, Object>() {{
-                        put( "name", name );
-                        put( "type", type );
-                    }},
-                SaveType.DOCSYSTEM );
-        }
-    }
-
-    public Node push( Map<String, Object> state, SaveType type ) {
-        Node nextElement = Mimis.createNode( state );
-        root.peek().createRelationshipTo( nextElement, type );
-        root.push( nextElement );
-        return nextElement;
-    }
-
-    public Node pop() {
-        return root.pop();
     }
 
     public void startElement( final String uri, final String localName, final String qName, Attributes attributes ) throws SAXException {
         super.startElement( uri, localName, qName, attributes );
 
-        push( new HashMap<String, Object>() {{
+        root.push( new HashMap<String, Object>() {{
                     put( "name", localName );
                     put( "type", "tag" );
                     put( "namespace", uri );
@@ -96,12 +75,10 @@ public class SaveSpot extends AbstractSAXTransformer {
 
     public void endElement( String uri, String localName, String qName ) throws SAXException {
         super.endElement( uri, localName, qName );
-        pop();
     }
 
     public void endDocument() throws SAXException {
         super.endDocument();
-        //this.transaction.success();
     }
 
     public void impress( Map<String, Object> config ) {
