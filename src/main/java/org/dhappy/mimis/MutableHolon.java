@@ -53,12 +53,19 @@ public class MutableHolon implements Holon {
                     }},
                 type );
         }
-
     }
 
-    public void release() {
+    public void commit() {
+        if( tx != null ) {
+            tx.success();
+            tx.finish();
+        }
+    }
+
+    public void finalize() {
         if( tx != null ) {
             tx.finish();
         }
+        tx = null;
     }
 }

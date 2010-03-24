@@ -43,6 +43,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collection;
@@ -106,6 +107,7 @@ public class Mimis {
             
             pipeline.setup( output );
             pipeline.execute();
+            mark.commit();
             } catch(Exception e) {
                 log.error( "Load Error: ", e );
             }
@@ -116,24 +118,13 @@ public class Mimis {
         }
     }
 
-    public static Listing list() {
-        return new OneOffTraverser( new HashMap<String, Object>() {{
-                    put( "order", Traverser.Order.DEPTH_FIRST );
-                    put( "stop", StopEvaluator.END_OF_GRAPH );
-                    put( "return", ReturnableEvaluator.ALL );
-                    put( "type", SaveSpot.SaveType.DOCSYSTEM );
-                    put( "direction", Direction.OUTGOING );
-                }} );
-    }
-
     static class PathTracker {
         int lastDepth = -1; // Traversal depth starts at 0
-        Stack<String> pathList;
-        Stack<Integer> pathDepth = new Stack<Integer>();
+        Stack<String> seekPath = new Stack<String>();
+        Stack<String> currentPath = new Stack<String>();
         
         public PathTracker( String key ) {
-            pathList = Mimis.getPathDecomposition( key );
-            pathDepth.push( new Integer( 0 ) );
+            Mimis.decomposeKey( key, seekPath );
         }
 
         public void step( int depth, Node location ) {
@@ -146,65 +137,83 @@ public class Mimis {
         }
 
         public void step( int depth, String name ) {
+            if( depth == lastDepth
+                && ( name.length() == 0
+                     || ( currentPath.size() > 0
+                          && currentPath.peek().equals( name ) ) ) ) {
+                return;
+            }
+            
             int delta = depth - lastDepth;
             lastDepth = depth;
-
-            log.debug( "list[" + lastDepth + "-" + delta + "]:" + name );
 
             if( delta > 1 ) {
                 log.info( "Unexpected Delta: [" + name + "]: " + delta );
             }
             
             // Child of last node and not empty
-            if( delta > 0 && name.length() > 0 ) {
-                pathDepth.push( pathDepth.peek() + delta );
+            if( delta >= 0 && name.length() > 0 ) {
+                if( delta == 0 ) { // Sibling
+                    currentPath.pop();
+                }
+                currentPath.push( name );
             } else if( delta < 0 ) { // Traversal returning
-                pathDepth.pop();
-            } else {                 // Siblings
+                currentPath.pop();
             }
 
-            log.debug( "list:[" + lastDepth + "/" + pathDepth.peek() + "]:" + name );
+            if( currentPath.size() <= seekPath.size() ) {
+                int seekIdx = Math.max( 0, currentPath.size() - 1 );
+                log.debug( "list:[" + lastDepth + "][" + name + "] ?== " +
+                           seekPath.elementAt( seekIdx ) );
+            }
+            
         }
 
         public boolean returnable() {
-            return pathDepth.peek() == pathList.size();
+            log.debug( "list:returnable:equal: " + currentPath.equals( seekPath ) );
+            return currentPath.equals( seekPath );
         }
 
         public boolean viable() {
-            return true;
+            log.debug( "list:viable:sublist: " + Collections.indexOfSubList( seekPath, currentPath ) );
+            return ( seekPath.size() < currentPath.size()
+                     && Collections.indexOfSubList( seekPath, currentPath ) != 0 );
         }
+    }
+
+    public static Listing list() {
+        return list( null );
     }
 
     public static Listing list( final Object key ) {
         final String path = key == null ? "" : key.toString();
         log.debug( "list:path = " + path );
 
-        final PathTracker tracker = new PathTracker( path );
+        Map config = new HashMap<String, Object>() {{
+                put( "order", Traverser.Order.DEPTH_FIRST );
+                put( "type", SaveSpot.SaveType.DOCSYSTEM );
+                put( "direction", Direction.OUTGOING );
+            }};
 
-        final ReturnableEvaluator returnable = new ReturnableEvaluator() {
+        if( key == null ) {
+            //config.put( "stop", StopEvaluator.DEPTH_ONE );
+            config.put( "stop", StopEvaluator.END_OF_GRAPH );
+            config.put( "return", ReturnableEvaluator.ALL_BUT_START_NODE );
+        } else {
+            final PathTracker tracker = new PathTracker( path );
+            config.put( "return", new ReturnableEvaluator() {
                 public boolean isReturnableNode( TraversalPosition position ) {
-                    log.debug( "returnable: " + position.depth() );
                     tracker.step( position.depth(), position.currentNode() );
                     return tracker.returnable();
-                }
-            };
-        final StopEvaluator viable = new StopEvaluator() {
+                } } );
+            config.put( "stop", new StopEvaluator() {
                 public boolean isStopNode( TraversalPosition position ) {
-                    log.debug( "viable: " + position.depth() );
                     tracker.step( position.depth(), position.currentNode() );
-                    log.debug( "viable: " + tracker.viable() );
                     return tracker.viable();
-                }
-            };
-        
-        log.debug( "list:returnable = " + returnable.toString() );
-        return new OneOffTraverser( new HashMap<String, Object>() {{
-                    put( "order", Traverser.Order.DEPTH_FIRST );
-                    put( "stop", viable );
-                    put( "return", returnable );
-                    put( "type", SaveSpot.SaveType.DOCSYSTEM );
-                    put( "direction", Direction.OUTGOING );
-                }} );
+                } } );
+        }
+
+        return new OneOffTraverser( config );
     }
 
     public static Node createNode( Map<String, Object> config ) {
@@ -216,11 +225,11 @@ public class Mimis {
         return node;
     }
 
-    public static Stack<String> getPathDecomposition( String key ) {
-        Stack<String> path = new Stack<String>();
-
+    public static void decomposeKey( String key, Stack<String> path ) {
         if( pathSplitter == null ) {
-            setProperty( "separators", "\\s+|/|:|\\.|,|-" );
+            impress( new HashMap<String, Object>() {{
+                        put( "separators", "\\s+|/|:|\\.|,|-" );
+                    }} );
         }
         Matcher match = pathSplitter.matcher( key );
         while( match.find() ) {
@@ -228,12 +237,11 @@ public class Mimis {
                 path.push( match.group( i ) );
             }
         }
-        return path;
     }
 
-    public static void setProperty( String name, Object value ) {
-        if( "separators".equals( name ) ) {
-            String separators = value.toString();
+    public static void impress( Map<String, Object> config ) {
+        if( config.containsKey( "separators" ) ) {
+            String separators = config.get( "separators" ).toString();
             pathSplitter = Pattern.compile( "(" + separators + "|[^" + separators + "]+)" );
         }
     }
@@ -347,16 +355,21 @@ public class Mimis {
                                 String msg;
 
                                 if( "ls".equals( cmd ) ) {
-                                    Traverser list = arg == null ? list() : list( arg );
+                                    try {
+                                    Traverser list = list( arg );
                                     msg = "packet[" + count + "]:list[][name]";
                                     out.append( msg + "\n" );
-                                    for( Node node : list() ) {
+                                    for( Node node : list ) {
                                         try {
                                             msg = "[][name] = " + node.getProperty( "name" );
                                         } catch( NotFoundException e ) {
                                             msg = "[][name] = \\0";
                                         }
                                         out.append( msg + "\n" );
+                                    }
+                                    log.debug( "Done Listing" );
+                                    } catch(Exception e) {
+                                        log.error( "List", e );
                                     }
                                 } else if( "load".equals( cmd ) ) {
                                     msg = "packet[" + count + "]:load";
@@ -423,14 +436,11 @@ public class Mimis {
             if( start == null ) {
                 start = graphDb.getReferenceNode();
             }
-            log.debug( "Traverser: " );
             traverser = start.traverse( (Traverser.Order)config.get( "order" ),
                                         (StopEvaluator)config.get( "stop" ),
                                         (ReturnableEvaluator)config.get( "return" ),
                                         (RelationshipType)config.get( "type" ),
                                         (Direction)config.get( "direction" ) );
-            log.debug( "Traverser: " + traverser );
-            log.debug( "LS: " + traverser.getAllNodes().size() );
         }
 
         public void impress( Map<String, Object> config ) {
@@ -470,6 +480,8 @@ public class Mimis {
             prime();
             boolean hasNext = next != null;
             if( ! hasNext ) {
+                log.debug( "Listing Finished" );
+                tx.success();
                 tx.finish();
             }
             return hasNext;
@@ -495,6 +507,12 @@ public class Mimis {
                 public Node getNode() { return current; }
                 public void impress( Map<String, Object> config ) {}
             };
+        }
+
+        public void finalize() {
+            if( tx != null ) {
+                tx.finish();
+            }
         }
     }
 }

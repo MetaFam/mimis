@@ -3,3 +3,4 @@ var/
 NeoTraverse/
 pipeline.*.out
 .../sys/
+test/

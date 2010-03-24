@@ -185,20 +185,6 @@
         <artifactId>maven-jetty-plugin</artifactId>
         <version>6.1.7</version>
         <configuration>
-          <connectors>
-            <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
-              <port></port>
-              <maxIdleTime>30000</maxIdleTime>
-            </connector>
-          </connectors>
-          <webAppSourceDirectory>${project.build.directory}/rcl/webapp</webAppSourceDirectory>
-          <contextPath>/</contextPath>
-          <systemProperties>
-            <systemProperty>
-              <name>org.apache.cocoon.mode</name>
-              <value>dev</value>
-            </systemProperty>
-          </systemProperties>
         </configuration>
       </plugin>
       <plugin>
@@ -225,7 +211,7 @@
     </plugins>
   </build>
 
-  <!-- mvn exec:exec -D spider -->
+<!--
   <profiles>
     <profile>
       <id>spider</id>
@@ -272,7 +258,9 @@
         </configuration>
       </plugin></plugins></build>
     </profile>
+-->
     <!-- Maven captures input, so loads, but can't be used -->
+<!--
     <profile>
       <id>neoshell</id>
       <activation><property><name>neoshell</name></property></activation>
@@ -290,4 +278,5 @@
       </plugin></plugins></build>
     </profile>
   </profiles>
+-->
 </project>

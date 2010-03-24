@@ -1,0 +1,2 @@
+Available targets:
+  * mvn exec:exec -D (spider|chatbot|jetty:run)
