@@ -185,6 +185,12 @@
         <artifactId>maven-jetty-plugin</artifactId>
         <version>6.1.7</version>
         <configuration>
+          <contextPath>/</contextPath>
+          <stopPort>9669</stopPort>
+          <stopKey>die</stopKey>
+          <systemProperties>
+            <systemProperty><name>jetty.port</name><value>9999</value></systemProperty>
+          </systemProperties>
         </configuration>
       </plugin>
       <plugin>
@@ -211,7 +217,6 @@
     </plugins>
   </build>
 
-<!--
   <profiles>
     <profile>
       <id>spider</id>
@@ -258,9 +263,7 @@
         </configuration>
       </plugin></plugins></build>
     </profile>
--->
     <!-- Maven captures input, so loads, but can't be used -->
-<!--
     <profile>
       <id>neoshell</id>
       <activation><property><name>neoshell</name></property></activation>
@@ -278,5 +281,4 @@
       </plugin></plugins></build>
     </profile>
   </profiles>
--->
 </project>
