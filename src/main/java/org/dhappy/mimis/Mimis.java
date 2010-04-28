@@ -225,7 +225,11 @@ public class Mimis {
         return node;
     }
 
-    public static void decomposeKey( String key, Stack<String> path ) {
+    public static Stack<String> decomposeKey( String key ) {
+        return decomposeKey( key, new Stack<String>() );
+    }
+
+    public static Stack<String> decomposeKey( String key, Stack<String> path ) {
         if( pathSplitter == null ) {
             impress( new HashMap<String, Object>() {{
                         put( "separators", "\\s+|/|:|\\.|,|-" );
@@ -237,6 +241,7 @@ public class Mimis {
                 path.push( match.group( i ) );
             }
         }
+        return path;
     }
 
     public static void impress( Map<String, Object> config ) {

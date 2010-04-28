@@ -28,7 +28,7 @@ public class MutableHolon implements Holon {
     }
 
     public void grow( String key, RelationshipType type ) {
-        grow( Mimis.getPathDecomposition( key ), type );
+        grow( Mimis.decomposeKey( key ), type );
     }
 
     public Node push( Map<String, Object> state, RelationshipType type ) {

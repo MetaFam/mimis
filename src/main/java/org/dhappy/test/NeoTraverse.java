@@ -98,7 +98,7 @@ public class NeoTraverse {
                     put( "order", Traverser.Order.DEPTH_FIRST );
                     put( "stop", StopEvaluator.END_OF_GRAPH );
                     put( "return", returnable );
-                    put( "type", SaveSpot.SaveType.FILESYSTEM );
+                    put( "type", SaveSpot.SaveType.DOCSYSTEM );
                     put( "direction", Direction.OUTGOING );
                 }} );
     }
