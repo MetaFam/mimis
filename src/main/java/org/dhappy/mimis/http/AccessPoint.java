@@ -16,7 +16,8 @@ public class AccessPoint extends HttpServlet {
         log.debug( "Creating Access Point" );
     }
 
-    public void doGet( HttpServletRequest request, HttpServletResponse response ) throws IOException {
+    public void doGet( HttpServletRequest request, HttpServletResponse response )
+        throws IOException {
         response.setContentType("text/plain");
 
         response.getWriter().println( "ContextPath: " + request.getContextPath() );
@@ -27,7 +28,5 @@ public class AccessPoint extends HttpServlet {
         response.getWriter().println( "ServletPath: " + request.getServletPath() );
         response.getWriter().println( "PathInfo: " + request.getPathInfo() );
         response.getWriter().println( "User: " + request.getRemoteUser() );
-        
     }
 }
-
