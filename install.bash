@@ -93,30 +93,11 @@ function fini() {
     echo -n
 }
 
-GOOGLE_REPO="http://dl.google.com/linux/deb/"
-SRC="/etc/apt/sources.list.d/google-chrome.list"
-[ -e "${SRC}" ] || (
-    OUT="$(getMutable ${SRC})"
-
-    sudo bash -c "eval cat > ${OUT} << EOF
-# Add: Google Chrome Home Repository
-#   By: ${AUTHOR}
-#
-
-deb ${GOOGLE_REPO} stable non-free main
-EOF"
-
-    commit "${OUT}"
-
-    KEY="https://dl-ssl.google.com/linux/linux_signing_key.pub"
-    echo "Adding Key: ${KEY}";
-    wget -q -O - "${KEY}" | sudo apt-key add -
-    
-    sudo apt-get update
-)
+sudo add-apt-repository ppa:chromium-daily/ppa
 
 APT[${#APT[*]}]=apache2
-APT[${#APT[*]}]=google-chrome-unstable
+APT[${#APT[*]}]=chromium-browser
+APT[${#APT[*]}]=chromium-codecs-ffmpeg
 APT[${#APT[*]}]=sun-java6-jdk
 APT[${#APT[*]}]=maven2
 
