@@ -189,6 +189,10 @@
               <directory>NeoTraverse</directory>
               <followSymlinks>false</followSymlinks>
             </fileset>
+            <fileset>
+              <directory>var</directory>
+              <followSymlinks>false</followSymlinks>
+            </fileset>
           </filesets>
         </configuration>
       </plugin>
