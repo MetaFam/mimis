@@ -24,7 +24,16 @@ import java.util.Map;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.HashMap;
+import java.io.File;
 import java.io.IOException;
+
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+
+import java.io.*;
+import static java.nio.file.FileVisitResult.*;
+import static java.nio.file.FileVisitOption.*;
+import java.util.*;
 
 import org.apache.tools.ant.types.Resource;
 import org.apache.tools.ant.Project;
@@ -45,13 +54,8 @@ public class NeoTraverse {
                dir = args[0];
             }
 
-	    FileSet files = new FileSet();
-	    Project project = new Project();
-	    project.setBasedir( dir );
-	    files.setProject( project );
-	    files.setDir( project.getBaseDir() );
-
-	    files.setIncludes( "**/*ml" );
+            GraphDuplicator duper = new GraphDuplicator();
+            Files.walkFileTree( dir, duper );
 
 	    log.debug( "Matched " + files.size() + " files" );
 
@@ -214,6 +218,52 @@ public class NeoTraverse {
             currentPosition = traverser.currentPosition();
             next = iterator.hasNext() ? iterator.next() : null;
             return current;
+        }
+    }
+
+    public static class GraphDuplicator extends SimpleFileVisitor<Path> {
+        private final PathMatcher matcher;
+        private int numMatches = 0;
+
+        GraphDuplicator( String pattern ) {
+            matcher = FileSystems.getDefault().getPathMatcher( "glob:" + pattern );
+        }
+
+        //Compares the glob pattern against the file or directory name.
+        void find( Path file ) {
+            Path name = file.getName();
+            if( name != null && matcher.matches( name ) ) {
+                numMatches++;
+                log.debug( file );
+            }
+        }
+
+        //Prints the total number of matches to standard out.
+        void done() {
+            log.debug( "Matched: " + numMatches );
+        }
+
+        //Invoke the pattern matching method on each file.
+        @Override
+            public FileVisitResult visitFile( Path file,
+                                              BasicFileAttributes attrs ) {
+            find( file );
+            return CONTINUE;
+        }
+
+        //Invoke the pattern matching method on each directory.
+        @Override
+            public FileVisitResult preVisitDirectory( Path dir,
+                                                      BasicFileAttributes attrs ) {
+            find(dir);
+            return CONTINUE;
+        }
+
+        @Override
+            public FileVisitResult visitFileFailed( Path file,
+                                                    IOException e ) {
+            log.error( e );
+            return CONTINUE;
         }
     }
 }
