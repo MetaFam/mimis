@@ -24,24 +24,51 @@ import java.util.Map;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.HashMap;
+import java.io.IOException;
+
+import org.apache.tools.ant.types.Resource;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.types.FileSet;
 
 public class NeoTraverse {
+    protected static String dbURI = "NeoTraverse/db";
+
     private static final Log log = LogFactory.getLog( NeoTraverse.class );
 
-    public static GraphDatabaseService graphDb;
+    protected static GraphDatabaseService graphDb;
     static boolean local = true;
-    static String arg = null;
 
     public static void main( String[] args ) {
         try {
-            log.debug( "Starting Traverse: " + graphDb );
-
+	    String dir = "...";
             if( args.length > 0 ) {
-                arg = args[0];
+               dir = args[0];
             }
-            arg = ".../";
 
-            Traverser list = local ? list( arg ) : Mimis.list( arg );
+	    FileSet files = new FileSet();
+	    Project project = new Project();
+	    project.setBasedir( dir );
+	    files.setProject( project );
+	    files.setDir( project.getBaseDir() );
+
+	    files.setIncludes( "**/*ml" );
+
+	    log.debug( "Matched " + files.size() + " files" );
+
+	    for( Iterator iter = files.iterator(); iter.hasNext(); ) {
+		Resource resource = (Resource)iter.next();
+		try {
+		    load( resource );
+                } catch( IOException ioe ) {
+                    log.error( "Loading: " + resource.getName(), ioe );
+                }
+            }
+        
+            //Mimis.shutdown();
+        
+            log.debug( "Traversing: " + dir );
+
+            Traverser list = local ? list( dir ) : Mimis.list( dir );
             //if( list.
             log.info( "main:list = " + list.toString() );
 
@@ -67,7 +94,13 @@ public class NeoTraverse {
         }
     }
 
-
+    public static void load( Resource resource )
+        throws IOException {
+        log.debug( "resource:name = " + resource.getName() );
+        //load( resource.getName(), resource.getInputStream() );
+        //Transaction tx = graphDb.beginTx();
+        return; // getGraph().getReferenceNode();
+    }
 
     public static Traverser list( ) {
         return list( null );
@@ -75,11 +108,7 @@ public class NeoTraverse {
 
     public static Traverser list( String path ) {
         log.debug( "list:" + path );
-        if( graphDb == null ) {
-            set( new HashMap<String, Object>() {{
-                        put( "db:path", "NeoTraverse/db" );
-                    }} );
-        }
+	GraphDatabaseService graphDb = getGraph();
         final ReturnableEvaluator returnable =
             ( path == null
               ? ReturnableEvaluator.ALL
@@ -104,9 +133,13 @@ public class NeoTraverse {
     }
 
     public static void set( Map<String, Object> config ) {
-        if( graphDb == null && config.containsKey( "db:path" ) ) {
-            graphDb = new EmbeddedGraphDatabase( config.get( "db:path" ).toString() );
+    }
+
+    public static GraphDatabaseService getGraph() {
+        if( graphDb == null ) {
+            graphDb = new EmbeddedGraphDatabase( dbURI );
         }
+	return graphDb;
     }
 
     static class OneOffTraverser implements Traverser, Iterator<Node> {
