@@ -233,10 +233,10 @@ public class FilesystemWalker {
     public static class GraphDuplicator implements TraversalListener {
         GraphDatabaseService graphDb;
         Node currentNode;
+        Transaction currentTx;
         
         GraphDuplicator( GraphDatabaseService graphDb ) {
             this.graphDb = graphDb;
-            currentNode = graphDb.getReferenceNode();
         }
 
         int readBufferSize = 8192;
@@ -280,6 +280,16 @@ public class FilesystemWalker {
 
         public void postVisitDirectory( File dir ) {
             return;
+        }
+
+        public void startTraverse( File root ) {
+            currentTx = graphDb.beginTx();
+            currentNode = graphDb.getReferenceNode();
+        }
+
+        public void endTraverse( File root ) {
+            currentTx.finish();
+            currentNode = null;
         }
     }
 }
