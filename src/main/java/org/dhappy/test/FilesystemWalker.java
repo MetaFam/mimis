@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.HashMap;
+import java.util.Stack;
 import java.io.File;
 import java.io.InputStream;
 import java.io.FileInputStream;
@@ -51,7 +52,7 @@ public class FilesystemWalker {
 
             String dbPath = ( ".mimis"
                               + File.separator
-                              + FilesystemWalker.class
+                              + FilesystemWalker.class.getName()
                               + File.separator
                               + fsRoot.getCanonicalPath()
                               + File.separator
@@ -242,44 +243,60 @@ public class FilesystemWalker {
         int readBufferSize = 8192;
 
         public void visitFile( File file ) {
-            try {
-                String algorithm = "SHA-256";
-                MessageDigest digest = MessageDigest.getInstance( algorithm );
-                InputStream input = new FileInputStream( file );
-                byte[] buffer = new byte[ readBufferSize ];
-
+            log.debug( "visit:" + file.getAbsolutePath() );
+            if( file.isFile() ) {
                 try {
-                    int read = 0;
-                    while( ( read = input.read( buffer ) ) > 0 ) {
-                        digest.update( buffer, 0, read );
-                    }
-                    byte[] sum = digest.digest();
-                    BigInteger bigInt = new BigInteger( 1, sum );
-                    String output = bigInt.toString( 16 );
-                    log.debug( algorithm + ":" + output );
-                } catch(IOException e) {
-                    throw new RuntimeException( "Unable to process: " + file, e );
-                } finally {
+                    String algorithm = "SHA-256";
+                    MessageDigest digest = MessageDigest.getInstance( algorithm );
+                    InputStream input = new FileInputStream( file );
+                    byte[] buffer = new byte[ readBufferSize ];
+
                     try {
-                        input.close();
+                        int read = 0;
+                        while( ( read = input.read( buffer ) ) > 0 ) {
+                            digest.update( buffer, 0, read );
+                        }
+                        byte[] sum = digest.digest();
+                        BigInteger bigInt = new BigInteger( 1, sum );
+                        String output = bigInt.toString( 16 );
+                        log.debug( algorithm + ":" + output );
                     } catch(IOException e) {
-                        log.error( "Unable to close: " + file, e);
+                        throw new RuntimeException( "Unable to process: " + file, e );
+                    } finally {
+                        try {
+                            input.close();
+                        } catch(IOException e) {
+                            log.error( "Unable to close: " + file, e);
+                        }
                     }
+                } catch( FileNotFoundException fnfe ) {
+                    log.error( fnfe );
+                } catch( NoSuchAlgorithmException nsae ) {
+                    log.error( nsae );
                 }
-            } catch( FileNotFoundException fnfe ) {
-                log.error( fnfe );
-            } catch( NoSuchAlgorithmException nsae ) {
-                log.error( nsae );
             }
         }
 
+        public enum FilesystemRelations implements RelationshipType {
+            CHILD
+        }
+
+        Stack<Node> path = new Stack<Node>();
+
         //Invoke the pattern matching method on each directory.
         public void preVisitDirectory( File dir ) {
-            return;
+            Node node = graphDb.createNode();
+            Relationship relationship =
+                currentNode.createRelationshipTo( node,
+                                                  FilesystemRelations.CHILD );
+ 
+            node.setProperty( "name", dir.getName() );
+            path.push( currentNode );
+            currentNode = node;
         }
 
         public void postVisitDirectory( File dir ) {
-            return;
+            currentNode = path.pop();
         }
 
         public void startTraverse( File root ) {

@@ -1,6 +1,8 @@
+*~
 target/
 var/
 NeoTraverse/
 pipeline.*.out
 .../sys/
 test/
+.mimis/
