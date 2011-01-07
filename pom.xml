@@ -30,7 +30,7 @@
   <description>M𝕚mis cache agent</description>  
 
   <properties>
-    <mimis.db.path>var/mimis</mimis.db.path>
+    <mimis.db.path>.mimis/local/neo4j/</mimis.db.path>
   </properties>
 
   <dependencies>
@@ -186,11 +186,7 @@
         <configuration>
           <filesets>
             <fileset>
-              <directory>NeoTraverse</directory>
-              <followSymlinks>false</followSymlinks>
-            </fileset>
-            <fileset>
-              <directory>var</directory>
+              <directory>.mimis</directory>
               <followSymlinks>false</followSymlinks>
             </fileset>
           </filesets>
@@ -272,7 +268,7 @@
           <executable>java</executable>
           <arguments>
             <argument>-classpath</argument><classpath />
-            <argument>org.dhappy.test.NeoTraverse</argument>
+            <argument>org.dhappy.test.FilesystemWalker</argument>
           </arguments>
         </configuration>
       </plugin></plugins></build>

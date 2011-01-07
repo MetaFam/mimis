@@ -20,56 +20,51 @@ import org.neo4j.graphdb.ReturnableEvaluator;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.NotFoundException;
 
+import java.math.BigInteger;
 import java.util.Map;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.HashMap;
 import java.io.File;
+import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
+import org.dhappy.mimis.FileList;
+import org.dhappy.mimis.TraversalListener;
 
-import java.io.*;
-import static java.nio.file.FileVisitResult.*;
-import static java.nio.file.FileVisitOption.*;
-import java.util.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
-import org.apache.tools.ant.types.Resource;
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.types.FileSet;
+public class FilesystemWalker {
+    private static final Log log = LogFactory.getLog( FilesystemWalker.class );
 
-public class NeoTraverse {
-    protected static String dbURI = "NeoTraverse/db";
-
-    private static final Log log = LogFactory.getLog( NeoTraverse.class );
-
-    protected static GraphDatabaseService graphDb;
     static boolean local = true;
 
     public static void main( String[] args ) {
         try {
-	    String dir = "...";
-            if( args.length > 0 ) {
-               dir = args[0];
-            }
+	    String dir = args.length == 0 ? "..." : args[0];
+            log.debug( "dir:" + dir );
 
-            GraphDuplicator duper = new GraphDuplicator();
-            Files.walkFileTree( dir, duper );
+            File fsRoot = new File( dir );
 
-	    log.debug( "Matched " + files.size() + " files" );
+            String dbPath = ( ".mimis"
+                              + File.separator
+                              + FilesystemWalker.class
+                              + File.separator
+                              + fsRoot.getCanonicalPath()
+                              + File.separator
+                              + fsRoot.getName() );
 
-	    for( Iterator iter = files.iterator(); iter.hasNext(); ) {
-		Resource resource = (Resource)iter.next();
-		try {
-		    load( resource );
-                } catch( IOException ioe ) {
-                    log.error( "Loading: " + resource.getName(), ioe );
-                }
-            }
-        
-            //Mimis.shutdown();
-        
+            log.debug( "dbPath:" + dbPath );
+            
+            GraphDatabaseService graph = getGraph( dbPath );
+            GraphDuplicator duper
+                = new GraphDuplicator( graph );
+            FileList files = new FileList( fsRoot );
+            files.traverse( duper );
+
             log.debug( "Traversing: " + dir );
 
             Traverser list = local ? list( dir ) : Mimis.list( dir );
@@ -98,9 +93,9 @@ public class NeoTraverse {
         }
     }
 
-    public static void load( Resource resource )
+    public static void load( )
         throws IOException {
-        log.debug( "resource:name = " + resource.getName() );
+        //log.debug( "resource:name = " + resource.getName() );
         //load( resource.getName(), resource.getInputStream() );
         //Transaction tx = graphDb.beginTx();
         return; // getGraph().getReferenceNode();
@@ -140,6 +135,20 @@ public class NeoTraverse {
     }
 
     public static GraphDatabaseService getGraph() {
+        return getGraph( null );
+    }
+
+    protected static EmbeddedGraphDatabase graphDb;
+
+    public static GraphDatabaseService getGraph( String dbURI ) {
+        // Default database URI
+        dbURI = ( dbURI == null ) ? ".mimis/host/files" : dbURI;
+
+        if( graphDb != null && dbURI != graphDb.getStoreDir() ) {
+            graphDb.shutdown();
+            graphDb = null;
+        }
+            
         if( graphDb == null ) {
             graphDb = new EmbeddedGraphDatabase( dbURI );
         }
@@ -221,49 +230,56 @@ public class NeoTraverse {
         }
     }
 
-    public static class GraphDuplicator extends SimpleFileVisitor<Path> {
-        private final PathMatcher matcher;
-        private int numMatches = 0;
-
-        GraphDuplicator( String pattern ) {
-            matcher = FileSystems.getDefault().getPathMatcher( "glob:" + pattern );
+    public static class GraphDuplicator implements TraversalListener {
+        GraphDatabaseService graphDb;
+        Node currentNode;
+        
+        GraphDuplicator( GraphDatabaseService graphDb ) {
+            this.graphDb = graphDb;
+            currentNode = graphDb.getReferenceNode();
         }
 
-        //Compares the glob pattern against the file or directory name.
-        void find( Path file ) {
-            Path name = file.getName();
-            if( name != null && matcher.matches( name ) ) {
-                numMatches++;
-                log.debug( file );
+        int readBufferSize = 8192;
+
+        public void visitFile( File file ) {
+            try {
+                String algorithm = "SHA-256";
+                MessageDigest digest = MessageDigest.getInstance( algorithm );
+                InputStream input = new FileInputStream( file );
+                byte[] buffer = new byte[ readBufferSize ];
+
+                try {
+                    int read = 0;
+                    while( ( read = input.read( buffer ) ) > 0 ) {
+                        digest.update( buffer, 0, read );
+                    }
+                    byte[] sum = digest.digest();
+                    BigInteger bigInt = new BigInteger( 1, sum );
+                    String output = bigInt.toString( 16 );
+                    log.debug( algorithm + ":" + output );
+                } catch(IOException e) {
+                    throw new RuntimeException( "Unable to process: " + file, e );
+                } finally {
+                    try {
+                        input.close();
+                    } catch(IOException e) {
+                        log.error( "Unable to close: " + file, e);
+                    }
+                }
+            } catch( FileNotFoundException fnfe ) {
+                log.error( fnfe );
+            } catch( NoSuchAlgorithmException nsae ) {
+                log.error( nsae );
             }
         }
 
-        //Prints the total number of matches to standard out.
-        void done() {
-            log.debug( "Matched: " + numMatches );
-        }
-
-        //Invoke the pattern matching method on each file.
-        @Override
-            public FileVisitResult visitFile( Path file,
-                                              BasicFileAttributes attrs ) {
-            find( file );
-            return CONTINUE;
-        }
-
         //Invoke the pattern matching method on each directory.
-        @Override
-            public FileVisitResult preVisitDirectory( Path dir,
-                                                      BasicFileAttributes attrs ) {
-            find(dir);
-            return CONTINUE;
+        public void preVisitDirectory( File dir ) {
+            return;
         }
 
-        @Override
-            public FileVisitResult visitFileFailed( Path file,
-                                                    IOException e ) {
-            log.error( e );
-            return CONTINUE;
+        public void postVisitDirectory( File dir ) {
+            return;
         }
     }
 }
