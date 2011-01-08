@@ -3,11 +3,11 @@ package org.dhappy.mimis;
 import javax.swing.JApplet;
 import javax.swing.SwingUtilities;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.logging.Logger;
 
 public class CacheAgentApplet extends JApplet {
-    private static final Log log = LogFactory.getLog( CacheAgentApplet.class );
+    private static Logger log =
+	Logger.getLogger( CacheAgentApplet.class.getName() );
 
     //Called when this applet is loaded into the browser.
     public void init() {
@@ -19,8 +19,8 @@ public class CacheAgentApplet extends JApplet {
 			log.info( "Applet Started" );
 		    }
 		});
-        } catch ( Exception e ) {
-            log.error( "Failed to Load", e );
+        } catch( Exception e ) {
+            log.warning( "Failed to Load: " + e.getMessage() );
         }
     }
 }
