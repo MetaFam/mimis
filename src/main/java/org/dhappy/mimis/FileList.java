@@ -104,6 +104,7 @@ public class FileList implements Iterable<File>, Iterator<File> {
     protected void traverse( File root,
                              TraversalListener listener,
                              int depth ) {
+	log.debug( "root:" + root.isDirectory() );
         //log.debug( "traverse:root = " + root.getName() );
         if( depth == 1 ) {
             listener.startTraverse( root );
@@ -112,10 +113,12 @@ public class FileList implements Iterable<File>, Iterator<File> {
             // Disallow symlink traversal except for root
             if( root.isDirectory()
                 && ( !isSymlink( root ) || depth == 1 ) ) {
+		log.debug( "root:" + root.listFiles() );
                 listener.preVisitDirectory( root );
                 File[] files = root.listFiles();
                 if( files != null ) {
                     for( File file : files ) {
+			log.debug( "file:" + file.getName() );
                         traverse( file, listener, depth + 1 );
                     }
                 }

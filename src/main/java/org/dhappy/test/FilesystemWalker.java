@@ -34,7 +34,6 @@ import java.io.IOException;
 
 import org.dhappy.mimis.FileList;
 import org.dhappy.mimis.TraversalListener;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -45,28 +44,42 @@ public class FilesystemWalker {
 
     public static void main( String[] args ) {
         try {
-	    String dir = args.length == 0 ? "..." : args[0];
-            log.debug( "dir:" + dir );
-
+	    String dir = args.length == 0 ? "." : args[0];
+            log.debug( "dir=" + dir );
+	    
             File fsRoot = new File( dir );
+	    
+	    String machType = System.getenv( "MACHTYPE" );
+	    if( machType == null ) {
+		machType = System.getProperty( "MACHTYPE" );
+	    }
+	    boolean cygwin =
+		( machType != null && machType.matches( ".*-cygwin" ) );
 
-            String dbPath = ( ".mimis"
-                              + File.separator
+	    String sep = cygwin ? "/" : File.separator;
+	    String path = fsRoot.getCanonicalPath();
+	    if( cygwin ) {
+		path = path.replaceAll( ( File.separator.equals( "\\" )
+					  ? "\\\\" : File.separator ),
+					"\\" + sep );
+	    }
+	    path = path.replaceAll( ":", "" );
+	    String dbPath = ( ".mimis"
+                              + sep
                               + FilesystemWalker.class.getName()
-                              + File.separator
-                              + fsRoot.getCanonicalPath()
-                              + File.separator
+                              + sep
+                              + path
                               + fsRoot.getName() );
 
             log.debug( "dbPath:" + dbPath );
-            
+
+            log.debug( "Traversing: " + dir );
+
             GraphDatabaseService graph = getGraph( dbPath );
             GraphDuplicator duper
                 = new GraphDuplicator( graph );
             FileList files = new FileList( fsRoot );
             files.traverse( duper );
-
-            log.debug( "Traversing: " + dir );
 
             Traverser list = local ? list( dir ) : Mimis.list( dir );
             //if( list.
@@ -142,15 +155,15 @@ public class FilesystemWalker {
     protected static EmbeddedGraphDatabase graphDb;
 
     public static GraphDatabaseService getGraph( String dbURI ) {
-        // Default database URI
-        dbURI = ( dbURI == null ) ? ".mimis/host/files" : dbURI;
-
-        if( graphDb != null && dbURI != graphDb.getStoreDir() ) {
+        if( graphDb != null && dbURI != null
+	    && dbURI != graphDb.getStoreDir() ) {
             graphDb.shutdown();
             graphDb = null;
         }
             
         if( graphDb == null ) {
+	    // Default database URI
+	    dbURI = ( dbURI == null ) ? ".mimis/host/files" : dbURI;
             graphDb = new EmbeddedGraphDatabase( dbURI );
         }
 	return graphDb;
@@ -261,7 +274,7 @@ public class FilesystemWalker {
                         String output = bigInt.toString( 16 );
                         log.debug( algorithm + ":" + output );
                     } catch(IOException e) {
-                        throw new RuntimeException( "Unable to process: " + file, e );
+                        log.error( "Unable to process: " + file, e );
                     } finally {
                         try {
                             input.close();
@@ -302,6 +315,7 @@ public class FilesystemWalker {
         public void startTraverse( File root ) {
             currentTx = graphDb.beginTx();
             currentNode = graphDb.getReferenceNode();
+	    log.debug( "start" );
         }
 
         public void endTraverse( File root ) {
