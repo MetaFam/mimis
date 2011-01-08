@@ -29,7 +29,12 @@
   <groupId>org.dhappy.mimis</groupId>
 
   <properties>
-    <mimis.db.path>.mimis/local/neo4j/</mimis.db.path>
+    <mimis.home>.${project.artifactId}</mimis.home>
+    <mimis.db.path>${mimis.home}/local/neo4j/</mimis.db.path>
+    <jar.filename>${project.artifactId}-${project.version}.jar</jar.filename>
+    <jar.keystore>${mimis.home}/jar/keystore</jar.keystore>
+    <jar.storepass>storepass</jar.storepass>
+    <jar.storealias>${project.artifactId}</jar.storealias>
   </properties>
 
   <dependencies>
@@ -217,6 +222,52 @@
           </archive>
         </configuration>
       </plugin>
+      <!-- When running mvn jarsigner:sign, "0 archive(s) processed" reported -->
+      <plugin>
+        <artifactId>maven-jarsigner-plugin</artifactId>
+        <version>1.2</version>
+        <executions>
+          <execution>
+            <id>sign</id>
+            <goals>
+              <goal>sign</goal>
+	    </goals>
+	    <phase>package</phase>
+	  </execution>
+	</executions>
+	<configuration>
+<!--
+	  <includes>
+	    <include>target/*.jar</include>
+	  </includes>
+-->
+	  <keystore>${jar.keystore}</keystore>
+	  <alias>${jar.storealias}</alias>
+	  <storepass>${jar.storepass}</storepass>
+	  <keypass>${jar.storepass}</keypass>
+	</configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <configuration>
+              <target name="sign">
+		<signjar jar="${jar.filename}"
+			 alias="${jar.signalias}"
+			 storepass="${jar.storepass}"
+			 keystore="${jar.keystore}" />
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -336,5 +387,28 @@
         </configuration>
       </plugin></plugins></build>
     </profile>
+    <profile>
+      <id>sign</id>
+      <activation><property><name>sign</name></property></activation>
+      <build><plugins><plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+	<version>1.2</version>
+        <configuration>
+          <executable>jarsigner</executable>
+          <arguments>
+            <argument>-keystore</argument>
+	    <argument>${jar.keystore}</argument>
+            <argument>-storepass</argument>
+	    <argument>${jar.storepass}</argument>
+	    <argument>-keypass</argument>
+	    <argument>${jar.storepass}</argument>
+	    <argument>${jar.filename}</argument>
+	    <argument>${jar.signalias}</argument>
+          </arguments>
+        </configuration>
+      </plugin></plugins></build>
+    </profile>
+
   </profiles>
 </project>

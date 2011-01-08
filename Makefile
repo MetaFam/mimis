@@ -1,7 +1,29 @@
-GROUP_ID = "org.dhappy.mimis"
+ID = mimis
+GROUP_ID = "org.dhappy.$(ID)"
+MIMIS_HOME = .$(ID)
+KEYSTORE = $(MIMIS_HOME)/jar/keystore
+STOREPASS = storepass
+
+KEYPATH = $(dir $(KEYSTORE))
 
 compile:
 	mvn cocoon:prepare
+
+$(KEYSTORE):
+	mkdir -p $(KEYPATH)
+	keytool -genkey \
+	        -keystore $@ \
+	        -alias $(ID) \
+	        -storepass '$(STOREPASS)' \
+	        -dname 'OU=Mimis ,O=Department of Happiness ,L=Baltimore ,S=Maryland ,C=US'
+
+sign: $(KEYSTORE)
+	jarsigner -keystore $< \
+                  -storepass storepass -keypass storepass \
+		  target/*.jar \
+		  mimis
+#	mvn exec:exec -D sign
+#	mvn jarsigner:sign
 
 shell:
 	mvn exec:java -Dexec.mainClass="org.neo4j.shell.StartClient" -Dexec.args="-path var/mimis"
