@@ -20,17 +20,17 @@
   <body>
     <h1>Mȉmis</h1>
     
-    <object classid="java:components.TumbleItem"
+    <object classid="java:org.dhappy.mimis.CacheAgentApplet"
             type="application/x-java-applet" codetype="application/java"
-            archive="http://download.oracle.com/javase/tutorialJWS/uiswing/components/ex6/TumbleItem.jar"
+            archive="target/mimis-0.2.a.jar"
             height="95" width="100%">
         <!-- Konqueror browser needs the following param -->
-        <param name="archive" value="http://download.oracle.com/javase/tutorialJWS/uiswing/components/ex6/TumbleItem.jar" />
-	<applet code="components/TumbleItem.class" 
-		codebase="http://download.oracle.com/javase/tutorialJWS/uiswing/components/ex6"
-		archive="TumbleItem.jar" 
+        <param name="archive" value="target/mimis-0.2.a.jar" />
+	<applet code="org.dhappy.mimis.CacheAgentApplet"
+		codebase="target/"
+		archive="mimis-0.2.a.jar,http://repo1.maven.org/maven2/commons-logging/commons-logging/1.1/commons-logging-1.1.jar" 
 		width="100%" height="95"
-		alt="TumbleItem applet"> 
+		alt="Mimis"> 
 	  <param name="maxwidth" value="120" /> 
 	  <param name="nimgs" value="17" /> 
 	  <param name="offset" value="-57" /> 
