@@ -140,7 +140,7 @@ public class FilesystemWalker {
                     put( "order", Traverser.Order.DEPTH_FIRST );
                     put( "stop", StopEvaluator.END_OF_GRAPH );
                     put( "return", returnable );
-                    put( "type", SaveSpot.SaveType.DOCSYSTEM );
+                    put( "type", GraphDuplicator.FilesystemRelations.CHILD );
                     put( "direction", Direction.OUTGOING );
                 }} );
     }

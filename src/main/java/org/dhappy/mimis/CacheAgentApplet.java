@@ -1,5 +1,7 @@
 package org.dhappy.mimis;
 
+import java.io.File;
+import java.io.IOException;
 import javax.swing.JApplet;
 import javax.swing.SwingUtilities;
 
@@ -17,6 +19,13 @@ public class CacheAgentApplet extends JApplet {
 		    public void run() {
 			//setContentPane(newContentPane);        
 			log.info( "Applet Started" );
+			for( File root : File.listRoots() ) {
+			    try {
+				log.info( root.getCanonicalPath() );
+			    } catch( IOException ioe ) {
+				log.warning( "File Error: " + ioe.getMessage() );
+			    }
+			}
 		    }
 		});
         } catch( Exception e ) {
