@@ -44,7 +44,7 @@ public class FilesystemWalker {
 
     public static void main( String[] args ) {
         try {
-	    String dir = args.length == 0 ? "\\" : args[0];
+	    String dir = args.length == 0 ? File.separator : args[0];
             log.debug( "dir=" + dir );
 	    
             File fsRoot = new File( dir );
