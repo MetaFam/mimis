@@ -81,6 +81,22 @@ public class FilesystemWalker {
             FileList files = new FileList( fsRoot );
             files.traverse( duper );
 
+            Transaction testTx = graph.beginTx();
+            try {
+                Node ref = graph.getReferenceNode();
+                Node child = graphDb.createNode();
+                Relationship relationship =
+                    ref.createRelationshipTo( child,
+                                              GraphDuplicator.FilesystemRelations.CHILD );
+                
+                ref.setProperty( "test", "test" );
+                child.setProperty( "test", "test" );
+                relationship.setProperty( "test", "test" );
+                testTx.success();
+            } finally {
+                testTx.finish();
+            }
+
             Traverser list = local ? list( dir ) : Mimis.list( dir );
             //if( list.
             log.info( "main:list = " + list.toString() );
@@ -319,6 +335,7 @@ public class FilesystemWalker {
         }
 
         public void endTraverse( File root ) {
+            currentTx.success();
             currentTx.finish();
             currentNode = null;
         }

@@ -9,9 +9,12 @@ KEYPATH = $(dir $(KEYSTORE))
 compile:
 	mvn cocoon:prepare
 
+
+keystore: $(KEYSTORE)
+
 $(KEYSTORE):
 	mkdir -p $(KEYPATH)
-	keytool -genkey \
+	echo | keytool -genkey \
 	        -keystore $@ \
 	        -alias $(ID) \
 	        -storepass '$(STOREPASS)' \
