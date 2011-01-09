@@ -44,7 +44,7 @@ public class FilesystemWalker {
 
     public static void main( String[] args ) {
         try {
-	    String dir = args.length == 0 ? "." : args[0];
+	    String dir = args.length == 0 ? "\\" : args[0];
             log.debug( "dir=" + dir );
 	    
             File fsRoot = new File( dir );
@@ -87,7 +87,7 @@ public class FilesystemWalker {
                 Node child = graphDb.createNode();
                 Relationship relationship =
                     ref.createRelationshipTo( child,
-                                              GraphDuplicator.FilesystemRelations.CHILD );
+                                              FilesystemRelations.CHILD );
                 
                 ref.setProperty( "test", "test" );
                 child.setProperty( "test", "test" );
@@ -156,7 +156,7 @@ public class FilesystemWalker {
                     put( "order", Traverser.Order.DEPTH_FIRST );
                     put( "stop", StopEvaluator.END_OF_GRAPH );
                     put( "return", returnable );
-                    put( "type", GraphDuplicator.FilesystemRelations.CHILD );
+                    put( "type", FilesystemRelations.CHILD );
                     put( "direction", Direction.OUTGOING );
                 }} );
     }
@@ -260,6 +260,10 @@ public class FilesystemWalker {
         }
     }
 
+    public enum FilesystemRelations implements RelationshipType {
+	CHILD
+    }
+
     public static class GraphDuplicator implements TraversalListener {
         GraphDatabaseService graphDb;
         Node currentNode;
@@ -272,7 +276,10 @@ public class FilesystemWalker {
         int readBufferSize = 8192;
 
         public void visitFile( File file ) {
-            log.debug( "visit:" + file.getAbsolutePath() );
+	    try {
+		log.debug( "visit:" + file.getAbsolutePath()
+			   + " (link:" + FileList.isSymlink( file ) + ")" );
+	    } catch(IOException ioe ) {}
             if( file.isFile() ) {
                 try {
                     String algorithm = "SHA-256";
@@ -289,6 +296,14 @@ public class FilesystemWalker {
                         BigInteger bigInt = new BigInteger( 1, sum );
                         String output = bigInt.toString( 16 );
                         log.debug( algorithm + ":" + output );
+
+			Node node = graphDb.createNode();
+			Relationship relationship =
+			    currentNode.createRelationshipTo( node,
+							      FilesystemRelations.CHILD );
+			node.setProperty( algorithm, output );
+			node.setProperty( "size", file.length() );
+			node.setProperty( "modified", file.lastModified() );
                     } catch(IOException e) {
                         log.error( "Unable to process: " + file, e );
                     } finally {
@@ -304,10 +319,6 @@ public class FilesystemWalker {
                     log.error( nsae );
                 }
             }
-        }
-
-        public enum FilesystemRelations implements RelationshipType {
-            CHILD
         }
 
         Stack<Node> path = new Stack<Node>();
