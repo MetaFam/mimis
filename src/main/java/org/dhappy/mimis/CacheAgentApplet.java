@@ -1,5 +1,6 @@
 package org.dhappy.mimis;
 
+import netscape.javascript.JSObject;
 import java.io.File;
 import java.io.IOException;
 import javax.swing.JApplet;
@@ -19,6 +20,12 @@ public class CacheAgentApplet extends JApplet {
 		    public void run() {
 			//setContentPane(newContentPane);        
 			log.info( "Applet Started" );
+                        JSObject win = JSObject.getWindow(this);
+                        JSObject doc = (JSObject) win.getMember("document");
+                        JSObject loc = (JSObject) doc.getMember("location");
+
+                        String s = (String) loc.getMember("href");  // document.location.href
+                        win.call("f", null);       // Call f() in HTML page
 			for( File root : File.listRoots() ) {
 			    try {
 				log.info( root.getCanonicalPath() );

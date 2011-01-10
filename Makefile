@@ -37,6 +37,9 @@ chatbot:
 loadfile:
 	mvn exec:java -Dexec.mainClass="org.dhappy.mimis.FileLoader"
 
+spider:
+	mvn package exec:exec -D spider
+
 neotest:
 	mvn exec:java -Dexec.mainClass="org.dhappy.test.NeoTraverse"
 

@@ -55,9 +55,23 @@ import java.util.regex.Matcher;
 public class Mimis {
     private static final Log log = LogFactory.getLog( Mimis.class );
 
-    static String dbPath = "var/mimis";
-    public final static GraphDatabaseService graphDb = new EmbeddedGraphDatabase( dbPath );
+    public final static GraphDatabaseService graphDb;
     static Pattern pathSplitter;
+
+    protected static GraphDatabaseService getGraph( String dbURI ) {
+        if( graphDb != null && dbURI != null
+	    && dbURI != graphDb.getStoreDir() ) {
+            graphDb.shutdown();
+            graphDb = null;
+        }
+            
+        if( graphDb == null ) {
+	    // Default database URI
+	    dbURI = ( dbURI == null ) ? ".mimis/host/files" : dbURI;
+            graphDb = new EmbeddedGraphDatabase( dbURI );
+        }
+	return graphDb;
+    }
     
     public static Holon load( String key ) throws IOException {
         //( key -== "/" ) // key = key[1] == "/" ? key[1:] : key // whole line suceeds or fails
@@ -97,7 +111,7 @@ public class Mimis {
             MutableHolon mark = null;
             log.info( "Loading: " + key );
             try {
-            mark = new MutableHolon( graphDb );
+            mark = new MutableHolon( getGraph() );
             SaveSpot recorder = new SaveSpot( mark );
             Pipeline<SAXPipelineComponent> pipeline = new NonCachingPipeline<SAXPipelineComponent>();
             pipeline.addComponent( new XMLGenerator( input ));
@@ -217,7 +231,7 @@ public class Mimis {
     }
 
     public static Node createNode( Map<String, Object> config ) {
-        Node node = graphDb.createNode();
+        Node node = getGraph().createNode();
 
         for( Map.Entry<String, Object> e : config.entrySet() ) {
             node.setProperty( e.getKey(), e.getValue() );
@@ -252,7 +266,8 @@ public class Mimis {
     }
 
     public static void shutdown() {
-        graphDb.shutdown();
+        getGraph().shutdown();
+        graphDb = null;
     }
 
     public static void main( String[] args ) {
