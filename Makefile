@@ -6,8 +6,8 @@ STOREPASS = storepass
 
 KEYPATH = $(dir $(KEYSTORE))
 
-compile:
-	mvn cocoon:prepare
+compile: keystore
+	mvn package
 
 
 keystore: $(KEYSTORE)
@@ -20,7 +20,7 @@ $(KEYSTORE):
 	        -storepass '$(STOREPASS)' \
 	        -dname 'OU=Mimis ,O=Department of Happiness ,L=Baltimore ,S=Maryland ,C=US'
 
-sign: $(KEYSTORE)
+sign: keystore
 	jarsigner -keystore $< \
                   -storepass storepass -keypass storepass \
 		  target/*.jar \
