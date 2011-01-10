@@ -24,6 +24,7 @@ public class FileLoader {
         project.setBasedir( "." );
         files.setProject(project);
         files.setDir( project.getBaseDir() );
+        files.setFollowSymlinks( false );
 
         files.setIncludes( "**/*ml" );
 
