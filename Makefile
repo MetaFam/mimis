@@ -20,6 +20,7 @@ $(KEYSTORE):
 	        -storepass '$(STOREPASS)' \
 	        -dname 'OU=Mimis ,O=Department of Happiness ,L=Baltimore ,S=Maryland ,C=US'
 
+
 sign: keystore
 	jarsigner -keystore $< \
                   -storepass storepass -keypass storepass \
@@ -27,6 +28,9 @@ sign: keystore
 		  mimis
 #	mvn exec:exec -D sign
 #	mvn jarsigner:sign
+
+maven-java-plugin:
+	mvn install:install-file -DgroupId=java.plugin -DartifactId=plugin -Dversion=jre-1.6.0_23 -Dpackaging=jar -Dfile=../lib/java/plugin/plugin.jar
 
 shell:
 	mvn exec:java -Dexec.mainClass="org.neo4j.shell.StartClient" -Dexec.args="-path var/mimis"

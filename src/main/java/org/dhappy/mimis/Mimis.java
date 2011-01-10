@@ -55,8 +55,12 @@ import java.util.regex.Matcher;
 public class Mimis {
     private static final Log log = LogFactory.getLog( Mimis.class );
 
-    public final static GraphDatabaseService graphDb;
+    protected static EmbeddedGraphDatabase graphDb;
     static Pattern pathSplitter;
+
+    public static GraphDatabaseService getGraph() {
+        return getGraph( null );
+    }
 
     protected static GraphDatabaseService getGraph( String dbURI ) {
         if( graphDb != null && dbURI != null

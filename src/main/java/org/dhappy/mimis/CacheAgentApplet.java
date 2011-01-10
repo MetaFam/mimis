@@ -14,18 +14,23 @@ public class CacheAgentApplet extends JApplet {
 
     //Called when this applet is loaded into the browser.
     public void init() {
+        final JApplet container = this;
+
         //Execute a job on the event-dispatching thread; creating this applet's GUI.
         try {
             SwingUtilities.invokeAndWait(new Runnable() {
 		    public void run() {
 			//setContentPane(newContentPane);        
 			log.info( "Applet Started" );
-                        JSObject win = JSObject.getWindow(this);
-                        JSObject doc = (JSObject) win.getMember("document");
-                        JSObject loc = (JSObject) doc.getMember("location");
 
-                        String s = (String) loc.getMember("href");  // document.location.href
-                        win.call("f", null);       // Call f() in HTML page
+                        JSObject win = JSObject.getWindow( container );
+                        JSObject doc = (JSObject)win.getMember( "document" );
+                        JSObject loc = (JSObject)doc.getMember( "location" );
+
+                        String href = (String)loc.getMember( "href" );
+                        log.info( "document.location.href = " + href );
+                        win.call( "appletLoaded", null );
+
 			for( File root : File.listRoots() ) {
 			    try {
 				log.info( root.getCanonicalPath() );

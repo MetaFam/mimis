@@ -29,6 +29,7 @@
   <groupId>org.dhappy.mimis</groupId>
 
   <properties>
+    <org.name>Department of Happiness</org.name>
     <mimis.home>.${project.artifactId}</mimis.home>
     <mimis.db.path>${mimis.home}/local/neo4j/</mimis.db.path>
     <jar.filename>${project.artifactId}-${project.version}.jar</jar.filename>
@@ -59,6 +60,13 @@
       <artifactId>log4j</artifactId>
       <!-- <scope>runtime</scope> -->
       <version>1.2.14</version>
+    </dependency>
+
+    <dependency> 
+      <groupId>java</groupId> 
+      <artifactId>java-plugin</artifactId> 
+      <version>jre-1.6.0_23</version> 
+      <scope>provided</scope>
     </dependency>
     
     <!-- Spring (+ AOP support)-->
