@@ -14,53 +14,77 @@ tip.merge = tip.merge ? tip.merge : function( struct ) {
 }
 
 $( function() {
-    var agentClass = 'org.dhappy.mimis.CacheAgentApplet';
-    var jar = 'target/mimis-0.2.a.jar';
-   
-    tip.merge( {
-        mimis : {
-            applet : {
-                $applet :
-                $('<applet/>')
-                    .attr( {
-                        code : agentClass,
-                        codebase : jar.replace( /[^\/]*$/, '' ),
-                        archive : jar.replace( /.*\//, '' ),
-                        height : 0,
-                        width : 0,
-                    } )
-                    .bind( 'load', onload ),
+    var svg = $('object').get(0).contentDocument;
+    $(svg.documentElement).append(
+        $('<circle/>')
+            .attr( {
+                cx : '50%',
+                cy : '50%',
+                r : 20,
+            } )
+            .css( {
+                'stroke-width' : 5,
+            } )
+    )
+    console.log( svg )
+} )
+
+tip.merge( {
+    mimis : {
+        applet : {
+            insert :
+            function() {
+                var onload = function() { console.log( 'onload' ) }
+                
+                var agentClass = 'org.dhappy.mimis.CacheAgentApplet';
+                var jar = 'target/mimis-0.2.a.jar';
+                
+                tip.merge( {
+                    mimis : {
+                        applet : {
+                            $applet :
+                            $('<applet/>')
+                                .attr( {
+                                    code : agentClass,
+                                    codebase : jar.replace( /[^\/]*$/, '' ),
+                                    archive : jar.replace( /.*\//, '' ),
+                                    height : 0,
+                                    width : 0,
+                                } )
+                                .bind( 'load', onload ),
+                        }
+                    }
+                } )
+                tip.merge( {
+                    mimis : {
+                        applet : {
+                            $object :
+                            $('<object/>')
+                                .attr( {
+                                    classid : 'java:' + agentClass,
+                                    type : 'application/x-java-applet',
+                                    codetype : 'application/java',
+                                    archive : jar,
+                                    height : 0,
+                                    width : 0,
+                                } )
+                                .bind( 'load', onload )
+                                .append(
+                                    $('<param/>').attr( {
+                                        name : 'archive',
+                                        value : jar,
+                                    } )
+                                )
+                                .append( tip.mimis.applet.$applet ),
+                        }
+                    }
+                } )
+                
+                $('body').append( tip.mimis.applet.$object );
             }
         }
-    } )
-    tip.merge( {
-        mimis : {
-            applet : {
-                $object :
-                $('<object/>')
-                    .attr( {
-                        classid : 'java:' + agentClass,
-                        type : 'application/x-java-applet',
-                        codetype : 'application/java',
-                        archive : jar,
-                        height : 0,
-                        width : 0,
-                    } )
-                    .bind( 'load', onload )
-                    .append(
-                        $('<param/>').attr( {
-                            name : 'archive',
-                            value : jar,
-                        } )
-                    )
-                    .append( tip.mimis.applet.$applet ),
-            }
-        }
-    } )
-                                
-    $('body').append( tip.mimis.applet.$object );
-    console.log( 'tip:load')
-} );
+    }
+} )
 
 tip.merge( {
     mimis : {
@@ -76,8 +100,6 @@ tip.merge( {
                 } )
                 console.log( 'applet:load' )
                 console.log( config )
-                console.log( this )
-                console.log( tip.mimis.instance )
                 console.log( tip.mimis.instance.get( 'loaded' ) )
             }
         }
