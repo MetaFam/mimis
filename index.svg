@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="100%" height="100%"
+     id="mimis browser"
+     viewBox="0 0 100 100"
+     version="1.1">
+  <title>Mîmis Interface</title>
+  <defs>
+    <style type="text/css" xlink:href=".../font/Nick Curtis/Ragg Mopp/css"/>
+    <style type="text/css" xlink:href=".../font/Dan Zadorozny/Lionheart/css"/>
+    <script type="application/javascript" id="script6747">
+      // jQuery checkes if document.body === null and delays loading if true
+      //document.body = undefined; // DOM Exception
+      document.__defineGetter__( 'body', function() { return document.documentElement; } );
+    </script>
+    <script type='application/javascript' xlink:href='https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js'></script>
+    <!-- <script xlink:href=".../lib/jquery/jquery.js" id="script6749" type="application/javascript" /> -->
+    <script xlink:href=".../lib/jquery-history-plugin/jquery.history.js" id="script2993" type="application/javascript" />
+    <script xlink:href=".../lib/jquery-svg/jquery.svg.js" type="application/javascript" id="script3303" />
+    <script xlink:href=".../lib/jquery-svg/jquery.svganim.js" type="application/javascript" id="script3305" />
+    <script xlink:href="mimis.jquery" type="application/javascript" />
+  </defs>
+  <object xmlns="http://www.w3.org/1999/xhtml"
+          id="mimisapplet"
+          classid="java:org.dhappy.mimis.CacheAgentApplet"
+          type="application/x-java-applet" codetype="application/java"
+          archive="target/mimis-0.2.a.jar"
+          height="95" width="100%">
+    <param name="archive" value="target/mimis-0.2.a.jar" />
+    <applet id="mimisapplet"
+            code="org.dhappy.mimis.CacheAgentApplet"
+	    codebase="target/"
+	    archive="mimis-0.2.a.jar" 
+	    width="100%" height="95"
+	    alt="Mimis"> 
+      <strong>For this page to function, you need the <a href="http://java.sun.com/products/plugin/downloads/">Java Plug-in</a>.</strong>
+    </applet>
+  </object>
+</svg>

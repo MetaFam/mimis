@@ -8,8 +8,10 @@
   <head>
     <title>Mȉmis HTTP Portal</title>
     <link rel="stylesheet" type="text/css" href="mimis.css"/>
-    <script type="text/javascript" src=".../lib/jquery/jquery.js"/>
-    <script type="text/javascript" src=".../lib/tip/tip.jquery"/>
+    <script type="application/javascript" src=".../lib/jquery/jquery.js"/>
+    <script type="application/javascript"
+            src=".../lib/java/plugin/deployJava.js"/>
+    <script type="application/javascript" src="mimis.jquery"/>
     <style type="text/css">
       html, body { margin: 0; padding: 0; }
       iframe { width: 100%; border: none; }
@@ -20,13 +22,31 @@
   <body>
     <h1>Mȉmis</h1>
 <!-- archive="mimis-0.2.a.jar,http://repo1.maven.org/maven2/commons-logging/commons-logging/1.1/commons-logging-1.1.jar" -->
-    <object classid="java:org.dhappy.mimis.CacheAgentApplet"
+    <script type="application/javascript">
+        <!-- applet id can be used to get a reference to the applet object -->
+/*
+        var attributes = {
+          id : 'mimisApplet',
+          code : 'org.dhappy.mimis.CacheAgentApplet',
+          archive : 'target/mimis-0.2.a.jar',
+          width : 1,
+          height : 1
+        }; 
+        var parameters = {
+          jnlp_href : 'mimis-applet.jnlp',
+        } ; 
+        deployJava.runApplet( attributes, parameters, '1.6' ); 
+        console.log( mimisApplet );
+*/
+    </script>
+    <object id="mimisapplet"
+            classid="java:org.dhappy.mimis.CacheAgentApplet"
             type="application/x-java-applet" codetype="application/java"
             archive="target/mimis-0.2.a.jar"
             height="95" width="100%">
-        <!-- Konqueror browser needs the following param -->
         <param name="archive" value="target/mimis-0.2.a.jar" />
-	<applet code="org.dhappy.mimis.CacheAgentApplet"
+	<applet id="mimisapplet"
+                code="org.dhappy.mimis.CacheAgentApplet"
 		codebase="target/"
 		archive="mimis-0.2.a.jar" 
 		width="100%" height="95"
@@ -38,6 +58,5 @@
 	  <strong>For this page to function, you need the <a href="http://java.sun.com/products/plugin/downloads/">Java Plug-in</a>.</strong>
 	</applet>
     </object>
-
   </body>
 </html>

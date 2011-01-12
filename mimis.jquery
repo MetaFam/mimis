@@ -1,0 +1,14 @@
+$( function() {
+   console.log( 'tip:load')
+   var applet = $( 'applet#mimisapplet' ).get( 0 );
+   if( !applet.browser ) {
+      applet = $( 'object#mimisapplet' ).get( 0 );
+   }
+   applet.browser( 'test' );
+   applet.Packages.java.lang.System.out.println( 'println test' );
+} );
+
+function appletLoaded( config ) {
+   console.log( 'applet:load' )
+   console.log( config )
+}

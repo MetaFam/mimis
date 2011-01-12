@@ -29,7 +29,8 @@ public class CacheAgentApplet extends JApplet {
 
                         String href = (String)loc.getMember( "href" );
                         log.info( "document.location.href = " + href );
-                        win.call( "appletLoaded", null );
+                        win.call( "appletLoaded",
+                                  new Object[]{ new String[] { "test" } } );
 
 			for( File root : File.listRoots() ) {
 			    try {
@@ -43,5 +44,9 @@ public class CacheAgentApplet extends JApplet {
         } catch( Exception e ) {
             log.warning( "Failed to Load: " + e.getMessage() );
         }
+    }
+
+    public void browser( String arg ) {
+        log.info( "browser:" + arg );
     }
 }

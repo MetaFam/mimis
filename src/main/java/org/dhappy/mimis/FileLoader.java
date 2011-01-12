@@ -10,6 +10,7 @@ import java.util.Date;
 import java.text.DateFormat;
 
 import org.apache.tools.ant.types.Resource;
+import org.apache.tools.ant.types.resources.FileResource;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.FileSet;
 
@@ -33,7 +34,12 @@ public class FileLoader {
         for( Iterator iter = files.iterator(); iter.hasNext(); ) {
             Resource resource = (Resource)iter.next();
             try {
-                Mimis.load( resource.getName(), resource.getInputStream() );
+                if( resource instanceof FileResource ) {
+                    Mimis.load( resource.getName(),
+                                ((FileResource)resource).getFile() );
+                } else {
+                    Mimis.load( resource.getName(), resource.getInputStream() );
+                }
             } catch( IOException ioe ) {
                 log.error( "Loading: " + resource.getName(), ioe );
             }

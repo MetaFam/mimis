@@ -97,6 +97,12 @@ public class Mimis {
         return null;
     }
 
+    public static Holon load( String key, File input ) throws IOException {
+        Holon position = load( key, new FileInputStream( input ) );
+        // ToDo: Save extra metadata
+        return position;
+    }
+
     public static Holon load( String key, InputStream input ) throws IOException {
         log.debug( "Input: " + key );
         FileOutputStream output = null;
@@ -117,7 +123,8 @@ public class Mimis {
             try {
             mark = new MutableHolon( getGraph() );
             SaveSpot recorder = new SaveSpot( mark );
-            Pipeline<SAXPipelineComponent> pipeline = new NonCachingPipeline<SAXPipelineComponent>();
+            Pipeline<SAXPipelineComponent> pipeline =
+                new NonCachingPipeline<SAXPipelineComponent>();
             pipeline.addComponent( new XMLGenerator( input ));
             
             pipeline.addComponent( recorder.getSAXPipeline() );
