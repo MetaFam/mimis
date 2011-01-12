@@ -1,6 +1,7 @@
 package org.dhappy.mimis;
 
 import netscape.javascript.JSObject;
+import netscape.javascript.JSException;
 import java.io.File;
 import java.io.IOException;
 import javax.swing.JApplet;
@@ -16,11 +17,10 @@ public class CacheAgentApplet extends JApplet {
     public void init() {
         final JApplet container = this;
 
-        //Execute a job on the event-dispatching thread; creating this applet's GUI.
         try {
-            SwingUtilities.invokeAndWait(new Runnable() {
+            SwingUtilities.invokeAndWait( new Runnable() {
 		    public void run() {
-			//setContentPane(newContentPane);        
+			//container.setContentPane(newContentPane);        
 			log.info( "Applet Started" );
 
                         JSObject win = JSObject.getWindow( container );
@@ -29,8 +29,13 @@ public class CacheAgentApplet extends JApplet {
 
                         String href = (String)loc.getMember( "href" );
                         log.info( "document.location.href = " + href );
-                        win.call( "appletLoaded",
-                                  new Object[]{ new String[] { "test" } } );
+
+                        try {
+                            win.call( "tip_mimis_applet_load",
+                                      new Object[]{ new String[] { "test" } } );
+                        } catch( JSException e ) {
+                            log.warning( "Callback Failed: " + e.getMessage() );
+                        }
 
 			for( File root : File.listRoots() ) {
 			    try {
@@ -40,13 +45,18 @@ public class CacheAgentApplet extends JApplet {
 			    }
 			}
 		    }
-		});
+		} );
         } catch( Exception e ) {
             log.warning( "Failed to Load: " + e.getMessage() );
         }
     }
 
-    public void browser( String arg ) {
-        log.info( "browser:" + arg );
+    public Object get( String key ) {
+        return retrieve( key );
+    }
+
+    public Object retrieve( String key ) {
+        log.info( "retrieve:" + key );
+        return key;
     }
 }

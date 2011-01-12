@@ -1,14 +1,87 @@
+var tip = tip || {};
+
+// Adds an object to the default namespace without
+// overiding existing variables unless there is a
+// direct conflict.
+tip.merge = tip.merge ? tip.merge : function( struct ) {
+    for( prop in struct ) {
+        if( typeof this[prop] == 'object' && this[prop] !== null ) {
+            tip.merge.call( this[prop], struct[prop] )
+        } else {
+            this[prop] = struct[prop]
+        }
+    }
+}
+
 $( function() {
-   console.log( 'tip:load')
-   var applet = $( 'applet#mimisapplet' ).get( 0 );
-   if( !applet.browser ) {
-      applet = $( 'object#mimisapplet' ).get( 0 );
-   }
-   applet.browser( 'test' );
-   applet.Packages.java.lang.System.out.println( 'println test' );
+    var agentClass = 'org.dhappy.mimis.CacheAgentApplet';
+    var jar = 'target/mimis-0.2.a.jar';
+   
+    tip.merge( {
+        mimis : {
+            applet : {
+                $applet :
+                $('<applet/>')
+                    .attr( {
+                        code : agentClass,
+                        codebase : jar.replace( /[^\/]*$/, '' ),
+                        archive : jar.replace( /.*\//, '' ),
+                        height : 0,
+                        width : 0,
+                    } )
+                    .bind( 'load', onload ),
+            }
+        }
+    } )
+    tip.merge( {
+        mimis : {
+            applet : {
+                $object :
+                $('<object/>')
+                    .attr( {
+                        classid : 'java:' + agentClass,
+                        type : 'application/x-java-applet',
+                        codetype : 'application/java',
+                        archive : jar,
+                        height : 0,
+                        width : 0,
+                    } )
+                    .bind( 'load', onload )
+                    .append(
+                        $('<param/>').attr( {
+                            name : 'archive',
+                            value : jar,
+                        } )
+                    )
+                    .append( tip.mimis.applet.$applet ),
+            }
+        }
+    } )
+                                
+    $('body').append( tip.mimis.applet.$object );
+    console.log( 'tip:load')
 } );
 
-function appletLoaded( config ) {
-   console.log( 'applet:load' )
-   console.log( config )
-}
+tip.merge( {
+    mimis : {
+        applet : {
+            load : function( config ) {
+                var instance = ( tip.mimis.applet.$object.get( 0 ).get
+                                 ? tip.mimis.applet.$object.get( 0 )
+                                 : tip.mimis.applet.$applet.get( 0 ) )
+                tip.merge( {
+                    mimis : {
+                        instance : instance,
+                    }
+                } )
+                console.log( 'applet:load' )
+                console.log( config )
+                console.log( this )
+                console.log( tip.mimis.instance )
+                console.log( tip.mimis.instance.get( 'loaded' ) )
+            }
+        }
+    }
+} )
+// Dot notation fails in java 1.6
+tip_mimis_applet_load = tip.mimis.applet.load;
