@@ -12,12 +12,50 @@ $( function() {
                     height : '100%',
                 } )
 
+        // Wait until all 3 libraries are loaded
+        if( $content.splitter == undefined
+            || $.jstree == undefined
+            || tip.mimis.instance == undefined ) {
+            return
+        }
+
         $('body').append( $content )
-        $('.vsplitbar')
-            .css( {
-                width : '5px',
-                'background-color' : '#cab',
-            } )
+
+        // Called before a jstree element is expanded
+        function treedata( obj, callback ) {
+            var listing;
+            if( obj == -1 ) { // The default
+                listing = [
+                    {
+                        data : 'Local',
+                        attr : { id : '' },
+                        children : [ 'placeholder' ],
+                    },
+                    {
+                        'attr' : { 'id' : 'li.node.id' },
+                        'data' : {
+                            'title' : 'Remote',
+                            'attr' : { 'href' : '#' }
+                        }
+                    }
+                ]
+            } else {
+                var id = obj.attr( 'id' )
+                var list = tip.mimis.instance.list( id )
+                console.log( list )
+                listing = []
+                $(list).each( function( idx, elem ) {
+                    listing.push( {
+                        data : elem.name,
+                        attr : { id : id + elem.name },
+                        children : [ 'placeholder' ],
+                    } )
+                } )
+            }
+            callback( listing )
+        }
+        
+        var i = 0
         $tree
             .css ( {
                 overflow : 'auto',
@@ -26,83 +64,21 @@ $( function() {
             .bind( 'open_node.jstree',
                    function( event, data ) {
                        $tree.jstree( 'refresh', data.rslt.obj )
-		       //var node = this._get_node( data.rslt.obj )
-                       //console.log( $tree.jstree._reference( $tree ) )
-//                           .load_node_json( data.rslt.obj, 
-                       if( event ) {
-                           //console.log( node )
-                           console.log( data.rslt.obj )
-                           console.log( data )
-                       }
                    } )
             .bind( 'load_node.jstree',
                    function( event, data ) {
                        if( event ) {
-                           console.log( 'load:' + this )
-                           console.log( data )
+                           //console.log( 'load:' + this )
                        }
                    } )
             .jstree( {
                 json_data : {
-                    data : function( obj, callback ) {
-                        console.log( arguments )
-                        callback( [
-                            {
-                                data : 'Local',
-                                attr : { id : 'mimis.root' },
-                                children : [
-                                    { data : 'Child 1', },
-                                    {
-                                        get data() {
-                                            console.log( 'got' )
-                                            return 'Child 2'
-                                        },
-                                        children : [
-                                            {
-                                                get data() {
-                                                    this.i = this.i ? this.i : 1
-                                                    console.log( 'child' )
-                                                    return 'Child ' + this.i++
-                                                },
-                                                children : [
-                                                    {
-                                                        get data() {
-                                                            this.i = this.i ? this.i : 1
-                                                            console.log( 'chld' )
-                                                            return 'Child ' + this.i++
-                                                        },
-                                                        children : [
-                                                            {
-                                                                get data() {
-                                                                    console.log( 'cld' )
-                                                                    return 'Child 2'
-                                                                },
-                                                            }
-                                                        ],
-                                                    }
-                                                ],
-                                            }
-                                        ]
-                                    },
-                                ],
-                            },
-                            {
-                                'attr' : { 'id' : 'li.node.id' },
-                                'data' : {
-                                    'title' : 'Remote',
-                                    'attr' : { 'href' : '#' }
-                                }
-                            }
-                        ] )
-                    },
+                    data : treedata,
                 },
                 'progressive_render' : true,
                 'plugins' : [ 'themes', 'json_data' ],
-                'load_node' : function ( obj ) {
-                    console.log( 'check' )
-                    console.log( obj )
-                },
             } )
+
         $content.splitter( {
             type: 'v',
             outline: false,
@@ -116,24 +92,39 @@ $( function() {
             dockKey: 'Z',// Alt-Shift-Z in FF/IE
             accessKey: 'I'// Alt-Shift-I in FF/IE
         } )
+
+        // Added by splitter
+        $('.vsplitbar')
+            .css( {
+                width : '5px',
+                'background-color' : '#cab',
+            } )
     }
-    $('head').append(
-        // This could run in parallel
-        $('<script/>')
-            .attr( {
-                type : 'application/javascript',
-                src : 'http://methvin.com/splitter/splitter.js',
-            } )
-            .bind( 'load', function() {
-                $('head')
-                    .append(
-                        $('<script/>')
-                            .attr( {
-                                type : 'application/javascript',
-                                src : '.../lib/jquery-jstree/jquery.jstree.js',
-                            } )
-                            .bind( 'load', buildui )
-                    )
-            } )
-    )
+    $('head')
+        .append(
+            // This could run in parallel
+            $('<script/>')
+                .attr( {
+                    type : 'application/javascript',
+                    src : 'mimis.jquery',
+                } )
+                .bind( 'load', buildui )
+        )
+        .append(
+            $('<script/>')
+                .attr( {
+                    type : 'application/javascript',
+                    src : 'http://methvin.com/splitter/splitter.js',
+                } )
+                .bind( 'load', buildui )
+        )
+        .append(
+            $('<script/>')
+                .attr( {
+                    type : 'application/javascript',
+                    src : '.../lib/jquery-jstree/jquery.jstree.js',
+                } )
+                .bind( 'load', buildui )
+        )
+        .bind( 'mimis.load', buildui )
 } )
