@@ -61,26 +61,31 @@ $( function() {
 } )
 
 mimis.merge( {
-    applet : {
-        load : function( config ) {
-            var instance = ( mimis.file.applet.$object.get( 0 ).get
-                             ? mimis.file.applet.$object.get( 0 )
-                             : mimis.file.applet.$applet.get( 0 ) )
-            mimis.merge( { file : {
-                applet : instance,
-                list : function( path ) {
-                    return this.applet.instance.list( path )
-                }
-            } } )
-            // Mimis may be loaded into other types of
-            // documents than html, so no specific tag
-            // name can be used.
-            //$.trigger( 'mimis.load' )
-            //$('#').trigger( 'mimis.load' )
-            $(document.documentElement).trigger( 'mimis.load' )
-            console.log( 'applet:load' )
+    file : {
+        applet : {
+            load : function( config ) {
+                var instance = ( mimis.file.applet.$object.get( 0 ).get
+                                 ? mimis.file.applet.$object.get( 0 )
+                                 : mimis.file.applet.$applet.get( 0 ) )
+                mimis.merge( {
+                    file : {
+                        applet : {
+                            instance : instance,
+                        },
+                        list : function( path ) {
+                            return mimis.file.applet.instance.list( path )
+                        }
+                    } } )
+                // Mimis may be loaded into other types of
+                // documents than html, so no specific tag
+                // name can be used.
+                //$.trigger( 'mimis.load' )
+                //$('#').trigger( 'mimis.load' )
+                $(document.documentElement).trigger( 'mimis.load' )
+                console.log( 'applet:load' )
+            }
         }
     }
 } )
 // Dot notation fails in java 1.6
-mimis_applet_load = mimis.applet.load;
+mimis_file_applet_load = mimis.file.applet.load;

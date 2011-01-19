@@ -51,6 +51,7 @@ $( function() {
                     console.log( 'Remote' )
                 } else {
                     var path = obj.attr( 'path' )
+                    console.log( mimis )
                     var list = mimis.file.list( path )
                     listing = []
                     $(list).each( function( idx, elem ) {
@@ -93,10 +94,9 @@ $( function() {
             .bind( 'select_node.jstree',
                    function( event, data ) {
                        var $selected = data.rslt.obj
-                       if( $lastSelected !== undefined
-                           && $.data( $selected ) == $.data( $lastSelected ) ) {
+                       if( $selected.equals( $lastSelected ) ) {
                            console.log( 'open' )
-                           $tree.jstree( 'node_open', $selected )
+                           $tree.jstree( 'open_node', $selected )
                        }
                        console.log( $.data( $lastSelected || '' ) )
                        console.log( $.data( $selected ) )
