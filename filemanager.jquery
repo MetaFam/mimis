@@ -65,7 +65,22 @@ $( function() {
             callback( listing )
         }
         
-        var i = 0
+        // From: http://groups.google.com/group/jquery-dev/browse_thread/thread/86504e9660e893ef
+        $.fn.equals = function( compareTo ) {
+            if( !compareTo
+                || !compareTo.length
+                || this.length != compareTo.length ) { 
+                return false
+            }
+            for( var i = 0; i < this.length; i++ ) { 
+                if( this[i] !== compareTo[i] ) {
+                    return false
+                }
+            }
+            return true
+        }
+
+        var $lastSelected
         $tree
             .css ( {
                 overflow : 'auto',
@@ -77,24 +92,28 @@ $( function() {
                    } )
             .bind( 'select_node.jstree',
                    function( event, data ) {
-                       if( event ) {
-                           console.log( this )
+                       var $selected = data.rslt.obj
+                       if( $lastSelected !== undefined
+                           && $.data( $selected ) == $.data( $lastSelected ) ) {
+                           console.log( 'open' )
+                           $tree.jstree( 'node_open', $selected )
                        }
+                       console.log( $.data( $lastSelected || '' ) )
+                       console.log( $.data( $selected ) )
+                       $lastSelected = $selected
                    } )
             .bind( 'hover_node.jstree',
                    function( event, data ) {
                        var active = data.rslt.obj
                        var display
-                       $([ 'title', 'id', 'path' ]).each(
-                           function( idx, attr ) {
-                               display = active.attr( attr )
-                               if( display != undefined
-                                   && display != '' ) {
-                                   break
-                               }
-                           }
-                       )
+                       var attrs = [ 'title', 'id', 'path' ]
+                       do {
+                           // display = active.attr( attrs.dequeue() )
+                           display = active.attr( attrs.shift() )
+                       } while( ( display == undefined || display == '' )
+                                && attrs.length > 0 )
                        window.status = display
+                       event.preventDefault()
                    } )
             .jstree( {
                 json_data : {
