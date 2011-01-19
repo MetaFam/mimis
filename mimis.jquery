@@ -1,88 +1,86 @@
-var tip = tip || {};
+var mimis = mimis || {};
 
 // Adds an object to the default namespace without
 // overiding existing variables unless there is a
 // direct conflict.
-tip.merge = tip.merge ? tip.merge : function( struct ) {
+mimis.merge = mimis.merge ? mimis.merge : function( struct ) {
     for( prop in struct ) {
         if( typeof this[prop] == 'object' && this[prop] !== null ) {
-            tip.merge.call( this[prop], struct[prop] )
+            mimis.merge.call( this[prop], struct[prop] )
         } else {
             this[prop] = struct[prop]
         }
     }
+    return struct
 }
 
-tip.merge( {
-    mimis : {
-        applet : {
-            insert :
-            function() {
-                var onload = function() { console.log( 'onload' ) }
+// Load the applet into the page
+$( function() {
+    var onload = function() { console.log( 'onload' ) }
                 
-                var agentClass = 'org.dhappy.mimis.CacheAgentApplet';
-                var jar = 'target/mimis-0.2.a.jar';
-
-                var $applet = ( $('<applet/>')
-                                .attr( {
-                                    code : agentClass,
-                                    codebase : jar.replace( /[^\/]*$/, '' ),
-                                    archive : jar.replace( /.*\//, '' ),
-                                    height : 0,
-                                    width : 0,
-                                } ) )
-                var $object = ( $('<object/>')
-                                .attr( {
-                                    classid : 'java:' + agentClass,
-                                    type : 'application/x-java-applet',
-                                    codetype : 'application/java',
-                                    archive : jar,
-                                    height : 0,
-                                    width : 0,
-                                } )
-                                .bind( 'load', onload )
-                                .append(
-                                    $('<param/>').attr( {
-                                        name : 'archive',
-                                        value : jar,
-                                    } )
-                                )
-                                .append( $applet )
-                                .bind( 'load', onload ) )
-                
-                $('body').append( $object );
-
-                tip.merge( {
-                    mimis : {
-                        applet : {
-                            $applet : $applet,
-                            $object : $object,
-                        }
-                    }
-                } )
+    var agentClass = 'org.dhappy.mimis.CacheAgentApplet';
+    var jar = 'target/mimis-0.2.a.jar';
+    
+    var $applet = ( $('<applet/>')
+                    .attr( {
+                        code : agentClass,
+                        codebase : jar.replace( /[^\/]*$/, '' ),
+                        archive : jar.replace( /.*\//, '' ),
+                        height : 0,
+                        width : 0,
+                    } ) )
+    var $object = ( $('<object/>')
+                    .attr( {
+                        classid : 'java:' + agentClass,
+                        type : 'application/x-java-applet',
+                        codetype : 'application/java',
+                        archive : jar,
+                        height : 0,
+                        width : 0,
+                    } )
+                    .bind( 'load', onload )
+                    .append(
+                        $('<param/>').attr( {
+                            name : 'archive',
+                            value : jar,
+                        } )
+                    )
+                    .append( $applet )
+                    .bind( 'load', onload ) )
+    
+    $('body').append( $object );
+            
+    mimis.merge( {
+        file : {
+            applet : {
+                $applet : $applet,
+                $object : $object,
             }
         }
-    }
+    } )
 } )
-$( tip.mimis.applet.insert )
 
-tip.merge( {
-    mimis : {
-        applet : {
-            load : function( config ) {
-                var instance = ( tip.mimis.applet.$object.get( 0 ).get
-                                 ? tip.mimis.applet.$object.get( 0 )
-                                 : tip.mimis.applet.$applet.get( 0 ) )
-                tip.merge( {
-                    mimis : {
-                        instance : instance,
-                    }
-                } )
-                $('head').trigger( 'mimis.load' )
-                console.log( 'applet:load' )
-            }
+mimis.merge( {
+    applet : {
+        load : function( config ) {
+            var instance = ( mimis.file.applet.$object.get( 0 ).get
+                             ? mimis.file.applet.$object.get( 0 )
+                             : mimis.file.applet.$applet.get( 0 ) )
+            mimis.merge( { file : {
+                applet : instance,
+                list : function( path ) {
+                    return this.applet.instance.list( path )
+                }
+            } } )
+            // Mimis may be loaded into other types of
+            // documents than html, so no specific tag
+            // name can be used.
+            //$.trigger( 'mimis.load' )
+            //$('#').trigger( 'mimis.load' )
+            $(document.documentElement).trigger( 'mimis.load' )
+            console.log( 'applet:load' )
         }
     }
 } )
 // Dot notation fails in java 1.6
-tip_mimis_applet_load = tip.mimis.applet.load;
+mimis_applet_load = mimis.applet.load;

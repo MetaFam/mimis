@@ -44,7 +44,7 @@ public class CacheAgentApplet extends JApplet {
                 String script = "(function() { return { test : 'test' } })()";
                 JSObject obj = (JSObject)window.eval( script );
                 obj.setMember( "testing", "test" );
-                window.call( "tip_mimis_applet_load",
+                window.call( "mimis_applet_load",
                              new Object[] { obj } );
             } catch( JSException e ) {
                 log.warning( "Callback Failed: " + e.getMessage() );

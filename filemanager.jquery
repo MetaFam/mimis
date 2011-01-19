@@ -1,11 +1,7 @@
 $( function() {
     function buildui() {
-        var $tree = $('<div/>')
-        var $listing = $('<div/>')
         var $content = 
             $('<div/>')
-                .append( $tree )
-                .append( $listing )
                 .css( {
                     overflow : 'auto',
                     width : '100%',
@@ -15,9 +11,15 @@ $( function() {
         // Wait until all 3 libraries are loaded
         if( $content.splitter == undefined
             || $.jstree == undefined
-            || tip.mimis.instance == undefined ) {
+            || mimis.file.list == undefined ) {
             return
         }
+
+        var $tree = $('<div/>')
+        var $listing = $('<div/>')
+        $content
+            .append( $tree )
+            .append( $listing )
 
         $('body').append( $content )
 
@@ -28,29 +30,37 @@ $( function() {
                 listing = [
                     {
                         data : 'Local',
-                        attr : { id : '' },
+                        attr : {
+                            id : 'mimis.local',
+                            path : '',
+                            title : 'Browse',
+                        },
                         children : [ 'placeholder' ],
                     },
                     {
-                        'attr' : { 'id' : 'li.node.id' },
-                        'data' : {
-                            'title' : 'Remote',
-                            'attr' : { 'href' : '#' }
-                        }
-                    }
+                        attr : {
+                            id : 'mimis.remote',
+                            title : 'Connect',
+                        },
+                        data : 'Remote',
+                    },
                 ]
             } else {
                 var id = obj.attr( 'id' )
-                var list = tip.mimis.instance.list( id )
-                console.log( list )
-                listing = []
-                $(list).each( function( idx, elem ) {
-                    listing.push( {
-                        data : elem.name,
-                        attr : { id : id + elem.name },
-                        children : [ 'placeholder' ],
+                if( id == 'mimis.remote' ) {
+                    console.log( 'Remote' )
+                } else {
+                    var path = obj.attr( 'path' )
+                    var list = mimis.file.list( path )
+                    listing = []
+                    $(list).each( function( idx, elem ) {
+                        listing.push( {
+                            data : elem.name,
+                            attr : { path : path + elem.name },
+                            children : [ 'placeholder' ],
+                        } )
                     } )
-                } )
+                }
             }
             callback( listing )
         }
@@ -65,18 +75,33 @@ $( function() {
                    function( event, data ) {
                        $tree.jstree( 'refresh', data.rslt.obj )
                    } )
-            .bind( 'load_node.jstree',
+            .bind( 'select_node.jstree',
                    function( event, data ) {
                        if( event ) {
-                           //console.log( 'load:' + this )
+                           console.log( this )
                        }
+                   } )
+            .bind( 'hover_node.jstree',
+                   function( event, data ) {
+                       var active = data.rslt.obj
+                       var display
+                       $([ 'title', 'id', 'path' ]).each(
+                           function( idx, attr ) {
+                               display = active.attr( attr )
+                               if( display != undefined
+                                   && display != '' ) {
+                                   break
+                               }
+                           }
+                       )
+                       window.status = display
                    } )
             .jstree( {
                 json_data : {
                     data : treedata,
                 },
                 'progressive_render' : true,
-                'plugins' : [ 'themes', 'json_data' ],
+                'plugins' : [ 'themes', 'json_data', 'ui' ],
             } )
 
         $content.splitter( {
@@ -126,5 +151,6 @@ $( function() {
                 } )
                 .bind( 'load', buildui )
         )
+    $(document.documentElement)
         .bind( 'mimis.load', buildui )
 } )
