@@ -20,12 +20,16 @@ $( function() {
                 
     var agentClass = 'org.dhappy.mimis.CacheAgentApplet';
     var jar = 'target/mimis-0.2.a.jar';
+    var libs = [
+        'http://mirrors.ibiblio.org/pub/mirrors/maven2/jivesoftware/smackx/3.1.0/smackx-3.1.0.jar'
+    ]
     
     var $applet = ( $('<applet/>')
                     .attr( {
                         code : agentClass,
                         codebase : jar.replace( /[^\/]*$/, '' ),
-                        archive : jar.replace( /.*\//, '' ),
+                        archive : ( jar.replace( /.*\//, '' )
+                                    + ',' + libs.join( ',' ) ),
                         height : 0,
                         width : 0,
                     } ) )
@@ -34,7 +38,7 @@ $( function() {
                         classid : 'java:' + agentClass,
                         type : 'application/x-java-applet',
                         codetype : 'application/java',
-                        archive : jar,
+                        archive : jar + ',' + libs.join( ',' ),
                         height : 0,
                         width : 0,
                     } )

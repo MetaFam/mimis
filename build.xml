@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Trying to get the build process to run entirely
+   - from maven, but can't manage to build the jar
+   - keystore only if it doesn't exist.
+   -->
+<project default="all">
+  <target name="keychain-check">
+    <mkdir dir="${jar.keystore.dir}" />
+    <available file="${jar.keystore}"
+               property="keychain.exists" />
+  </target>
+  
+  <target name="make-keychain"
+          depends="keychain-check"
+          unless="keychain.exists">
+    <echo message="${jar.keystore}"/>
+    <exec dir="." executable="keytool">
+      <arg line="-genkey -keystore ${jar.keystore} -alias ${jar.storealias} -storepass ${jar.storepass} -dname 'OU=Mimis, O=DoH ,L=Baltimore ,S=Maryland ,C=US'" />
+    </exec>
+  </target>
+
+  <target name="target-lib-check">
+    <available file="target/lib"
+               property="target.lib.exists" />
+  </target>
+
+  <target name="make-target-lib"
+          depends="target-lib-check"
+          unless="target.lib.exists">
+    <exec dir="." executable="ln">
+      <arg line="-s ../lib target/lib"/>
+    </exec>
+  </target>
+
+  <target name="all"
+          depends="make-target-lib,make-keychain"
+          unless="target.lib.exists">
+  </target>
+</project>

@@ -1,15 +1,15 @@
 $( function() {
     function buildui() {
-        var $content = 
-            $('<div/>')
+        var $content = $('<div/>')
                 .css( {
                     overflow : 'auto',
                     width : '100%',
                     height : '100%',
                 } )
 
-        // Wait until all 3 libraries are loaded
+        // Wait until all libraries are loaded
         if( $content.splitter == undefined
+            || $content.dataTable == undefined
             || $.jstree == undefined
             || mimis.file.list == undefined ) {
             return
@@ -17,12 +17,39 @@ $( function() {
 
         var $tree = $('<div/>')
         var $listing = $('<div/>')
+
+        var $table = $('<table/>')
+            .css( {
+                width : '100%',
+            } )
+
         $content
             .append( $tree )
-            .append( $listing )
+            .append( $listing.append( $table ) )
 
         $('body').append( $content )
 
+        var tableCols = [
+            { sTitle: 'Name' },
+            {
+                sTitle: 'Date Modified',
+                fnRender : function( obj ) {
+                    var date = obj.aData[ obj.iDataColumn ]
+                    date = new Date( date )
+                    return date.toDateString()
+                },
+            },
+            { sTitle: 'Type' },
+            {
+                sTitle : 'Size',
+                sClass : 'center',
+                fnRender : function( obj ) {
+                    var size = obj.aData[ obj.iDataColumn ]
+                    return size
+                }
+            }
+        ]
+        
         // Called before a jstree element is expanded
         function treedata( obj, callback ) {
             var listing;
@@ -51,23 +78,36 @@ $( function() {
                     console.log( 'Remote' )
                 } else {
                     var path = obj.attr( 'path' )
-                    console.log( mimis )
                     var list = mimis.file.list( path )
                     listing = []
+                    var table = []
                     $(list).each( function( idx, elem ) {
                         listing.push( {
                             data : elem.name,
                             attr : { path : path + elem.name },
                             children : [ 'placeholder' ],
                         } )
+                        table.push( [
+                            elem.name,
+                            elem.modified,
+                            'type',
+                            elem.size
+                        ] )
                     } )
+                    $table
+                        .dataTable( {
+                            aaData : table,
+                            aoColumns : tableCols,
+                            bPaginate : false, // Disable pagination
+                            bDestroy : true, // Rebuild
+                        } )
                 }
             }
             callback( listing )
         }
         
         // From: http://groups.google.com/group/jquery-dev/browse_thread/thread/86504e9660e893ef
-        $.fn.equals = function( compareTo ) {
+        $.fn.equals = $.fn.equals || function( compareTo ) {
             if( !compareTo
                 || !compareTo.length
                 || this.length != compareTo.length ) { 
@@ -95,11 +135,8 @@ $( function() {
                    function( event, data ) {
                        var $selected = data.rslt.obj
                        if( $selected.equals( $lastSelected ) ) {
-                           console.log( 'open' )
-                           $tree.jstree( 'open_node', $selected )
+                           $tree.jstree( 'toggle_node', $selected )
                        }
-                       console.log( $.data( $lastSelected || '' ) )
-                       console.log( $.data( $selected ) )
                        $lastSelected = $selected
                    } )
             .bind( 'hover_node.jstree',
@@ -170,6 +207,15 @@ $( function() {
                 } )
                 .bind( 'load', buildui )
         )
+        .append(
+            $('<script/>')
+                .attr( {
+                    type : 'application/javascript',
+                    src : 'http://www.datatables.net/release-datatables/media/js/jquery.dataTables.js',
+                } )
+                .bind( 'load', buildui )
+        )
+
     $(document.documentElement)
         .bind( 'mimis.load', buildui )
 } )
