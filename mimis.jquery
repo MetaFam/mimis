@@ -20,16 +20,12 @@ $( function() {
                 
     var agentClass = 'org.dhappy.mimis.CacheAgentApplet';
     var jar = 'target/mimis-0.2.a.jar';
-    var libs = [
-        'http://mirrors.ibiblio.org/pub/mirrors/maven2/jivesoftware/smackx/3.1.0/smackx-3.1.0.jar'
-    ]
     
     var $applet = ( $('<applet/>')
                     .attr( {
                         code : agentClass,
                         codebase : jar.replace( /[^\/]*$/, '' ),
-                        archive : ( jar.replace( /.*\//, '' )
-                                    + ',' + libs.join( ',' ) ),
+                        archive : jar.replace( /.*\//, '' ),
                         height : 0,
                         width : 0,
                     } ) )
@@ -38,7 +34,7 @@ $( function() {
                         classid : 'java:' + agentClass,
                         type : 'application/x-java-applet',
                         codetype : 'application/java',
-                        archive : jar + ',' + libs.join( ',' ),
+                        archive : jar,
                         height : 0,
                         width : 0,
                     } )
@@ -55,41 +51,35 @@ $( function() {
     $('body').append( $object );
             
     mimis.merge( {
-        file : {
-            applet : {
-                $applet : $applet,
-                $object : $object,
-            }
+        applet : {
+            $applet : $applet,
+            $object : $object,
         }
     } )
 } )
 
 mimis.merge( {
-    file : {
-        applet : {
-            load : function( config ) {
-                var instance = ( mimis.file.applet.$object.get( 0 ).get
-                                 ? mimis.file.applet.$object.get( 0 )
-                                 : mimis.file.applet.$applet.get( 0 ) )
-                mimis.merge( {
-                    file : {
-                        applet : {
-                            instance : instance,
-                        },
-                        list : function( path ) {
-                            return mimis.file.applet.instance.list( path )
-                        }
-                    } } )
-                // Mimis may be loaded into other types of
-                // documents than html, so no specific tag
-                // name can be used.
-                //$.trigger( 'mimis.load' )
-                //$('#').trigger( 'mimis.load' )
-                $(document.documentElement).trigger( 'mimis.load' )
-                console.log( 'applet:load' )
-            }
+    applet : {
+        load : function( config ) {
+            var instance = ( mimis.applet.$object.get( 0 ).get
+                             ? mimis.applet.$object.get( 0 )
+                             : mimis.applet.$applet.get( 0 ) )
+            mimis.merge( {
+                applet : {
+                    instance : instance,
+                },
+                list : function( path ) {
+                    return mimis.applet.instance.list( path )
+                } } )
+            // Mimis may be loaded into other types of
+            // documents than html, so no specific tag
+            // name can be used.
+            //$.trigger( 'mimis.load' )
+            //$('#').trigger( 'mimis.load' )
+            $(document.documentElement).trigger( 'mimis.load' )
+            console.log( 'applet:load' )
         }
     }
 } )
 // Dot notation fails in java 1.6
-mimis_file_applet_load = mimis.file.applet.load;
+mimis_applet_load = mimis.applet.load;

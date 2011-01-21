@@ -11,7 +11,7 @@ $( function() {
         if( $content.splitter == undefined
             || $content.dataTable == undefined
             || $.jstree == undefined
-            || mimis.file.list == undefined ) {
+            || mimis.list == undefined ) {
             return
         }
 
@@ -59,26 +59,29 @@ $( function() {
                         data : 'Local',
                         attr : {
                             id : 'mimis.local',
-                            path : '',
+                            path : 'file:',
                             title : 'Browse',
                         },
                         children : [ 'placeholder' ],
                     },
                     {
+                        data : 'Remote',
                         attr : {
                             id : 'mimis.remote',
+                            path : 'xmpp:',
                             title : 'Connect',
                         },
-                        data : 'Remote',
+                        children : [ 'placeholder' ],
                     },
                 ]
             } else {
                 var id = obj.attr( 'id' )
+                var path = obj.attr( 'path' )
+                var list = mimis.list( path )
                 if( id == 'mimis.remote' ) {
-                    console.log( 'Remote' )
+                    console.log( 'Remote:' + path )
+                    console.log( list )
                 } else {
-                    var path = obj.attr( 'path' )
-                    var list = mimis.file.list( path )
                     listing = []
                     var table = []
                     $(list).each( function( idx, elem ) {
