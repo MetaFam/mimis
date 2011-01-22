@@ -1,0 +1,9 @@
+<form action="login/" method="post"> 
+  <fieldset class="login"> 
+    <ul> 
+      <li><legend>Username</legend><input type="text" name="username" value=""/></li> 
+      <li><legend>Password</legend><input type="password" name="password" value=""/></li> 
+      <li><input type="submit" name="submit" value="Login"/></li> 
+    </ul> 
+  </fieldset> 
+</form>

@@ -83,28 +83,29 @@ $( function() {
         mimis.bind(
             'path.selected',
             function( event, $source ) {
-                console.log( 'selected:' + $source )
                 var id = $source.attr( 'id' )
                 var path = $source.attr( 'path' )
-                var list = mimis.list( path )
-                if( path.match( '/^file:/' ) ) {
-                    $(list).each( function( idx, elem ) {
-                        table.push( [
-                            elem.name,
-                            elem.modified,
-                            'type',
-                            elem.size
-                        ] )
-                    } )
-                    $table
-                        .dataTable( {
-                            aaData : table,
-                            aoColumns : tableCols,
-                            bPaginate : false, // Disable pagination
-                            bDestroy : true, // Rebuild
-                        } )
-                } else if( path.match( '/^xmpp:/' ) ) {
-                }
+                mimis.list( path,
+                            function( data ) {
+                                if( path.match( '/^file:/' ) ) {
+                                    $(list).each( function( idx, elem ) {
+                                        table.push( [
+                                            elem.name,
+                                            elem.modified,
+                                            'type',
+                                            elem.size
+                                        ] )
+                                    } )
+                                    $table
+                                        .dataTable( {
+                                            aaData : table,
+                                            aoColumns : tableCols,
+                                            bPaginate : false, // Disable pagination
+                                            bDestroy : true, // Rebuild
+                                        } )
+                                } else if( path.match( '/^xmpp:/' ) ) {
+                                }
+                            } )
             } )
 
         // Called before a jstree element is expanded
@@ -131,21 +132,24 @@ $( function() {
                         children : [ 'placeholder' ],
                     },
                 ]
+                callback( listing )
             } else {
                 var id = obj.attr( 'id' )
                 var path = obj.attr( 'path' )
-                var list = mimis.list( path )
-                console.log( list );
-                listing = []
-                $(list).each( function( idx, elem ) {
-                    listing.push( {
-                        data : elem.name,
-                        attr : { path : path + elem.name },
-                        children : [ 'placeholder' ],
-                    } )
-                } )
+
+                mimis.list( path,
+                            function( list ) {
+                                listing = []
+                                $(list).each( function( idx, elem ) {
+                                    listing.push( {
+                                        data : elem.name,
+                                        attr : { path : path + elem.name },
+                                        children : [ 'placeholder' ],
+                                    } )
+                                } )
+                                callback( listing )
+                            } )
             }
-            callback( listing )
         }
         
         // From: http://groups.google.com/group/jquery-dev/browse_thread/thread/86504e9660e893ef
@@ -207,19 +211,38 @@ $( function() {
 
         $listing.css( {
             overflow : 'auto',
-        } )
+        } );
 
-        mimis.merge( {
-            xmpp : {
-                get username() {
-                    console.log( 'got username' )
-                    return 'mimis.test'
-                },
-                get password() {
-                    return 'mimistest'
-                },
-            }
-        } )
+        ( function() {
+            var username;
+            var password;
+            mimis.merge( {
+                xmpp : {
+                    get username() {
+                        if( username == undefined ) {
+                            $.get( 'form/login/html',
+                                   function( data ) {
+                                       console.log( data )
+                                       var $loginform = $(data);
+                                       $loginform.bind( 'submit',
+                                                        function( event ) {
+                                                            username =
+                                                                $loginform.find( 'input[type="username"]' ).val()
+                                                            password = 
+                                                                $loginform.find( 'input[type="username"]' ).val()
+                                                            event.preventDefault()
+                                                        } )
+                                       $table.append( $loginform )
+                                   } )
+                        }
+                        return username
+                    },
+                    get password() {
+                        return password
+                    },
+                }
+            } )
+        } )()
 
         $content.splitter( {
             type: 'v',

@@ -14,6 +14,11 @@ mimis.merge = mimis.merge ? mimis.merge : function( struct ) {
     return struct
 }
 
+// Mimis may be loaded into other types of
+// documents than html, so no specific tag
+// name can be used.
+//$.trigger( 'mimis.load' )
+//$('#').trigger( 'mimis.load' )
 mimis.bind = mimis.bind ? mimis.bind : function( name, listener ) {
     $(document.documentElement).bind( 'mimis.' + name, listener )
 }
@@ -80,20 +85,17 @@ mimis.merge( {
                 applet : {
                     instance : instance,
                 },
-                list : function( path ) {
-                    return mimis.applet.instance.list( path )
+                list : function( path, callback ) {
+                    return mimis.applet.instance.list( path, callback )
                 },
-                get : function( path ) {
-                    return mimis.applet.instance.get( path )
+                get : function( path, callback ) {
+                    // ReferenceError: NPMethod called on non-NPObject
+                    //return mimis.applet.instance.get.apply( this, arguments )
+                    return mimis.applet.instance.get( path, callback )
                 },
                 set : function( path, val ) {
-                    return mimis.applet.instance.set( path, val )
+                    return mimis.applet.instance.set.apply( this, arguments )
                 }, } )
-            // Mimis may be loaded into other types of
-            // documents than html, so no specific tag
-            // name can be used.
-            //$.trigger( 'mimis.load' )
-            //$('#').trigger( 'mimis.load' )
             mimis.trigger( 'load' )
             console.log( 'applet:load' )
         }

@@ -217,7 +217,22 @@ public class CacheAgentApplet extends JApplet {
     }
 
     public Object get( String key ) {
-        return makeJSObject( localGet( key ) );
+        log.info( "Single param get" );
+        return get( key, null );
+    }
+
+    public Object get( String key, Object callback ) {
+        Object ret = makeJSObject( localGet( key ) );
+        if( callback != null ) {
+            if( ! ( callback instanceof JSObject ) ) {
+                log.warning( getClass().getName()
+                             + ".get called with callback type: "
+                             + callback.getClass().getName() );
+            } else {
+                ((JSObject)callback).call( "call", new Object[] { ret } );
+            }
+        }
+        return ret;
     }
 
     public Object set( String key, Object value ) {
@@ -225,13 +240,34 @@ public class CacheAgentApplet extends JApplet {
     }
 
     public Object list( final String path ) {
+        log.info( "list0: " + path );
+        return list( path, null );
+    }
+
+    public Object list( final String path, JSObject callback ) {
         log.info( "list: " + path );
+        Object ret = null;
         if( path.startsWith( "file:" ) ) {
-            return fileList( path.substring( 5 ) );
+            ret = fileList( path.substring( 5 ) );
         } else if( path.startsWith( "xmpp:" ) ) {
-            return chatList( path.substring( 5 ) );
+            ret = chatList( path.substring( 5 ) );
         }
-        return null;
+        ret = makeJSObject( ret );
+
+        if( callback != null ) {
+            if( ! ( callback instanceof JSObject ) ) {
+                log.warning( getClass().getName()
+                             + ".get called with callback type: "
+                             + callback.getClass().getName() );
+            } else {
+                try {
+                    callback.call( "call", new Object[] { callback, ret } );
+                } catch( JSException jse ) {
+                    log.warning( "Callback Failed: " + jse.getMessage() );
+                }
+            }
+        }
+        return ret;
     }
 
     public Object fileList( final String path ) {
@@ -273,7 +309,7 @@ public class CacheAgentApplet extends JApplet {
             log.warning( e.getClass().getName() );
         }
         
-        return makeJSObject( paths );
+        return paths;
     }
 
     public class Greeter implements RosterListener {
@@ -310,9 +346,9 @@ public class CacheAgentApplet extends JApplet {
                         Stack<Map<String,Object>> paths =
                             new Stack<Map<String,Object>>();
                         
-                        Roster roster = connection.getRoster();
-                        roster.setSubscriptionMode( Roster.SubscriptionMode.manual );
-                        roster.addRosterListener( new Greeter( connection ) );
+                        Roster roster = getConnection().getRoster();
+                        // roster.setSubscriptionMode( Roster.SubscriptionMode.manual );
+                        // roster.addRosterListener( new Greeter( connection ) );
 
                         if( path.length() == 0 ) {
                             for( RosterEntry entry : roster.getEntries() ) {
@@ -377,7 +413,7 @@ public class CacheAgentApplet extends JApplet {
             }
             if( input instanceof List ) {
                 log.info( ((List)input).size() + " : " + input.toString() );
-                String script = "(function() { return [] })()";
+                String script = "[]"; //"(function() { return [] })()";
                 JSObject obj = (JSObject)window.eval( script );
                 int index = 0;
                 for( Object child : (List)input ) {
@@ -387,12 +423,16 @@ public class CacheAgentApplet extends JApplet {
             } else if( input instanceof Map ) {
                 String script = "(function() { return {} })()";
                 JSObject obj = (JSObject)window.eval( script );
-                for(Map.Entry<String, Object> entry :
-                        ( (Map<String, Object>)input ).entrySet() ) {
-                    obj.setMember( entry.getKey(), entry.getValue() );
+                for( Map.Entry<String, Object> entry :
+                         ( (Map<String, Object>)input ).entrySet() ) {
+                    obj.setMember( entry.getKey(),
+                                   makeJSObject( entry.getValue() ) );
                 }
                 ret = obj;
-            } else if( input instanceof String ) {
+            } else if( input instanceof JSObject
+                       || input instanceof Integer
+                       || input instanceof Boolean
+                       || input instanceof String ) {
                 ret = input;
             }
         } catch( Exception e ) {
