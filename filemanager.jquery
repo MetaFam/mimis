@@ -15,6 +15,8 @@ $( function() {
             return
         }
 
+        console.log( mimis.get( 'local.hostname' ) )
+
         var $tree = $('<div/>')
         var $listing = $('<div/>')
 
@@ -45,11 +47,66 @@ $( function() {
                 sClass : 'center',
                 fnRender : function( obj ) {
                     var size = obj.aData[ obj.iDataColumn ]
+                    
+                    // From: http://snipplr.com/view/5945/javascript-numberformat--ported-from-php/
+                    function number_format( number, decimals, dec_point, thousands_sep ) {
+                        var n = number
+                        var c = isNaN( decimals = Math.abs( decimals ) ) ? 2 : decimals
+                        var d = dec_point == undefined ? '.' : dec_point
+                        var t = thousands_sep == undefined ? ',' : thousands_sep
+                        var s = n < 0 ? '-' : '';
+                        var i = parseInt( n = Math.abs(+n || 0).toFixed( c ) ) + ''
+                        var j = ( j = i.length ) > 3 ? j % 3 : 0
+ 
+                        return ( s + ( j ? i.substr( 0, j ) + t : '')
+                                 + i.substr( j ).replace( /(\d{3})(?=\d)/g, '$1' + t )
+                                 + (c ? d + Math.abs( n - i ).toFixed( c ).slice( 2 ) : '' ) )
+                    }
+
+                    var gb = Math.pow( 2, 30 )
+                    var mb = Math.pow( 2, 20 )
+                    var kb = Math.pow( 2, 10 )
+                    if( size >= gb )  {
+                        size = number_format( size / gb ) + ' GB';
+                    } else if( size >= mb ) {
+                        size = number_format( size / mb ) + ' MB';
+                    } else if( size >= kb ) {
+                        size = number_format( size / kb, 0 ) + ' KB';
+                    } else {
+                        size = number_format( size, 0 ) + ' B';
+                    }
                     return size
                 }
             }
         ]
         
+        mimis.bind(
+            'path.selected',
+            function( event, $source ) {
+                console.log( 'selected:' + $source )
+                var id = $source.attr( 'id' )
+                var path = $source.attr( 'path' )
+                var list = mimis.list( path )
+                if( path.match( '/^file:/' ) ) {
+                    $(list).each( function( idx, elem ) {
+                        table.push( [
+                            elem.name,
+                            elem.modified,
+                            'type',
+                            elem.size
+                        ] )
+                    } )
+                    $table
+                        .dataTable( {
+                            aaData : table,
+                            aoColumns : tableCols,
+                            bPaginate : false, // Disable pagination
+                            bDestroy : true, // Rebuild
+                        } )
+                } else if( path.match( '/^xmpp:/' ) ) {
+                }
+            } )
+
         // Called before a jstree element is expanded
         function treedata( obj, callback ) {
             var listing;
@@ -78,33 +135,15 @@ $( function() {
                 var id = obj.attr( 'id' )
                 var path = obj.attr( 'path' )
                 var list = mimis.list( path )
-                if( id == 'mimis.remote' ) {
-                    console.log( 'Remote:' + path )
-                    console.log( list )
-                } else {
-                    listing = []
-                    var table = []
-                    $(list).each( function( idx, elem ) {
-                        listing.push( {
-                            data : elem.name,
-                            attr : { path : path + elem.name },
-                            children : [ 'placeholder' ],
-                        } )
-                        table.push( [
-                            elem.name,
-                            elem.modified,
-                            'type',
-                            elem.size
-                        ] )
+                console.log( list );
+                listing = []
+                $(list).each( function( idx, elem ) {
+                    listing.push( {
+                        data : elem.name,
+                        attr : { path : path + elem.name },
+                        children : [ 'placeholder' ],
                     } )
-                    $table
-                        .dataTable( {
-                            aaData : table,
-                            aoColumns : tableCols,
-                            bPaginate : false, // Disable pagination
-                            bDestroy : true, // Rebuild
-                        } )
-                }
+                } )
             }
             callback( listing )
         }
@@ -132,7 +171,8 @@ $( function() {
             } )
             .bind( 'open_node.jstree',
                    function( event, data ) {
-                       $tree.jstree( 'refresh', data.rslt.obj )
+                       var $selected = data.rslt.obj
+                       $tree.jstree( 'refresh', $selected )
                    } )
             .bind( 'select_node.jstree',
                    function( event, data ) {
@@ -141,6 +181,8 @@ $( function() {
                            $tree.jstree( 'toggle_node', $selected )
                        }
                        $lastSelected = $selected
+                       mimis.trigger( 'path.selected',
+                                      [ $selected ] )
                    } )
             .bind( 'hover_node.jstree',
                    function( event, data ) {
@@ -162,6 +204,22 @@ $( function() {
                 'progressive_render' : true,
                 'plugins' : [ 'themes', 'json_data', 'ui' ],
             } )
+
+        $listing.css( {
+            overflow : 'auto',
+        } )
+
+        mimis.merge( {
+            xmpp : {
+                get username() {
+                    console.log( 'got username' )
+                    return 'mimis.test'
+                },
+                get password() {
+                    return 'mimistest'
+                },
+            }
+        } )
 
         $content.splitter( {
             type: 'v',
