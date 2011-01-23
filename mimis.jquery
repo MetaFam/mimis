@@ -69,35 +69,50 @@ $( function() {
             
     mimis.merge( {
         applet : {
-            $applet : $applet,
-            $object : $object,
-        }
-    } )
-} )
-
-mimis.merge( {
-    applet : {
-        load : function( config ) {
-            var instance = ( mimis.applet.$object.get( 0 ).get
-                             ? mimis.applet.$object.get( 0 )
-                             : mimis.applet.$applet.get( 0 ) )
-            mimis.merge( {
-                applet : {
-                    instance : instance,
-                },
-                list : function( path, callback ) {
-                    return mimis.applet.instance.list( path, callback )
-                },
-                get : function( path, callback ) {
-                    // ReferenceError: NPMethod called on non-NPObject
-                    //return mimis.applet.instance.get.apply( this, arguments )
-                    return mimis.applet.instance.get( path, callback )
-                },
-                set : function( path, val ) {
-                    return mimis.applet.instance.set.apply( this, arguments )
-                }, } )
+            load : function( config ) {
+                var instance = ( $object.get( 0 ).get
+                             ? $object.get( 0 )
+                             : $applet.get( 0 ) )
+                mimis.merge( {
+                    applet : {
+                        instance : instance,
+                        callback : function( id, data ) {
+                            console.log( 'callback:' + id )
+                            return mimis.applet.instance.callback( id, data )
+                        },
+                    },
+                    list : function( path, callback ) {
+                        return mimis.applet.instance.list( path, callback )
+                    },
+                    get : function( path, callback ) {
+                        // ReferenceError: NPMethod called on non-NPObject
+                        //return mimis.applet.instance.get.apply( this, arguments )
+                        return mimis.applet.instance.get( path, callback )
+                    },
+                    set : function( path, val ) {
+                        return mimis.applet.instance.set.apply( this, arguments )
+                    },
+                    browser : {
+                        get : function( path, callback ) {
+                            console.log( 'browser.get:' + path )
+                            var obj = window
+                            var elems = path.split( '.' )
+                            while( elems.length > 0 && obj) {
+                                var sub = obj[ elems.shift() ]
+                                obj = sub
+                            }
+                            if( $.isFunction( obj ) ) {
+                                obj( callback )
+                            } else {
+                                callback( obj )
+                            }
+                            return obj
+                        },
+                    }, } )
             mimis.trigger( 'load' )
             console.log( 'applet:load' )
         }
     }
 } )
+} )
+

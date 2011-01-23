@@ -54,16 +54,24 @@ public class CacheAgentApplet extends JApplet {
 
     String mimisValueKey = "__mimis_value";
 
+    public interface Callback {
+        public Object call( Object data );
+    }
+
     public interface DynamicValue {
-        public Object value();
+        public Object value( Callback callback );
     }
 
     public Object localGet( String path ) {
+        return localGet( path, null );
+    }
+
+    public Object localGet( String path, Callback callback ) {
         Map<String,Object> root = store;
         Object ret = null;
 
         Queue<String> elems = new LinkedList<String>();
-        elems.addAll( Arrays.asList( path.split( "[./, ]" ) ) );
+        elems.addAll( Arrays.asList( path.split( "[./,]" ) ) );
 
         while( ! elems.isEmpty() && root != null ) {
             String elem = elems.poll();
@@ -83,8 +91,11 @@ public class CacheAgentApplet extends JApplet {
         }
         
         if( ret instanceof DynamicValue ) {
-            ret = ((DynamicValue)ret).value();
+            ret = ((DynamicValue)ret).value( callback );
+        } else if( callback != null ) {
+            callback.call( ret );
         }
+
         return ret;
     }
     
@@ -93,7 +104,7 @@ public class CacheAgentApplet extends JApplet {
         Object ret = null;
 
         Queue<String> elems = new LinkedList<String>();
-        elems.addAll( Arrays.asList( path.split( "[./, ]" ) ) );
+        elems.addAll( Arrays.asList( path.split( "[./,]" ) ) );
 
         while( ! elems.isEmpty() && root != null && ret == null ) {
             String elem = elems.poll();
@@ -110,47 +121,26 @@ public class CacheAgentApplet extends JApplet {
         return ret;
     }
 
-    XMPPConnection connection = null;
+    Map<Integer,Callback> callbacks =
+        new HashMap<Integer,Callback>();
+    public Object browserGet( String path, Callback callback ) {
+        JSObject browser = (JSObject)browserGet( "mimis.browser" );
+        log.info( "get1:" + path );
+        int id = callback.hashCode();
+        JSObject jsCallback = (JSObject)window.eval
+            ( "(function() { return function( data ) {"
+              + "mimis.applet.callback( arguments.callee.mimis_id, data )"
+              + "} })()" );
+        jsCallback.setMember( "mimis_id", id );
+        callbacks.put( id, callback );
+        Object ret =
+            browser.call( "get", new Object[] { path, jsCallback } );
+        return ret;
+    }
 
-    public XMPPConnection getConnection() {
-        if( connection == null ) {
-            String username = (String)browserGet( "mimis.xmpp.username" );
-            String password = (String)browserGet( "mimis.xmpp.password" );
-
-            String server = username.replace( "^.*@", "" );
-            int port = 5222;
-            String domain = server;
-            if( server == "gmail.com" ) {
-                server = "talk.google.com";
-            }
-
-            ConnectionConfiguration connConfig =
-                new ConnectionConfiguration( server, port, domain );
-            connection = new XMPPConnection( connConfig );
-        
-            try {
-                connection.connect();
-                log.info( "Connected to " + connection.getHost() );
-
-                SASLAuthentication.supportSASLMechanism( "PLAIN", 0 );
-
-                connection.login( username,
-                                  password,
-                                  "mimis/bot/" + localGet( "local.hostname" ) + "/" );
-
-                log.info( "Logged in as " + connection.getUser() );
-                            
-                Presence presence = new Presence( Presence.Type.available );
-                connection.sendPacket( presence );
-            } catch( XMPPException ex ) {
-                ex.printStackTrace();
-                // XMPPConnection only remember the username if login is succesful
-                // so we can't use connection.getUser() unless we log in correctly
-                connection = null;
-                log.warning( "Failed to log in as " + username );
-            }
-        }
-        return connection;
+    public Object callback( int id, Object data ) {
+        log.info( "cb:" + id );
+        return callbacks.get( id ).call( data );
     }
 
     // Called when the applet is loaded into the browser.
@@ -166,7 +156,7 @@ public class CacheAgentApplet extends JApplet {
                           new DynamicValue() {
                               String hostname = null;
                               
-                              public Object value() {
+                              public Object value( Callback callback ) {
                                   if( hostname == null ) {
                                       hostname = "";
                                       try {
@@ -174,14 +164,96 @@ public class CacheAgentApplet extends JApplet {
                                           hostname = localMachine.getHostName();
                                       } catch( UnknownHostException uhe ) {}
                                   }
+                                  if( callback != null ) {
+                                      callback.call( hostname );
+                                  }
                                   return hostname;
                               }
                               
                               public String toString() {
-                                  return (String)value();
+                                  return (String)value( null );
                               }
                           } );
-                
+
+                localSet( "connection",
+                          new DynamicValue() {
+                              XMPPConnection connection = null;
+                              String username;
+                              String password;
+                              
+                              public Object value( final Callback callback ) {
+                                  log.info( "get:connection" );
+                                  // Called when the username and password callbacks return
+                                  final Callback connector = new Callback() {
+                                          public Object call( Object data ) {
+                                              return AccessController.doPrivileged
+                                                  ( new PrivilegedAction() {
+                                                          public Object run() {
+                                                              if( username != null && password != null ) {
+                                                                  String server = username.substring( username.lastIndexOf( "@" ) + 1 );
+                                                                  int port = 5222;
+                                                                  String domain = server;
+                                                                  if( server.equals( "gmail.com" ) ) {
+                                                                      server = "talk.google.com";
+                                                                  }
+
+                                                                  log.info( "connector:" + username + ":" + server );
+                                                                  
+                                                                  ConnectionConfiguration connConfig =
+                                                                      new ConnectionConfiguration( server, port, domain );
+                                                                  connection = new XMPPConnection( connConfig );
+                                                                  
+                                                                  try {
+                                                                      connection.connect();
+                                                                      log.info( "Connected to " + connection.getHost() );
+                                                                      
+                                                                      SASLAuthentication.supportSASLMechanism( "PLAIN", 0 );
+                                                                      
+                                                                      connection.login( username,
+                                                                                        password,
+                                                                                        "mimis/bot/" + localGet( "local.hostname" ) + "/" );
+                                                                      
+                                                                      log.info( "Logged in as " + connection.getUser() );
+                                                                      
+                                                                      Presence presence = new Presence( Presence.Type.available );
+                                                                      connection.sendPacket( presence );
+                                                                  } catch( XMPPException ex ) {
+                                                                      ex.printStackTrace();
+                                                                      // XMPPConnection only remember the username if login is succesful
+                                                                      // so we can't use connection.getUser() unless we log in correctly
+                                                                      connection = null;
+                                                                      log.warning( "Failed to log in as " + username );
+                                                                  }
+                                                              }
+                                                              if( callback != null && connection != null ) {
+                                                                  callback.call( connection );
+                                                              }
+                                                              return connection;
+                                                          }
+                                                      } );
+                                          }
+                                      };
+                                  browserGet( "mimis.xmpp.username",
+                                              new Callback() {
+                                                  public Object call( Object data ) {
+                                                      username = (String)data;
+                                                      connector.call( null );
+                                                      return username;
+                                                  }
+                                              } );
+                                  browserGet( "mimis.xmpp.password",
+                                              new Callback() {
+                                                  public Object call( Object data ) {
+                                                      password = (String)data;
+                                                      connector.call( null );
+                                                      return password;
+                                                  }
+                                              } );
+
+                                  return connection;
+                              }
+                          } );
+
                 ((JSObject)browserGet( "mimis.applet" ))
                     .call( "load",
                            new Object[] { makeJSObject( store ) } );
@@ -198,7 +270,7 @@ public class CacheAgentApplet extends JApplet {
     public Object localSet( String path, Object value ) {
         Map<String,Object> root = store;
 
-        for( String elem : path.split( "[./, ]" ) ) {
+        for( String elem : path.split( "[./,]" ) ) {
             Object next = root.get( elem );
             if( next == null ) {
                 next = new HashMap<String,Object>();
@@ -221,17 +293,27 @@ public class CacheAgentApplet extends JApplet {
         return get( key, null );
     }
 
-    public Object get( String key, Object callback ) {
-        Object ret = makeJSObject( localGet( key ) );
-        if( callback != null ) {
-            if( ! ( callback instanceof JSObject ) ) {
-                log.warning( getClass().getName()
-                             + ".get called with callback type: "
-                             + callback.getClass().getName() );
-            } else {
-                ((JSObject)callback).call( "call", new Object[] { ret } );
-            }
+    public Object get( String key, final Object callback ) {
+        Callback castCallback = null;
+        if( callback instanceof Callback ) {
+            castCallback = (Callback)callback;
+        } else if( callback instanceof JSObject ) {
+            castCallback = new Callback() {
+                    public Object call( Object data ) {
+                        if( ! ( data instanceof JSObject ) ) {
+                            data = makeJSObject( data );
+                        }
+                        ((JSObject)callback).call( "call", new Object[] { callback, data } );
+                        return data;
+                    }
+                };
+        } else {
+            log.warning( getClass().getName()
+                         + ".get called with callback type: "
+                         + callback.getClass().getName() );
         }
+
+        Object ret = localGet( key, castCallback );
         return ret;
     }
 
@@ -244,33 +326,38 @@ public class CacheAgentApplet extends JApplet {
         return list( path, null );
     }
 
-    public Object list( final String path, JSObject callback ) {
+    public Object list( final String path, final Object callback ) {
+        Callback castCallback = null;
+        if( callback instanceof Callback ) {
+            castCallback = (Callback)callback;
+        } else if( callback instanceof JSObject ) {
+            castCallback = new Callback() {
+                    public Object call( Object data ) {
+                        log.info( "Callback:" + path );
+                        if( ! ( data instanceof JSObject ) ) {
+                            data = makeJSObject( data );
+                        }
+                        ((JSObject)callback).call( "call", new Object[] { callback, data } );
+                        return data;
+                    }
+                };
+        } else {
+            log.warning( getClass().getName()
+                         + ".get called with callback type: "
+                         + callback.getClass().getName() );
+        }
+
         log.info( "list: " + path );
         Object ret = null;
         if( path.startsWith( "file:" ) ) {
-            ret = fileList( path.substring( 5 ) );
+            ret = fileList( path.substring( 5 ), castCallback );
         } else if( path.startsWith( "xmpp:" ) ) {
-            ret = chatList( path.substring( 5 ) );
-        }
-        ret = makeJSObject( ret );
-
-        if( callback != null ) {
-            if( ! ( callback instanceof JSObject ) ) {
-                log.warning( getClass().getName()
-                             + ".get called with callback type: "
-                             + callback.getClass().getName() );
-            } else {
-                try {
-                    callback.call( "call", new Object[] { callback, ret } );
-                } catch( JSException jse ) {
-                    log.warning( "Callback Failed: " + jse.getMessage() );
-                }
-            }
+            ret = chatList( path.substring( 5 ), castCallback );
         }
         return ret;
     }
 
-    public Object fileList( final String path ) {
+    public Object fileList( final String path, Callback callback ) {
         Stack<Map<String,Object>> paths = null;
         try {
             paths =
@@ -305,6 +392,9 @@ public class CacheAgentApplet extends JApplet {
                             return paths;
                         }
                     } );
+            if( callback != null ) {
+                callback.call( paths );
+            }
         } catch( Exception e ) {
             log.warning( e.getClass().getName() );
         }
@@ -334,74 +424,86 @@ public class CacheAgentApplet extends JApplet {
         }
     };
 
-    public Object chatList( final String path ) {
-        Stack<Map<String,Object>> paths = null;
-        try {
-            paths =
-            (Stack<Map<String,Object>>)AccessController.doPrivileged
-            ( new PrivilegedAction() {
-                    public Object run() {
-                        //PacketFilter filter = new MessageTypeFilter( Message.Type.chat );
-                        //connection.addPacketListener( new MessageParrot( connection ), filter );
-                        Stack<Map<String,Object>> paths =
-                            new Stack<Map<String,Object>>();
-                        
-                        Roster roster = getConnection().getRoster();
-                        // roster.setSubscriptionMode( Roster.SubscriptionMode.manual );
-                        // roster.addRosterListener( new Greeter( connection ) );
-
-                        if( path.length() == 0 ) {
-                            for( RosterEntry entry : roster.getEntries() ) {
-                                Map<String,Object> obj =
-                                    new HashMap<String,Object>();
+    public Object chatList( final String path, final Callback callback ) {
+        return get( "connection",
+                    new Callback() {
+                        public Object call( Object data ) {
+                            final XMPPConnection connection =
+                                (XMPPConnection)data;
+                            Stack<Map<String,Object>> paths = null;
+                            try {
+                                paths =
+                                    (Stack<Map<String,Object>>)AccessController.doPrivileged
+                                    ( new PrivilegedAction() {
+                                            public Object run() {
+                                                //PacketFilter filter = new MessageTypeFilter( Message.Type.chat );
+                                                //connection.addPacketListener( new MessageParrot( connection ), filter );
+                                                Stack<Map<String,Object>> paths =
+                                                    new Stack<Map<String,Object>>();
+                                                
+                                                Roster roster = connection.getRoster();
+                                                // roster.setSubscriptionMode( Roster.SubscriptionMode.manual );
+                                                // roster.addRosterListener( new Greeter( connection ) );
+                                                
+                                                if( path.length() == 0 ) {
+                                                    for( RosterEntry entry : roster.getEntries() ) {
+                                                        Map<String,Object> obj =
+                                                            new HashMap<String,Object>();
                                 
-                                String name = entry.getName();
-                                String username = entry.getUser();
-                                if( name == null ) {
-                                    name = username;
+                                                        String name = entry.getName();
+                                                        String username = entry.getUser();
+                                                        if( name == null ) {
+                                                            name = username;
+                                                        }
+                                                        obj.put( "name", name );
+                                                        obj.put( "username", username );
+                                                 
+                                                        Pattern botName = Pattern.compile( "^" + username
+                                                                                           + "/mimis/bot"
+                                                                                           + "/(.*)/([^/]+)/?" );
+                                                        for( Iterator<Presence> presences =
+                                                                 roster.getPresences( username );
+                                                             presences.hasNext(); ) {
+                                                            Presence presence = (Presence)presences.next();
+                                                            Matcher match = botName.matcher( presence.getFrom() );
+                                                            if( match.matches() ) {
+                                                                String location = match.group( 1 );
+                                                                String id = match.group( 2 );
+                                                                log.info( "presence:" + presence.toString() );
+                                                                obj.put( "location", location );
+                                                            }
+                                                        }
+                                                        paths.push( obj );
+                                                    }
+                                                } else {
+                                                    // google bounces back the default message types, you must use chat
+                                                    Message msg = new Message( "wholcomb@gmail.com",
+                                                                               Message.Type.chat );
+                                                    msg.setBody( "Test" );
+                                                    connection.sendPacket( msg );
+                                                }
+                                                return paths;
+                                            }
+                                        } );
+                                if( callback != null ) {
+                                    callback.call( paths );
                                 }
-                                obj.put( "name", name );
-                                obj.put( "username", username );
-
-                                Pattern botName = Pattern.compile( "^" + username
-                                                                   + "/mimis/bot"
-                                                                   + "/(.*)/([^/]+)/?" );
-                                for( Iterator<Presence> presences =
-                                         roster.getPresences( username );
-                                     presences.hasNext(); ) {
-                                    Presence presence = (Presence)presences.next();
-                                    Matcher match = botName.matcher( presence.getFrom() );
-                                    if( match.matches() ) {
-                                        String location = match.group( 1 );
-                                        String id = match.group( 2 );
-                                        log.info( "presence:" + presence.toString() );
-                                        obj.put( "location", location );
-                                    }
-                                }
-                                paths.push( obj );
+                            } catch( Exception e ) {
+                                e.printStackTrace();
+                                log.warning( e.getClass().getName() );
                             }
-                        } else {
-                            // google bounces back the default message types, you must use chat
-                            Message msg = new Message( "wholcomb@gmail.com",
-                                                       Message.Type.chat );
-                            msg.setBody( "Test" );
-                            connection.sendPacket( msg );
+                            return paths;
                         }
-                        return paths;
-                    }
-                } );
-        } catch( Exception e ) {
-            e.printStackTrace();
-            log.warning( e.getClass().getName() );
-        }
-        return makeJSObject( paths );
+                    } );
     }
 
     public void stop() {
+        /*
         if( connection != null ) {
             connection.disconnect();
             connection = null;
         }
+        */
     }
 
     public Object makeJSObject( Object input ) {

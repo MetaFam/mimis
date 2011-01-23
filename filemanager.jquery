@@ -15,7 +15,7 @@ $( function() {
             return
         }
 
-        console.log( mimis.get( 'local.hostname' ) )
+        //console.log( mimis.get( 'local.hostname' ) )
 
         var $tree = $('<div/>')
         var $listing = $('<div/>')
@@ -216,29 +216,61 @@ $( function() {
         ( function() {
             var username;
             var password;
+            
+            var $loginform;
+            var callbacks = [];
+            function get$loginform( callback ) {
+                if( $loginform == undefined ) {
+                    callbacks.push( callback )
+                    if( callbacks.length == 1 ) {
+                        $.get( 'form/login/html',
+                               function( data ) {
+                                   $loginform = $(data)
+                                   $loginform.bind( 'submit',
+                                                    function( event ) {
+                                                        event.preventDefault()
+                                                        $loginform.fadeOut()
+                                                    } )
+                                   $table.append( $loginform )
+                                   $(callbacks).each( function( idx, callback ) {
+                                       callback( $loginform )
+                                   } )
+                               } )
+                    }
+                } else {
+                    callback( $loginform )
+                }
+            }
+
             mimis.merge( {
                 xmpp : {
-                    get username() {
+                    username : function( callback ) {
                         if( username == undefined ) {
-                            $.get( 'form/login/html',
-                                   function( data ) {
-                                       console.log( data )
-                                       var $loginform = $(data);
-                                       $loginform.bind( 'submit',
-                                                        function( event ) {
-                                                            username =
-                                                                $loginform.find( 'input[type="username"]' ).val()
-                                                            password = 
-                                                                $loginform.find( 'input[type="username"]' ).val()
-                                                            event.preventDefault()
-                                                        } )
-                                       $table.append( $loginform )
-                                   } )
+                            get$loginform( function( $loginform ) {
+                                if( ! $loginform.data( 'mimis.xmpp.username.listener' ) ) {
+                                    $loginform.bind( 'submit',
+                                                     function( event ) {
+                                                         username =
+                                                             $loginform.find( 'input[name="username"]' ).val()
+                                                         callback( username )
+                                                     } )
+                                }
+                            } )
                         }
-                        return username
                     },
-                    get password() {
-                        return password
+                    password : function( callback ) {
+                        if( password == undefined ) {
+                            get$loginform( function( $loginform ) {
+                                if( ! $loginform.data( 'mimis.xmpp.password.listener' ) ) {
+                                    $loginform.bind( 'submit',
+                                                     function( event ) {
+                                                         password =
+                                                             $loginform.find( 'input[name="password"]' ).val()
+                                                         callback( password )
+                                                     } )
+                                }
+                            } )
+                        }
                     },
                 }
             } )
