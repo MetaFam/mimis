@@ -1,4 +1,5 @@
 $( function() {
+    var uiBuilt = false
     function buildui() {
         var $content = $('<div/>')
                 .css( {
@@ -11,9 +12,11 @@ $( function() {
         if( $content.splitter == undefined
             || $content.dataTable == undefined
             || $.jstree == undefined
-            || mimis.list == undefined ) {
+            || mimis.list == undefined
+            || uiBuilt ) {
             return
         }
+        uiBuilt = true
 
         //console.log( mimis.get( 'local.hostname' ) )
 
@@ -21,6 +24,9 @@ $( function() {
         var $listing = $('<div/>')
 
         var $table = $('<table/>')
+            .attr( {
+                id : 'datatable',
+            } )
             .css( {
                 width : '100%',
             } )
@@ -79,29 +85,40 @@ $( function() {
                 }
             }
         ]
-        
+
+        $( '#datatable tr' ).live( 'dblclick', function() {
+            var $row = $(this)
+            var path = $table.data( 'path' ) + $row.children().eq( 0 ).text()
+            console.log( path )
+            mimis.trigger( 'path.selected', [ path ] )
+        } )
+
         mimis.bind(
             'path.selected',
-            function( event, $source ) {
-                var id = $source.attr( 'id' )
-                var path = $source.attr( 'path' )
+            function( event, path ) {
                 mimis.list( path,
-                            function( data ) {
-                                if( path.match( '/^file:/' ) ) {
+                            function( list ) {
+                                console.log( list )
+                                if( path.match( /^file:/ ) ) {
+                                    var table = []
                                     $(list).each( function( idx, elem ) {
                                         table.push( [
                                             elem.name,
                                             elem.modified,
-                                            'type',
+                                            elem.type,
                                             elem.size
                                         ] )
                                     } )
+                                    console.log( table )
                                     $table
                                         .dataTable( {
                                             aaData : table,
                                             aoColumns : tableCols,
                                             bPaginate : false, // Disable pagination
                                             bDestroy : true, // Rebuild
+                                        } )
+                                        .data( {
+                                            path : path,
                                         } )
                                 } else if( path.match( '/^xmpp:/' ) ) {
                                 }
@@ -186,18 +203,23 @@ $( function() {
                        }
                        $lastSelected = $selected
                        mimis.trigger( 'path.selected',
-                                      [ $selected ] )
+                                      [ $selected.attr( 'path' ) ] )
                    } )
             .bind( 'hover_node.jstree',
                    function( event, data ) {
                        var active = data.rslt.obj
                        var display
-                       var attrs = [ 'title', 'id', 'path' ]
+                       var attrs = [ 'title', 'id' ]
                        do {
                            // display = active.attr( attrs.dequeue() )
                            display = active.attr( attrs.shift() )
                        } while( ( display == undefined || display == '' )
                                 && attrs.length > 0 )
+                       attrs = [ 'path' ]
+                       while( ( display == undefined || display == '' )
+                              && attrs.length > 0 ) {
+                           display = active.data( attrs.shift() )
+                       }
                        window.status = display
                        event.preventDefault()
                    } )
@@ -299,7 +321,6 @@ $( function() {
     }
     $('head')
         .append(
-            // This could run in parallel
             $('<script/>')
                 .attr( {
                     type : 'application/javascript',
@@ -330,6 +351,14 @@ $( function() {
                     src : 'http://www.datatables.net/release-datatables/media/js/jquery.dataTables.js',
                 } )
                 .bind( 'load', buildui )
+        )
+        .append(
+            $('<link/>')
+                .attr( {
+                    rel : 'stylesheet',
+                    type : 'text/css',
+                    href : 'filemanager.css',
+                } )
         )
 
     $(document.documentElement)

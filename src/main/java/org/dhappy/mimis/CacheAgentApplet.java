@@ -6,6 +6,8 @@ import netscape.javascript.JSException;
 import java.io.File;
 import java.io.IOException;
 
+import javax.activation.MimetypesFileTypeMap;
+
 import javax.swing.JApplet;
 import javax.swing.SwingUtilities;
 import javax.swing.JFileChooser;
@@ -109,6 +111,7 @@ public class CacheAgentApplet extends JApplet {
         while( ! elems.isEmpty() && root != null && ret == null ) {
             String elem = elems.poll();
             ret = root.getMember( elem );
+            log.info( elem + ":" + ret );
             if( ! elems.isEmpty()
                 && ( ret instanceof JSObject || ret == null ) ) {
                 root = (JSObject)ret;
@@ -364,6 +367,7 @@ public class CacheAgentApplet extends JApplet {
                 (Stack<Map<String,Object>>)AccessController.doPrivileged
                 ( new PrivilegedAction() {
                         public Object run() {
+                            MimetypesFileTypeMap type = new MimetypesFileTypeMap();
                             Stack<Map<String,Object>> paths =
                                 new Stack<Map<String,Object>>();
                             File[] files =
@@ -380,10 +384,17 @@ public class CacheAgentApplet extends JApplet {
                                         name = file.getCanonicalPath();
                                     }
                                     obj.put( "name", name );
-                                    obj.put( "size", file.length() );
+                                    obj.put( "size",
+                                             ( path.length() == 0
+                                               ? file.getTotalSpace()
+                                               : file.length() ) );
                                     obj.put( "readable", file.canRead() );
                                     obj.put( "writable", file.canWrite() );
                                     obj.put( "modified", file.lastModified() );
+                                    obj.put( "type",
+                                             ( file.isDirectory()
+                                               ? "text/directory"
+                                               : type.getContentType( file ) ) );
                                     paths.push( obj );
                                 } catch( IOException ioe ) {
                                     log.warning( ioe.getMessage() );
@@ -535,6 +546,8 @@ public class CacheAgentApplet extends JApplet {
                        || input instanceof Integer
                        || input instanceof Boolean
                        || input instanceof String ) {
+                ret = input;
+            } else {
                 ret = input;
             }
         } catch( Exception e ) {

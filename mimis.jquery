@@ -33,40 +33,6 @@ mimis.trigger = mimis.trigger ? mimis.trigger : function( name, extra ) {
 
 // Load the applet into the page
 $( function() {
-    var onload = function() { console.log( 'onload' ) }
-                
-    var agentClass = 'org.dhappy.mimis.CacheAgentApplet';
-    var jar = 'target/mimis-0.2.a.jar';
-    
-    var $applet = ( $('<applet/>')
-                    .attr( {
-                        code : agentClass,
-                        codebase : jar.replace( /[^\/]*$/, '' ),
-                        archive : jar.replace( /.*\//, '' ),
-                        height : 0,
-                        width : 0,
-                    } ) )
-    var $object = ( $('<object/>')
-                    .attr( {
-                        classid : 'java:' + agentClass,
-                        type : 'application/x-java-applet',
-                        codetype : 'application/java',
-                        archive : jar,
-                        height : 0,
-                        width : 0,
-                    } )
-                    .bind( 'load', onload )
-                    .append(
-                        $('<param/>').attr( {
-                            name : 'archive',
-                            value : jar,
-                        } )
-                    )
-                    .append( $applet )
-                    .bind( 'load', onload ) )
-    
-    $('body').append( $object );
-            
     mimis.merge( {
         applet : {
             load : function( config ) {
@@ -108,11 +74,46 @@ $( function() {
                             }
                             return obj
                         },
-                    }, } )
-            mimis.trigger( 'load' )
-            console.log( 'applet:load' )
+                    },
+                } )
+                mimis.trigger( 'load' )
+                console.log( 'applet:load' )
+            }
         }
-    }
-} )
+    } )
+
+    var onload = function() { console.log( 'onload' ) }
+                
+    var agentClass = 'org.dhappy.mimis.CacheAgentApplet';
+    var jar = 'target/mimis-0.2.a.jar';
+    
+    var $applet = ( $('<applet/>')
+                    .attr( {
+                        code : agentClass,
+                        codebase : jar.replace( /[^\/]*$/, '' ),
+                        archive : jar.replace( /.*\//, '' ),
+                        height : 0,
+                        width : 0,
+                    } ) )
+    var $object = ( $('<object/>')
+                    .attr( {
+                        classid : 'java:' + agentClass,
+                        type : 'application/x-java-applet',
+                        codetype : 'application/java',
+                        archive : jar,
+                        height : 0,
+                        width : 0,
+                    } )
+                    .bind( 'load', onload )
+                    .append(
+                        $('<param/>').attr( {
+                            name : 'archive',
+                            value : jar,
+                        } )
+                    )
+                    .append( $applet )
+                    .bind( 'load', onload ) )
+    
+    $('body').append( $object );
 } )
 
