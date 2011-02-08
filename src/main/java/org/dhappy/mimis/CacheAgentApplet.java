@@ -193,6 +193,7 @@ public class CacheAgentApplet extends JApplet {
                               XMPPConnection connection = null;
                               String username;
                               String password;
+                              String server;
                               
                               public Object value( final Callback callback ) {
                                   log.info( "get:connection" );
@@ -202,14 +203,13 @@ public class CacheAgentApplet extends JApplet {
                                               return AccessController.doPrivileged
                                                   ( new PrivilegedAction() {
                                                           public Object run() {
-                                                              if( username != null && password != null ) {
-                                                                  String server = username.substring( username.lastIndexOf( "@" ) + 1 );
-                                                                  int port = 5222;
-                                                                  String domain = server;
-                                                                  if( server.equals( "gmail.com" ) ) {
-                                                                      server = "talk.google.com";
+                                                              if( username != null && password != null && connection == null ) {
+                                                                  String domain = username.substring( username.lastIndexOf( "@" ) + 1 );
+                                                                  if( server == null || server.length() == 0 ) {
+                                                                      server = domain;
                                                                   }
 
+                                                                  int port = 5222;
                                                                   log.info( "connector:" + username + ":" + server );
                                                                   
                                                                   ConnectionConfiguration connConfig =
@@ -252,6 +252,8 @@ public class CacheAgentApplet extends JApplet {
                                                       JSObject credentials = (JSObject)data;
                                                       username = (String)credentials.getMember( "username" );
                                                       password = (String)credentials.getMember( "password" );
+                                                      server = (String)credentials.getMember( "server" );
+                                                      log.info( "Cred:" + username );
                                                       connector.call( null );
                                                       return data;
                                                   }
@@ -476,11 +478,13 @@ public class CacheAgentApplet extends JApplet {
                                                         Pattern botName = Pattern.compile( "^" + username
                                                                                            + "/mimis/bot"
                                                                                            + "/(.*)/([^/]+)/?" );
+                                                        log.info( "name:" + username );
                                                         for( Iterator<Presence> presences =
                                                                  roster.getPresences( username );
                                                              presences.hasNext(); ) {
                                                             Presence presence = (Presence)presences.next();
                                                             Matcher match = botName.matcher( presence.getFrom() );
+                                                            log.info( "presence:" + presence.getFrom() + ":" + presence.toString() );
                                                             if( match.matches() ) {
                                                                 String location = match.group( 1 );
                                                                 String id = match.group( 2 );

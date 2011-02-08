@@ -63,7 +63,7 @@ form ul {
   padding: 0;
 }
 
-input[type='submit'] {
+input[type='submit'], form a.button {
   float: right;
   margin-right: 2em;
 }
@@ -116,6 +116,10 @@ input[type='text'], input[type='password'], textarea, .wmd-preview {
   width: 12em;
   margin: 1em auto;
   padding: .5em;
+}
+
+form#login {
+  margin-top: 3em;
 }
 
 /* Post form styles */

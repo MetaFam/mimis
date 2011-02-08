@@ -151,6 +151,8 @@ $( function() {
             function( event, path ) {
                 mimis.list( path,
                             function( list ) {
+                                $('#login').hide()
+                                $('#datatable_wrapper').show()
                                 if( path.match( /^file:/ ) ) {
                                     var table = []
                                     $(list).each( function( idx, elem ) {
@@ -175,7 +177,26 @@ $( function() {
                                         .data( {
                                             path : path,
                                         } )
-                                } else if( path.match( '/^xmpp:/' ) ) {
+                                } else if( path.match( /^xmpp:/ ) ) {
+                                    console.log( list )
+                                    var table = []
+                                    $(list).each( function( idx, elem ) {
+                                        table.push( [
+                                            elem.name,
+                                            elem.online,
+                                            elem.connected
+                                        ] )
+                                    } )
+                                    $table
+                                        .dataTable( {
+                                            aaData : table,
+                                            aaSorting : [[ 3, 'desc' ]],
+                                            aoColumns : tableCols.xmpp,
+                                            bJQueryUI : true,
+                                            bFilter : false, // Disable searching
+                                            bPaginate : false, // Disable pagination
+                                            bDestroy : true, // Rebuild
+                                        } )
                                 }
                             } )
             } )
@@ -297,83 +318,94 @@ $( function() {
 
         ( function() {
             var $loginform;
-            var callbacks = [];
-            function get$loginform( callback ) {
+            function getLogin( onsubmit ) {
+                //$listing.empty()
+                $('#datatable_wrapper').hide()
+
                 if( $loginform == undefined ) {
-                    callbacks.push( callback )
-                    if( callbacks.length == 1 ) {
-                        $.get( 'form/login/html',
-                               function( data ) {
-                                   $loginform = $(data)
-                                   $loginform.bind( 'submit',
-                                                    function( event ) {
-                                                        event.preventDefault()
-                                                        $loginform.fadeOut()
-                                                    } )
-                                   $listing.empty()
-                                   // Add classes to theme interface
-                                   $loginform.find( 'fieldset' )
-                                       .addClass( 'ui-widget-content' )
-                                   $loginform.find( 'input:text, input:password, textarea' )
-                                       .addClass( 'ui-state-highlight ui-corner-all' )
-                                   // Theme buttons
-                                   $loginform.find( 'button, input:submit, a.button' ).button()
-
-                                   // Fix object links by inserting a transparent link
-                                   $loginform.find( 'a.button object[type="image/svg+xml"]' )
-                                       .each( function() {
-                                           var $svg = $(this)
-                                           var $link = $svg.parents( 'a' )
-                                           var $overlay = ( $('<a/>')
-                                                            .attr( {
-                                                                href : $link.attr( 'href' ),
-                                                            } ) )
-                                           $link.append( $overlay.append( $link.children() ) )
-                                           console.log( $link )
-                                       } )
-
-                                   $listing.append( $loginform )
-                                   $(callbacks).each( function( idx, callback ) {
-                                       callback( $loginform )
-                                   } )
+                    $.get( 'form/login/html',
+                           function( data ) {
+                               $loginform = $(data)
+                               $loginform.bind( 'submit',
+                                                function( event ) {
+                                                    $loginform.fadeOut()
+                                                    event.preventDefault()
+                                                    onsubmit( event )
+                                                } )
+                               $loginform.find( 'input' ).keypress( function( event ) {
+                                   if( ( event.which && event.which == 13 )
+                                       || ( event.keyCode && event.keyCode == 13 ) ) {
+                                       $loginform.trigger( 'submit' )
+                                       return false
+                                   } else {
+                                       return true
+                                   }
                                } )
-                    }
+
+                               // Add classes to theme interface
+                               $loginform.find( 'fieldset' )
+                                   .addClass( 'ui-widget-content' )
+                               $loginform.find( 'input:text, input:password, textarea' )
+                                   .addClass( 'ui-state-highlight ui-corner-all' )
+                               // Theme buttons
+                               $loginform.find( 'button, input:submit, a.button' ).button()
+                               
+                               // Fix object links by inserting a transparent link
+                               $loginform.find( 'a.button object[type="image/svg+xml"]' )
+                                   .each( function() {
+                                       var $svg = $(this)
+                                       var $link = $svg.parents( 'a' )
+                                       var $overlay = ( $('<a/>')
+                                                        .attr( {
+                                                            href : $link.attr( 'href' ),
+                                                        } ) )
+                                       $link.append( $overlay.append( $link.children() ) )
+                                   } )
+                               
+                               $listing.append( $loginform )
+                           } )
                 } else {
-                    callback( $loginform )
+                    $loginform.fadeIn()
                 }
             }
-
+            
+            var username;
+            var password;
+            var server;
             mimis.merge( {
-                xmpp : { credentials : {
-                    username : function( callback ) {
+                xmpp : {
+                    credentials : function( callback ) {
                         if( username == undefined ) {
-                            get$loginform( function( $loginform ) {
-                                if( ! $loginform.data( 'mimis.xmpp.username.listener' ) ) {
-                                    $loginform.bind( 'submit',
-                                                     function( event ) {
-                                                         username =
-                                                             $loginform.find( 'input[name="username"]' ).val()
-                                                         callback( username )
-                                                     } )
+                            getLogin( function( event ) {
+                                var $loginform = $(event.target)
+                                username = $loginform.find( 'input[name="username"]' ).val()
+                                password = $loginform.find( 'input[name="password"]' ).val()
+                                server = $loginform.find( 'input[name="server"]' ).val()
+
+                                if( ! username.match( /@/ ) ) {
+                                    if( server == 'talk.google.com' ) {
+                                        username += '@gmail.com'
+                                    } else {
+                                        username += '@' + server
+                                    }
                                 }
+
+                                console.log( 'cred:' + username )
+                                callback( {
+                                    username : username,
+                                    password : password,
+                                    server : server,
+                                } )
+                            } )
+                        } else {
+                            callback( {
+                                username : username,
+                                password : password,
+                                server : server,
                             } )
                         }
-                    },
-                    password : function( callback ) {
-                        if( password == undefined ) {
-                            get$loginform( function( $loginform ) {
-                                if( ! $loginform.data( 'mimis.xmpp.password.listener' ) ) {
-                                    $loginform.bind( 'submit',
-                                                     function( event ) {
-                                                         password =
-                                                             $loginform.find( 'input[name="password"]' ).val()
-                                                         callback( password )
-                                                     } )
-                                }
-                            } )
-                        }
-                    },
-                } }
+                    }
+                }
             } )
         } )()
 
