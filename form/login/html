@@ -1,9 +1,23 @@
-<form action="login/" method="post"> 
+<form id="login" action="login/" method="post"> 
   <fieldset class="login"> 
     <ul> 
       <li><legend>Username</legend><input type="text" name="username" value=""/></li> 
       <li><legend>Password</legend><input type="password" name="password" value=""/></li> 
-      <li><input type="submit" name="submit" value="Login"/></li> 
+      <li>
+        <a href="javascript:$('form#login').submit()"
+           class="button" title="Google Login">
+          <object type="image/svg+xml" data=".../image/logo/Google/svg"
+                  style="width: 4em; height: 1.5em">
+            <input type="submit" name="submit" value="Google"/>
+          </object>
+        </a>
+        <a href="javascript:console.log(this)" class="button" title="Facebook Login">
+          <object type="image/svg+xml" data=".../image/logo/Facebook/svg"
+                  style="width: 5em; height: 1.5em">
+            <input type="submit" name="submit" value="Facebook"/>
+          </object>
+        </a>
+      </li> 
     </ul> 
   </fieldset> 
 </form>

@@ -111,7 +111,6 @@ public class CacheAgentApplet extends JApplet {
         while( ! elems.isEmpty() && root != null && ret == null ) {
             String elem = elems.poll();
             ret = root.getMember( elem );
-            log.info( elem + ":" + ret );
             if( ! elems.isEmpty()
                 && ( ret instanceof JSObject || ret == null ) ) {
                 root = (JSObject)ret;
@@ -178,6 +177,17 @@ public class CacheAgentApplet extends JApplet {
                               }
                           } );
 
+                localSet( "file.separator",
+                          new DynamicValue() {
+                              public Object value( Callback callback ) {
+                                  if( callback != null ) {
+                                      callback.call( File.separator );
+                                  }
+                                  return File.separator;
+                              }
+                          } );
+
+
                 localSet( "connection",
                           new DynamicValue() {
                               XMPPConnection connection = null;
@@ -236,20 +246,14 @@ public class CacheAgentApplet extends JApplet {
                                                       } );
                                           }
                                       };
-                                  browserGet( "mimis.xmpp.username",
+                                  browserGet( "mimis.xmpp.credentials",
                                               new Callback() {
                                                   public Object call( Object data ) {
-                                                      username = (String)data;
+                                                      JSObject credentials = (JSObject)data;
+                                                      username = (String)credentials.getMember( "username" );
+                                                      password = (String)credentials.getMember( "password" );
                                                       connector.call( null );
-                                                      return username;
-                                                  }
-                                              } );
-                                  browserGet( "mimis.xmpp.password",
-                                              new Callback() {
-                                                  public Object call( Object data ) {
-                                                      password = (String)data;
-                                                      connector.call( null );
-                                                      return password;
+                                                      return data;
                                                   }
                                               } );
 
@@ -310,7 +314,7 @@ public class CacheAgentApplet extends JApplet {
                         return data;
                     }
                 };
-        } else {
+        } else if( callback != null ) {
             log.warning( getClass().getName()
                          + ".get called with callback type: "
                          + callback.getClass().getName() );

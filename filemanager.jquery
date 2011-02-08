@@ -34,62 +34,115 @@ $( function() {
         $content
             .append( $tree )
             .append( $listing.append( $table ) )
-
         $('body').append( $content )
 
-        var tableCols = [
-            { sTitle: 'Name' },
-            {
-                sTitle: 'Date Modified',
-                fnRender : function( obj ) {
-                    var date = obj.aData[ obj.iDataColumn ]
-                    date = new Date( date )
-                    return date.toDateString()
+        var tableCols = {
+            file : [
+                {
+                    sWidth : '1.5em',
+                    sClass : 'icon',
+                    fnRender : function( obj ) {
+                        /*
+                        return ( '<object class="image/svg+xml" '
+                                 + ( 'data=".../mime/type/'
+                                     + obj.aData[ obj.iDataColumn ]
+                                     + '/icon/svg"/>' ) )
+                        */
+                        return ( '<ins class="icon" '
+                                 + 'type="' + obj.aData[ obj.iDataColumn ] + '"/>' )
+                    },
                 },
-            },
-            { sTitle: 'Type' },
-            {
-                sTitle : 'Size',
-                sClass : 'center',
-                fnRender : function( obj ) {
-                    var size = obj.aData[ obj.iDataColumn ]
-                    
-                    // From: http://snipplr.com/view/5945/javascript-numberformat--ported-from-php/
-                    function number_format( number, decimals, dec_point, thousands_sep ) {
-                        var n = number
-                        var c = isNaN( decimals = Math.abs( decimals ) ) ? 2 : decimals
-                        var d = dec_point == undefined ? '.' : dec_point
-                        var t = thousands_sep == undefined ? ',' : thousands_sep
-                        var s = n < 0 ? '-' : '';
-                        var i = parseInt( n = Math.abs(+n || 0).toFixed( c ) ) + ''
-                        var j = ( j = i.length ) > 3 ? j % 3 : 0
- 
-                        return ( s + ( j ? i.substr( 0, j ) + t : '')
-                                 + i.substr( j ).replace( /(\d{3})(?=\d)/g, '$1' + t )
-                                 + (c ? d + Math.abs( n - i ).toFixed( c ).slice( 2 ) : '' ) )
+                {
+                    sTitle : 'Name',
+                    sWidth : 'auto',
+                },
+                {
+                    sTitle : 'Date Modified',
+                    sType : 'date',
+                    fnRender : function( obj ) {
+                        var date = obj.aData[ obj.iDataColumn ]
+                        date = new Date( date )
+                        return date.toDateString()
+                    },
+                    sWidth : 'auto',
+                },
+                {
+                    sTitle : 'Type',
+                    sWidth : 'auto',
+                },
+                {
+                    sTitle : 'Size',
+                    sClass : 'center',
+                    sWidth : 'auto',
+                    bUseRendered : false,
+                    fnRender : function( obj ) {
+                        var size = obj.aData[ obj.iDataColumn ]
+                        
+                        // From: http://snipplr.com/view/5945/javascript-numberformat--ported-from-php/
+                        function number_format( number, decimals, dec_point, thousands_sep ) {
+                            var n = number
+                            var c = isNaN( decimals = Math.abs( decimals ) ) ? 2 : decimals
+                            var d = dec_point == undefined ? '.' : dec_point
+                            var t = thousands_sep == undefined ? ',' : thousands_sep
+                            var s = n < 0 ? '-' : '';
+                            var i = parseInt( n = Math.abs(+n || 0).toFixed( c ) ) + ''
+                            var j = ( j = i.length ) > 3 ? j % 3 : 0
+                            
+                            return ( s + ( j ? i.substr( 0, j ) + t : '')
+                                     + i.substr( j ).replace( /(\d{3})(?=\d)/g, '$1' + t )
+                                     + (c ? d + Math.abs( n - i ).toFixed( c ).slice( 2 ) : '' ) )
+                        }
+                        
+                        var gb = Math.pow( 2, 30 )
+                        var mb = Math.pow( 2, 20 )
+                        var kb = Math.pow( 2, 10 )
+                        if( size >= gb )  {
+                            size = number_format( size / gb ) + ' GB';
+                        } else if( size >= mb ) {
+                            size = number_format( size / mb ) + ' MB';
+                        } else if( size >= kb ) {
+                            size = number_format( size / kb, 0 ) + ' KB';
+                        } else {
+                            size = number_format( size, 0 ) + ' B';
+                        }
+                        return size
                     }
-
-                    var gb = Math.pow( 2, 30 )
-                    var mb = Math.pow( 2, 20 )
-                    var kb = Math.pow( 2, 10 )
-                    if( size >= gb )  {
-                        size = number_format( size / gb ) + ' GB';
-                    } else if( size >= mb ) {
-                        size = number_format( size / mb ) + ' MB';
-                    } else if( size >= kb ) {
-                        size = number_format( size / kb, 0 ) + ' KB';
-                    } else {
-                        size = number_format( size, 0 ) + ' B';
-                    }
-                    return size
                 }
+            ],
+            xmpp : [
+                {
+                    sTitle : 'Name',
+                    sWidth : 'auto',
+                },
+                {
+                    sTitle : 'Online',
+                    sWidth : 'auto',
+                },
+                {
+                    sTitle : 'Connected',
+                    sWidth : 'auto',
+                },
+            ],
+        }
+
+        var sep = mimis.get( 'file.separator' )
+
+        // Add an element to a path adding a separator if necessary
+        function addPath( path, ext ) {
+            if( ! path.match( /:$/ )
+                && ! path.match( new RegExp( ( sep == '\\' ? '\\\\' : sep ) + '$' ) ) ) {
+                path += sep
             }
-        ]
+            path += ext
+            return path
+        }
 
         $( '#datatable tr' ).live( 'dblclick', function() {
             var $row = $(this)
-            var path = $table.data( 'path' ) + $row.children().eq( 0 ).text()
-            console.log( path )
+            var path = $table.data( 'path' )
+            // ToDo: Handle quotes in filenames
+            $tree.jstree( 'open_node', '[path="' + path + '"]' )
+            path = addPath( path, $row.children().eq( 1 ).text() )
             mimis.trigger( 'path.selected', [ path ] )
         } )
 
@@ -98,22 +151,24 @@ $( function() {
             function( event, path ) {
                 mimis.list( path,
                             function( list ) {
-                                console.log( list )
                                 if( path.match( /^file:/ ) ) {
                                     var table = []
                                     $(list).each( function( idx, elem ) {
                                         table.push( [
+                                            elem.type,
                                             elem.name,
                                             elem.modified,
                                             elem.type,
                                             elem.size
                                         ] )
                                     } )
-                                    console.log( table )
                                     $table
                                         .dataTable( {
                                             aaData : table,
-                                            aoColumns : tableCols,
+                                            aaSorting : [[ 2, 'desc' ]],
+                                            aoColumns : tableCols.file,
+                                            bJQueryUI : true,
+                                            bFilter : false, // Disable searching
                                             bPaginate : false, // Disable pagination
                                             bDestroy : true, // Rebuild
                                         } )
@@ -133,7 +188,7 @@ $( function() {
                     {
                         data : 'Local',
                         attr : {
-                            id : 'mimis.local',
+                            id : 'file', //escape( 'file:' ),
                             path : 'file:',
                             title : 'Browse',
                         },
@@ -142,7 +197,7 @@ $( function() {
                     {
                         data : 'Remote',
                         attr : {
-                            id : 'mimis.remote',
+                            id : escape( 'xmpp:' ),
                             path : 'xmpp:',
                             title : 'Connect',
                         },
@@ -154,15 +209,20 @@ $( function() {
                 var id = obj.attr( 'id' )
                 var path = obj.attr( 'path' )
 
+                console.log( path )
                 mimis.list( path,
                             function( list ) {
                                 listing = []
                                 $(list).each( function( idx, elem ) {
-                                    listing.push( {
-                                        data : elem.name,
-                                        attr : { path : path + elem.name },
-                                        children : [ 'placeholder' ],
-                                    } )
+                                    if( elem.type.match( /\/directory$/ ) ) {
+                                        listing.push( {
+                                            data : elem.name,
+                                            attr : {
+                                                path : addPath( path, elem.name ),
+                                            },
+                                            children : [ 'placeholder' ],
+                                        } )
+                                    }
                                 } )
                                 callback( listing )
                             } )
@@ -209,7 +269,7 @@ $( function() {
                    function( event, data ) {
                        var active = data.rslt.obj
                        var display
-                       var attrs = [ 'title', 'id' ]
+                       var attrs = [ 'title', 'id', 'path' ]
                        do {
                            // display = active.attr( attrs.dequeue() )
                            display = active.attr( attrs.shift() )
@@ -236,9 +296,6 @@ $( function() {
         } );
 
         ( function() {
-            var username;
-            var password;
-            
             var $loginform;
             var callbacks = [];
             function get$loginform( callback ) {
@@ -253,7 +310,29 @@ $( function() {
                                                         event.preventDefault()
                                                         $loginform.fadeOut()
                                                     } )
-                                   $table.append( $loginform )
+                                   $listing.empty()
+                                   // Add classes to theme interface
+                                   $loginform.find( 'fieldset' )
+                                       .addClass( 'ui-widget-content' )
+                                   $loginform.find( 'input:text, input:password, textarea' )
+                                       .addClass( 'ui-state-highlight ui-corner-all' )
+                                   // Theme buttons
+                                   $loginform.find( 'button, input:submit, a.button' ).button()
+
+                                   // Fix object links by inserting a transparent link
+                                   $loginform.find( 'a.button object[type="image/svg+xml"]' )
+                                       .each( function() {
+                                           var $svg = $(this)
+                                           var $link = $svg.parents( 'a' )
+                                           var $overlay = ( $('<a/>')
+                                                            .attr( {
+                                                                href : $link.attr( 'href' ),
+                                                            } ) )
+                                           $link.append( $overlay.append( $link.children() ) )
+                                           console.log( $link )
+                                       } )
+
+                                   $listing.append( $loginform )
                                    $(callbacks).each( function( idx, callback ) {
                                        callback( $loginform )
                                    } )
@@ -265,7 +344,7 @@ $( function() {
             }
 
             mimis.merge( {
-                xmpp : {
+                xmpp : { credentials : {
                     username : function( callback ) {
                         if( username == undefined ) {
                             get$loginform( function( $loginform ) {
@@ -294,7 +373,7 @@ $( function() {
                             } )
                         }
                     },
-                }
+                } }
             } )
         } )()
 
