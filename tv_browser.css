@@ -1,0 +1,48 @@
+html { background-color: black; color: white; }
+html, body { margin: 0; padding: 0; height: 100%; }
+input[name='show'] {
+  display: block; margin: auto; width: 10em;
+  margin-top: 2em; font-size: 13pt;
+  padding: .25em .5em;
+}
+#seasons > ol {
+  list-style: none;
+}
+#seasons > p:after {
+  content: ': ';
+}
+#seasons > p, #seasons > ol > li {
+  padding: .25em;
+  float: left;
+}
+#seasons {
+  max-width: 700px; margin: auto;
+}
+.images { list-style: none; overflow: hidden; }
+.images li {
+  float: left;
+}
+
+.jcarousel-skin-tango .jcarousel-clip-horizontal,
+.jcarousel-skin-tango .jcarousel-container-horizontal,
+.jcarousel-skin-tango .jcarousel-item {
+  width: auto;
+  height: auto;
+}
+
+.jcarousel-skin-tango .jcarousel-clip-horizontal,
+.jcarousel-skin-tango .jcarousel-container-horizontal {
+  width: 100%;
+}
+
+.jcarousel-skin-tango .jcarousel-clip-horizontal {
+  width: 500px;
+}
+
+.jcarousel-item {
+  display: inline;
+}
+
+.jcarousel-list {
+  white-space: nowrap;
+}
