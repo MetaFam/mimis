@@ -178,7 +178,7 @@ $( function() {
                                             path : path,
                                         } )
                                 } else if( path.match( /^xmpp:/ ) ) {
-                                    console.log( list )
+                                    //console.log( list )
                                     var table = []
                                     $(list).each( function( idx, elem ) {
                                         table.push( [
@@ -190,7 +190,7 @@ $( function() {
                                     $table
                                         .dataTable( {
                                             aaData : table,
-                                            aaSorting : [[ 3, 'desc' ]],
+                                            //aaSorting : [[ 3, 'desc' ]],
                                             aoColumns : tableCols.xmpp,
                                             bJQueryUI : true,
                                             bFilter : false, // Disable searching
@@ -230,7 +230,7 @@ $( function() {
                 var id = obj.attr( 'id' )
                 var path = obj.attr( 'path' )
 
-                console.log( path )
+                //console.log( path )
                 mimis.list( path,
                             function( list ) {
                                 listing = []
@@ -390,7 +390,7 @@ $( function() {
                                     }
                                 }
 
-                                console.log( 'cred:' + username )
+                                //console.log( 'cred:' + username )
                                 callback( {
                                     username : username,
                                     password : password,
