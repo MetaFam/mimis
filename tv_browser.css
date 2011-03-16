@@ -1,8 +1,9 @@
 html { background-color: black; color: white; }
 html, body { margin: 0; padding: 0; height: 100%; }
+body { padding-top: 2em; }
 input[name='show'] {
   display: block; margin: auto; width: 10em;
-  margin-top: 2em; font-size: 13pt;
+  margin-top: 0; margin-bottom: 0; font-size: 13pt;
   padding: .25em .5em;
 }
 #seasons > ol {
@@ -23,8 +24,17 @@ input[name='show'] {
   float: left;
 }
 
+.jcarousel-skin-tango .jcarousel-container-horizontal {
+  width: 590px;
+}
+
+.jcarousel-skin-tango .jcarousel-clip-horizontal {
+  width: 100%;
+  height: 110px;
+}
+  
+/*
 .jcarousel-skin-tango .jcarousel-clip-horizontal,
-.jcarousel-skin-tango .jcarousel-container-horizontal,
 .jcarousel-skin-tango .jcarousel-item {
   width: auto;
   height: auto;
@@ -34,13 +44,17 @@ input[name='show'] {
 .jcarousel-skin-tango .jcarousel-container-horizontal {
   width: 100%;
 }
+*/
 
-.jcarousel-skin-tango .jcarousel-clip-horizontal {
-  width: 500px;
+.jcarousel-skin-tango .jcarousel-item {
+  display: inline;
+  width: 110px;
+  height: 110px;
 }
 
-.jcarousel-item {
-  display: inline;
+.jcarousel-skin-tango .jcarousel-prev-horizontal,
+.jcarousel-skin-tango .jcarousel-next-horizontal {
+  top: 60px;
 }
 
 .jcarousel-list {

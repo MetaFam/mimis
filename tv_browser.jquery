@@ -22,7 +22,7 @@ $( function() {
                    $.getJSON( service_url + '?callback=?',
                               { query : JSON.stringify( query_envelope ) },
                               function( data ) {
-                                  console.log( data )
+                                  //console.log( data )
                                   $(data.result[0]['/tv/tv_program/seasons'])
                                       .each( function( idx, season ) {
                                           var $images =
@@ -56,9 +56,10 @@ $( function() {
                                                   } ],
                                                   '/common/topic/image' : [ {
                                                       id : null,
-                                                      size : [],
-                                                      '/common/image/size' : [],
-                                                      image_caption : null,
+                                                      size : {
+                                                          x : null,
+                                                          y : null,
+                                                      },
                                                       //limit : 1,
                                                   } ],
                                                   //limit : 1,
@@ -71,23 +72,33 @@ $( function() {
                                           $.getJSON( service_url + '?callback=?',
                                                      { query : JSON.stringify( query_envelope ) },
                                                      function( data ) {
-                                                         console.log( data )
+                                                         //console.log( data )
                                                          var $jcarousel
                                                          if( data.result.length > 0 ) {
                                                              $(data.result[0]['/tv/tv_series_season/episodes'])
                                                                  .each( function( idx, episode ) {
                                                                      var doc_url = 'http://api.freebase.com/api/trans/raw'
+                                                                     var thumb_url = 'http://img.freebase.com/api/trans/image_thumb'
                                                                      var images = episode['/common/topic/image']
+                                                                     console.log( images )
                                                                      var $image =
                                                                          $('<img/>')
                                                                          .attr( {
-                                                                             src : doc_url + images[0].id,
+                                                                             src : ( thumb_url + images[0].id
+                                                                                     + '?maxwidth=110&maxheight=110'
+                                                                                     + '&mode=fillcropmid' ),
                                                                          } )
+                                                                         .css( {
+                                                                             width : 110,
+                                                                             height : 110,
+                                                                         } )
+                                                                     /*
                                                                          .bind( 'load',
                                                                                 function() {
                                                                                     //$jcarousel.setup()
                                                                                     $(window).trigger( 'resize.jcarousel' )
                                                                                 } )
+                                                                     */
                                                                      
 
                                                                      var articles = episode['/common/topic/article']
