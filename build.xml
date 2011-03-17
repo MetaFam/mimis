@@ -1,21 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Trying to get the build process to run entirely
-   - from maven, but can't manage to build the jar
-   - keystore only if it doesn't exist.
-   -->
-<project default="all">
+<project default="jar">
+  <loadproperties>
+    <file file="java/build/properties"/>
+  </loadproperties>
+  <loadproperties>
+    <file file="java/private/properties"/>
+  </loadproperties>
+
   <target name="keychain-check">
-    <mkdir dir="${jar.keystore.dir}" />
-    <available file="${jar.keystore}"
+    <mkdir dir="${jar.key.store.dir}" />
+    <available file="${jar.key.store}"
                property="keychain.exists" />
   </target>
   
   <target name="make-keychain"
           depends="keychain-check"
           unless="keychain.exists">
-    <echo message="${jar.keystore}"/>
     <exec dir="." executable="keytool">
-      <arg line="-genkey -keystore ${jar.keystore} -alias ${jar.storealias} -storepass ${jar.storepass} -dname 'OU=Mimis, O=DoH ,L=Baltimore ,S=Maryland ,C=US'" />
+      <arg line="-genkey -keystore '${jar.key.store}' -alias '${jar.key.alias}' -storepass '${jar.key.pass}' -dname '${distinguished.name}'" />
     </exec>
   </target>
 
@@ -31,9 +33,57 @@
       <arg line="-s ../lib target/lib"/>
     </exec>
   </target>
-
-  <target name="all"
-          depends="make-target-lib,make-keychain"
-          unless="target.lib.exists">
+  
+  <target name="setup" depends="make-keychain" unless="setup.done">
+    <mkdir dir="${jar.dir}" />
+    <mkdir dir="build/" />
+    <copy todir="build/">
+      <fileset dir="java/src">
+        <include name="**.java" />
+        <exclude name="**/..." />
+      </fileset>
+    </copy>
+    <property name="setup.done" value="true" />
   </target>
+
+  <target name="jar" depends="setup">
+    <javac srcdir="build/" destdir="build/" deprecation="on">
+      <!--
+      <classpath>
+        <pathelement location="/usr/share/java/antlr.jar"/>
+        <fileset dir="${user.home}/lib"><include name="**/*.jar"/></fileset>
+      </classpath>
+      -->
+    </javac>
+    <jar destfile="${jar}" basedir="build/">
+      <manifest>
+        <attribute name="Built-By" value="${user.name}"/>
+        <attribute name="Main-Class" value="${main.class}" />
+      </manifest>
+    </jar>
+    <signjar jar="${jar}" alias="${jar.key.alias}" storepass="${jar.key.pass}" keystore="${jar.key.store}" />
+  </target>
+
+  <target name="javadoc" depends="setup">
+    <propertyregex property="escaped.name"
+                   input="${author.name}"
+                   regexp=" "
+                   replace="%20"
+                   global="true" />
+    <javadoc packagenames="org.dhappy.*" sourcepath="build/"
+             excludepackagenames="" defaultexcludes="yes"
+             destdir="java/doc/" windowtitle="${doc.title}"
+             author="true" version="true" use="true">
+      <doctitle><![CDATA[<h1><a href="${project.uri}">${doc.title}</a></h1>]]></doctitle>
+      <bottom><![CDATA[<a href="${author.uri}">${author.name}</a> <a href="mailto:${escaped.name}%20%3C${author.email}%3E">${author.email}</a>]]></bottom>
+      <!--
+          <tag name="todo" scope="all" description="To do:"/>
+          <group title="Group 1 Packages" packages="com.dummy.test.a*"/>
+          <group title="Group 2 Packages" packages="com.dummy.test.b*:com.dummy.test.c*"/>
+          <link offline="true" href="http://java.sun.com/products/jdk/1.2/docs/api/" packagelistLoc="C:\tmp"/>
+          <link href="http://developer.java.sun.com/developer/products/xml/docs/api/"/>
+      -->
+    </javadoc>
+  </target>
+
 </project>

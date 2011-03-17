@@ -24,9 +24,15 @@ $( function() {
             // http://www.chromium.org/developers/design-documents/desktop-notifications/api-specification
             //webkitNotifications.createHTMLNotification( 'notification.html' )
             
-            webkitNotifications.ALLOWED = webkitNotifications.ALLOWED || 0
+            // ToDo: Move to definitions file
+            webkitNotifications,__defineGetter__(
+                'allowed',
+                function() {
+                    webkitNotifications.ALLOWED = webkitNotifications.ALLOWED || 0
+                    return webkitNotifications.checkPermission() == webkitNotifications.ALLOWED
+                } )
 
-            if( webkitNotifications.checkPermission() == webkitNotifications.ALLOWED ) {
+            if( webkitNotifications.allowed )
                 var notification = webkitNotifications.createNotification(
                     chrome.extension.getURL( 'icon/48/png' ),
                     'Property Changed',

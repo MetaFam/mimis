@@ -5,3 +5,5 @@ NeoTraverse/
 pipeline.*.out
 test/
 favicon.*
+.mimis/
+build/

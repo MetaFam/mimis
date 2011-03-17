@@ -7,6 +7,7 @@ chrome.extension = chrome.extension || {
         return ( location.href.replace( /(\/extension\/).*/, '$1' )
                  + url.replace( /^\/?/, '' ) )
     },
+    faux : true,
 }
 
 chrome.browserAction = chrome.browserAction || {
