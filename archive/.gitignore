@@ -1,7 +1,4 @@
-*~
 target/
 var/
 NeoTraverse/
 pipeline.*.out
-test/
-favicon.*

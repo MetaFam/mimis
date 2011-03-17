@@ -43,7 +43,7 @@ $( function() {
                     applet : {
                         instance : instance,
                         callback : function( id, data ) {
-                            console.log( 'callback:' + id )
+                            //console.log( 'callback:' + id )
                             return mimis.applet.instance.callback( id, data )
                         },
                     },
@@ -60,7 +60,7 @@ $( function() {
                     },
                     browser : {
                         get : function( path, callback ) {
-                            console.log( 'browser.get:' + path )
+                            //console.log( 'browser.get:' + path )
                             var obj = window
                             var elems = path.split( '.' )
                             while( elems.length > 0 && obj) {
@@ -77,7 +77,7 @@ $( function() {
                     },
                 } )
                 mimis.trigger( 'load' )
-                console.log( 'applet:load' )
+                //console.log( 'applet:load' )
             }
         }
     } )
