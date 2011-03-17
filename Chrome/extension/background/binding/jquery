@@ -1,0 +1,33 @@
+$( function(){
+    // This event is fired each time the user updates the text in the omnibox,
+    // as long as the extension's keyword mode is still active.
+    chrome.omnibox.onInputChanged.addListener(
+        function( text, suggest ) {
+            var serverURI = localStorage.queryURI
+            console.log( 'Server: ' + serverURI )
+            $.getJSON( serverURI + text + '&callback=?',
+                       function( data ) {
+                           var suggestions = []
+                           $( data.response ).each( function( idx, suggestion ) {
+                               suggestions.push( {
+                                   content : suggestion.id,
+                                   description : suggestion.name,
+                               } )
+                           } )
+                           suggest( suggestions )
+                       } )
+        } )
+
+    // This event is fired with the user accepts the input in the omnibox.
+    chrome.omnibox.onInputEntered.addListener(
+        function( text ) {
+            if( text.match( /^\// ) ) {
+                var fburl = 'http://freebase.com/view' + text
+                return chrome.tabs.create( { url : fburl } )
+            } else if( text != '' ) {
+                var fburl = localStorage.searchURI + text
+                return chrome.tabs.create( { url : fburl } )
+            }
+        }
+    )
+} )
