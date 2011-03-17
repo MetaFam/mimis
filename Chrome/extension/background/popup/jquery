@@ -1,0 +1,16 @@
+$( function() {
+    var manifestURL = chrome.extension.getURL( 'manifest.json' )
+    var manifest
+    $.ajax( {
+        url : manifestURL,
+        dataType : 'json',
+        contentType : 'application/json',
+        async : false,
+        success : function( json ) {
+            manifest = json
+        },
+    } )
+    chrome.browserAction.setBadgeText( {
+        text : manifest.version,
+    } )
+} )

@@ -1,0 +1,20 @@
+console.log( chrome )
+chrome.tabs.executeScript( null, {
+    code : "document.body.style.backgroundColor = 'red'",
+} )
+        
+chrome.browserAction.setBadgeText( {
+    text : "#"
+} )
+
+;( function() {
+    var i = 0
+    window.setInterval( function() {
+        chrome.browserAction.setBadgeBackgroundColor( {
+            color : [ Math.round( Math.random() * 255 ),
+                      Math.round( Math.random() * 255 ),
+                      Math.round( Math.random() * 255 ),
+                      Math.round( Math.random() * 255 ) ],
+        } )
+    }, 3000 )
+} )()
