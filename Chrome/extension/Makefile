@@ -16,3 +16,10 @@ icon/%/png: logo/svg
 
 crx: $(icons) manifest.json $(shell find -name jquery -or -name js -or -name html)
 	mkcrx . key/signing/pem
+
+clean:
+	#git clean -nx
+	#CONTINUE ?= (shell read -p "Remove? [Y/n] " CONTINUE; echo $$CONTINUE)
+	#%if $(CONTINUE) == n
+		git clean -xf
+	#%endif
