@@ -1,0 +1,70 @@
+var mimis = mimis || {}
+
+mimis.bind = mimis.bind || function( name, listener ) {
+    $(window).bind( 'mimis.' + name, listener )
+}
+
+mimis.unbind = mimis.unbind || function( name, listener ) {
+    $(window).unbind( 'mimis.' + name, listener )
+}
+
+mimis.trigger = mimis.trigger || function( name, extra ) {
+    $(window).trigger( 'mimis.' + name, extra )
+}
+
+$( function() {
+    var agentClass = 'org.dhappy.mimis.CacheAgentApplet'
+    var jar = chrome.extension.getURL( 'agent/cache/jar' )
+
+    var onload = function() {
+        console.log( "Testing 'load' listener" )
+    }
+        
+    var $applet = ( $('<applet/>')
+                    .attr( {
+                        code : agentClass,
+                        codebase : jar.replace( /[^\/]*$/, '' ),
+                        archive : jar.replace( /.*\//, '' ),
+                        height : 0,
+                        width : 0,
+                    } ) )
+                    .bind( 'load', onload )
+    var $object = ( $('<object/>')
+                    .attr( {
+                        classid : 'java:' + agentClass,
+                        type : 'application/x-java-applet',
+                        codetype : 'application/java',
+                        archive : jar,
+                        height : 0,
+                        width : 0,
+                    } )
+                    .append(
+                        $('<param/>').attr( {
+                            name : 'archive',
+                            value : jar,
+                        } )
+                    )
+                    .append( $applet )
+                    .bind( 'load', onload ) )
+
+    $('body').append( $object )
+
+    // ToDo: A non-destructive version of $.extend
+    $.extend( true, mimis.applet, {
+        load : ( function( config ) {
+            var instance = ( $object.get( 0 ).get
+                             ? $object.get( 0 )
+                             : $applet.get( 0 ) )
+            console.log( 'Load Callback' )
+            mimis.trigger( 'load', {
+                applet : instance,
+            } )
+        } )
+    } )
+
+    var callback = function( id, data ) {
+        //console.log( 'callback:' + id )
+        return mimis.applet.instance.callback( id, data )
+    }
+} )
+
