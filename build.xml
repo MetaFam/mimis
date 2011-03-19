@@ -35,11 +35,12 @@
   </target>
   
   <target name="setup" depends="make-keychain" unless="setup.done">
-    <mkdir dir="${jar.dir}" />
     <mkdir dir="build/" />
+    <!-- Even with exclude ..., is still overflowing the heap -->
     <copy todir="build/">
-      <fileset dir="java/src">
-        <include name="**.java" />
+      <fileset dir="java/src" followsymlinks="false">
+        <include name="**/*.java" />
+        <exclude name="..." />
         <exclude name="**/..." />
       </fileset>
     </copy>
@@ -48,13 +49,16 @@
 
   <target name="jar" depends="setup">
     <javac srcdir="build/" destdir="build/" deprecation="on">
-      <!--
       <classpath>
-        <pathelement location="/usr/share/java/antlr.jar"/>
-        <fileset dir="${user.home}/lib"><include name="**/*.jar"/></fileset>
+        <!--<pathelement location="/usr/share/java/antlr.jar"/>-->
+        <fileset dir="${user.home}/.../lib/java/lib">
+          <include name="**/*.jar"/>
+          <exclude name="..." />
+          <exclude name="**/..." />
+        </fileset>
       </classpath>
-      -->
     </javac>
+    <mkdir dir="${jar.dir}" />
     <jar destfile="${jar}" basedir="build/">
       <manifest>
         <attribute name="Built-By" value="${user.name}"/>

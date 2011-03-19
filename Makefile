@@ -1,3 +1,6 @@
+# This is largely obsolete and needs to be revised.
+# Building is through ant.
+
 ID = mimis
 GROUP_ID = "org.dhappy.$(ID)"
 MIMIS_HOME = .$(ID)
