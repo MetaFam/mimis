@@ -1,7 +1,0 @@
-localStorage.queryURI =
-    localStorage.queryURI
-    || 'http://westport.freebaseapps.com/newjsonp?q='
-
-localStorage.searchURI =
-    localStorage.searchURI
-    || 'http://westport.freebaseapps.com/?q='
