@@ -222,17 +222,13 @@ $( function() {
         }
     } )
 
-    try {
-        $('#fileview').dataTable( {
-            //sDom: "<'row-fluid'<'span4'l><'span4'f>r>t<'row-fluid'<'span3'i><'span5'p>>",
-            //sPaginationType: 'bootstrap',
-            oLanguage: {
-                sLengthMenu: '_MENU_ per page'
-            }
-        } )
-    } catch( ex ) {
-        console.error( "$('#fileview').dataTable", ex )
-    }
+    $('#fileview').dataTable( {
+        sDom: "<'row-fluid'<'span4'l><'span4'f>r>t<'row-fluid'<'span3'i><'span5'p>>",
+        sPaginationType: 'bootstrap',
+        oLanguage: {
+            sLengthMenu: '_MENU_ per page'
+        }
+    } )
 
     var world = {}
 

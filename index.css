@@ -1,0 +1,107 @@
+#filelist {
+    border: none;
+}
+
+#filelist:hover {
+    background-color: #F8F8F8;
+}
+
+li {
+    white-space: nowrap;
+}
+
+#files {
+    overflow: auto;
+}
+
+html, body, .container, .fullheight .span4, .fullheight .span8, #files, #filelist, .fullheight.row, .fullheight.row-fluid {
+    height: 100%;
+}
+
+input, label {
+    display: block;
+}
+
+.selected, .selected + label {
+    background-color: gray ! important;
+    color: white;
+}
+
+label:hover, label:active, input:hover, input:hover + label, input:active + label,
+.file a:hover {
+    background-color: #F8F8F8 ! important;
+    color: black;
+}
+
+.container {
+    width: 100%;
+}
+
+.sorting:after {
+    content: ' \21F3';
+}
+
+.sorting_desc:after {
+    content: ' \21E7';
+}
+
+.sorting_asc:after {
+    content: ' \21E9';
+}
+
+#back-button a {
+    background-image: url('http://dhappy.org/.../image/icon/go/previous/svg');
+    background-repeat: no-repeat;
+    padding: 6px 0px 4px 28px;
+    margin-top: 3px;
+}
+
+ol.tree li label {
+    background-repeat: no-repeat;
+}
+
+ol.tree li label[for=world] {
+    background-image: url('http://dhappy.org/.../image/globe/svg') ! important;
+}
+
+ol.tree li label[for=local] {
+    background-image: url('http://dhappy.org/.../image/icon/computer/svg') ! important;
+}
+
+ol.tree li label[for=sharing] {
+    background-image: url('http://dhappy.org/.../image/icon/workgroup/svg') ! important;
+}
+
+ol.tree li label[for=book] {
+    background-image: url('http://dhappy.org/.../image/book/open/svg') ! important;
+}
+
+ol.tree li label[for='book - award'], ol.tree li label[for='movie - award'] {
+    background-image: url('http://dhappy.org/.../image/ribbon/svg') ! important;
+}
+
+ol.tree li label[for~='year'] {
+    background-image: url('http://dhappy.org/.../image/icon/calendar/svg') ! important;
+}
+
+ol.tree li label[for='book - award - Hugo'] {
+    background-image: url('http://dhappy.org/.../image/book/award/Hugo/svg') ! important;
+}
+
+ol.tree li label[for='book - award - Nebula'] {
+    background-image: url('http://dhappy.org/.../image/planet/Saturn/svg') ! important;
+}
+
+ol.tree li label[for=movie] {
+    background-image: url('http://dhappy.org/.../image/icon/movie/svg') ! important;
+}
+
+ol.tree li label[for='movie - award - Academy'] {
+    background-image: url('http://dhappy.org/.../image/movie/award/Oscar/svg') ! important;
+}
+
+ol.tree li[class='loading message'] {
+    background-image: url('http://dhappy.org/.../image/icon/loading/svg') ! important;
+    background-repeat: no-repeat;
+    padding-left: 20px;
+}
