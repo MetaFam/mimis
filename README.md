@@ -1,6 +1,1 @@
-If mvn doesn't work:
-  * make -C .../lib/apache/maven/
-
-Available targets:
-  * mvn package exec:exec -D (spider|chatbot|jetty:run)
-  * mvn jar:jar
+Mïmis is intended to be a P2P content distribution network. Each user published a [tree](http://hoenir.himinbi.org/2013/02/distributed-eson/) into a distributed hash table and then these are combined to form a virtual filesystem.
