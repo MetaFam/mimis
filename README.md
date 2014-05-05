@@ -5,8 +5,8 @@ Mimis is essentially Freenet sans encryption running over [WebRTC](http://webrtc
 
 The characteristic I want to borrow from Freebase is predictive caching. The network is constantly trying to guess as to what will be needed beforehand.
 
-I want to base it on a distributed hashtable built on WebRTC, but that doesn't exist yet.
+I want to base it on a distributed hashtable built on WebRTC, but that doesn't exist yet. The most promising work is [WebTorrent](https://github.com/feross/webtorrent).
 
 -----
 
-Mïmis holds the memesphere which is all the digitized information.
+Mïmis holds the memesphere.
