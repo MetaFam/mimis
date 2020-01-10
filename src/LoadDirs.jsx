@@ -22,7 +22,7 @@ export default () => {
           })
         }
       )
-      setText(`Loaded: ${dirs.length} dirs`)
+      setText(`Loaded: ${Number(dirs.length).toLocaleString()} dirs`)
     } else {
       setText('Error!')
       console.error('dirs GET', res)
@@ -31,6 +31,7 @@ export default () => {
 
   return (
     <Button
+      type='primary'
       disabled={text !== defText}
       onClick={getData}
     >
