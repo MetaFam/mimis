@@ -1,0 +1,13 @@
+.ant-select-auto-complete {
+  text-align: center;
+
+  .ant-select-search input.ant-input {
+    height: 3ex;
+  }
+
+  .ant-select-selection__placeholder {
+    height: auto;
+    line-height: inherit;
+    margin-top: .1ex;
+  }
+}
