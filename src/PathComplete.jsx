@@ -16,39 +16,29 @@ export default () => {
     console.info('onSelect', value)
   }
 
-  const checkLength = (search, len, out) => {
-    if(len > MAX_LEN || out.size > MAX_RESULTS) {
-      setMsg(null)
-    } else {
-      setMsg(`Checking: ${len}`)
-
-      db.query(
-        'paths/all',
-        {
-          startkey: [len, search],
-          endkey: [len, `${search}\uFFF0`],
-          limit: MAX_RESULTS - out.size,
-          group: true,
-        }
-      )
+  const onSearch = async (search) => {
+    setMsg('Searching…')
+    db.createIndex(
+      {index: {fields: ['dirlen', 'dir']}}
+    )
+    .then(() => {
+      db.find({
+        selector: {
+          dir: { $gte: search },
+          dirlen: { $gt: null },
+        },
+        sort: ['dirlen'],
+        limit: MAX_RESULTS,
+      })
       .then((res) => {
-        if(out.size === 0 && res.rows.length === 1) {
+        if(res.docs.length === 1) {
           console.info('Single Result')
         }
-        out.concat(res.rows.map((d) => d.key[1]))
-        setDS(out)
-
-        console.log(len, out, res)
-
-        checkLength(search, len + 1, out)
+        console.log('D', res)
+        setDS(res.docs.map((r) => r._id))
+        setMsg(null)
       })
-    }
-
-  }
-
-  const onSearch = async (search) => {
-    setMsg('Starting…')
-    checkLength(search, search.length, [])
+    })
   }
 
   const onChange = (value) => {
@@ -71,7 +61,6 @@ export default () => {
     />
     {msg !== null
       ? <Spin style={{marginLeft: '-45px', marginTop: '2.5ex'}} size='large'>
-          <Alert message={msg} type='info'/>
         </Spin>
       : ''
     }
