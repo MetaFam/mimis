@@ -14,6 +14,7 @@ export default () => {
     if(elem) queue.push(elem) // want ruby's postfix syntax
     // BROKE: This doesn't work as intended, but the load doesn't seem problematic
     if(flush || queue.size > MAX_QUEUE_SIZE) {
+      console.info('Q', queue)
       setText(`Putting ${queue.size} docs`)
       await db.bulkDocs(queue)
       setText(`Added ${queue.size} Paths`)
@@ -32,20 +33,22 @@ export default () => {
         dirs,
         async (e) => {
           for(let i in e.path) {
-            let path = e.path.slice(0, parseInt(i) + 1)
+            let idx = parseInt(i) + 1
+            let path = e.path.slice(0, idx)
             let dir = path.join('/')
             if(seen[dir]) {
-             // console.info(`Skipping ${dir}`, parseInt(i) + 1)
+              //setText(`Skipping ${dir}`)
             } else {
               seen[dir] = true
-              //console.info(`Putting ${dir}`, parseInt(i) + 1)
+              
               try {
+                setText(`Putting ${dir}`)
                 await bulkPut({
                   _id: dir,
                   path: path,
                   dir: dir,
                   dirlen: dir.length,
-                  depth: path.size,
+                  depth: idx,
                   ipfs_id: e.ipfs_id,
                 })
               } catch(err) {

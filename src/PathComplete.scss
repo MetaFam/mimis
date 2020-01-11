@@ -3,8 +3,8 @@
 }
 
 .ant-select-auto-complete {
-  .ant-select-search input.ant-input {
-    height: 3ex;
+  input {
+    height: 3ex ! important;
   }
 
   .ant-select-selection__placeholder {

@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { AutoComplete, Spin, Alert } from 'antd'
 import 'antd/dist/antd.css'
 import { useDB } from 'react-pouchdb'
+import './PathComplete.scss'
 
 const MAX_RESULTS = 25
 const MAX_LEN = 100
