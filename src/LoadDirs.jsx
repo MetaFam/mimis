@@ -10,12 +10,15 @@ export default () => {
   const [text, setText] = useState(defText)
 
   let queue = []
-    const bulkPut = async (elem = null, { flush }) => {
-    if(elem) queue.push(elem)
+  const bulkPut = async (elem = null, flush = false) => {
+    if(elem) queue.push(elem) // want ruby's postfix syntax
+    // BROKE: This doesn't work as intended, but the load doesn't seem problematic
     if(flush || queue.size > MAX_QUEUE_SIZE) {
       console.log('BULK', queue)
       await db.bulkDocs(queue)
+      console.log('BLKDNE', queue)
       queue = []
+      console.log('CLR', queue)
     }
   }
 
@@ -32,16 +35,17 @@ export default () => {
             let path = e.path.slice(0, parseInt(i) + 1)
             let dir = path.join('/')
             if(seen[dir]) {
-              console.info(`Skipping ${dir}`, parseInt(i) + 1)
+             // console.info(`Skipping ${dir}`, parseInt(i) + 1)
             } else {
               seen[dir] = true
-              console.info(`Putting ${dir}`, parseInt(i) + 1)
+              //console.info(`Putting ${dir}`, parseInt(i) + 1)
               try {
                 await bulkPut({
                   _id: dir,
                   path: path,
                   dir: dir,
                   dirlen: dir.length,
+                  depth: path.size,
                   ipfs_id: e.ipfs_id,
                 })
               } catch(err) {
@@ -53,7 +57,7 @@ export default () => {
           }
         }
       )
-      bulkPut({ flush: true })
+      bulkPut(null, true)
       setText(`Loaded: ${Number(dirs.length).toLocaleString()} dirs`)
     } else {
       setText('Error!')

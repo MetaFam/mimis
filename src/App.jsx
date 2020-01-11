@@ -1,16 +1,17 @@
 import React from 'react'
 import './App.css'
 import LoadDirs from './LoadDirs'
-import CreatePathsDDoc from './CreatePathsDDoc'
+import CreateIndex from './CreateIndex'
 import PathComplete from './PathComplete'
 import Sync from './Sync'
+import RemoveDB from './RemoveDB'
 
 export default () => (
   <div className="App">
-    First, <LoadDirs />, then <CreatePathsDDoc />.
+    First, <LoadDirs/>, then <CreateIndex/>.
     <hr/>
-    <PathComplete />
+    <PathComplete/>
     <hr/>
-    To debug, you might need to <Sync />.
+    To debug, you might need to <Sync/> or <RemoveDB/>.
   </div>
 )

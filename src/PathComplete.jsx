@@ -19,15 +19,18 @@ export default () => {
   const onSearch = async (search) => {
     setMsg('Searching…')
     db.createIndex(
-      {index: {fields: ['dirlen', 'dir']}}
+      {index: {fields: ['depth', 'dir']}}
     )
     .then(() => {
       db.find({
         selector: {
-          dir: { $gte: search },
-          dirlen: { $gt: null },
+          $and: [
+            { dir: { $gte: search } },
+            { dir: { $lte: `${search}\uFFF0` } },
+            { depth: { $gt: null } },
+          ],
         },
-        sort: ['dirlen'],
+        sort: ['depth'],
         limit: MAX_RESULTS,
       })
       .then((res) => {
