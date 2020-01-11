@@ -15,11 +15,17 @@ export default () => {
       Array.prototype.forEach.call(
         dirs,
         (e) => {
-          db.post({
-            path: e.path,
-            dir: e.path.join('/'),
-            ipfs_id: e.ipfs_id,
-          })
+          for(let i in e.path) {
+            let path = e.path.slice(0, i + 1)
+            let dir = path.join('/')
+            db.put({
+              _id: dir,
+              path: path,
+              dir: dir,
+              dirlen: dir.length,
+              ipfs_id: e.ipfs_id,
+            })
+          }
         }
       )
       setText(`Loaded: ${Number(dirs.length).toLocaleString()} dirs`)

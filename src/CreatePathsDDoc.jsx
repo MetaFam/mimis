@@ -15,7 +15,7 @@ export default () => {
       views: {
         full: {
           // emit confuses webpack in production
-          map: 'function(doc) { emit(doc.dir, doc) }',
+          map: 'function(doc) { emit(doc.dir, null) }',
           reduce: function(keys, values, rereduce) {
             return 1 // uniqueness
           }.toString(),
@@ -25,7 +25,8 @@ export default () => {
           map: (
             'function(doc) {'
             + 'for(i in doc.path) {'
-            + 'emit(doc.path.slice(0,i + 1).join("/"), doc)'
+            + 'var path = doc.path.slice(0,i+1).join("/");'
+            + 'emit([path.length, path], null);'
             + '}'
             + '}'
           ),
