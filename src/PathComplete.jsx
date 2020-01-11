@@ -5,7 +5,6 @@ import { useDB } from 'react-pouchdb'
 import './PathComplete.scss'
 
 const MAX_RESULTS = 25
-const MAX_LEN = 100
 
 export default () => {
   const [dataSource, setDS] = useState([])
@@ -21,11 +20,11 @@ export default () => {
     setMsg('Searching…')
     db.find({
       selector: {
-        $and: [
-          { dir: { $gte: search } },
-          { dir: { $lte: `${search}\uFFF0` } },
-          { depth: { $gt: null } },
-        ],
+        dir: {
+          $gte: search,
+          $lte: `${search}\uFFF0`,
+        },
+        depth: { $gt: null },
       },
       sort: ['depth'],
       limit: MAX_RESULTS,
@@ -51,7 +50,7 @@ export default () => {
       onSelect={onSelect}
       onSearch={onSearch}
       onChange={onChange}
-      placeholder='Path?'
+      placeholder='Path? (expect initial delay)'
       style={{
         fontSize: '6ex',
         margin: 'auto',

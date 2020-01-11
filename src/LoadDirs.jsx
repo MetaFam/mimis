@@ -12,15 +12,15 @@ export default () => {
   let queue = []
   const bulkPut = async (elem = null, flush = false) => {
     if(elem) queue.push(elem) // want ruby's postfix syntax
-    // BROKE: This doesn't work as intended, but the load doesn't seem problematic
-    if(flush || queue.size > MAX_QUEUE_SIZE) {
-      console.info('Q', queue)
-      setText(`Putting ${queue.size} docs`)
-      await db.bulkDocs(queue)
-      setText(`Added ${queue.size} Paths`)
-      queue = []
-      console.log('CLR', queue)
-    }
+  }
+
+  const flushQueue = async () => {
+    console.info('Q', queue)
+    setText(`Putting ${Number(queue.length).toLocaleString()} Paths`)
+    await db.bulkDocs(queue)
+    setText(`Added ${Number(queue.length).toLocaleString()} Paths`)
+    queue = []
+    console.log('CLR', queue)
   }
 
   const getData = async () => {
@@ -49,6 +49,7 @@ export default () => {
                   dir: dir,
                   dirlen: dir.length,
                   depth: idx,
+                  index: idx,
                   ipfs_id: e.ipfs_id,
                 })
               } catch(err) {
@@ -60,7 +61,7 @@ export default () => {
           }
         }
       )
-      bulkPut(null, true)
+      flushQueue()
       setText(`Loaded: ${Number(dirs.length).toLocaleString()} dirs`)
     } else {
       setText('Error!')
