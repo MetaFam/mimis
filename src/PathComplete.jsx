@@ -18,29 +18,24 @@ export default () => {
 
   const onSearch = async (search) => {
     setMsg('Searching…')
-    db.createIndex(
-      {index: {fields: ['depth', 'dir']}}
-    )
-    .then(() => {
-      db.find({
-        selector: {
-          $and: [
-            { dir: { $gte: search } },
-            { dir: { $lte: `${search}\uFFF0` } },
-            { depth: { $gt: null } },
-          ],
-        },
-        sort: ['depth'],
-        limit: MAX_RESULTS,
-      })
-      .then((res) => {
-        if(res.docs.length === 1) {
-          console.info('Single Result')
-        }
-        console.log('D', res)
-        setDS(res.docs.map((r) => r._id))
-        setMsg(null)
-      })
+    db.find({
+      selector: {
+        $and: [
+          { dir: { $gte: search } },
+          { dir: { $lte: `${search}\uFFF0` } },
+          { depth: { $gt: null } },
+        ],
+      },
+      sort: ['depth'],
+      limit: MAX_RESULTS,
+    })
+    .then((res) => {
+      if(res.docs.length === 1) {
+        console.info('Single Result')
+      }
+      console.log('D', res)
+      setDS(res.docs.map((r) => r._id))
+      setMsg(null)
     })
   }
 

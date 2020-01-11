@@ -14,9 +14,9 @@ export default () => {
     if(elem) queue.push(elem) // want ruby's postfix syntax
     // BROKE: This doesn't work as intended, but the load doesn't seem problematic
     if(flush || queue.size > MAX_QUEUE_SIZE) {
-      console.log('BULK', queue)
+      setText(`Putting ${queue.size} docs`)
       await db.bulkDocs(queue)
-      console.log('BLKDNE', queue)
+      setText(`Added ${queue.size} Paths`)
       queue = []
       console.log('CLR', queue)
     }
