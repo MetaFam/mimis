@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import { AutoComplete, Spin, Alert } from 'antd'
 import 'antd/dist/antd.css'
 import { useDB } from 'react-pouchdb'
 import './PathComplete.scss'
+import SearchContext from './SearchContext'
 
 const MAX_RESULTS = 25
 
@@ -10,7 +11,9 @@ export default () => {
   const [dataSource, setDS] = useState([])
   const [value, setValue] = useState('')
   const [msg, setMsg] = useState(null)
+  const [error, setError] = useState(null)
   const db = useDB('books')
+  const [search, setSearch] = useContext(SearchContext)
 
   const onSelect = (value) => {
     console.info('onSelect', value)
@@ -18,14 +21,17 @@ export default () => {
 
   const onSearch = async (search) => {
     setMsg('Searching…')
+    // Recursive, but too slow (~10s per request every time)
+    /*
     db.find({
       selector: {
-        dir: {
-          $gte: search,
+        _id: {
+          $gt: search,
           $lte: `${search}\uFFF0`,
         },
         depth: { $gt: null },
       },
+      fields: ['_id'],
       sort: ['depth'],
       limit: MAX_RESULTS,
     })
@@ -33,10 +39,30 @@ export default () => {
       if(res.docs.length === 1) {
         console.info('Single Result')
       }
-      console.log('D', res)
+      if(res.warning) {
+        console.warn('FIND', res.warning)
+      }
       setDS(res.docs.map((r) => r._id))
       setMsg(null)
     })
+    */
+    const re = /\S\//g
+    const depth = ((search || '').match(re) || []).length + 1
+    db.query(
+      'paths/by_depth',
+      {
+        startkey: [depth, search],
+        endkey: [depth, `${search}\uFFF0`],
+        group: true,
+        limit: MAX_RESULTS,
+      }
+    )
+    .then((res) => {
+      console.log('R', res)
+      setDS(res.rows.map(r => r.key[1]))
+      setMsg(null)
+    })
+    .catch(err => setError(err))
   }
 
   const onChange = (value) => {
@@ -47,19 +73,17 @@ export default () => {
     <AutoComplete
       value={value}
       dataSource={dataSource}
-      onSelect={onSelect}
-      onSearch={onSearch}
+      onSelect={onSearch}
+      onSearch={setSearch}
       onChange={onChange}
       placeholder='Path? (expect initial delay)'
-      style={{
-        fontSize: '6ex',
-        margin: 'auto',
-        width: '75%',
-      }}
     />
     {msg !== null
-      ? <Spin style={{marginLeft: '-45px', marginTop: '2.5ex'}} size='large'>
-        </Spin>
+      ? <Spin style={{marginLeft: '-45px', marginTop: '2.5ex'}} size='large'/>
+      : ''
+    }
+    {error !== null
+      ? <Alert message={error}/>
       : ''
     }
   </React.Fragment>

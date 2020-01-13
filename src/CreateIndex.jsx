@@ -10,7 +10,7 @@ export default () => {
   const createIdx = async () => {
     setText('Creating…')
     db.createIndex(
-      {index: {fields: ['depth', 'dir']}}
+      {index: {fields: ['depth']}}
     )
     .then(setText('Created'))
   }

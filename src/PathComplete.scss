@@ -3,13 +3,17 @@
 }
 
 .ant-select-auto-complete {
+  font-size: 4ex ! important;
+  margin: auto;
+  width: 75%;
+
   input {
-    height: 3ex ! important;
+    height: auto ! important;
   }
 
   .ant-select-selection__placeholder {
     height: auto;
-    line-height: inherit;
-    margin-top: .1ex;
+    line-height: 100%;
+    margin-top: 0ex;
   }
 }

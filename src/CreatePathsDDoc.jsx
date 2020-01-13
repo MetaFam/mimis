@@ -15,26 +15,43 @@ export default () => {
       views: {
         full: {
           // emit confuses webpack in production
-          map: 'function(doc) { emit(doc.dir, null) }',
+          map: (
+            'function(doc) {'
+            + 'emit(doc.path.join("/") + "/", null);'
+            + '}'
+          ),
           reduce: function(keys, values, rereduce) {
-            return 1 // uniqueness
+            return null // uniqueness
           }.toString(),
         },
         all: {
-          // emit confuses webpack in production
           map: (
             'function(doc) {'
             + 'for(i in doc.path) {'
-            + 'var path = doc.path.slice(0,i+1).join("/");'
-            + 'emit([path.length, path], null);'
+            + 'var path = doc.path.slice(0,i+1).join("/") + "/";'
+            + 'emit(path, null);'
             + '}'
             + '}'
           ),
           reduce: function(keys, values, rereduce) {
-            return 1 // uniqueness
+            return null // uniqueness
           }.toString(),
         },
-      },
+        by_depth: {
+          map: (
+            'function(doc) {'
+            + 'for(i in doc.path) {'
+            + 'var idx = parseInt(i) + 1;'
+            + 'var path = doc.path.slice(0,idx).join("/") + "/";'
+            + 'emit([idx, path], null);'
+            + '}'
+            + '}'
+          ),
+          reduce: function(keys, values, rereduce) {
+            return null // uniqueness
+          }.toString(),
+        },
+      }
     }
 
     setText('Loading…')
