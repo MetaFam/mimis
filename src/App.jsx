@@ -7,6 +7,7 @@ import Sync from './Sync'
 import RemoveDB from './RemoveDB'
 import { SearchProvider } from './SearchContext'
 import Covers from './Covers'
+import IPFSSlurp from './IPFSSlurp'
 
 export default () => (
   <div className="App">
@@ -18,6 +19,8 @@ export default () => (
       <Covers/>
       <hr/>
       To debug, you might need to <Sync/> or <RemoveDB/>.
+      <hr/>
+      <IPFSSlurp/>
     </SearchProvider>
   </div>
 )

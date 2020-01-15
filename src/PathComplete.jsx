@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react'
+import React, { useState, useContext, useEffect } from 'react'
 import { AutoComplete, Spin, Alert } from 'antd'
 import 'antd/dist/antd.css'
 import { useDB } from 'react-pouchdb'
@@ -9,7 +9,6 @@ const MAX_RESULTS = 25
 
 export default () => {
   const [dataSource, setDS] = useState([])
-  const [value, setValue] = useState('')
   const [msg, setMsg] = useState(null)
   const [error, setError] = useState(null)
   const db = useDB('books')
@@ -19,63 +18,61 @@ export default () => {
     console.info('onSelect', value)
   }
 
-  const onSearch = async (search) => {
-    setMsg('Searching…')
-    // Recursive, but too slow (~10s per request every time)
-    /*
-    db.find({
-      selector: {
-        _id: {
-          $gt: search,
-          $lte: `${search}\uFFF0`,
+  useEffect(
+    () => {
+      setMsg('Searching…')
+      // Recursive, but too slow (~10s per request every time)
+      /*
+      db.find({
+        selector: {
+          _id: {
+            $gt: search,
+            $lte: `${search}\uFFF0`,
+          },
+          depth: { $gt: null },
         },
-        depth: { $gt: null },
-      },
-      fields: ['_id'],
-      sort: ['depth'],
-      limit: MAX_RESULTS,
-    })
-    .then((res) => {
-      if(res.docs.length === 1) {
-        console.info('Single Result')
-      }
-      if(res.warning) {
-        console.warn('FIND', res.warning)
-      }
-      setDS(res.docs.map((r) => r._id))
-      setMsg(null)
-    })
-    */
-    const re = /\S\//g
-    const depth = ((search || '').match(re) || []).length + 1
-    db.query(
-      'paths/by_depth',
-      {
-        startkey: [depth, search],
-        endkey: [depth, `${search}\uFFF0`],
-        group: true,
+        fields: ['_id'],
+        sort: ['depth'],
         limit: MAX_RESULTS,
-      }
-    )
-    .then((res) => {
-      console.log('R', res)
-      setDS(res.rows.map(r => r.key[1]))
-      setMsg(null)
-    })
-    .catch(err => setError(err))
-  }
-
-  const onChange = (value) => {
-    setValue(value)
-  }
-
+      })
+      .then((res) => {
+        if(res.docs.length === 1) {
+          console.info('Single Result')
+        }
+        if(res.warning) {
+          console.warn('FIND', res.warning)
+        }
+        setDS(res.docs.map((r) => r._id))
+        setMsg(null)
+      })
+      */
+      const re = /\S\//g
+      const depth = ((search || '').match(re) || []).length + 1
+      db.query(
+        'paths/by_depth',
+        {
+          startkey: [depth, search],
+          endkey: [depth, `${search}\uFFF0`],
+          group: true,
+          limit: MAX_RESULTS,
+        }
+      )
+      .then((res) => {
+        console.log('R', res)
+        setDS(res.rows.map(r => r.key[1]))
+        setMsg(null)
+      })
+      .catch((err) => {
+        setError(`${err.status} Error: ${err.name} ${err.docId}`)
+      })
+    },
+    [search]
+  )
   return <React.Fragment>
     <AutoComplete
-      value={value}
       dataSource={dataSource}
-      onSelect={onSearch}
+      onSelect={setSearch}
       onSearch={setSearch}
-      onChange={onChange}
       placeholder='Path? (expect initial delay)'
     />
     {msg !== null
