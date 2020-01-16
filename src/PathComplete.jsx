@@ -64,6 +64,7 @@ export default () => {
       })
       .catch((err) => {
         setError(`${err.status} Error: ${err.name} ${err.docId}`)
+        setMsg(null)
       })
     },
     [search]

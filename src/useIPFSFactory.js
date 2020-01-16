@@ -13,7 +13,7 @@ let ipfs = null
  * so use-ipfs calls can grab it from there rather than expecting
  * it to be passed in.
  */
-export default ({ commands }) => {
+export default function useIPFSFactory({ commands }) {
   const [isIpfsReady, setIpfsReady] = useState(Boolean(ipfs))
   const [ipfsInitError, setIpfsInitError] = useState(null)
 
@@ -23,18 +23,18 @@ export default ({ commands }) => {
     // Hence we delegate to a async fn rather than making the param an async fn.
     startIpfs()
     return function cleanup () {
-      if (ipfs && ipfs.stop) {
+      if(ipfs && ipfs.stop) {
         console.log('Stopping IPFS')
-        ipfs.stop().catch(err => console.error(err))
+        ipfs.stop().catch(console.error)
         setIpfsReady(false)
       }
     }
   })
 
   async function startIpfs () {
-    if (ipfs) {
+    if(ipfs) {
       console.log('IPFS already started')
-    } else if (window.ipfs && window.ipfs.enable) {
+    } else if(window.ipfs && window.ipfs.enable) {
       console.log('Found window.ipfs')
       ipfs = await window.ipfs.enable({ commands })
     } else {
