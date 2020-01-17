@@ -11,12 +11,8 @@ export default () => {
   const [dataSource, setDS] = useState([])
   const [msg, setMsg] = useState(null)
   const [error, setError] = useState(null)
-  const db = useDB('books')
+  const db = useDB()
   const [search, setSearch] = useContext(SearchContext)
-
-  const onSelect = (value) => {
-    console.info('onSelect', value)
-  }
 
   useEffect(
     () => {
@@ -76,13 +72,7 @@ export default () => {
       onSearch={setSearch}
       placeholder='Path? (expect initial delay)'
     />
-    {msg !== null
-      ? <Spin style={{marginLeft: '-45px', marginTop: '2.5ex'}} size='large'/>
-      : ''
-    }
-    {error !== null
-      ? <Alert message={error}/>
-      : ''
-    }
+    {msg && <Spin style={{marginLeft: '-45px', marginTop: '2.5ex'}} size='large'/>}
+    {error && <Alert message={error}/>}
   </React.Fragment>
 }

@@ -8,19 +8,21 @@ import RemoveDB from './RemoveDB'
 import { SearchProvider } from './SearchContext'
 import Covers from './Covers'
 import IPFSSlurp from './IPFSSlurp'
+import { PouchDB } from 'react-pouchdb'
+
+//const remoteURL = 'http://localhost:5984/mimis'
+const dbURL = 'https://65b65739-de46-4263-811c-394e70f5f6ef-bluemix:aded6f26e1dea877cf128dff192f396dd1b12f22b218d56cb22981f44c8124bb@65b65739-de46-4263-811c-394e70f5f6ef-bluemix.cloudantnosqldb.appdomain.cloud/mimis'
 
 export default () => (
   <div className="App">
-    <SearchProvider>
-      First, <LoadDirs/>, then <CreatePathsDDoc/>.
+    <SearchProvider><PouchDB name={dbURL}>
+      <IPFSSlurp/>
       <hr/>
       <PathComplete/>
       <hr/>
       <Covers/>
       <hr/>
-      To debug, you might need to <Sync/> or <RemoveDB/>.
-      <hr/>
-      <IPFSSlurp/>
-    </SearchProvider>
+      To debug, you might need to <CreatePathsDDoc/>, <Sync/> or <RemoveDB/>.
+    </PouchDB></SearchProvider>
   </div>
 )

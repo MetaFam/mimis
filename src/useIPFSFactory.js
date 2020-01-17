@@ -17,19 +17,19 @@ export default function useIPFSFactory({ commands }) {
   const [isIpfsReady, setIpfsReady] = useState(Boolean(ipfs))
   const [ipfsInitError, setIpfsInitError] = useState(null)
 
-  useEffect(() => {
-    // The fn to useEffect should not return anything other than a cleanup fn,
-    // So it cannot be marked async, which causes it to return a promise,
-    // Hence we delegate to a async fn rather than making the param an async fn.
-    startIpfs()
-    return function cleanup () {
-      if(ipfs && ipfs.stop) {
-        console.log('Stopping IPFS')
-        ipfs.stop().catch(console.error)
-        setIpfsReady(false)
+  useEffect(
+    () => {
+      startIpfs()
+      return function cleanup () {
+        if(ipfs && ipfs.stop) {
+          console.log('Stopping IPFS')
+          ipfs.stop().catch(console.error)
+          setIpfsReady(false)
+        }
       }
-    }
-  })
+    },
+    []
+  )
 
   async function startIpfs () {
     if(ipfs) {

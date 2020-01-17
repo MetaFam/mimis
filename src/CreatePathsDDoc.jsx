@@ -4,7 +4,7 @@ import { useDB } from 'react-pouchdb'
 import './PathComplete.scss'
 
 export default () => {
-  const db = useDB('books')
+  const db = useDB()
   const defText = 'Create Paths Design Doc'
   const [text, setText] = useState(defText)
 
@@ -13,43 +13,29 @@ export default () => {
     const ddoc = {
       _id: docId,
       views: {
-        full: {
-          // emit confuses webpack in production
-          map: (
-            'function(doc) {'
-            + 'emit(doc.path.join("/") + "/", null);'
-            + '}'
-          ),
-          reduce: function(keys, values, rereduce) {
-            return null // uniqueness
-          }.toString(),
-        },
-        all: {
-          map: (
-            'function(doc) {'
-            + 'for(i in doc.path) {'
-            + 'var path = doc.path.slice(0,i+1).join("/") + "/";'
-            + 'emit(path, null);'
-            + '}'
-            + '}'
-          ),
-          reduce: function(keys, values, rereduce) {
-            return null // uniqueness
-          }.toString(),
-        },
         by_depth: {
           map: (
             'function(doc) {'
             + 'for(i in doc.path) {'
+            + 'if(i === 0) next;'
             + 'var idx = parseInt(i) + 1;'
-            + 'var path = doc.path.slice(0,idx).join("/") + "/";'
-            + 'emit([idx, path], null);'
+            + 'var path = doc.path.slice(1,idx).join("/");'
+            + 'if(idx < doc.path.length) path += "/";'
+            + 'emit([idx - 1, path], null);'
             + '}'
             + '}'
           ),
-          reduce: function(keys, values, rereduce) {
-            return null // uniqueness
-          }.toString(),
+          reduce: '_count',
+        },
+        files: {
+          map: (
+            'function(doc) {'
+            + 'if(doc.ipfs_id) {'
+            + 'var path = doc.path.slice(1).join("/");'
+            + 'emit(path, doc.ipfs_id);'
+            + '}'
+            + '}'
+          ),
         },
       }
     }

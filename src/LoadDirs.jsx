@@ -3,7 +3,7 @@ import { useDB } from 'react-pouchdb'
 import { Button } from 'antd'
 
 export default () => {
-  const db = useDB('books')
+  const db = useDB()
   const defText = 'Load Directories'
   const [text, setText] = useState(defText)
 
@@ -24,7 +24,6 @@ export default () => {
     const res = await fetch('dirs.json')
     if(res.ok) {
       const dirs = await res.json()
-      const seen = {}
       await Array.prototype.forEach.call(
         dirs,
         (e) => {
