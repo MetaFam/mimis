@@ -54,7 +54,6 @@ export default () => {
         }
       )
       .then((res) => {
-        console.log('R', res)
         setDS(res.rows.map(r => r.key[1]))
         setMsg(null)
       })

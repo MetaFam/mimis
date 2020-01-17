@@ -7,7 +7,7 @@ import { useDB } from 'react-pouchdb'
 export default () => {
   const { ipfs } = useIPFSFactory({ commands: ['id', 'ls', 'get'] })
   const [message, setMessage] = useState(null)
-  const [key, setKey] = useState('QmWFWHYQg7mFvMtHaXHjXLFL4RKBQPef3L4iPJ4Eva2tQr')
+  const [key, setKey] = useState('Qmf9bLjQqUrPufD67uZjth8M4mkbNdzLRRVTCTc9y22bZo')
   const defText = 'Intake:'
   const [text, setText] = useState(defText)
   const db = useDB()
@@ -34,7 +34,7 @@ export default () => {
       switch(entry.type) {
         case 'dir':
           log(`Dir: "${name}": Recursing`)
-          listDir(`${key}/${entry.name}`, fullpath)
+          await listDir(`${key}/${entry.name}`, fullpath)
           break
         case 'file':
           try {
