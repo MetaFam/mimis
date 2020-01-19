@@ -80,16 +80,17 @@ export default () => {
               log(`Added: "${name}": ${entry.hash}`)
               break
             default:
-              ipfs.block.get(entry.hash)
-              .then((block) => {
-                if(block.data[0] === 10) {
-                  log(`ToDo: Link: "${name}": ${block.data.slice(6)}`)
-                } else {
-                  const msg = `Unknown: "${name}":`
-                  console.error(msg, block)
-                  log(msg)
-                }
-              })
+              promises.push(ipfs.block.get(entry.hash)
+                .then((block) => {
+                  if(block.data[0] === 10) {
+                    log(`ToDo: Link: "${name}": ${block.data.slice(6)}`)
+                  } else {
+                    const msg = `Unknown: "${name}":`
+                    console.error(msg, block)
+                    log(msg)
+                  }
+                })
+              )
               break
           }
         })
@@ -100,10 +101,11 @@ export default () => {
   const startWith = async (hash) => {
     setText('Loading:')
     console.log(1)
-    let promises = listDir(hash)
+    let promises = []
+    listDir(hash, [], promises)
     console.log(2, promises)
     promises.push(flushQueue())
-    console.log(3, promises)
+    console.log(3)
     await Promise.allSettled(promises)
     setText('Loaded:')
   }
