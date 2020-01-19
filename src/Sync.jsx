@@ -3,9 +3,9 @@ import { useDB } from 'react-pouchdb'
 import { Button } from 'antd'
 
 export default () => {
-  const local = useDB('mimis')
-  const remote = useDB()
-  const defText = `Sync w/ Local`
+  const local = useDB()
+  const remote = useDB('http://localhost:5984/mimis')
+  const defText = `Sync w/ Localhost`
   const [text, setText] = useState(defText)
 
   const doSync = () => {

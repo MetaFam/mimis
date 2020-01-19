@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { Button } from 'antd'
 import { useDB } from 'react-pouchdb'
-import './PathComplete.scss'
 
 export default () => {
   const db = useDB()
@@ -16,22 +15,33 @@ export default () => {
         by_depth: {
           map: (
             'function(doc) {'
+            + 'if(doc.type === "dir") {'
             + 'for(i in doc.path) {'
-            + 'if(i === 0) next;'
             + 'var idx = parseInt(i) + 1;'
-            + 'var path = doc.path.slice(1,idx).join("/");'
-            + 'if(idx < doc.path.length) path += "/";'
+            + 'if(idx === 1) continue;'
+            + 'var path = doc.path.slice(1,idx).join("/") + "/";'
             + 'emit([idx - 1, path], null);'
+            + '}'
             + '}'
             + '}'
           ),
           reduce: '_count',
         },
+        dirs: {
+          map: (
+            'function(doc) {'
+            + 'if(doc.type === "dir") {'
+            + 'var path = doc.path.slice(1).join("/") + "/";'
+            + 'emit(path, doc.ipfs_id);'
+            + '}'
+            + '}'
+          ),
+        },
         files: {
           map: (
             'function(doc) {'
-            + 'if(doc.ipfs_id) {'
-            + 'var path = doc.path.slice(1).join("/");'
+            + 'if(doc.type === "file") {'
+            + 'var path = doc.path.slice(-1)[0];'
             + 'emit(path, doc.ipfs_id);'
             + '}'
             + '}'

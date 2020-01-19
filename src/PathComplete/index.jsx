@@ -2,8 +2,8 @@ import React, { useState, useContext, useEffect } from 'react'
 import { AutoComplete, Spin, Alert } from 'antd'
 import 'antd/dist/antd.css'
 import { useDB } from 'react-pouchdb'
-import './PathComplete.scss'
-import SearchContext from './SearchContext'
+import './style.scss'
+import SearchContext from '../SearchContext'
 
 const MAX_RESULTS = 25
 
@@ -58,7 +58,11 @@ export default () => {
         setMsg(null)
       })
       .catch((err) => {
-        setError(`${err.status} Error: ${err.name} ${err.docId}`)
+        if(err.status === 404) {
+          setError('Missing Design Document: Can\'t Search')
+        } else {
+          setError(`${err.status} Error: ${err.name} ${err.docId}`)
+        }
         setMsg(null)
       })
     },

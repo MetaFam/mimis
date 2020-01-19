@@ -11,9 +11,8 @@ export default () => {
 
   useEffect(
     () => {
-      console.log('Searching...')
       db.query(
-        'paths/files',
+        'paths/dirs',
         {
           startkey: search,
           endkey: `${search}\uFFF0`,
