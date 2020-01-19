@@ -29,85 +29,78 @@ export default () => {
     if(queue.length >= MAX_SIZE) {
       return flushQueue()
     } else {
-      return Promise.resolve(null)
+      return Promise.resolve()
     }
   }
 
-  const listDir = (key, path = [], promises = []) => {
-    return ipfs.ls(key)
-    .then((list) => {
+  const processList = (list, path) => (
+    Promise.allSettled(
+      list.map((entry) => {
+        const fullpath = [...path, entry.name]
+        const name = fullpath.join('/')
+
+        switch(entry.type) {
+        case 'dir':
+          log(`Dir: "${name}": Recursing`)
+          return listDir(entry.hash, fullpath)
+        case 'file':
+          log(`Adding File: ${entry.name}`)
+          return enque({
+            _id: fullpath.join('/'), type: 'file',
+            path: fullpath, ipfs_id: entry.hash,
+          }).catch((err) => {
+            if(err.status === 409) {
+              console.warn('Conflict', err)
+            } else {
+              console.error(err)
+            }
+          })
+        default:
+          return ipfs.block.get(entry.hash)
+          .then((block) => {
+            if(block.data[0] === 10) {
+              log(`ToDo: Link: "${name}": ${block.data.slice(6)}`)
+            } else {
+              const msg = `Unknown: "${name}":`
+              console.error(msg, block)
+              log(msg)
+            }
+          })
+        }
+      })
+    )
+  )
+
+  const listDir = (key, path = []) => (
+    ipfs.ls(key)
+    .then(async (list) => {
       console.log('listDir', path)
 
       if(path.length === 0) path.push(key) // the root
 
-      const dir = path.join('/')
       const parent = path.slice(-1)[0]
       const keys = list.map(e => e.path)
       if(keys.includes(`${key}/${parent}.txt`)) { // Gutenberg content dir
-        console.log('Content', dir)
-        promises.push(enque({
-          _id: dir,
-          type: 'dir',
-          path: path,
-          ipfs_id: key,
-        }))
-        listDir(key, [], promises)
-      } else {
-        list.forEach(async (entry) => {
-          const name = `${path.join('/')}/${entry.name}`
-          const fullpath = [...path, entry.name]
-          switch(entry.type) {
-            case 'dir':
-              log(`Dir: "${name}": Recursing`)
-              listDir(entry.hash, fullpath, promises)
-              break
-            case 'file':
-              try {
-                log(`Adding File: ${entry.name}`)
-                promises.push(enque({
-                  _id: fullpath.join('/'),
-                  type: 'file',
-                  path: fullpath,
-                  ipfs_id: entry.hash,
-                }))
-              } catch(err) {
-                if(err.status === 409) {
-                  console.warn('Conflict', err)
-                } else {
-                  console.error(err)
-                }
-              }
-              log(`Added: "${name}": ${entry.hash}`)
-              break
-            default:
-              promises.push(ipfs.block.get(entry.hash)
-                .then((block) => {
-                  if(block.data[0] === 10) {
-                    log(`ToDo: Link: "${name}": ${block.data.slice(6)}`)
-                  } else {
-                    const msg = `Unknown: "${name}":`
-                    console.error(msg, block)
-                    log(msg)
-                  }
-                })
-              )
-              break
-          }
+        await enque({
+          _id: path.join('/') + '/', type: 'dir',
+          path: path, ipfs_id: key,
         })
+        await listDir(key)
+      } else {
+        await processList(list, path)
       }
     })
-  }
+  )
 
   const startWith = async (hash) => {
     setText('Loading:')
     console.log(1)
-    let promises = []
-    listDir(hash, [], promises)
-    console.log(2, promises)
-    promises.push(flushQueue())
+    await listDir(hash)
+    console.log(2)
+    await flushQueue()
     console.log(3)
-    await Promise.allSettled(promises)
-    setText('Loaded:')
+    log('Done')
+    setText(defText)
   }
 
   return <React.Fragment>
