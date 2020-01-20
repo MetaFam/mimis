@@ -5,6 +5,7 @@ import { debounce } from 'lodash'
 import { useDB } from 'react-pouchdb'
 
 export default () => {
+  let count = 0  // total number imported
   let queue = [] // objects to insert
   const MAX_SIZE = 5000 // size of a bulk post
   const { ipfs } = useIPFSFactory({ commands: ['id', 'ls', 'get'] })
@@ -14,10 +15,7 @@ export default () => {
   const [text, setText] = useState(defText)
   const db = useDB()
 
-  const log = debounce(
-    setMessage,
-    50
-  )
+  const log = debounce(setMessage, 100)
 
   const flushQueue = () => {
     const copy = [...queue]
@@ -25,8 +23,10 @@ export default () => {
     return db.bulkDocs(copy)
   }
   const enque = (obj) => {
+    count++
     queue.push(obj)
-    console.log(`Queued ${queue.length}: ${obj.type}: ${obj._id}`)
+    log(`Queued ${count} (${queue.length}): ${obj.type}: ${obj._id}`)
+    console.log(`Queued ${count} (${queue.length}): ${obj.type}: ${obj._id}`)
     if(queue.length >= MAX_SIZE) {
       console.log('Flushing Queue')
       return flushQueue()

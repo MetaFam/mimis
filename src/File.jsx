@@ -1,5 +1,6 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
-export default (props) => {
-  return <h5>Hi</h5>
+export default ({ name, path }) => {
+  return <Link to={`/hash/${path}`}>{name}</Link>
 }

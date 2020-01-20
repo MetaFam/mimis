@@ -2,7 +2,7 @@ import React, { useContext, Suspense, useEffect, useState } from 'react'
 import SearchContext from './SearchContext'
 import { useDB } from 'react-pouchdb'
 import { Spin } from 'antd'
-import IPFSDoc from './IPFSDoc'
+import Data from './Data'
 
 export default () => {
   const [search] = useContext(SearchContext)
@@ -29,7 +29,7 @@ export default () => {
       rows === null
       ? <Spin/>
       : rows.map((r, i) => (
-        <IPFSDoc key={i} hash={r.value} path={r.key}/>
+        <Data key={i} hash={r.value} path={r.key}/>
       ))
     }
    </React.Fragment>
