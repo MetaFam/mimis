@@ -5,20 +5,20 @@ import { debounce } from 'lodash'
 import { useDB } from 'react-pouchdb'
 
 export default () => {
+  let queue = [] // objects to insert
+  const MAX_SIZE = 5000 // size of a bulk post
   const { ipfs } = useIPFSFactory({ commands: ['id', 'ls', 'get'] })
   const [message, setMessage] = useState(null)
-  const [key, setKey] = useState('QmVm1ySxJSAgGAeKfeJbUs1LMZNXuzKCaNRQqyvyPDgpQb')
+  const [key, setKey] = useState('QmTGcsAY1t3r5TWp5QrBZevW1h5qam2G7SBYptq4orGJgr')
   const defText = 'Intake:'
   const [text, setText] = useState(defText)
   const db = useDB()
 
   const log = debounce(
-    (msg) => setMessage(msg),
+    setMessage,
     50
   )
 
-  let queue = [] // objects to insert
-  const MAX_SIZE = 50000 // size of a bulk post
   const flushQueue = () => {
     const copy = [...queue]
     queue = []
@@ -26,7 +26,9 @@ export default () => {
   }
   const enque = (obj) => {
     queue.push(obj)
+    console.log(`Queued ${queue.length}: ${obj.type}: ${obj._id}`)
     if(queue.length >= MAX_SIZE) {
+      console.log('Flushing Queue')
       return flushQueue()
     } else {
       return Promise.resolve()
@@ -41,7 +43,7 @@ export default () => {
 
         switch(entry.type) {
         case 'dir':
-          log(`Dir: "${name}": Recursing`)
+          log(`Dir: "${name}/": Recursing`)
           return listDir(entry.hash, fullpath)
         case 'file':
           log(`Adding File: ${entry.name}`)
@@ -74,8 +76,6 @@ export default () => {
   const listDir = (key, path = []) => (
     ipfs.ls(key)
     .then(async (list) => {
-      console.log('listDir', path)
-
       if(path.length === 0) path.push(key) // the root
 
       const parent = path.slice(-1)[0]
