@@ -95,7 +95,19 @@ Contexts are added both for path beginning with the root hash and for the path w
 
 The result is an interface that can autocomplete on the filesystem, but the directory names are meaningless. I would like to remedy this without touching the Gutenberg mirror and without tying it to a specific hash.
 
+The first step was parsing the `GUTINDEX` files for the author and title.
+
+I created a filesystem of the form:
+
+* `book/by/author/title/` → `.../gutenberg/1/2/3/1234`
+
 The system recognizes a special directory `...`. Those links cause a new contextualization to be added with the branch ids of the link source and destination.
+
+_Working locally, it is possible to create a directory structure of the format:_
+
+* _`home/...` → `.`_
+* _`home/book/...` → `../...`_
+* _`home/gutenberg/...` → `../...`_
 
 Also, a link object is created:
 
@@ -105,7 +117,7 @@ Also, a link object is created:
       source_id, destination_id,
     }
 
-So, when the user types a path, they ma
+So, when the user types a path…
 
 # Goals
 
