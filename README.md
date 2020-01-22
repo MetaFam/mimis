@@ -83,13 +83,13 @@ Content objects are:
 
 Contextualizations are:
 
-  {
-    // others have slashes in their ids, so there shouldn't be collisions
-    // ids are branch ids
-    _id: `ctxn:${context_id}:${content_id},
-    type: 'ctxn',
-    context_id, content_id,
-  }
+    {
+      // others have slashes in their ids, so there shouldn't be collisions
+      // ids are branch ids
+      _id: `ctxn:${context_id}:${content_id},
+      type: 'ctxn',
+      context_id, content_id,
+    }
 
 Contexts are added both for path beginning with the root hash and for the path without it.
 
