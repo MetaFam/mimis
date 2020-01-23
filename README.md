@@ -50,14 +50,14 @@ The first interface I would like to build is for [Project Gutenberg](//gutenberg
 
 Their corpus of 60k+ works is available via [rsync](bin/gutenberg.sh). The content is stored by id in a directory structure of the format:
 
-* 1/2/3/1234
-* 1/2/3/4/12341
+* `1/2/3/1234`
+* `1/2/3/4/12341`
 
 HTML files, if they exist, are in a subdirectory: `1/2/3/1234/1234-h/`.
 
 The first task is to import that filesystem into IPFS ([QmTGcsAY1t3r5TWp5QrBZevW1h5qam2G7SBYptq4orGJgr](ipfs://QmTGcsAY1t3r5TWp5QrBZevW1h5qam2G7SBYptq4orGJgr)), and a [web app](//forets.web.app) to spider that hash and import it into a CouchDB instance.
 
-The CouchDB objects from this import are divided into context and content based on the presense of a specifically-named text file marking content directories. The format of a context node is:
+The CouchDB objects from this import are divided into context and content based on the presence of a specifically-named text file marking content directories. The format of a context node is:
 
     {
       // "Quote" slashes by doubling them to prevent injection attacks
@@ -100,6 +100,7 @@ The first step was parsing the `GUTINDEX` files for the author and title.
 I created a filesystem of the form:
 
 * `book/by/author/title/` → `.../gutenberg/1/2/3/1234`
+* `book/title(, by author)` _(if present)_ → `.../gutenberg/…`
 
 The system recognizes a special directory `...`. Those links cause a new contextualization to be added with the branch ids of the link source and destination.
 
@@ -117,7 +118,7 @@ Also, a link object is created:
       source_id, destination_id,
     }
 
-So, when the user types a path…
+So, when the user types a path, it could either be a partial or reference content…
 
 # Goals
 
@@ -129,3 +130,4 @@ For payments, I am particularly interested in [IOTA](//iota.io). The structure i
 
 Also, tracking data could go toward creating graphs that aid in the collaborative filtering of paths.
 
+Ultimately, the structure I envision is a flow graph where the nodes with the max flow are prioitized for viewing.
