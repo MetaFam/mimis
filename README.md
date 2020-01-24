@@ -34,7 +34,7 @@ This is accomplished in part by a linking system that allows conglomerating cont
 
 It relies on a base semantic graph. For example:
 
-/book/by/Ursula K. Leguin/A Wizard of Earthsea/
+`/book/by/Ursula K. Leguin/A Wizard of Earthsea/`
 
 This sort of structure is inherently ambiguous and a large part of the system is figuring out what to show the user when they view a particular space.
 
@@ -97,28 +97,11 @@ The result is an interface that can autocomplete on the filesystem, but the dire
 
 The first step was parsing the `GUTINDEX` files for the author and title.
 
-I created a filesystem of the form:
-
-* `book/by/author/title/` → `.../gutenberg/1/2/3/1234`
-* `book/title(, by author)` _(if present)_ → `.../gutenberg/…`
-
-The system recognizes a special directory `...`. Those links cause a new contextualization to be added with the branch ids of the link source and destination.
-
-_Working locally, it is possible to create a directory structure of the format:_
-
-* _`home/...` → `.`_
-* _`home/book/...` → `../...`_
-* _`home/gutenberg/...` → `../...`_
-
-Also, a link object is created:
-
     {
       _id: `link:${source_id}:${destination_id},
       type: 'link',
       source_id, destination_id,
     }
-
-So, when the user types a path, it could either be a partial or reference content…
 
 # Goals
 

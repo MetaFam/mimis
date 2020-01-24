@@ -2,6 +2,7 @@
 
 # temporary
 tmp/
+log/
 
 # hosting
 .firebase/
