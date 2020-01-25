@@ -1,20 +1,37 @@
 import React from 'react'
-import CreatePathsDDoc from '../CreatePathsDDoc'
-import PathComplete from '../PathComplete'
-import Sync from '../Sync'
-import RemoveDB from '../RemoveDB'
 import { SearchProvider } from '../SearchContext'
-import Covers from '../Covers'
-import IPFSSlurp from '../IPFSSlurp'
+import { Tabs, Icon } from 'antd'
+import Browse from '../Browse'
+import Debug from '../Debug'
+const { TabPane } = Tabs
 
 export default () => {
   return <SearchProvider>
-    <IPFSSlurp/>
-    <hr/>
-    <PathComplete/>
-    <hr/>
-    <Covers/>
-    <hr/>
-    To debug, you might need to <CreatePathsDDoc/>, <Sync/> or <RemoveDB/>.
+    <Tabs>
+      <TabPane
+        tab={
+          <span><Icon type='book' /> Browse</span>
+        }
+        key='browse'
+      >
+        <Browse/>
+      </TabPane>
+      <TabPane
+        tab={
+          <span><Icon type='database' /> Load Data</span>
+        }
+        key='debug'
+      >
+        <Debug/>
+      </TabPane>
+      <TabPane
+        tab={
+          <span><Icon type='control' /> Settings</span>
+        }
+        key='settings'
+      >
+        <h1>Settings</h1>
+      </TabPane>
+    </Tabs>
   </SearchProvider>
 }

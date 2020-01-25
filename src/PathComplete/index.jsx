@@ -75,7 +75,7 @@ export default () => {
       onSearch={setSearch}
       placeholder='Path? (expect initial delay)'
     />
-    {msg && <Spin style={{marginLeft: '-45px', marginTop: '2.5ex'}} size='large'/>}
+    {msg && <Spin size='large'/>}
     {error && <Alert message={error}/>}
   </React.Fragment>
 }

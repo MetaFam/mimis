@@ -12,7 +12,7 @@ export default (props) => {
   const { ipfs } = useIPFSFactory({ commands: ['id', 'ls', 'get'] })
   const [message, setMessage] = useState(null)
   const [key, setKey] = useState(props.hash)
-  const defText = 'Intake:'
+  const defText = 'Parse:'
   const [text, setText] = useState(defText)
   const db = useDB()
 
