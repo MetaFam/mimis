@@ -3,6 +3,8 @@ import { SearchProvider } from '../SearchContext'
 import { Tabs, Icon } from 'antd'
 import Browse from '../Browse'
 import Debug from '../Debug'
+import Settings from '../Settings'
+import './index.scss'
 const { TabPane } = Tabs
 
 export default () => {
@@ -30,7 +32,7 @@ export default () => {
         }
         key='settings'
       >
-        <h1>Settings</h1>
+        <Settings/>
       </TabPane>
     </Tabs>
   </SearchProvider>

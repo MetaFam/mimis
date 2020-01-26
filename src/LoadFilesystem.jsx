@@ -18,22 +18,10 @@ export default (props) => {
 
   const log = debounce(setMessage, 100)
 
-  const flushQueue = () => {
-    const copy = [...queue]
-    queue = []
-    return db.bulkDocs(copy)
-  }
   const enque = (obj) => {
-    count++
     queue.push(obj)
     log(`Queued ${count} (${queue.length}): ${obj.type}: ${obj._id}`)
-    console.log(`Queued ${count} (${queue.length}): ${obj.type}: ${obj._id}`)
-    if(queue.length >= MAX_SIZE) {
-      console.log('Flushing Queue')
-      return flushQueue()
-    } else {
-      return Promise.resolve()
-    }
+    console.log(`Queued ${queue.length}: ${obj}`)
   }
 
   const processList = (list, path) => (
@@ -45,13 +33,11 @@ export default (props) => {
         switch(entry.type) {
         case 'dir':
           log(`Dir: "${name}/": Recursing`)
-          return queueDir(entry.hash, fullpath)
+          return listFiles(entry.hash, fullpath)
         case 'file':
           log(`Adding File: ${entry.name}`)
-          return enque({
-            _id: fullpath.join('/'), type: 'file',
-            path: fullpath, ipfs_id: entry.hash,
-          }).catch((err) => {
+          return enque(fullpath)
+          .catch((err) => {
             if(err.status === 409) {
               console.warn('Conflict', err)
             } else {
@@ -74,41 +60,41 @@ export default (props) => {
     )
   )
 
-  const queueDir = (key, path = []) => (
+  const listFiles = (key, path = []) => (
     ipfs.ls(key)
     .then(async (list) => {
       if(path.length === 0) path.push(key) // the root
 
-      const parent = path.slice(-1)[0]
-      const keys = list.map(e => e.path)
-      let isContext = false
-
-      // Gutenberg content dir
-      isContext = (
-        keys.includes(`${key}/${parent}.txt`)
-        || keys.includes(`${key}/${parent}-0.txt`)
-        || keys.includes(`${key}/${parent}-8.txt`)
-      )
-
-      if(isContext) {
-        await enque({
-          _id: path.join('/') + '/', type: 'dir',
-          path: path, ipfs_id: key,
-        })
-        await queueDir(key)
-      } else {
-        await processList(list, path)
-      }
+      await processList(list, path)
     })
   )
 
   const startWith = async (hash) => {
     setText('Loading:')
-    console.log(1, 'Queuing…')
-    await queueDir(hash)
-    console.log(2, `Queued ${queue.length}, Writing…`)
-    await flushQueue()
-    console.log(3, 'Done')
+
+    const files = await listFiles(hash)
+
+    console.log('Queued:', [...queue])
+
+    const entries = await Promise.allSettled(
+      queue.map((file) => {
+        const filename = file.join('/')
+        log(`Loading: ${filename}`)
+        return ipfs.cat(filename)
+        .then((data) => JSON.parse(data))
+        .then((entries) => {
+          log(`Loaded: ${entries.length} entries`)
+          return entries
+        })
+      })
+    )
+    .then(out => out.map(d => d.value))
+    .then(data => data.flat())
+
+    log(`Got: ${entries.length} Entries: Writing…`)
+
+    await db.bulkDocs(entries)
+
     log('Done')
     setText(defText)
   }
@@ -122,7 +108,7 @@ export default (props) => {
     <Input
       value={key}
       onChange={evt => setKey(evt.target.value)}
-      style={{width: '60ex'}}
+      style={{width: '55ex'}}
     />
     {message && <Alert message={message}/>}
   </React.Fragment>

@@ -1,11 +1,12 @@
 import React from 'react'
 import PathComplete from '../PathComplete'
 import Covers from '../Covers'
+import './index.scss'
 
 export default () => (
-  <React.Fragment>
+  <div className='mimis-browse'>
     <PathComplete/>
     <hr/>
     <Covers/>
-  </React.Fragment>
+  </div>
 )
