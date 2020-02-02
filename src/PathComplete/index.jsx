@@ -44,22 +44,29 @@ export default () => {
         setMsg(null)
       })
       */
+
+      let startpath = path
       let endpath = []
 
-      if(path.length > 0) {
+      if(tag && tag.length > 0) {
+        startpath = startpath.concat(tag)
+      }
+
+      if(startpath.length > 0) {
         endpath = (
-          path
-          .slice(0, path.length - 1)
-          .concat(`${path[path.length - 1]}\uFFF0`)
+          startpath
+          .slice(0, startpath.length - 1)
+          .concat(`${startpath[startpath.length - 1]}\uFFF0`)
         )
       }
       endpath = endpath.concat({})
-      console.log('EP', endpath)
+
+      setSearch(startpath.join('/'))
 
       db.query(
         'paths/by_depth',
         {
-          startkey: [path.length + 1, path],
+          startkey: [path.length + 1, startpath],
           endkey: [path.length + 1, endpath],
           group: true,
           limit: MAX_RESULTS,
@@ -80,39 +87,37 @@ export default () => {
         setMsg(null)
       })
     },
-    [search, path]
+    [path, tag]
   )
 
   const addTag = (text) => {
     setPath([...path, text])
+    setTag('')
   }
 
   const removeTag = (idx) => {
     let copy = [...path]
-    copy.splice(idx, 0)
+    copy.splice(idx, 1)
+    console.info('RM', copy)
     setPath(copy)
   }
 
-  const changeTag = (text) => {
+  const changeTag = (tag) => {
     setTag(tag)
-    setPath(
-      path
-      .slice(0, path.length - 1)
-      .concat(tag)
-    )
   }
 
   return <React.Fragment>
-    <ul className='mimis-path'>{path.map((p, i) => (
-      <li key={i}><Tag closable onClose={() => removeTag(i)}>{p}</Tag></li>
-    ))}</ul>
-    <AutoComplete
-      value={tag}
-      dataSource={completions}
-      onSelect={addTag}
-      onChange={changeTag}
-      placeholder='Path? (expect initial delay)'
-    />
+    <ul className='mimis-path'>
+      {path.map((p, i) => (
+        <li key={Math.random()}><Tag closable onClose={() => removeTag(i)}>{p}</Tag></li>
+      ))}
+      <li><AutoComplete
+        value={tag}
+        onChange={changeTag}
+        dataSource={completions}
+        onSelect={addTag}
+      /></li>
+    </ul>
     {msg && <Spin size='large'/>}
     {error && <Alert message={error}/>}
   </React.Fragment>
