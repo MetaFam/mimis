@@ -7,7 +7,9 @@ export const sources = {
   Local: 'mimis',
 }
 
-const defCtx = Object.keys(sources)[0]
+let defCtx = Object.keys(sources)[0]
+let ls = localStorage.getItem('db')
+if(ls) defCtx = ls
 
 const DatabaseContext = createContext(defCtx)
 
@@ -16,10 +18,15 @@ export default DatabaseContext
 export const DatabaseProvider = (props) => {
   const [db, setDB] = useState(defCtx)
 
+  const storeDB = (db) => {
+    setDB(db)
+    localStorage.setItem('db', db)
+  }
+
   console.log('db', db)
 
   return (
-    <DatabaseContext.Provider value={[db, setDB]}>
+    <DatabaseContext.Provider value={[db, storeDB]}>
       <PouchDB name={sources[db]}>
         {props.children}
       </PouchDB>

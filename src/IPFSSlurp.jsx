@@ -39,7 +39,7 @@ export default (props) => {
   const processList = (list, path) => (
     Promise.allSettled(
       list.map((entry) => {
-        const fullpath = [...path, entry.name]
+        const fullpath = [...path, decodeURI(entry.name)]
         const name = fullpath.join('/')
 
         switch(entry.type) {

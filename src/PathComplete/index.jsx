@@ -14,6 +14,7 @@ export default () => {
   const db = useDB()
   const [search, setSearch] = useContext(SearchContext)
   const [path, setPath] = useState([])
+  const [tag, setTag] = useState('')
 
   useEffect(
     () => {
@@ -92,14 +93,24 @@ export default () => {
     setPath(copy)
   }
 
+  const changeTag = (text) => {
+    setTag(tag)
+    setPath(
+      path
+      .slice(0, path.length - 1)
+      .concat(tag)
+    )
+  }
+
   return <React.Fragment>
     <ul className='mimis-path'>{path.map((p, i) => (
       <li key={i}><Tag closable onClose={() => removeTag(i)}>{p}</Tag></li>
     ))}</ul>
     <AutoComplete
+      value={tag}
       dataSource={completions}
       onSelect={addTag}
-      onSearch={setSearch}
+      onChange={changeTag}
       placeholder='Path? (expect initial delay)'
     />
     {msg && <Spin size='large'/>}
