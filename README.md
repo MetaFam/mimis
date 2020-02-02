@@ -122,3 +122,9 @@ The graph will be used to generate a feed of the form:
 * ⋮
 
 With an accompanying interface for scrolling and linking through the feed.
+
+# Thoughts
+
+IPFS provides forward trees only. The aim of this system is to provide the context tree for those trees by conglomerating filesystems.
+
+I'm trying to avoid having to traverse the tree…

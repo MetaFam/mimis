@@ -108,7 +108,7 @@ export default (props) => {
     <Input
       value={key}
       onChange={evt => setKey(evt.target.value)}
-      style={{width: '55ex'}}
+      style={{width: '60ex'}}
     />
     {message && <Alert message={message}/>}
   </React.Fragment>

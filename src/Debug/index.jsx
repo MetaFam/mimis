@@ -13,8 +13,8 @@ export default () => (
 
     <p>Gutenberg <a href='https://github.com/dhappy/ecesis/blob/master/bin/gutenberg.sh'>RSync</a></p>
     <ol>
-      <li>Base + 0/ + 1/ + 2/: <IPFSSlurp hash='QmdU3ssrYAXPzHybrTrc1U1yrdoerRL93hz3EFgaRq9GBk'/></li>
-      <li>3/: <IPFSSlurp hash='QmdU3ssrYAXPzHybrTrc1U1yrdoerRL93hz3EFgaRq9GBk'/></li>
+      <li>Base + 0/ + 1/ + 2/: <IPFSSlurp hash='QmcjevUJ78tyXZjszpo9DXaWvyt1YsaqNztNgG8oWrXRQS'/></li>
+      <li>3/: <IPFSSlurp hash='QmUikMNp9TL896MocqJKeitKPHZJkw3SmkiC7i2r81N4yk'/></li>
     </ol>
     
     <h1>Load Context</h1>

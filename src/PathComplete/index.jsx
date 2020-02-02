@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react'
-import { AutoComplete, Spin, Alert } from 'antd'
+import { AutoComplete, Spin, Alert, Tag } from 'antd'
 import 'antd/dist/antd.css'
 import { useDB } from 'react-pouchdb'
 import './style.scss'
@@ -8,11 +8,12 @@ import SearchContext from '../SearchContext'
 const MAX_RESULTS = 25
 
 export default () => {
-  const [dataSource, setDS] = useState([])
+  const [completions, setCompletions] = useState([])
   const [msg, setMsg] = useState(null)
   const [error, setError] = useState(null)
   const db = useDB()
   const [search, setSearch] = useContext(SearchContext)
+  const [path, setPath] = useState([])
 
   useEffect(
     () => {
@@ -42,19 +43,31 @@ export default () => {
         setMsg(null)
       })
       */
-      const re = /\S\//g
-      const depth = ((search || '').match(re) || []).length + 1
+      let endpath = []
+
+      if(path.length > 0) {
+        endpath = (
+          path
+          .slice(0, path.length - 1)
+          .concat(`${path[path.length - 1]}\uFFF0`)
+        )
+      }
+      endpath = endpath.concat({})
+      console.log('EP', endpath)
+
       db.query(
         'paths/by_depth',
         {
-          startkey: [depth, search],
-          endkey: [depth, `${search}\uFFF0`],
+          startkey: [path.length + 1, path],
+          endkey: [path.length + 1, endpath],
           group: true,
           limit: MAX_RESULTS,
         }
       )
       .then((res) => {
-        setDS(res.rows.map(r => r.key[1]))
+        setCompletions(res.rows.map((r) => (
+          r.key[1][r.key[1].length - 1]
+        )))
         setMsg(null)
       })
       .catch((err) => {
@@ -66,12 +79,26 @@ export default () => {
         setMsg(null)
       })
     },
-    [search]
+    [search, path]
   )
+
+  const addTag = (text) => {
+    setPath([...path, text])
+  }
+
+  const removeTag = (idx) => {
+    let copy = [...path]
+    copy.splice(idx, 0)
+    setPath(copy)
+  }
+
   return <React.Fragment>
+    <ul className='mimis-path'>{path.map((p, i) => (
+      <li key={i}><Tag closable onClose={() => removeTag(i)}>{p}</Tag></li>
+    ))}</ul>
     <AutoComplete
-      dataSource={dataSource}
-      onSelect={setSearch}
+      dataSource={completions}
+      onSelect={addTag}
       onSearch={setSearch}
       placeholder='Path? (expect initial delay)'
     />

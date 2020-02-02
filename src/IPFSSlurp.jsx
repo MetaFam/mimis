@@ -81,6 +81,7 @@ export default (props) => {
 
       const parent = path.slice(-1)[0]
       const keys = list.map(e => e.path)
+      const names = list.map(e => e.name)
       let isContext = false
 
       // Gutenberg content dir
@@ -90,7 +91,12 @@ export default (props) => {
         || keys.includes(`${key}/${parent}-8.txt`)
       )
 
-      if(isContext) {
+      // Μïmis content dir
+      isContext = (
+        names.filter(k => /^index\./.test(k)).length > 0
+      )
+
+      if(isContext && path.length > 1) {
         await enque({
           _id: path.join('/') + '/', type: 'dir',
           path: path, ipfs_id: key,
