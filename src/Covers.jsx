@@ -3,6 +3,7 @@ import SearchContext from './SearchContext'
 import { useDB } from 'react-pouchdb'
 import { Spin } from 'antd'
 import Data from './Data'
+import { Link } from 'react-router-dom'
 
 export default () => {
   const [search] = useContext(SearchContext)
@@ -29,7 +30,9 @@ export default () => {
       rows === null
       ? <Spin/>
       : rows.map((r, i) => (
-        <Data key={i} hash={r.value} path={r.key}/>
+        <Link to={`view/${r.value}`}>
+          <Data key={i} hash={r.value} path={r.key}/>
+        </Link>
       ))
     }
    </React.Fragment>

@@ -1,0 +1,23 @@
+.ant-carousel {
+  div {
+    background-color: #222;
+    display: flex ! important;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      max-height: 95vh;
+      width: auto;
+    }
+  }
+}
+
+.img-nav {
+  font-weight: bold;
+  position: relative;
+  top: -45vh;
+
+  &:nth-of-type(3) {
+    float: right;
+  }
+}

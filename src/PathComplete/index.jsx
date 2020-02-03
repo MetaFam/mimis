@@ -1,6 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react'
 import { AutoComplete, Spin, Alert, Tag } from 'antd'
-import 'antd/dist/antd.css'
 import { useDB } from 'react-pouchdb'
 import './style.scss'
 import SearchContext from '../SearchContext'
