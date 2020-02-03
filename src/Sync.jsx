@@ -12,7 +12,7 @@ export default () => {
 
   const doSync = () => {
     setText('Syncing…')
-    local.sync(remote)
+    local.replicate.to(remote)
     .on('complete', () => {
       setText(defText)
     })

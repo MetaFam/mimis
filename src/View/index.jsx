@@ -47,7 +47,7 @@ export default (props) => {
     <hr/>
     {images.length > 0 && <Carousel ref={carousel}>
       {images.map((img, idx) => (
-        <div><Tooltip title={img.name}>
+        <div key={idx}><Tooltip title={img.name}>
           <img alt={img.name} src={`//ipfs.io/ipfs/${img.path}`}/>
         </Tooltip></div>
       ))}

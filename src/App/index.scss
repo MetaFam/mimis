@@ -3,8 +3,26 @@
 }
 
 // https://github.com/tholman/github-corners
-.github-corner:hover .octo-arm {
-  animation: octocat-wave 560ms ease-in-out
+.github-corner {
+  svg {
+    fill: #151513EE;
+    color: #FFF;
+    position: absolute;
+    top: 0;
+    border: 0;
+    right: 0;
+  } 
+
+  &:hover {
+    svg {
+      fill: #151513;
+      color: #FFFF00EE;
+    }
+
+    .octo-arm {
+      animation: octocat-wave 560ms ease-in-out
+    }
+  }
 }
 
 @keyframes octocat-wave{
