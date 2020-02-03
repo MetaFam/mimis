@@ -3,6 +3,7 @@ import { AutoComplete, Spin, Alert, Tag } from 'antd'
 import { useDB } from 'react-pouchdb'
 import './style.scss'
 import SearchContext from '../SearchContext'
+import { useLocation } from 'react-router-dom'
 
 const MAX_RESULTS = 25
 
@@ -11,9 +12,16 @@ export default () => {
   const [msg, setMsg] = useState(null)
   const [error, setError] = useState(null)
   const db = useDB()
-  const [search, setSearch] = useContext(SearchContext)
-  const [path, setPath] = useState([])
+  const [_, setSearch] = useContext(SearchContext)
   const [tag, setTag] = useState('')
+
+  let defPath = []
+  const location = useLocation()
+  const params = (new URLSearchParams(location.search))
+  if(params.get('q')) defPath = JSON.parse(params.get('q'))
+  const [path, setPath] = useState(defPath)
+  
+  console.log('Q', params.get('q'))
 
   useEffect(
     () => {
@@ -97,7 +105,6 @@ export default () => {
   const removeTag = (idx) => {
     let copy = [...path]
     copy.splice(idx, 1)
-    console.info('RM', copy)
     setPath(copy)
   }
 

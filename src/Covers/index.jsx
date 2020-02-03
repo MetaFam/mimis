@@ -25,6 +25,7 @@ export default () => {
         }
       )
       .then((res) => {
+        console.log('R', res)
         setHasMore(res.rows.length === 30)
         const last = res.rows[res.rows.length - 1]
         if(last) setMidkey(last.key)
@@ -64,7 +65,7 @@ export default () => {
         }}
         dataSource={rows}
         renderItem={(r) => (
-          <List.Item>
+          <List.Item key={Math.random()}>
             <Link to={`view/${r.value}`}>
               <Data hash={r.value} path={r.key}/>
             </Link>

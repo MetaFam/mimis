@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useDB } from 'react-pouchdb'
 import { Link, useParams, useHistory } from 'react-router-dom'
-import { Button, Carousel, Tooltip, Icon } from 'antd'
+import { Button, Carousel, Tooltip, Icon, Menu, Dropdown, Tag } from 'antd'
 import './index.scss'
 
 export default (props) => {
@@ -11,6 +11,7 @@ export default (props) => {
   const [docs, setDocs] = useState([])
   const [images, setImages] = useState([])
   const [index, setIndex] = useState(null)
+  const [paths, setPaths] = useState([])
   const history = useHistory()
   const carousel = useRef(null)
 
@@ -45,10 +46,41 @@ export default (props) => {
     [hash]
   )
 
+  useEffect(
+    () => {
+      db.query(
+        'paths/contains',
+        { key: hash }
+      )
+      .then((res) => {
+        setPaths(res.rows.map((r => r.value)))
+      })
+    },
+    [hash]
+  )
+
+  const pathList = <Menu>
+    {paths.map((p) => (
+      <Menu.Item>
+        {p.slice(1).map((d, i) => {
+          const q = JSON.stringify(p.slice(1, i + 2))
+          return <Link className='tag-link' to={`/?q=${q}`}>
+            <Tag>{d}</Tag>
+          </Link>
+        })}
+      </Menu.Item>
+    ))}
+  </Menu>
+
   return <React.Fragment>
     <Button title='Back' onClick={() => history.goBack()}><Icon type='arrow-left'/></Button>
     {index &&
       <Button title='Index'><Link to={`/hash/${index.path}`}><Icon type='html5'/></Link></Button>
+    }
+    {paths.length > 0 &&
+      <Dropdown overlay={pathList}>
+        <Button title='Paths'><Icon type='unordered-list'/></Button>
+      </Dropdown>
     }
     <hr/>
     {images.length > 0 && <Carousel ref={carousel}>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import './index.scss'
 import { useDB } from 'react-pouchdb'
-import File from '../File'
 
 export default (props) => {
   const { path, hash } = props
@@ -40,7 +39,7 @@ export default (props) => {
 
     {docs &&
       <ul className='mimis-filelist'>
-        {docs.map((d, i) => <li key={i}><File {...d} /></li>)}
+        {docs.map((d, i) => <li key={i}>{d.value}</li>)}
       </ul>
     }
   </div>

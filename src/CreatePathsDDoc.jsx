@@ -52,6 +52,15 @@ export default () => {
             + '}'
           ),
         },
+        contains: {
+          map: (
+            'function(doc) {'
+            + 'if(doc.type === "dir") {'
+            + 'emit(doc.ipfs_id, doc.path);'
+            + '}'
+            + '}'
+          ),
+        },
       }
     }
 
