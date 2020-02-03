@@ -15,9 +15,9 @@
 .img-nav {
   font-weight: bold;
   position: relative;
-  top: -45vh;
+  top: -30vh;
 
-  &:nth-of-type(3) {
+  &.right {
     float: right;
   }
 }

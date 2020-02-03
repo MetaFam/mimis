@@ -117,7 +117,7 @@ export default () => {
         onSelect={addTag}
       /></li>
     </ul>
-    {msg && <Spin size='large'/>}
+    {msg && <Spin className='path-spin' size='large'/>}
     {error && <Alert message={error}/>}
   </React.Fragment>
 }
