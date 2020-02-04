@@ -39,7 +39,7 @@ export default (props) => {
 
     {docs &&
       <ul className='mimis-filelist'>
-        {docs.map((d, i) => <li key={i}>{d.value}</li>)}
+        {docs.map((d, i) => <li key={i}>{d.name}</li>)}
       </ul>
     }
   </div>

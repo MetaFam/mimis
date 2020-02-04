@@ -7,8 +7,6 @@ import { useDB } from 'react-pouchdb'
 export default (props) => {
   let count = 0  // total number imported
   let queue = [] // objects to insert
-  // queue is currently unbounded b/c indexDb is choking on successive puts
-  const MAX_SIZE = Number.MAX_SAFE_INTEGER // size of a bulk post
   const { ipfs } = useIPFSFactory({ commands: ['id', 'ls', 'get'] })
   const [message, setMessage] = useState(null)
   const [key, setKey] = useState(props.hash)
@@ -72,7 +70,7 @@ export default (props) => {
   const startWith = async (hash) => {
     setText('Loading:')
 
-    const files = await listFiles(hash)
+    await listFiles(hash)
 
     console.log('Queued:', [...queue])
 

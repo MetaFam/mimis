@@ -48,10 +48,7 @@ export default (props) => {
 
   useEffect(
     () => {
-      db.query(
-        'paths/contains',
-        { key: hash }
-      )
+      db.query('paths/contains', { key: hash })
       .then((res) => {
         setPaths(res.rows.map((r => r.value)))
       })
@@ -60,11 +57,11 @@ export default (props) => {
   )
 
   const pathList = <Menu>
-    {paths.map((p) => (
-      <Menu.Item>
+    {paths.map((p, i) => (
+      <Menu.Item key={i}>
         {p.slice(1).map((d, i) => {
           const q = JSON.stringify(p.slice(1, i + 2))
-          return <Link className='tag-link' to={`/?q=${q}`}>
+          return <Link className='tag-link' to={`/?q=${q}`} key={i}>
             <Tag>{d}</Tag>
           </Link>
         })}
@@ -74,11 +71,12 @@ export default (props) => {
 
   return <React.Fragment>
     <Button title='Back' onClick={() => history.goBack()}><Icon type='arrow-left'/></Button>
+    <Link to='/'><Button title='Home'><Icon type='home'/></Button></Link>
     {index &&
       <Button title='Index'><Link to={`/hash/${index.path}`}><Icon type='html5'/></Link></Button>
     }
     {paths.length > 0 &&
-      <Dropdown overlay={pathList}>
+      <Dropdown overlay={pathList} trigger={['click', 'hover']}>
         <Button title='Paths'><Icon type='unordered-list'/></Button>
       </Dropdown>
     }

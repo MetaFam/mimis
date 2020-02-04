@@ -21,8 +21,6 @@ export default () => {
   if(params.get('q')) defPath = JSON.parse(params.get('q'))
   const [path, setPath] = useState(defPath)
   
-  console.log('Q', params.get('q'))
-
   useEffect(
     () => {
       setMsg('Searching…')
@@ -68,15 +66,14 @@ export default () => {
       }
       endpath = endpath.concat({})
 
-      setSearch(startpath.join('/'))
+      setSearch(startpath)
 
       db.query(
         'paths/by_depth',
         {
           startkey: [path.length + 1, startpath],
           endkey: [path.length + 1, endpath],
-          group: true,
-          limit: MAX_RESULTS,
+          group: true, limit: MAX_RESULTS,
         }
       )
       .then((res) => {

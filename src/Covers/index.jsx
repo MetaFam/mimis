@@ -7,6 +7,8 @@ import { Link } from 'react-router-dom'
 import './index.scss'
 import InfiniteScroll from 'react-infinite-scroller'
 
+const PER_REQUEST = 30
+
 export default () => {
   const [search] = useContext(SearchContext)
   const db = useDB()
@@ -14,41 +16,37 @@ export default () => {
   const [midkey, setMidkey] = useState(null)
   const [hasMore, setHasMore] = useState(true)
 
+  const loadDirs = (startkey, append = true) => {
+    console.info('SK', startkey)
+    const endkey = search.map(p => p.replace(/\//g, '//')).join('/')
+    db.query(
+      'paths/dirs',
+      {
+        startkey: startkey,
+        endkey: `${endkey}\uFFF0`,
+        limit: PER_REQUEST,
+      }
+    )
+    .then((res) => {
+      setHasMore(res.rows.length === PER_REQUEST)
+      const last = res.rows[res.rows.length - 1]
+      if(last) setMidkey(last.key)
+      const idRows = res.rows.map(r => ({...r, path: r.key, key: Math.random()}))
+      setRows(append ? rows.concat(idRows) : idRows)
+    })
+  }
+
   useEffect(
     () => {
-      db.query(
-        'paths/dirs',
-        {
-          startkey: search,
-          endkey: `${search}\uFFF0`,
-          limit: 30,
-        }
-      )
-      .then((res) => {
-        console.log('R', res)
-        setHasMore(res.rows.length === 30)
-        const last = res.rows[res.rows.length - 1]
-        if(last) setMidkey(last.key)
-        setRows(res.rows)
-      })
+      const key = search.map(p => p.replace(/\//g, '//')).join('/')
+      loadDirs(key, false)
     },
     [search]
   )
 
   const loadMore = () => {
-    db.query(
-      'paths/dirs',
-      {
-        startkey: midkey,
-        endkey: `${search}\uFFF0`,
-        limit: 30,
-      }
-    )
-    .then((res) => {
-      setHasMore(res.rows.length === 30)
-      setMidkey(res.rows[res.rows.length - 1].key)
-      setRows(rows.concat(res.rows))
-    })
+    let key = midkey
+    loadDirs(key)
   }
 
   return (
@@ -56,7 +54,8 @@ export default () => {
       pageStart={0}
       loadMore={loadMore}
       hasMore={hasMore}
-      loader={<Spin/>}
+      loader={<Spin key={0}/>}
+      initialLoad={false}
     >
       <List
         grid={{ gutter: 10,
@@ -65,9 +64,9 @@ export default () => {
         }}
         dataSource={rows}
         renderItem={(r) => (
-          <List.Item key={Math.random()}>
+          <List.Item title={r.path}>
             <Link to={`view/${r.value}`}>
-              <Data hash={r.value} path={r.key}/>
+              <Data hash={r.value} path={r.path}/>
             </Link>
           </List.Item>
         )}

@@ -1,11 +1,11 @@
 import React, { createContext, useState } from 'react'
 
-const SearchContext = createContext('')
+const SearchContext = createContext([])
 
 export default SearchContext
 
 export const SearchProvider = (props) => {
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState([])
 
   return (
     <SearchContext.Provider value={[search, setSearch]}>
