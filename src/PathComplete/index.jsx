@@ -1,11 +1,12 @@
 import React, { useState, useContext, useEffect } from 'react'
-import { AutoComplete, Spin, Alert, Tag } from 'antd'
+import { Spin, Alert, Tag, Menu, Dropdown, Input } from 'antd'
 import { useDB } from 'react-pouchdb'
 import './style.scss'
 import SearchContext from '../SearchContext'
 import { useLocation } from 'react-router-dom'
+import InfiniteScroll from 'react-infinite-scroller'
 
-const MAX_RESULTS = 25
+const MAX_RESULTS = 50
 
 export default () => {
   const [completions, setCompletions] = useState([])
@@ -14,6 +15,8 @@ export default () => {
   const db = useDB()
   const [_, setSearch] = useContext(SearchContext)
   const [tag, setTag] = useState('')
+  const [midkey, setMidkey] = useState([])
+  const [hasMore, setHasMore] = useState(true)
 
   let defPath = []
   const location = useLocation()
@@ -37,16 +40,6 @@ export default () => {
         fields: ['_id'],
         sort: ['depth'],
         limit: MAX_RESULTS,
-      })
-      .then((res) => {
-        if(res.docs.length === 1) {
-          console.info('Single Result')
-        }
-        if(res.warning) {
-          console.warn('FIND', res.warning)
-        }
-        setDS(res.docs.map((r) => r._id))
-        setMsg(null)
       })
       */
 
@@ -77,9 +70,13 @@ export default () => {
         }
       )
       .then((res) => {
-        setCompletions(res.rows.map((r) => (
-          r.key[1][r.key[1].length - 1]
-        )))
+        setCompletions(res.rows.map((r) => ({
+          name: r.key[1][r.key[1].length - 1],
+          count: r.value,
+        })))
+        setHasMore(res.rows.length === MAX_RESULTS)
+        const last = res.rows[res.rows.length - 1]
+        if(last) setMidkey(last.key)
         setMsg(null)
       })
       .catch((err) => {
@@ -93,6 +90,54 @@ export default () => {
     },
     [path, tag]
   )
+
+  const loadMore = () => {
+    setMsg('Searching…')
+    let startpath = path
+    let endpath = []
+
+    if(tag && tag.length > 0) {
+      startpath = startpath.concat(tag)
+    }
+
+    if(startpath.length > 0) {
+      endpath = (
+        startpath
+        .slice(0, startpath.length - 1)
+        .concat(`${startpath[startpath.length - 1]}\uFFF0`)
+      )
+    }
+    endpath = endpath.concat({})
+
+    db.query(
+      'paths/by_depth',
+      {
+        startkey: midkey,
+        endkey: [path.length + 1, endpath],
+        group: true, limit: MAX_RESULTS,
+      }
+    )
+    .then((res) => {
+      setCompletions(completions.concat(
+        res.rows.map((r) => ({
+          name: r.key[1][r.key[1].length - 1],
+          count: r.value,
+        }))
+      ))
+      setHasMore(res.rows.length === MAX_RESULTS)
+      const last = res.rows[res.rows.length - 1]
+      if(last) setMidkey(last.key)
+      setMsg(null)
+    })
+    .catch((err) => {
+      if(err.status === 404) {
+        setError('Missing Design Document: Can\'t Search')
+      } else {
+        setError(`${err.status} Error: ${err.name} ${err.docId}`)
+      }
+      setMsg(null)
+    })
+  }
 
   const addTag = (text) => {
     setPath([...path, text])
@@ -109,19 +154,35 @@ export default () => {
     setTag(tag)
   }
 
+  const menu = <div class='autocomplete'>
+    <InfiniteScroll
+        pageStart={0}
+        loadMore={loadMore} hasMore={hasMore}
+        loader={<div className='complete-spin'><Spin key={0}/></div>}
+        useWindow={false} initialLoad={false}
+      >
+      <Menu>
+        {completions.map(({name, count}) => (
+          <Menu.Item title={name} onClick={() => addTag(name)}>
+            {name}{count !== 1 && `(${count})`}
+          </Menu.Item>
+        ))}
+      </Menu>
+    </InfiniteScroll>
+  </div>
+
   return <React.Fragment>
     <ul className='mimis-path'>
       {path.map((p, i) => (
         <li key={Math.random()}><Tag closable onClose={() => removeTag(i)}>{p}</Tag></li>
       ))}
-      <li><AutoComplete
-        value={tag}
-        onChange={changeTag}
-        dataSource={completions}
-        onSelect={addTag}
-      /></li>
+      <li>
+        <Dropdown overlay={menu} trigger={['click', 'hover']}>
+          <Input value={tag} onChange={evt => changeTag(evt.target.value)}/>
+        </Dropdown> 
+      </li>
+      {msg && <li><Spin className='path-spin'/></li>}
     </ul>
-    {msg && <Spin className='path-spin' size='large'/>}
     {error && <Alert message={error}/>}
   </React.Fragment>
 }

@@ -18,8 +18,26 @@
   }
 }
 
+.autocomplete {
+  max-height: 75vh;
+}
+
+.autocomplete, .ant-dropdown-menu-item {
+  max-width: 60ex;
+  text-overflow: ellipsis;
+  overflow-x: hidden;
+}
+
+.complete-spin {
+  display: block;
+  text-align: center;
+  align-content: center;
+  background-color: white;
+}
+
 .path-spin {
-  display: inline-block;
+  margin-left: -2.1em ! important;
+  margin-top: 3px ! important;
 }
 
 .mimis-path {
