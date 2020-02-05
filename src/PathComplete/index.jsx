@@ -6,7 +6,7 @@ import SearchContext from '../SearchContext'
 import { useLocation } from 'react-router-dom'
 import InfiniteScroll from 'react-infinite-scroller'
 
-const MAX_RESULTS = 50
+const MAX_RESULTS = 150
 
 export default () => {
   const [completions, setCompletions] = useState([])
@@ -119,7 +119,7 @@ export default () => {
     )
     .then((res) => {
       setCompletions(completions.concat(
-        res.rows.map((r) => ({
+        res.rows.slice(1).map((r) => ({
           name: r.key[1][r.key[1].length - 1],
           count: r.value,
         }))
@@ -163,8 +163,8 @@ export default () => {
       >
       <Menu>
         {completions.map(({name, count}) => (
-          <Menu.Item title={name} onClick={() => addTag(name)}>
-            {name}{count !== 1 && `(${count})`}
+          <Menu.Item key={Math.random()} title={name} onClick={() => addTag(name)}>
+            {name}{count !== 1 && ` (${count})`}
           </Menu.Item>
         ))}
       </Menu>
