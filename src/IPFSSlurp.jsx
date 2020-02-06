@@ -7,6 +7,7 @@ import { useDB } from 'react-pouchdb'
 export default (props) => {
   let count = 0  // total number imported
   let queue = [] // objects to insert
+  let seen = {}  //visited hashes
   // queue is currently unbounded b/c indexDb is choking on successive puts
   const MAX_SIZE = Number.MAX_SAFE_INTEGER // size of a bulk post
   const { ipfs } = useIPFSFactory({ commands: ['id', 'ls', 'get'] })
@@ -101,7 +102,10 @@ export default (props) => {
           _id: path.join('/') + '/', type: 'dir',
           path: path, ipfs_id: key,
         })
-        await queueDir(key)
+        if(!seen[key]) {
+          seen[key] = true
+          await queueDir(key)
+        }
       } else {
         await processList(list, path)
       }
@@ -109,14 +113,18 @@ export default (props) => {
   )
 
   const startWith = async (hash) => {
-    setText('Loading:')
-    console.log(1, 'Queuing…')
-    await queueDir(hash)
-    console.log(2, `Queued ${queue.length}, Writing…`)
-    await flushQueue()
-    console.log(3, 'Done')
-    log('Done')
-    setText(defText)
+    try {
+      setText('Loading:')
+      console.log(1, 'Queuing…')
+      await queueDir(hash)
+      console.log(2, `Queued ${queue.length}, Writing…`)
+      await flushQueue()
+      console.log(3, 'Done')
+      log('Done')
+      setText(defText)
+    } catch(err) {
+      setText(`Error: ${err}`)
+    }
   }
 
   return <React.Fragment>

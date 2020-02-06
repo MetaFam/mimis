@@ -154,17 +154,17 @@ export default () => {
     setTag(tag)
   }
 
-  const menu = <div class='autocomplete'>
+  const menu = <div className='autocomplete'>
     <InfiniteScroll
         pageStart={0}
         loadMore={loadMore} hasMore={hasMore}
-        loader={<div className='complete-spin'><Spin key={0}/></div>}
+        loader={<div className='complete-spin' key={0}><Spin/></div>}
         useWindow={false} initialLoad={false}
       >
-      <Menu>
+      <Menu className='completions'>
         {completions.map(({name, count}) => (
           <Menu.Item key={Math.random()} title={name} onClick={() => addTag(name)}>
-            {name}{count !== 1 && ` (${count})`}
+            {name}{count !== 1 && ` (${Number(count).toLocaleString()})`}
           </Menu.Item>
         ))}
       </Menu>
@@ -178,7 +178,11 @@ export default () => {
       ))}
       <li>
         <Dropdown overlay={menu} trigger={['click', 'hover']}>
-          <Input value={tag} onChange={evt => changeTag(evt.target.value)}/>
+          <Input
+            value={tag}
+            onChange={evt => changeTag(evt.target.value)}
+            onPressEnter={evt => addTag(evt.target.value)}
+          />
         </Dropdown> 
       </li>
       {msg && <li><Spin className='path-spin'/></li>}

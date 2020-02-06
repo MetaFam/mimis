@@ -32,7 +32,7 @@ export default () => {
       const last = res.rows[res.rows.length - 1]
       if(last) setMidkey(last.key)
       const idRows = res.rows.map(r => ({...r, path: r.key, key: Math.random()}))
-      setRows(append ? rows.concat(idRows) : idRows)
+      setRows(append ? rows.concat(idRows.slice(1)) : idRows)
     })
   }
 

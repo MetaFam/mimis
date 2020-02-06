@@ -22,7 +22,7 @@
   max-height: 75vh;
 }
 
-.autocomplete, .ant-dropdown-menu-item {
+.autocomplete, .completions .ant-dropdown-menu-item {
   max-width: 60ex;
   text-overflow: ellipsis;
   overflow-x: hidden;

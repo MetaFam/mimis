@@ -69,6 +69,13 @@ export default (props) => {
     ))}
   </Menu>
 
+  const fileList = <Menu>
+    {docs.map((d, i) => <Menu.Item key={i}>
+      <Link to={`/hash/${d.path}`}>{d.name}</Link>
+    </Menu.Item>
+    )}
+  </Menu>
+
   return <React.Fragment>
     <Button title='Back' onClick={() => history.goBack()}><Icon type='arrow-left'/></Button>
     <Link to='/'><Button title='Home'><Icon type='home'/></Button></Link>
@@ -78,6 +85,11 @@ export default (props) => {
     {paths.length > 0 &&
       <Dropdown overlay={pathList} trigger={['click', 'hover']}>
         <Button title='Paths'><Icon type='unordered-list'/></Button>
+      </Dropdown>
+    }
+    {docs.length > 0 &&
+      <Dropdown overlay={fileList} trigger={['click', 'hover']}>
+        <Button title='Files'><Icon type='folder'/></Button>
       </Dropdown>
     }
     <hr/>
@@ -90,8 +102,5 @@ export default (props) => {
     </Carousel>}
     <Button className='img-nav left' onClick={() => carousel.current.prev()}><Icon type='arrow-left'/></Button>
     <Button className='img-nav right' onClick={() => carousel.current.next()}><Icon type='arrow-right'/></Button>
-    <ul>{docs.map((d, i) => (
-      <li key={i}><Link to={`/hash/${d.path}`}>{d.name}</Link></li>
-    ))}</ul>
   </React.Fragment>
 }
