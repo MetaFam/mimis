@@ -25,6 +25,7 @@ export default (props) => {
         const entries = res.rows.map((r) => ({
           path: r.id,
           name: r.doc.path.slice(-1)[0],
+          branch: r.doc.path,
         }))
 
         let images = []
@@ -76,11 +77,12 @@ export default (props) => {
     )}
   </Menu>
 
-  return <React.Fragment>
+  return <div className='view'>
+    <span title='Info' className='title-icon'>📕</span>
     <Button title='Back' onClick={() => history.goBack()}><Icon type='arrow-left'/></Button>
     <Link to='/'><Button title='Home'><Icon type='home'/></Button></Link>
     {index &&
-      <Button title='Index'><Link to={`/hash/${index.path}`}><Icon type='html5'/></Link></Button>
+      <Button title='Index'><Link to={`/book/${index.path}`}><Icon type='html5'/></Link></Button>
     }
     {paths.length > 0 &&
       <Dropdown overlay={pathList} trigger={['click', 'hover']}>
@@ -96,11 +98,13 @@ export default (props) => {
     {images.length > 0 && <Carousel ref={carousel}>
       {images.map((img, idx) => (
         <div key={idx}><Tooltip title={img.name}>
-          <img alt={img.name} src={`//ipfs.io/ipfs/${img.path}`}/>
+          <Link to={`/book/${img.branch[0]}/index.html#img-${img.branch.slice(1).join('/')}`}>
+            <img alt={img.name} src={`//ipfs.io/ipfs/${img.path}`}/>
+          </Link>
         </Tooltip></div>
       ))}
     </Carousel>}
     <Button className='img-nav left' onClick={() => carousel.current.prev()}><Icon type='arrow-left'/></Button>
     <Button className='img-nav right' onClick={() => carousel.current.next()}><Icon type='arrow-right'/></Button>
-  </React.Fragment>
+  </div>
 }

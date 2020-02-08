@@ -37,6 +37,7 @@ export default () => {
     </Button>
     <Modal onOk={onOk} onCancel={() => setActive(false)} visible={active}>
       <form>
+        <h2>URL To Replicate To</h2>
         <Input value={url} onChange={evt => setURL(evt.target.value)}/>
       </form>
     </Modal>

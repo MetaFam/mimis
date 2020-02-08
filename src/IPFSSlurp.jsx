@@ -123,7 +123,7 @@ export default (props) => {
       log('Done')
       setText(defText)
     } catch(err) {
-      setText(`Error: ${err}`)
+      setMessage(err)
     }
   }
 
