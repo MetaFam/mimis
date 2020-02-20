@@ -1,0 +1,36 @@
+body {
+  margin: 0 ! important;
+}
+
+.mimir {
+  nav {
+    text-align: center;
+  }
+  
+  & .carousel .nav {
+    position: relative;
+    top: 50%;
+
+    &.left { float: left }
+    &.right { float: right }
+  }
+
+  & .frame {
+    max-width: 100vh;
+    overflow-x: scroll;
+    margin: 0 auto;
+
+    & > .content {
+      max-height: calc(100vh - 5em); // clientHeight
+      column-width: 100vh;
+      column-gap: 0;
+
+      img {
+        max-width: 100%;
+        max-height: calc(100vh - 5em);
+        break-inside: avoid;
+        box-sizing: border-box;
+      }
+    }
+  }
+}

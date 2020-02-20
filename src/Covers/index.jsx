@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom'
 import './index.scss'
 import InfiniteScroll from 'react-infinite-scroller'
 
-const PER_REQUEST = 30
+const PER_REQUEST = 40
 
 export default () => {
   const [search] = useContext(SearchContext)
@@ -65,7 +65,7 @@ export default () => {
         dataSource={rows}
         renderItem={(r) => (
           <List.Item title={r.path}>
-            <Link to={`view/${r.value}`}>
+            <Link to={`book/${r.value}/index.epub`}>
               <Data hash={r.value} path={r.path}/>
             </Link>
           </List.Item>

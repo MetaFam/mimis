@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import './index.css'
 import { Link, useParams, useHistory } from 'react-router-dom'
 import { Button, Icon } from 'antd'
+import Reader from '../Mimir'
 
 export default ({ url }) => {
   const params = useParams()
@@ -10,9 +11,6 @@ export default ({ url }) => {
   const history = useHistory()
 
   return <div className='book'>
-    <span title='Content' className='title-icon'>📖</span>
-    <Button title='Back' onClick={() => history.goBack()}><Icon type='arrow-left'/></Button>
-    <Link title='Home' to='/'><Button><Icon type='home'/></Button></Link>
-    <iframe src={IPFSUrl} />
+    <Reader url={IPFSUrl} hash={key}/>
   </div>
 }

@@ -33,7 +33,7 @@ export default (props) => {
         entries.forEach((e) => {
           if(/(png|jpg|jpeg|gif)$/.test(e.name)) {
             images.push(e)
-          } else if(e.name === 'index.html') {
+          } else if(e.name === 'index.epub') {
             setIndex(e)
           } else {
             files.push(e)
@@ -94,7 +94,9 @@ export default (props) => {
         <Button title='Files'><Icon type='folder'/></Button>
       </Dropdown>
     }
-    <hr/>
+    <a href='//github.com/dhappy/mimis'>
+      <Button title='Github'><Icon type='github'/></Button>
+    </a>
     {images.length > 0 && <Carousel ref={carousel}>
       {images.map((img, idx) => (
         <div key={idx}><Tooltip title={img.name}>

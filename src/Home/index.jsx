@@ -4,12 +4,21 @@ import { Tabs, Icon } from 'antd'
 import Browse from '../Browse'
 import Debug from '../Debug'
 import Settings from '../Settings'
+import Setup from '../Setup'
 import './index.scss'
 const { TabPane } = Tabs
 
 export default () => {
   return <SearchProvider>
-    <Tabs>
+    <Tabs defaultActiveKey='browse'>
+      <TabPane
+        tab={
+          <span><Icon type='setting' /> Setup</span>
+        }
+        key='setup'
+      >
+        <Setup/>
+      </TabPane>
       <TabPane
         tab={
           <span><Icon type='book' /> Browse</span>
