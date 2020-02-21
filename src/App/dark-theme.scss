@@ -6,10 +6,7 @@ html {
 }
 
 body {
-  background-color: var(--bg) ! important;
-  color: var(--fg) ! important;
-
-  .ant-tabs, h1, h2, h3, h4, h5, .ant-radio-wrapper, p {
+  &, .ant-tabs, h1, h2, h3, h4, h5, .ant-radio-wrapper, p {
     background-color: var(--bg) ! important;
     color: var(--fg) ! important;
   }
@@ -19,7 +16,7 @@ div::-webkit-scrollbar {
   width: 11px;
 }
 div {
-  //scrollbar-width: thin;
+  scrollbar-width: thin;
   scrollbar-color: var(--thumb) var(--scrollbar);
 }
 div::-webkit-scrollbar-track {

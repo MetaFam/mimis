@@ -6,7 +6,7 @@ body {
   nav {
     text-align: center;
   }
-  
+
   & .carousel .nav {
     position: relative;
     top: 50%;
@@ -21,7 +21,7 @@ body {
     margin: 0 auto;
 
     & > .content {
-      max-height: calc(100vh - 5em); // clientHeight
+      max-height: calc(100vh - 48px); // clientHeight
       column-width: 100vh;
       column-gap: 0;
 

@@ -20,6 +20,7 @@
     "pouchdb": "^7.1.1",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
+    "react-hammerjs": "^1.0.1",
     "react-infinite-scroller": "^1.2.4",
     "react-mimir": "^0.1.0",
     "react-pouchdb": "^2.0.0",

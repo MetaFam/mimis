@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
 import './index.scss'
 import { Link, useHistory } from 'react-router-dom'
-import { Tabs, Button, Carousel, Tooltip, Icon, Menu, Dropdown, Tag, Input } from 'antd'
+import { Button, Carousel, Tooltip, Icon, Menu, Dropdown, Tag, Input } from 'antd'
 import { useLocation } from 'react-router-dom'
 import { useDB } from 'react-pouchdb'
+import Hammer from 'react-hammerjs'
 import * as Z from '../Unzip'
 const { zip } = Z
-const { TabPane } = Tabs
 
 export default (props) => {
   const [docs, setDocs] = useState([])
@@ -16,14 +16,12 @@ export default (props) => {
   const [url, setURL] = useState(params.get('url') || props.url)
   const frame = useRef()
   const [images, setImages] = useState([])
-  const [index, setIndex] = useState(null)
+  const [size, setSize] = useState(100)
   const [paths, setPaths] = useState([])
   const [view, setView] = useState('html')
   const history = useHistory()
   const carousel = useRef()
   const db = useDB()
-
-  console.log(props)
 
   const setPage = (p) => {
     if(isNaN(p)) return
@@ -54,6 +52,10 @@ export default (props) => {
         deltaPage(-5)
       } else if(evt.key === 'PageDown') {
         deltaPage(5)
+      } else if(evt.key === '-') {
+        setSize(size => size - 10)
+      } else if(evt.key === '+') {
+        setSize(size => size + 10)
       }
     },
   }
@@ -87,7 +89,7 @@ export default (props) => {
     return () => {
       f.removeEventListener('scroll', scroll)
     }
-  }, [])
+  }, [frame])
   
   useEffect(() => {
     const hash = props.hash.split('/').shift()
@@ -185,7 +187,20 @@ export default (props) => {
     }, console.error)
   }, [url])
 
-  console.log(paths)
+  const onTap = (evt) => {
+    const w = evt.target.offsetWidth
+    let x = (evt.center.x - evt.target.offsetLeft % w) / w
+    if(x <= 0.25) deltaPage(-1)
+    if(x > 0.25) deltaPage(1)
+  }
+
+  const onSwipe = (evt) => {
+    if(evt.deltaX < 0) {
+      deltaPage(-1)
+    } else {
+      deltaPage(1)
+    }
+  }
 
   const pathList = <Menu>
     {paths.map((p, i) => (
@@ -241,13 +256,14 @@ export default (props) => {
         <h2>EPub URL:</h2>
         <Input onPressEnter={evt => setURL(evt.target.value)}/>
       </div>}
-
       {styles.map((s, i) => <link key={i} rel='stylesheet' href={s}/>)}
-      <div className='frame' ref={frame}><div className='content'>
-        {docs.map((d, i) => (
-          <div key={i} dangerouslySetInnerHTML={{__html: d.outerHTML}}/>
-        ))}
-      </div></div>
+      <div className='frame' style={{fontSize: `${size}%`}} ref={frame}>
+        <Hammer onTap={onTap} onSwipe={onSwipe}><div className='content'>
+          {docs.map((d, i) => (
+            <div key={i} dangerouslySetInnerHTML={{__html: d.outerHTML}}/>
+          ))}
+        </div></Hammer>
+      </div>
     </div>}
   </div>
 }
