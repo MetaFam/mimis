@@ -35,7 +35,7 @@ export default (props) => {
   return <div className='mimis-fileentry'>
     {cover ? '' : <h3>{path}</h3>}
 
-    {cover && <img alt={path} src={`//cloudfare-ipfs.com/ipfs/${cover.path}`} />}
+    {cover && <img alt={path} src={`//cloudflare-ipfs.com/ipfs/${cover.path}`} />}
 
     {docs &&
       <ul className='mimis-filelist'>
