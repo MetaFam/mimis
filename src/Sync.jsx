@@ -12,7 +12,7 @@ export default () => {
 
   const doSync = () => {
     setText('Syncing…')
-    local.sync(remote)
+    local.replicate.to(remote)
     .on('complete', () => {
       setText(defText)
     })
@@ -37,6 +37,7 @@ export default () => {
     </Button>
     <Modal onOk={onOk} onCancel={() => setActive(false)} visible={active}>
       <form>
+        <h2>URL To Replicate To</h2>
         <Input value={url} onChange={evt => setURL(evt.target.value)}/>
       </form>
     </Modal>

@@ -1,0 +1,35 @@
+.view {
+  max-height: 100vh;
+}
+
+.ant-carousel {
+  div {
+    background-color: #222;
+    display: flex ! important;
+    align-items: center;
+    justify-content: center;
+    max-height: calc(100vh - 6em);
+
+    img {
+      width: auto;
+    }
+  }
+
+  .slick-slide a {
+    pointer-events: all;
+  }
+}
+
+.tag-link {
+  display: inline-block ! important;
+}
+
+.img-nav {
+  font-weight: bold;
+  position: relative;
+  top: -45vh;
+
+  &.right {
+    float: right;
+  }
+}

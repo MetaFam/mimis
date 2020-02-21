@@ -113,4 +113,18 @@ For payments, I am particularly interested in [IOTA](//iota.io). The structure i
 
 Also, tracking data could go toward creating graphs that aid in the collaborative filtering of paths.
 
-Ultimately, the structure I envision is a flow graph where the nodes with the max flow are prioitized for viewing.
+Ultimately, the structure I envision is a flow graph where the nodes with the max flow are prioritized for viewing.
+
+The graph will be used to generate a feed of the form:
+
+* `turing/feed/1`
+* `turing/feed/2`
+* ⋮
+
+With an accompanying interface for scrolling and linking through the feed.
+
+# Thoughts
+
+IPFS provides forward trees only. The aim of this system is to provide the context tree for those trees by conglomerating filesystems.
+
+I'm trying to avoid having to traverse the tree…

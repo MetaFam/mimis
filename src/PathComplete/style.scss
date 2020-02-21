@@ -5,7 +5,7 @@
 .ant-select-auto-complete {
   font-size: 4ex ! important;
   margin: auto;
-  width: 75%;
+  width: 100%;
 
   input {
     height: auto ! important;
@@ -15,5 +15,33 @@
     height: auto;
     line-height: 100%;
     margin-top: 0ex;
+  }
+}
+
+.autocomplete {
+  max-height: 75vh;
+}
+
+.autocomplete, .completions .ant-dropdown-menu-item {
+  max-width: 60ex;
+  text-overflow: ellipsis;
+  overflow-x: hidden;
+}
+
+.complete-spin {
+  display: block;
+  text-align: center;
+  align-content: center;
+  background-color: white;
+}
+
+.path-spin {
+  margin-left: -2.1em ! important;
+  margin-top: 3px ! important;
+}
+
+.mimis-path {
+  li {
+    display: inline-block;
   }
 }
