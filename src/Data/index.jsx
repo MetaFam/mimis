@@ -29,7 +29,7 @@ export default (props) => {
         }
       })
     },
-    [hash]
+    [hash, db]
   )
 
   return <div className='mimis-fileentry'>

@@ -41,7 +41,7 @@ export default () => {
       const key = search.map(p => p.replace(/\//g, '//')).join('/')
       loadDirs(key, false)
     },
-    [search]
+    [search. loadDirs]
   )
 
   const loadMore = () => {

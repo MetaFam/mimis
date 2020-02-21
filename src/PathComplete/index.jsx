@@ -88,7 +88,7 @@ export default () => {
         setMsg(null)
       })
     },
-    [path, tag]
+    [path, tag, db, setSearch]
   )
 
   const loadMore = () => {

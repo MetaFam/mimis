@@ -44,7 +44,7 @@ export default (props) => {
         setImages(images)
       })
     },
-    [hash]
+    [hash, db]
   )
 
   useEffect(
@@ -54,7 +54,7 @@ export default (props) => {
         setPaths(res.rows.map((r => r.value)))
       })
     },
-    [hash]
+    [hash, db]
   )
 
   const pathList = <Menu>

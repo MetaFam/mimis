@@ -69,7 +69,7 @@ export default (props) => {
         window.removeEventListener(t, listeners[t])
       })
     }
-  }, [])
+  }, [listeners])
 
   useEffect(() => {
     const scroll = () => {
@@ -97,7 +97,7 @@ export default (props) => {
     .then((res) => {
       setPaths(res.rows.map((r => r.value)))
     })
-  }, [props.hash])
+  }, [props.hash, db])
 
   const process = (entries) => {
     const content = entries.find(
