@@ -23,8 +23,6 @@ export const DatabaseProvider = (props) => {
     localStorage.setItem('db', db)
   }
 
-  console.log('db', db)
-
   return (
     <DatabaseContext.Provider value={[db, storeDB]}>
       <PouchDB name={sources[db]}>

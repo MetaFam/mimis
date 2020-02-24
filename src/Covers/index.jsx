@@ -17,7 +17,6 @@ export default () => {
   const [hasMore, setHasMore] = useState(true)
 
   const loadDirs = (startkey, append = true) => {
-    console.info('SK', startkey)
     const endkey = search.map(p => p.replace(/\//g, '//')).join('/')
     db.query(
       'paths/dirs',
@@ -41,7 +40,7 @@ export default () => {
       const key = search.map(p => p.replace(/\//g, '//')).join('/')
       loadDirs(key, false)
     },
-    [search. loadDirs]
+    [search]
   )
 
   const loadMore = () => {
