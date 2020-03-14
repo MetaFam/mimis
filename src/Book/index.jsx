@@ -1,7 +1,8 @@
 import React from 'react'
 import './index.css'
 import { useParams } from 'react-router-dom'
-import Reader from '../Mimir'
+//import Reader from '../Mimir'
+import Reader from '../Readium'
 
 export default ({ url }) => {
   const params = useParams()

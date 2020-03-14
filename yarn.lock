@@ -928,6 +928,15 @@
   resolved "https://registry.yarnpkg.com/@csstools/normalize.css/-/normalize.css-10.1.0.tgz#f0950bba18819512d42f7197e56c518aa491cf18"
   integrity sha512-ij4wRiunFfaJxjB0BdrYHIH8FxBJpOwNPhhAcunlmPdXudL1WQV1qoP9un6JsEBAgQH+7UXyyjh0g7jTxXK6tg==
 
+"@evidentpoint/readium-js@^1.0.0-alpha.1":
+  version "1.0.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@evidentpoint/readium-js/-/readium-js-1.0.0-alpha.1.tgz#680f3f36641ca31f674808e167c8d9790e88d1ae"
+  integrity sha512-ixUU00mFycVPmXZedHGy8zP0FIfofYszRF6uZHb/EwiL4NDqgYqaTzl1KX7Ypw8xmpnaeWAnfcb4HJkgWYUrvQ==
+  dependencies:
+    bowser "^1.9.3"
+    crypto-js "^3.1.9-1"
+    zip-js "github:danielweck/zip.js#master"
+
 "@hapi/accept@3.x.x":
   version "3.2.3"
   resolved "https://registry.yarnpkg.com/@hapi/accept/-/accept-3.2.3.tgz#6947259928ed28df2736c7daffbfc739b72adfcc"
@@ -3192,6 +3201,11 @@ borc@^2.0.3, borc@^2.1.0:
     ieee754 "^1.1.8"
     iso-url "~0.4.4"
     json-text-sequence "~0.1.0"
+
+bowser@^1.9.3:
+  version "1.9.4"
+  resolved "https://registry.yarnpkg.com/bowser/-/bowser-1.9.4.tgz#890c58a2813a9d3243704334fa81b96a5c150c9a"
+  integrity sha512-9IdMmj2KjigRq6oWhmwv1W36pDuA4STQZ8q6YO9um+x07xgYNCD3Oou+WP/3L1HNz7iqythGet3/p4wvc8AAwQ==
 
 boxen@^3.0.0:
   version "3.2.0"
@@ -14043,6 +14057,14 @@ readdirp@^2.2.1:
     micromatch "^3.1.10"
     readable-stream "^2.0.2"
 
+readium-js@^0.0.0:
+  version "0.0.0"
+  resolved "https://registry.yarnpkg.com/readium-js/-/readium-js-0.0.0.tgz#573e931b4298f18c4374231707c28057dd7d48f1"
+  integrity sha1-Vz6TG0KY8YxDdCMXB8KAV919SPE=
+  dependencies:
+    requirejs latest
+    requirejs-text latest
+
 realpath-native@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/realpath-native/-/realpath-native-1.1.0.tgz#2003294fea23fb0672f2476ebe22fcf498a2d65c"
@@ -14277,6 +14299,16 @@ require-main-filename@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/require-main-filename/-/require-main-filename-2.0.0.tgz#d0b329ecc7cc0f61649f62215be69af54aa8989b"
   integrity sha512-NKN5kMDylKuldxYLSUfrbo5Tuzh4hd+2E8NPPX02mZtn1VuREQToYe/ZdlJy+J3uCpfaiGF05e7B8W0iXbQHmg==
+
+requirejs-text@latest:
+  version "2.0.15"
+  resolved "https://registry.yarnpkg.com/requirejs-text/-/requirejs-text-2.0.15.tgz#13138733613fc4457b7e1247e8cb751df7aa5429"
+  integrity sha1-ExOHM2E/xEV7fhJH6Mt1HfeqVCk=
+
+requirejs@latest:
+  version "2.3.6"
+  resolved "https://registry.yarnpkg.com/requirejs/-/requirejs-2.3.6.tgz#e5093d9601c2829251258c0b9445d4d19fa9e7c9"
+  integrity sha512-ipEzlWQe6RK3jkzikgCupiTbTvm4S0/CAU5GlgptkN5SO6F3u0UD0K18wy6ErDqiCyP4J4YYe1HuAShvsxePLg==
 
 requires-port@^1.0.0:
   version "1.0.0"
@@ -17043,3 +17075,7 @@ zcash-block@^2.0.0:
   integrity sha512-I6pv5b+eGE8CJFmltR+ILHnGcnBO8olV78VicQIaWulMhkomlwDmaMeMshJRLPcnd0FBs58QQVcVNBOT9ojH6Q==
   dependencies:
     multihashing "~0.3.3"
+
+"zip-js@github:danielweck/zip.js#master":
+  version "0.0.1"
+  resolved "https://codeload.github.com/danielweck/zip.js/tar.gz/f71eda6df5a85aad2b96c8718c33b97e13b684ee"

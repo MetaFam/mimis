@@ -1,12 +1,14 @@
+/*
 html, body, iframe {
   padding: 0;
   margin: 0;
   border: none;
 }
 
-.book iframe {
+.book {
   width: min(100vw, 90vh);
   height: calc(100vh - 3em);
   display: block;
   margin: auto;
 }
+*/

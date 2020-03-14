@@ -2,7 +2,10 @@
   height: 15em;
   overflow-y: scroll;
 
-  img {
-    max-width: 100%;
+  &:hover {
+    min-height: 15em;
+    height: auto;
   }
+
+  img { max-width: 100% }
 }

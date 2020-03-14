@@ -13,6 +13,7 @@ export default (props) => {
   const [styles, setStyles] = useState([])
   const location = useLocation()
   const params = (new URLSearchParams(location.search))
+  console.log('p', params)
   const [url, setURL] = useState(params.get('url') || props.url)
   const frame = useRef()
   const [images, setImages] = useState([])
@@ -44,7 +45,7 @@ export default (props) => {
       deltaPage(pages)
     },
     keyup: (evt) => {
-      if(evt.key === 'ArrowDown' || evt.key === 'ArrowRight') {
+      if(evt.key === 'ArrowDown' || evt.key === 'ArrowRight' || evt.key === 'Enter') {
         deltaPage(1)
       } else if(evt.key === 'ArrowUp' || evt.key === 'ArrowLeft') {
         deltaPage(-1)
