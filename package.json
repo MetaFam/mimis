@@ -28,7 +28,8 @@
     "react-router": "^5.1.2",
     "react-router-dom": "^5.1.2",
     "react-scripts": "3.3.0",
-    "readium-js": "^0.0.0"
+    "readium-js": "^0.0.0",
+    "readium-js-viewer": "https://github.com/readium/readium-js-viewer"
   },
   "scripts": {
     "start": "react-scripts start",
