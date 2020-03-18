@@ -3,9 +3,16 @@
 }
 
 .ant-row {
-  display: grid;
+  display: grid ! important;
+  grid-template-columns: repeat(6, 1fr);
 
   .ant-col {
-    grid-template-columns: 5em;
+    width: 100%;
+
+    max-height: 10em;
+
+    &:hover {
+      max-height: none;
+    }
   }
 }

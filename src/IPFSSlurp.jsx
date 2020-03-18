@@ -8,16 +8,14 @@ export default (props) => {
   let count = 0  // total number imported
   let queue = [] // objects to insert
   let seen = {}  //visited hashes
+  const log = props.log || console.debug
   // queue is currently unbounded b/c indexDb is choking on successive puts
   const MAX_SIZE = Number.MAX_SAFE_INTEGER // size of a bulk post
   const { ipfs } = useIPFSFactory({ commands: ['id', 'ls', 'get'] })
-  const [message, setMessage] = useState(null)
   const [key, setKey] = useState(props.hash)
   const defText = 'Intake:'
   const [text, setText] = useState(defText)
   const db = useDB()
-
-  const log = debounce(setMessage, 100)
 
   const flushQueue = () => {
     const copy = [...queue]
@@ -28,7 +26,6 @@ export default (props) => {
     count++
     queue.push(obj)
     log(`Queued ${count} (${queue.length}): ${obj.type}: ${obj._id}`)
-    console.log(`Queued ${count} (${queue.length}): ${obj.type}: ${obj._id}`)
     if(queue.length >= MAX_SIZE) {
       console.log('Flushing Queue')
       return flushQueue()
@@ -115,15 +112,14 @@ export default (props) => {
   const startWith = async (hash) => {
     try {
       setText('Loading:')
-      console.log(1, 'Queuing…')
+      log('Queuing…')
       await queueDir(hash)
-      console.log(2, `Queued ${queue.length}, Writing…`)
+      log(`Queued ${queue.length}, Writing…`)
       await flushQueue()
-      console.log(3, 'Done')
       log('Done')
       setText(defText)
     } catch(err) {
-      setMessage(err)
+      log(err)
     }
   }
 
@@ -138,6 +134,5 @@ export default (props) => {
       onChange={evt => setKey(evt.target.value)}
       style={{width: '60ex'}}
     />
-    {message && <Alert message={message}/>}
   </React.Fragment>
 }

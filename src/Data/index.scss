@@ -1,9 +1,8 @@
 .mimis-fileentry {
-  height: 15em;
   overflow-y: scroll;
+  background-color: var(--bg);
 
   &:hover {
-    min-height: 15em;
     height: auto;
   }
 
