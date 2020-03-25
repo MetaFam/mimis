@@ -64,9 +64,7 @@ export default () => {
         dataSource={rows}
         renderItem={(r) => (
           <List.Item title={r.path}>
-            <Link to={`book/${r.value}/index.epub`}>
-              <Data hash={r.value} path={r.path}/>
-            </Link>
+            <Data hash={r.value} path={r.path}/>
           </List.Item>
         )}
       />

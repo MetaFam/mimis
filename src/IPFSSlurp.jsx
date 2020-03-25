@@ -1,8 +1,19 @@
 import React, { useState } from 'react'
 import { Button, Alert, Input } from 'antd'
 import useIPFSFactory from './useIPFSFactory'
-import { debounce } from 'lodash'
 import { useDB } from 'react-pouchdb'
+
+const mimetype = (filename) => {
+  switch(filename.split('.').pop()) {
+    case 'jpg': case 'jpeg': return 'image/jpeg'
+    case 'svg': return 'image/svg+xml'
+    case 'gif': return 'image/gif'
+    case 'html': case 'htm': return 'text/html'
+    case 'xhtml': return 'application/html+xml'
+    case 'epub': return 'application/epub+zip'
+    default: return 'unknown/unknown'
+  }
+}
 
 export default (props) => {
   let count = 0  // total number imported
@@ -34,7 +45,7 @@ export default (props) => {
     }
   }
 
-  const processList = (list, path) => (
+  const processList = (list, path, hasSplit) => (
     Promise.allSettled(
       list.map((entry) => {
         const fullpath = [...path, decodeURIComponent(entry.name)]
@@ -43,12 +54,13 @@ export default (props) => {
         switch(entry.type) {
         case 'dir':
           log(`Dir: "${name}/": Recursing`)
-          return queueDir(entry.hash, fullpath)
+          return queueDir(entry.hash, fullpath, hasSplit)
         case 'file':
           log(`Adding File: ${entry.name}`)
           return enque({
             _id: fullpath.join('/'), type: 'file',
             path: fullpath, ipfs_id: entry.hash,
+            mimetype: mimetype(entry.name),
           }).catch((err) => {
             if(err.status === 409) {
               console.warn('Conflict', err)
@@ -72,7 +84,7 @@ export default (props) => {
     )
   )
 
-  const queueDir = (key, path = []) => (
+  const queueDir = (key, path = [], hasSplit = false) => (
     ipfs.ls(key)
     .then(async (list) => {
       if(path.length === 0) path.push(key) // the root
@@ -80,31 +92,26 @@ export default (props) => {
       const parent = path.slice(-1)[0]
       const keys = list.map(e => e.path)
       const names = list.map(e => e.name)
-      let isContext = false
+      let isContent = false
 
-      // Gutenberg content dir
-      isContext = (
-        keys.includes(`${key}/${parent}.txt`)
-        || keys.includes(`${key}/${parent}-0.txt`)
-        || keys.includes(`${key}/${parent}-8.txt`)
+      // book covers content dir
+      isContent = (
+        isContent || names.filter(k => k === 'covers').length > 0
       )
+      isContent = isContent || !!list.find(f => f.type === 'file')
+      isContent = isContent || names.length === 0
 
-      // Μïmis content dir
-      isContext = (
-        names.filter(k => /^index\./.test(k)).length > 0
-      )
-
-      if(isContext && path.length > 1) {
+      if(!hasSplit && isContent && path.length > 1) {
         await enque({
           _id: path.join('/') + '/', type: 'dir',
           path: path, ipfs_id: key,
         })
         if(!seen[key]) {
           seen[key] = true
-          await queueDir(key)
+          await queueDir(key, [], true)
         }
       } else {
-        await processList(list, path)
+        await processList(list, path, hasSplit)
       }
     })
   )
@@ -132,6 +139,7 @@ export default (props) => {
     <Input
       value={key}
       onChange={evt => setKey(evt.target.value)}
+      onPressEnter={evt => startWith(key)}
       style={{width: '60ex'}}
     />
   </React.Fragment>

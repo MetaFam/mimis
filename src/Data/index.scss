@@ -6,5 +6,6 @@
     height: auto;
   }
 
-  img { max-width: 100% }
+  img, h3 { max-width: 100% }
+  h3 { overflow-x: hidden; text-overflow: ellipsis }
 }
