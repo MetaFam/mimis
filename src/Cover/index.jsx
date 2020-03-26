@@ -27,36 +27,28 @@ export default (props) => {
   }, [key, db])
 
   useEffect(() => {
-    db.allDocs({
-      startkey: key, endkey: `${key}\uFFF0`,
-      limit: 500, include_docs: true,
-    })
+    db.query('paths/dirs', { key: key })
     .then((res) => {
-      const files = res.rows.map((r) => ({
-        path: r.id,
-        name: r.doc.path.slice(1).join('/'),
-        type: r.doc.mimetype,
-        path: r.doc.path,
-      }))
-      setDocs(files)
-      setImages(files.filter(f => /^image\//.test(f.type)))
-      setBook(files.find(f => f.name === 'index.epub'))
+      console.log('r', res)
+      // setDocs(files)
+      // setImages(files.filter(f => /^image\//.test(f.type)))
+      // setBook(files.find(f => f.name === 'index.epub'))
     })
   }, [key, db])
 
   return <React.Fragment>
     <ul>
-    {paths.map((path) => <li>
-      {path.slice(1).map((d, i) => {
-        const q = JSON.stringify(path.slice(1, i + 2))
-        return <Link className='tag-link' to={`/?q=${q}`} key={i}>
-          <Tag>{d}</Tag>
-        </Link>
-      })}
-    </li>)}
+      {paths.map((path) => <li>
+        {path.slice(1).map((d, i) => {
+          const q = JSON.stringify(path.slice(1, i + 2))
+          return <Link className='tag-link' to={`/?q=${q}`} key={i}>
+            <Tag>{d}</Tag>
+          </Link>
+        })}
+      </li>)}
     </ul>
     {book && <Link to={`/book/${book.path.join('/')}`}>{book.name}</Link>}
-    {images && <Carousel>
+    {images.length > 0 && <Carousel>
       {images.map((d, i) => (
         <img key={i} src={`//ipfs.io/ipfs/${d.path.join('/')}`}/>
       ))}

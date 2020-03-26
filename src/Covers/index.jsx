@@ -27,10 +27,14 @@ export default () => {
       }
     )
     .then((res) => {
+      console.log('RS', res)
       setHasMore(res.rows.length === PER_REQUEST)
       const last = res.rows[res.rows.length - 1]
       if(last) setMidkey(last.key)
-      const idRows = res.rows.map(r => ({...r, path: r.key, key: Math.random()}))
+      const idRows = res.rows.map(r => ({
+        ...r, path: r.key, key: Math.random()
+      }))
+      console.log('ID', idRows)
       setRows(append ? rows.concat(idRows.slice(1)) : idRows)
     })
   }
@@ -64,7 +68,7 @@ export default () => {
         dataSource={rows}
         renderItem={(r) => (
           <List.Item title={r.path}>
-            <Data hash={r.value} path={r.path}/>
+            <Data hash={r.id} contents={r.value} path={r.path}/>
           </List.Item>
         )}
       />

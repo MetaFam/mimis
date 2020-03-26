@@ -37,10 +37,20 @@ export default () => {
             'function(doc) {'
             + 'if(doc.type === "dir") {'
             + 'var path = doc.path.slice(1).join("/") + "/";'
-            + 'emit(path, doc.ipfs_id);'
+            + 'emit(path, doc.contents);'
             + '}'
             + '}'
           ),
+          reduce: (
+            'function(keys, docs, rereduce) {'
+            + 'var out = {};'
+            + 'for(var i = 0; i < docs.length; i++) {'
+            + 'Object.assign(out, docs[i]);'
+            + '}'
+            + 'console.log("OUT", out);'
+            + 'return out'
+            + '}'
+          )
         },
         files: {
           map: (

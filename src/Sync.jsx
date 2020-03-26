@@ -38,7 +38,7 @@ export default () => {
     <Modal onOk={onOk} onCancel={() => setActive(false)} visible={active}>
       <form>
         <h2>URL To Replicate To</h2>
-        <Input value={url} onChange={evt => setURL(evt.target.value)}/>
+        <Input value={url} onChange={evt => setURL(evt.target.value)} onPressEnter={onOk}/>
       </form>
     </Modal>
   </React.Fragment>

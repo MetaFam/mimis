@@ -9,40 +9,26 @@ import 'react-responsive-carousel/lib/styles/carousel.css'
 const Carousel = CarouselLib.Carousel
 
 export default (props) => {
-  const { path, hash } = props
-  const db = useDB()
+  const { contents, path, hash } = props
   const [docs, setDocs] = useState([])
   const [covers, setCovers] = useState([])
   const [book, setBook] = useState()
-  const [mimis, setMimis] = useState()
   const history = useHistory()
 
-  const pullMimis = async (file) => {
-    if(file) {
-      const data = await fetch(`//ipfs.io/ipfs/${file.id}`)
-      setBook((await data.json()).book)
+  const pullMimis = (key) => {
+    if(key) {
+      return fetch(`//ipfs.io/ipfs/${key}`)
+      .then(res => res.json())
+      .then(data => setBook(data))
     }
   }
 
   useEffect(() => {
-    db.allDocs({
-      startkey: hash, endkey: `${hash}\uFFF0`,
-      limit: 500, include_docs: true,
-    })
-    .then((res) => {
-      const files = res.rows.map((r) => ({
-        path: r.doc.path, id: r.id,
-        name: r.doc.path.slice(-1)[0],
-      }))
-      setCovers(files.filter((f) => (
-        f.path.slice(-2)[0] == 'covers'
-      )))
-      pullMimis(files.find(f => f.name === 'mimis.json'))
-      setDocs(files)
-    })
-  }, [hash, db])
+    contents.covers && setCovers(Object.values(contents.covers))
+    contents['mimis.json'] && pullMimis(contents['mimis.json'])
+  }, [contents])
 
-  const onSelect = cover => history.push(`/cover/${cover.path[0]}`)
+  const onSelect = cover => history.push(`/cover/${path}`)
 
   const Head = () => {
     if(covers.length > 0) {
@@ -52,11 +38,11 @@ export default (props) => {
         showIndicators={false}
       >
         {covers.map((c, i) => (
-          <img key={i} alt={path} src={`//ipfs.io/ipfs/${c.id}`}/>
+          <img key={i} alt={path} src={`//ipfs.io/ipfs/${c}`}/>
         ))}
       </Carousel>
     } else if(book) {
-      return <Link to={`/cover/${hash}`}>
+      return <Link to={`/cover/${path}`}>
         <h1>{book.title}</h1>
         <h2>by {book.author}</h2>
       </Link>

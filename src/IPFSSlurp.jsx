@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Button, Alert, Input } from 'antd'
 import useIPFSFactory from './useIPFSFactory'
 import { useDB } from 'react-pouchdb'
+import { reject } from '@evidentpoint/readium-js'
 
 const mimetype = (filename) => {
   switch(filename.split('.').pop()) {
@@ -18,7 +19,7 @@ const mimetype = (filename) => {
 export default (props) => {
   let count = 0  // total number imported
   let queue = [] // objects to insert
-  let seen = {}  //visited hashes
+  let objFor = {}  //visited hashes
   const log = props.log || console.debug
   // queue is currently unbounded b/c indexDb is choking on successive puts
   const MAX_SIZE = Number.MAX_SAFE_INTEGER // size of a bulk post
@@ -45,7 +46,7 @@ export default (props) => {
     }
   }
 
-  const processList = (list, path, hasSplit) => (
+  const processList = (list, path) => (
     Promise.allSettled(
       list.map((entry) => {
         const fullpath = [...path, decodeURIComponent(entry.name)]
@@ -54,7 +55,7 @@ export default (props) => {
         switch(entry.type) {
         case 'dir':
           log(`Dir: "${name}/": Recursing`)
-          return queueDir(entry.hash, fullpath, hasSplit)
+          return queueDir(entry.hash, fullpath)
         case 'file':
           log(`Adding File: ${entry.name}`)
           return enque({
@@ -84,13 +85,28 @@ export default (props) => {
     )
   )
 
-  const queueDir = (key, path = [], hasSplit = false) => (
+  const fsToObj = (key) => (
+    ipfs.ls(key)
+    .then((list) => {
+      let out = {}
+      const promises = list.map((file) => {
+        switch(file.type) {
+          case 'dir':
+            return fsToObj(file.hash).then(o => out[file.name] = o)
+          case 'file':
+            out[file.name] = file.hash
+            return Promise.resolve()
+        }
+      })
+      return Promise.allSettled(promises).then(() => out)
+    })
+  )
+
+  const queueDir = (key, path = []) => (
     ipfs.ls(key)
     .then(async (list) => {
       if(path.length === 0) path.push(key) // the root
 
-      const parent = path.slice(-1)[0]
-      const keys = list.map(e => e.path)
       const names = list.map(e => e.name)
       let isContent = false
 
@@ -101,17 +117,16 @@ export default (props) => {
       isContent = isContent || !!list.find(f => f.type === 'file')
       isContent = isContent || names.length === 0
 
-      if(!hasSplit && isContent && path.length > 1) {
+      if(isContent && path.length > 1) {
+        if(!objFor[key]) {
+          objFor[key] = await fsToObj(key)
+        }
         await enque({
           _id: path.join('/') + '/', type: 'dir',
-          path: path, ipfs_id: key,
+          path: path, ipfs_id: key, contents: objFor[key],
         })
-        if(!seen[key]) {
-          seen[key] = true
-          await queueDir(key, [], true)
-        }
       } else {
-        await processList(list, path, hasSplit)
+        await processList(list, path)
       }
     })
   )
@@ -126,7 +141,7 @@ export default (props) => {
       log('Done')
       setText(defText)
     } catch(err) {
-      log(err)
+      log(err.message)
     }
   }
 
