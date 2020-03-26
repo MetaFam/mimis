@@ -47,10 +47,19 @@ export default () => {
             + 'for(var i = 0; i < docs.length; i++) {'
             + 'Object.assign(out, docs[i]);'
             + '}'
-            + 'console.log("OUT", out);'
             + 'return out'
             + '}'
           )
+        },
+        contents: {
+          map: (
+            'function(doc) {'
+            + 'if(doc.type === "dir") {'
+            + 'var path = doc.path.slice(1).join("/") + "/";'
+            + 'emit(path, doc.contents);'
+            + '}'
+            + '}'
+          ),
         },
         files: {
           map: (

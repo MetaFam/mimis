@@ -21,20 +21,17 @@ export default () => {
     db.query(
       'paths/dirs',
       {
-        startkey: startkey,
-        endkey: `${endkey}\uFFF0`,
-        limit: PER_REQUEST,
+        startkey: startkey, endkey: `${endkey}\uFFF0`,
+        limit: PER_REQUEST, group: true,
       }
     )
     .then((res) => {
-      console.log('RS', res)
       setHasMore(res.rows.length === PER_REQUEST)
       const last = res.rows[res.rows.length - 1]
       if(last) setMidkey(last.key)
       const idRows = res.rows.map(r => ({
         ...r, path: r.key, key: Math.random()
       }))
-      console.log('ID', idRows)
       setRows(append ? rows.concat(idRows.slice(1)) : idRows)
     })
   }

@@ -85,14 +85,16 @@ export default (props) => {
     )
   )
 
-  const fsToObj = (key) => (
+  const fsToObj = (key, root = true) => (
     ipfs.ls(key)
     .then((list) => {
       let out = {}
+      if(root) { out['.'] = key }
       const promises = list.map((file) => {
         switch(file.type) {
           case 'dir':
-            return fsToObj(file.hash).then(o => out[file.name] = o)
+            return fsToObj(file.hash, false)
+            .then(o => out[file.name] = o)
           case 'file':
             out[file.name] = file.hash
             return Promise.resolve()

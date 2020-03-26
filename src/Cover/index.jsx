@@ -27,7 +27,7 @@ export default (props) => {
   }, [key, db])
 
   useEffect(() => {
-    db.query('paths/dirs', { key: key })
+    db.query('paths/contents', { key: key })
     .then((res) => {
       console.log('r', res)
       // setDocs(files)
