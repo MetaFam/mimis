@@ -17,11 +17,10 @@ export default (props) => {
   const db = useDB()
 
   useEffect(() => {
-    const hash = key
-    db.query('paths/contains', { key: hash })
+    db.query('paths/contains', { key: key })
     .then((res) => {
       const ret = res.rows.map((r => r.value))
-      console.log('P', ret)
+      console.log('P', key, ret)
       setPaths(res.rows.map((r => r.value)))
     })
   }, [key, db])
@@ -29,9 +28,11 @@ export default (props) => {
   useEffect(() => {
     db.query('paths/contents', { key: key })
     .then((res) => {
-      console.log('r', res)
+      let contents = {}
+      res.rows.forEach(c => Object.assign(contents, c.value))
+      console.log('r', contents)
       // setDocs(files)
-      // setImages(files.filter(f => /^image\//.test(f.type)))
+      setImages(Object.values(contents.covers || {}))
       // setBook(files.find(f => f.name === 'index.epub'))
     })
   }, [key, db])
@@ -49,8 +50,8 @@ export default (props) => {
     </ul>
     {book && <Link to={`/book/${book.path.join('/')}`}>{book.name}</Link>}
     {images.length > 0 && <Carousel>
-      {images.map((d, i) => (
-        <img key={i} src={`//ipfs.io/ipfs/${d.path.join('/')}`}/>
+      {images.map((id, i) => (
+        <img key={i} src={`//ipfs.io/ipfs/${id}`}/>
       ))}
     </Carousel>}
     {images.length === 0 && <Link to={`/add?to=${key}`}><Button>Add Cover</Button></Link>}

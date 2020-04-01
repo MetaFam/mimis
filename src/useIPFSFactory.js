@@ -17,19 +17,16 @@ export default function useIPFSFactory({ commands }) {
   const [isIpfsReady, setIpfsReady] = useState(Boolean(ipfs))
   const [ipfsInitError, setIpfsInitError] = useState(null)
 
-  useEffect(
-    () => {
-      startIpfs()
-      return function cleanup () {
-        if(ipfs && ipfs.stop) {
-          console.log('Stopping IPFS')
-          ipfs.stop().catch(console.error)
-          setIpfsReady(false)
-        }
+  useEffect(() => {
+    startIpfs()
+    return function cleanup () {
+      if(ipfs && ipfs.stop) {
+        console.log('Stopping IPFS')
+        ipfs.stop().catch(console.error)
+        setIpfsReady(false)
       }
-    },
-    []
-  )
+    }
+  }, [])
 
   async function startIpfs () {
     if(ipfs) {

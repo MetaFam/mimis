@@ -85,24 +85,25 @@ export default (props) => {
     )
   )
 
-  const fsToObj = (key, root = true) => (
-    ipfs.ls(key)
+  const fsToObj = (key, path = []) => {
+    if(path.length === 0) path.push(key)
+
+    return ipfs.ls(key)
     .then((list) => {
       let out = {}
-      if(root) { out['.'] = key }
       const promises = list.map((file) => {
         switch(file.type) {
           case 'dir':
-            return fsToObj(file.hash, false)
+            return fsToObj(file.hash, [...path, file.name])
             .then(o => out[file.name] = o)
           case 'file':
-            out[file.name] = file.hash
+            out[file.name] = [...path, file.name].join('/')
             return Promise.resolve()
         }
       })
       return Promise.allSettled(promises).then(() => out)
     })
-  )
+  }
 
   const queueDir = (key, path = []) => (
     ipfs.ls(key)

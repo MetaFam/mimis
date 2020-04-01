@@ -36,13 +36,10 @@ export default () => {
     })
   }
 
-  useEffect(
-    () => {
+  useEffect(() => {
       const key = search.map(p => p.replace(/\//g, '//')).join('/')
       loadDirs(key, false)
-    },
-    [search]
-  )
+    }, [search])
 
   const loadMore = () => {
     let key = midkey

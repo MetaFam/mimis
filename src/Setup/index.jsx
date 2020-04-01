@@ -4,6 +4,7 @@ import CreatePathsDDoc from '../CreatePathsDDoc'
 import IPFSSlurp from '../IPFSSlurp'
 import LoadFilesystem from '../LoadFilesystem'
 import RemoveDB from '../RemoveDB'
+import Download from '../Download'
 
 export default () => {
   const [log, setLog] = useState([])
@@ -25,6 +26,7 @@ export default () => {
     </ul>
     <hr/>
     <div style={{textAlign: 'center'}}>
+      <Download cid='QmWVVMpoyF9dRNimVnGpbioTkkgVkJGNf4FB1sH5nEGsKb'/>
       <RemoveDB/>
     </div>
   </div>
