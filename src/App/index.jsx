@@ -10,9 +10,10 @@ import Add from '../Add'
 import { DatabaseProvider } from '../DatabaseContext'
 import 'antd/dist/antd.css'
 import './dark-theme.scss'
+import { IPFSProvider } from '../IPFSContext'
 
 export default () => (
-  <DatabaseProvider><Router>
+  <DatabaseProvider><IPFSProvider><Router>
     <div className="App">
       <Route path='/add' component={Add} />
       <Route path='/hash/*' component={Hash} />
@@ -21,5 +22,5 @@ export default () => (
       <Route path='/cover/*' component={Cover} />
       <Route path='/' exact={true} component={Home} />
     </div>
-  </Router></DatabaseProvider>
+  </Router></IPFSProvider></DatabaseProvider>
 )

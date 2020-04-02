@@ -10,7 +10,7 @@ const { TabPane } = Tabs
 
 export default () => {
   return <SearchProvider>
-    <Tabs defaultActiveKey='browse'>
+    <Tabs defaultActiveKey='setup'>
       <TabPane
         tab={
           <span><Icon type='setting' /> Setup</span>

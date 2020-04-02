@@ -1,7 +1,8 @@
-import Ipfs from 'ipfs'
 import { useEffect, useState } from 'react'
+import Ipfs from 'ipfs'
 
 let ipfs = null
+let starting = false
 
 /*
  * A quick demo using React hooks to create an ipfs instance.
@@ -31,11 +32,13 @@ export default function useIPFSFactory({ commands }) {
   async function startIpfs () {
     if(ipfs) {
       console.log('IPFS already started')
-    } else if(window.ipfs && window.ipfs.enable) {
-      console.log('Found window.ipfs')
-      ipfs = await window.ipfs.enable({ commands })
-    } else {
+    //} else if(window.ipfs && window.ipfs.enable) {
+    //  console.log('Found window.ipfs')
+    //  ipfs = await window.ipfs.enable({ commands })
+    } else if(!starting) {
+      starting = true
       try {
+        console.debug('Starting')
         console.time('IPFS Started')
         ipfs = await Ipfs.create()
         console.timeEnd('IPFS Started')

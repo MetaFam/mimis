@@ -1,5 +1,6 @@
 import { DAGNode } from 'ipld-dag-pb'
 import GitRepo from '../GitRepo'
+import Ipfs from 'ipfs'
 
 const MAX_REFS_DEPTH = 10
 
@@ -15,22 +16,22 @@ class Ref {
       .replace('refs/tags/', '')
   }
 
-  static async getRefHeads(node) {
+  static async getRefHeads(node, ipfs) {
     const refs = {}
-    await Ref.walkRefDir(refs, '', node, 1)
+    await Ref.walkRefDir(refs, '', node, 1, ipfs)
     return refs
   }
 
-  static walkRefDir(refs, path, node, depth) {
+  static walkRefDir(refs, path, node, depth, ipfs) {
     if (depth > MAX_REFS_DEPTH) return
 
-    return Promise.all(node.links.map(async l => {
-      const obj = await window.ipfs.dag.get(l.cid).then(r => r.value)
+    return Promise.all(node._links.map(async l => {
+      const obj = await ipfs.dag.get(l._cid).then(r => r.value)
       if (obj instanceof DAGNode) {
-        return Ref.walkRefDir(refs, path + l.name + '/', obj, depth + 1)
+        return Ref.walkRefDir(refs, path + l._name + '/', obj, depth + 1, ipfs)
       }
 
-      refs[path + l.name] = GitRepo.wrapGitObject(obj, l.cid)
+      refs[path + l.name] = GitRepo.wrapGitObject(obj, l._cid)
     }))
   }
 }

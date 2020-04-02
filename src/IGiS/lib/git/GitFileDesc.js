@@ -11,10 +11,11 @@ import CID from 'cids'
 // }
 //
 class GitFileDesc {
-  constructor(repo, data, name) {
+  constructor(repo, data, name, ipfs) {
     Object.assign(this, data)
     this.repo = repo
     this.name = name
+    this.ipfs = ipfs
     this.cid = new CID(this.hash['/']).toBaseEncodedString()
   }
 
@@ -27,7 +28,7 @@ class GitFileDesc {
   }
 
   fetchContents() {
-    return this.repo.getObject(this.cid)
+    return this.repo.getObject(this.cid, this.ipfs)
   }
 }
 

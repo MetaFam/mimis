@@ -9,11 +9,11 @@ const DEFAULT_HEAD_REF = 'refs/heads/master'
 
 //TODO: cleanup
 class GitRepo {
-  constructor(cid, headObj, defaultBranch) {
+  constructor(cid, headObj, defaultBranch, ipfs) {
     this.cid = cid
     this.defaultBranch = defaultBranch
     // Note: this is a Promise
-    this.refs = Ref.getRefHeads(headObj)
+    this.refs = Ref.getRefHeads(headObj, ipfs)
   }
 
   async refHead(refNick) {
@@ -32,22 +32,18 @@ class GitRepo {
     return new CommitCompare(this, refNicks, onUpdate).start()
   }
 
-  async getObject(path) {
-    // Simulate network fetch
-    // await new Promise(a => setTimeout(a, 1000))
-
+  async getObject(path, ipfs) {
     console.debug('Fetch', path)
-    const ipfs = await window.ipfs.enable()
     const data = (await ipfs.dag.get(path)).value
     // If this is a Uint8Array treat it as a Git blob
     if (data instanceof Uint8Array) {
-      console.debug('Got blob', path)
+      console.debug('%cGot blob', 'color: blue', path)
       return new GitBlob(data, path)
     }
     // If it has a gitType commit treat it as a commit
     if (data.gitType === 'commit') {
       const c = new GitCommit(this, data, path)
-      console.debug('Got commit', path, `'${c.summary}'`)
+      console.debug('%cGot commit', 'color: blue', path, `'${c.summary}'`)
       return c
     }
     // If it has a gitType tag treat it as a tag
@@ -56,26 +52,23 @@ class GitRepo {
       return new GitTag(this, data, path)
     }
     // Otherwise assume git tree
-    console.debug('Got tree', path)
-    return new GitTree(this, data, path)
+    console.debug('%cGot tree', 'color: blue', path)
+    return new GitTree(this, data, path, ipfs)
   }
 
-  static async fetch(cid) {
-    const ipfs = await window.ipfs.enable()
-    console.debug('fetching', cid)
-    //ipfs.dag.get(cid).then(console.debug)
+  static async fetch(cid, ipfs) {
     const repo = await ipfs.dag.get(cid).then(r => r.value)
-    console.debug('fetched', cid)
-    const defaultBranch = await GitRepo.getDefaultBranch(repo)
-    return new GitRepo(cid, repo, defaultBranch)
+    console.log('%c repo', 'color: red', repo)
+    const defaultBranch = await GitRepo.getDefaultBranch(repo, ipfs)
+    return new GitRepo(cid, repo, defaultBranch, ipfs)
   }
 
-  static async getDefaultBranch(dagRepo) {
-    const head = dagRepo.links.find(l => l.name === 'HEAD')
+  static async getDefaultBranch(dagRepo, ipfs) {
+    const head = dagRepo._links.find(l => l._name === 'HEAD')
     if (!head) return DEFAULT_HEAD_REF
 
-    const ipfs = await window.ipfs.enable()
-    return ipfs.cat(head.cid).then(h => h.toString())
+    console.debug('cid', head._cid)
+    return (await ipfs.cat(head._cid)).toString()
   }
 
   static wrapGitObject(obj, cid) {
