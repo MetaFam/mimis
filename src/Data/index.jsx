@@ -14,6 +14,7 @@ export default (props) => {
   const [covers, setCovers] = useState([])
   const [book, setBook] = useState()
   const [epub, setEPub] = useState()
+  const [repo, setRepo] = useState()
   const [html, setHTML] = useState()
   const history = useHistory()
 
@@ -40,6 +41,9 @@ export default (props) => {
     if(contents['toc.ncx']) { // exploded
       setEPub(contents['.'])
       epubFound = true
+    }
+    if(contents['repo']) { // git repository
+      setRepo(contents['repo'])
     }
     if(!epubFound) {
       contents['index.html'] && setHTML(contents['.'] + '/index.html')
@@ -79,6 +83,9 @@ export default (props) => {
   return <div className='mimis-fileentry'>
     <Head/>
     {epub && <a href={`/readium/?epub=//ipfs.io/ipfs/${epub}`}>
+      <Button style={{position: 'absolute', top: 0, left: 0 }}>📖</Button>
+    </a>}
+    {repo && <a href={`/book/${repo}`}>
       <Button style={{position: 'absolute', top: 0, left: 0 }}>📖</Button>
     </a>}
     {html && <a href={`//ipfs.io/ipfs/${html}`}>

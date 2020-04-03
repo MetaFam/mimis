@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import { Button, Alert, Input } from 'antd'
-import useIPFSFactory from './useIPFSFactory'
+import IPFSContext from './IPFSContext'
 import { useDB } from 'react-pouchdb'
 import { reject } from '@evidentpoint/readium-js'
 
@@ -23,7 +23,7 @@ export default (props) => {
   const log = props.log || console.debug
   // queue is currently unbounded b/c indexDb is choking on successive puts
   const MAX_SIZE = Number.MAX_SAFE_INTEGER // size of a bulk post
-  const { ipfs } = useIPFSFactory({ commands: ['id', 'ls', 'get'] })
+  const [ipfs] = useContext(IPFSContext)
   const [key, setKey] = useState(props.hash)
   const defText = 'Intake:'
   const [text, setText] = useState(defText)
@@ -92,13 +92,13 @@ export default (props) => {
     .then((list) => {
       let out = {}
       const promises = list.map((file) => {
-        switch(file.type) {
-          case 'dir':
-            return fsToObj(file.hash, [...path, file.name])
-            .then(o => out[file.name] = o)
-          case 'file':
-            out[file.name] = [...path, file.name].join('/')
-            return Promise.resolve()
+        if(file.type === 'dir' && file.name !== 'repo') {
+          out[file.name] = [...path, file.name].join('/')
+          return fsToObj(file.hash, [...path, file.name])
+          .then(o => out[file.name] = o)
+        } else {
+          out[file.name] = [...path, file.name].join('/')
+          return Promise.resolve()
         }
       })
       return Promise.allSettled(promises).then(() => out)
