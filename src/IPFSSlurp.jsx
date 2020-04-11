@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react'
 import { Button, Alert, Input } from 'antd'
 import IPFSContext from './IPFSContext'
 import { useDB } from 'react-pouchdb'
-import { reject } from '@evidentpoint/readium-js'
+import all from 'it-all'
 
 const mimetype = (filename) => {
   switch(filename.split('.').pop()) {
@@ -37,7 +37,7 @@ export default (props) => {
   const enque = (obj) => {
     count++
     queue.push(obj)
-    log(`Queued ${count} (${queue.length}): ${obj.type}: ${obj._id}`)
+    log(`Queued ${count} (${queue.length}): ${obj.type}: ${obj._id.split("/").splice(1).join('/')}`)
     if(queue.length >= MAX_SIZE) {
       console.log('Flushing Queue')
       return flushQueue()
@@ -46,98 +46,97 @@ export default (props) => {
     }
   }
 
-  const processList = (list, path) => (
-    Promise.allSettled(
-      list.map((entry) => {
-        const fullpath = [...path, decodeURIComponent(entry.name)]
-        const name = fullpath.join('/')
+  const processList = async (list, path) => (
+    await Promise.all(list.map(async (entry) => {
+      const fullpath = [...path, decodeURIComponent(entry.name)]
+      const name = fullpath.join('/')
 
-        switch(entry.type) {
-        case 'dir':
-          log(`Dir: "${name}/": Recursing`)
-          return queueDir(entry.hash, fullpath)
-        case 'file':
-          log(`Adding File: ${entry.name}`)
-          return enque({
-            _id: fullpath.join('/'), type: 'file',
-            path: fullpath, ipfs_id: entry.hash,
-            mimetype: mimetype(entry.name),
-          }).catch((err) => {
-            if(err.status === 409) {
-              console.warn('Conflict', err)
-            } else {
-              console.error(err)
-            }
-          })
-        default:
-          return ipfs.block.get(entry.hash)
-          .then((block) => {
-            if(block.data[0] === 10) {
-              log(`ToDo: Link: "${name}": ${block.data.slice(6)}`)
-            } else {
-              const msg = `Unknown: "${name}":`
-              console.error(msg, block)
-              log(msg)
-            }
-          })
+      switch(entry.type) {
+      case 'dir':
+        log(`Dir: "${fullpath.slice(1).join('/')}/": Recursing`)
+        await queueDir(entry.cid.toString(), fullpath)
+      break
+      case 'file':
+        log(`Adding File: ${entry.name}`)
+        enque({
+          _id: fullpath.join('/'), type: 'file',
+          path: fullpath, ipfs_id: entry.hash,
+          mimetype: mimetype(entry.name),
+        }).catch((err) => {
+          if(err.status === 409) {
+            console.warn('Conflict', err)
+          } else {
+            console.error(err)
+          }
+        })
+      break
+      default:
+        const block = await ipfs.block.get(entry.hash)
+        if(block.data[0] === 10) {
+          log(`ToDo: Link: "${name}": ${block.data.slice(6)}`)
+        } else {
+          const msg = `Unknown: "${name}":`
+          console.error(msg, block)
+          log(msg)
         }
-      })
-    )
+      }
+    }))
   )
 
-  const fsToObj = (key, path = []) => {
+  const fsToObj = async (key, path = []) => {
     if(path.length === 0) path.push(key)
 
-    return ipfs.ls(key)
-    .then((list) => {
-      let out = {}
-      const promises = list.map((file) => {
-        if(file.type === 'dir' && file.name !== 'repo') {
-          out[file.name] = [...path, file.name].join('/')
-          return fsToObj(file.hash, [...path, file.name])
-          .then(o => out[file.name] = o)
-        } else {
-          out[file.name] = [...path, file.name].join('/')
-          return Promise.resolve()
-        }
-      })
-      return Promise.allSettled(promises).then(() => out)
-    })
+    const list = await all(ipfs.ls(key))
+    let out = {}
+    await Promise.all(list.map(async (file) => {
+      if(file.type === 'dir' && file.name !== 'repo') {
+        const obj = await fsToObj(file.cid.toString(), [...path, file.name])
+        console.log("Recursed", file.name, obj)
+        out[file.name] = obj
+      } else {
+        out[file.name] = [...path, file.name].join('/')
+      }
+    }))
+    console.log('fsToObj#Listing', key, out)
+
+    return out
   }
 
-  const queueDir = (key, path = []) => (
-    ipfs.ls(key)
-    .then(async (list) => {
-      if(path.length === 0) path.push(key) // the root
+  const queueDir = async (key, path = []) => {
+    const list = await all(ipfs.ls(key))
 
-      const names = list.map(e => e.name)
-      let isContent = false
+    if(path.length === 0) path.push(key) // the root
 
-      // book covers content dir
-      isContent = (
-        isContent || names.filter(k => k === 'covers').length > 0
-      )
-      isContent = isContent || !!list.find(f => f.type === 'file')
-      isContent = isContent || names.length === 0
+    const names = list.map(e => e.name)
+    let isContent = false
 
-      if(isContent && path.length > 1) {
-        if(!objFor[key]) {
-          objFor[key] = await fsToObj(key)
-        }
-        await enque({
-          _id: path.join('/') + '/', type: 'dir',
-          path: path, ipfs_id: key, contents: objFor[key],
-        })
-      } else {
-        await processList(list, path)
+    // book covers content dir
+    isContent = (
+      isContent || names.filter(k => k === 'covers').length > 0
+    )
+    isContent = (
+      isContent || names.filter(k => k === 'repo').length > 0
+    )
+    isContent = isContent || !!list.find(f => f.type === 'file')
+    isContent = isContent || names.length === 0
+
+    if(isContent && path.length > 1) {
+      if(!objFor[key]) {
+        objFor[key] = await fsToObj(key)
       }
-    })
-  )
+      await enque({
+        _id: path.join('/') + '/', type: 'dir',
+        path: path, ipfs_id: key, contents: objFor[key],
+      })
+    } else {
+      await processList(list, path)
+    }
+  }
 
   const startWith = async (hash) => {
     try {
       setText('Loading:')
-      log('Queuing…')
+      log(`Queuing ${hash}…`)
       await queueDir(hash)
       log(`Queued ${queue.length}, Writing…`)
       await flushQueue()
@@ -152,7 +151,7 @@ export default (props) => {
     <Button
       type='primary'
       onClick={() => startWith(key)}
-      disabled={text !== defText}
+      disabled={text !== defText || ipfs === undefined}
     >{text}</Button>
     <Input
       value={key}

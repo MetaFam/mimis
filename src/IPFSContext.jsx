@@ -11,8 +11,8 @@ export const IPFSProvider = (props) => {
 
   useEffect(() => {
     //window.ipfs.enable({ commands: [] }).then(setIPFS)
-    Ipfs.create({ repo: 'ipfs-' + Math.random() }).then(setIPFS)
-    //setIPFS(IpfsHttpClient('/ip4/127.0.0.1/tcp/5001'))
+    //Ipfs.create({ repo: 'ipfs-' + Math.random() }).then(setIPFS)
+    setIPFS(IpfsHttpClient('/ip4/127.0.0.1/tcp/5001'))
 
     // const ipfs = new Ipfs()
     // ipfs.on('ready', () => setIPFS(ipfs))

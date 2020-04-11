@@ -15,7 +15,6 @@ import { IPFSProvider } from '../IPFSContext'
 export default () => (
   <DatabaseProvider><IPFSProvider><Router>
     <div className="App">
-      <Route path='/add' component={Add} />
       <Route path='/hash/*' component={Hash} />
       <Route path='/book/*' component={Book} />
       <Route path='/view/*' component={View} />

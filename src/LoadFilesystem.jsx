@@ -1,14 +1,12 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import { Button, Alert, Input } from 'antd'
-import useIPFSFactory from './useIPFSFactory'
-import { debounce } from 'lodash'
 import { useDB } from 'react-pouchdb'
-import { CID } from 'ipfs-http-client'
+import IPFSContext from './IPFSContext'
 
 export default (props) => {
   let count = 0  // total number imported
   let queue = [] // objects to insert
-  const { ipfs } = useIPFSFactory({ commands: ['id', 'ls', 'get'] })
+  const [ipfs] = useContext(IPFSContext)
   const [message, setMessage] = useState(null)
   const log = props.log || console.debug
   const [key, setKey] = useState(props.hash)

@@ -18,22 +18,14 @@ export default () => {
     <div style={{textAlign: 'center'}}>
       <CreatePathsDDoc log={logLine}/>
       <br/><br/>
-      <IPFSSlurp log={logLine} hash='QmUCEx1poBu726HioY2SEsY3PjCwyGxP79SAiCrr56TRkM'/>
+      <IPFSSlurp log={logLine} hash='QmWfePbZ3hG6YizbMZYxsEE7dRtEkAA1caqChpSrzDwNZK'/>
       <br/><br/>
       <LoadFilesystem log={logLine} hash='QmXWjJRd7y4fM4ZDDWCmTpNRcDuQndGnRBRNYaMHfAfQrT'/>
     </div>
     <ul>
       {log.map((line) => <li key={Math.random()}>{line}</li>)}
     </ul>
-    {epub && <iframe src={`/readium/?epub=${epub}`}/>}
-    <hr/>
     <div style={{textAlign: 'center'}}>
-      <Download cid='QmWVVMpoyF9dRNimVnGpbioTkkgVkJGNf4FB1sH5nEGsKb'
-        onLoad={setEPub}
-      />
-      <Download cid='QmUs35NHqrMiG2eWrveUqT7CMQzDa6b6yhVNfLNGPy2cvw/repo'
-        onLoad={setEPub}
-      />
       <RemoveDB/>
     </div>
   </div>
