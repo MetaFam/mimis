@@ -6,10 +6,7 @@ import Home from '../Home'
 import View from '../View'
 import Book from '../Book'
 import Cover from '../Cover'
-import Add from '../Add'
 import { DatabaseProvider } from '../DatabaseContext'
-import 'antd/dist/antd.css'
-import './dark-theme.scss'
 import { IPFSProvider } from '../IPFSContext'
 
 export default () => (

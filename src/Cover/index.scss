@@ -1,5 +1,9 @@
-.carousel {
-  max-height: 100vh;
+#book {
+  color: white;
 
-  .slide img { max-height: 100%; width: auto }
+  .carousel {
+    max-height: 100vh;
+
+    .slide img { max-height: 100%; width: auto }
+  }
 }

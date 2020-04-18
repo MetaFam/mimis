@@ -14,7 +14,6 @@ export default (props) => {
   const [covers, setCovers] = useState([])
   const [book, setBook] = useState()
   const [epub, setEPub] = useState()
-  const [repo, setRepo] = useState()
   const [html, setHTML] = useState()
   const history = useHistory()
 
@@ -28,22 +27,32 @@ export default (props) => {
 
   useEffect(() => {
     if(contents.covers && Object.keys(contents.covers).length > 0) {
-      setCovers(Object.values(contents.covers))
+      const covers = Object.keys(contents.covers)
+      .filter(key => key !== '.')
+      .reduce((res, key) => res.add(contents.covers[key]), new Set())
+      setCovers([...covers])
     } else {
-      contents['mimis.json'] && pullMimis(contents['mimis.json'])
+      const covers = Object.keys(contents)
+      .filter(key => /^cover\.(jpg|jpeg|gif|svg|png|tiff)/.test(key))
+      .reduce((res, key) => res.add(contents[key]), new Set())
+      setCovers([...covers])
+
+      console.log('C', covers)
+
+      if(covers.size === 0) {
+        console.debug('Mimis', path)
+        contents['mimis.json'] && pullMimis(contents['mimis.json'])
+      }
     }
-    console.log('CTS', path, contents)
+
     let epubFound = false
     if(contents['index.epub']) {
       setEPub(contents['index.epub'])
       epubFound = true
     }
-    if(contents['toc.ncx']) { // exploded
+    if(contents['META-INF']) { // exploded
       setEPub(contents['.'])
       epubFound = true
-    }
-    if(contents['repo']) { // git repository
-      setRepo(contents['repo'])
     }
     if(!epubFound) {
       contents['index.html'] && setHTML(contents['.'] + '/index.html')
@@ -82,11 +91,8 @@ export default (props) => {
 
   return <div className='mimis-fileentry'>
     <Head/>
-    {epub && <a href={`/readium/?epub=//ipfs.io/ipfs/${epub}`}>
-      <Button style={{position: 'absolute', top: 0, left: 0 }}>📖</Button>
-    </a>}
-    {repo && <a href={`/book/${repo}`}>
-      <Button style={{position: 'absolute', top: 0, left: 0 }}>📖</Button>
+    {epub && <a href={`/readium/?epub=//localhost:8080/ipfs/${epub}`} style={{position: 'absolute', top: 0, left: 0 }}>
+      📖
     </a>}
     {html && <a href={`//ipfs.io/ipfs/${html}`}>
       <Button style={{position: 'absolute', top: 0, left: 0 }}><Icon type='html5'/></Button>

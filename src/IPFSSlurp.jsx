@@ -53,8 +53,10 @@ export default (props) => {
 
       switch(entry.type) {
       case 'dir':
-        log(`Dir: "${fullpath.slice(1).join('/')}/": Recursing`)
-        await queueDir(entry.cid.toString(), fullpath)
+        if(entry.name != '.git') {
+          log(`Dir: "${fullpath.slice(1).join('/')}/": Recursing`)
+          await queueDir(entry.cid.toString(), fullpath)
+        }
       break
       case 'file':
         log(`Adding File: ${entry.name}`)
@@ -87,9 +89,9 @@ export default (props) => {
     if(path.length === 0) path.push(key)
 
     const list = await all(ipfs.ls(key))
-    let out = {}
+    let out = { '.': key }
     await Promise.all(list.map(async (file) => {
-      if(file.type === 'dir' && file.name !== 'repo') {
+      if(file.type === 'dir' && file.name !== '.git') {
         const obj = await fsToObj(file.cid.toString(), [...path, file.name])
         console.log("Recursed", file.name, obj)
         out[file.name] = obj

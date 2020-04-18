@@ -2,7 +2,7 @@ import React from 'react'
 import { SearchProvider } from '../SearchContext'
 import { Tabs, Icon } from 'antd'
 import Browse from '../Browse'
-import Debug from '../Debug'
+import FAQ from '../FAQ'
 import Settings from '../Settings'
 import Setup from '../Setup'
 import './index.scss'
@@ -10,7 +10,7 @@ const { TabPane } = Tabs
 
 export default () => {
   return <SearchProvider>
-    <Tabs defaultActiveKey='setup'>
+    <Tabs defaultActiveKey='browse'>
       <TabPane
         tab={
           <span><Icon type='setting' /> Setup</span>
@@ -29,11 +29,11 @@ export default () => {
       </TabPane>
       <TabPane
         tab={
-          <span><Icon type='database' /> Load Data</span>
+          <span><Icon type='question' /> FAQ</span>
         }
-        key='debug'
+        key='faq'
       >
-        <Debug/>
+        <FAQ/>
       </TabPane>
       <TabPane
         tab={
