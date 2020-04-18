@@ -1,7 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useDB } from 'react-pouchdb'
 import { Link, useParams, useHistory } from 'react-router-dom'
-import { Button, Carousel, Tooltip, Icon, Menu, Dropdown, Tag } from 'antd'
+
+import {
+  ArrowLeftOutlined,
+  ArrowRightOutlined,
+  FolderOutlined,
+  GithubOutlined,
+  HomeOutlined,
+  Html5Outlined,
+  UnorderedListOutlined,
+} from '@ant-design/icons';
+
+import { Button, Carousel, Tooltip, Menu, Dropdown, Tag } from 'antd';
 import './index.scss'
 
 export default (props) => {
@@ -77,36 +88,38 @@ export default (props) => {
     )}
   </Menu>
 
-  return <div className='view'>
-    <span title='Info' className='title-icon'>📕</span>
-    <Button title='Back' onClick={() => history.goBack()}><Icon type='arrow-left'/></Button>
-    <Link to='/'><Button title='Home'><Icon type='home'/></Button></Link>
-    {index &&
-      <Button title='Index'><Link to={`/book/${index.path}`}><Icon type='html5'/></Link></Button>
-    }
-    {paths.length > 0 &&
-      <Dropdown overlay={pathList} trigger={['click', 'hover']}>
-        <Button title='Paths'><Icon type='unordered-list'/></Button>
-      </Dropdown>
-    }
-    {docs.length > 0 &&
-      <Dropdown overlay={fileList} trigger={['click', 'hover']}>
-        <Button title='Files'><Icon type='folder'/></Button>
-      </Dropdown>
-    }
-    <a href='//github.com/dhappy/mimis'>
-      <Button title='Github'><Icon type='github'/></Button>
-    </a>
-    {images.length > 0 && <Carousel ref={carousel}>
-      {images.map((img, idx) => (
-        <div key={idx}><Tooltip title={img.name}>
-          <Link to={`/book/${img.branch[0]}/index.html#img-${img.branch.slice(1).join('/')}`}>
-            <img alt={img.name} src={`//ipfs.io/ipfs/${img.path}`}/>
-          </Link>
-        </Tooltip></div>
-      ))}
-    </Carousel>}
-    <Button className='img-nav left' onClick={() => carousel.current.prev()}><Icon type='arrow-left'/></Button>
-    <Button className='img-nav right' onClick={() => carousel.current.next()}><Icon type='arrow-right'/></Button>
-  </div>
+  return (
+    <div className='view'>
+      <span title='Info' className='title-icon'>📕</span>
+      <Button title='Back' onClick={() => history.goBack()}><ArrowLeftOutlined /></Button>
+      <Link to='/'><Button title='Home'><HomeOutlined /></Button></Link>
+      {index &&
+        <Button title='Index'><Link to={`/book/${index.path}`}><Html5Outlined /></Link></Button>
+      }
+      {paths.length > 0 &&
+        <Dropdown overlay={pathList} trigger={['click', 'hover']}>
+          <Button title='Paths'><UnorderedListOutlined /></Button>
+        </Dropdown>
+      }
+      {docs.length > 0 &&
+        <Dropdown overlay={fileList} trigger={['click', 'hover']}>
+          <Button title='Files'><FolderOutlined /></Button>
+        </Dropdown>
+      }
+      <a href='//github.com/dhappy/mimis'>
+        <Button title='Github'><GithubOutlined /></Button>
+      </a>
+      {images.length > 0 && <Carousel ref={carousel}>
+        {images.map((img, idx) => (
+          <div key={idx}><Tooltip title={img.name}>
+            <Link to={`/book/${img.branch[0]}/index.html#img-${img.branch.slice(1).join('/')}`}>
+              <img alt={img.name} src={`//ipfs.io/ipfs/${img.path}`}/>
+            </Link>
+          </Tooltip></div>
+        ))}
+      </Carousel>}
+      <Button className='img-nav left' onClick={() => carousel.current.prev()}><ArrowLeftOutlined /></Button>
+      <Button className='img-nav right' onClick={() => carousel.current.next()}><ArrowRightOutlined /></Button>
+    </div>
+  );
 }

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import './index.scss'
 import { useDB } from 'react-pouchdb'
+import { Html5Outlined } from '@ant-design/icons';
 //import { Carousel } from 'antd' // doesn't load
-import { Button, Icon } from 'antd'
+import { Button } from 'antd';
 import { Link, useHistory } from 'react-router-dom'
 import * as CarouselLib from 'react-responsive-carousel'
 import 'react-responsive-carousel/lib/styles/carousel.css'
@@ -89,16 +90,18 @@ export default (props) => {
     }
   }
 
-  return <div className='mimis-fileentry'>
-    <Head/>
-    {epub && <a href={`/readium/?epub=//localhost:8080/ipfs/${epub}`} style={{position: 'absolute', top: 0, left: 0 }}>
-      📖
-    </a>}
-    {html && <a href={`//ipfs.io/ipfs/${html}`}>
-      <Button style={{position: 'absolute', top: 0, left: 0 }}><Icon type='html5'/></Button>
-    </a>}
-    {covers.length === 0 && <ul className='mimis-filelist'>
-      {docs.map((d, i) => <li key={i}>{d.path.slice(1).join('/')}</li>)}
-    </ul>}
-  </div>
+  return (
+    <div className='mimis-fileentry'>
+      <Head/>
+      {epub && <a href={`/readium/?epub=//localhost:8080/ipfs/${epub}`} style={{position: 'absolute', top: 0, left: 0 }}>
+        📖
+      </a>}
+      {html && <a href={`//ipfs.io/ipfs/${html}`}>
+        <Button style={{position: 'absolute', top: 0, left: 0 }}><Html5Outlined /></Button>
+      </a>}
+      {covers.length === 0 && <ul className='mimis-filelist'>
+        {docs.map((d, i) => <li key={i}>{d.path.slice(1).join('/')}</li>)}
+      </ul>}
+    </div>
+  );
 }

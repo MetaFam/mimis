@@ -1,7 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react'
 import './index.scss'
 import { Link, useHistory } from 'react-router-dom'
-import { Button, Carousel, Tooltip, Icon, Menu, Dropdown, Tag, Input } from 'antd'
+
+import {
+  ArrowLeftOutlined,
+  ArrowRightOutlined,
+  FileImageOutlined,
+  GithubOutlined,
+  HomeOutlined,
+  Html5Outlined,
+  UnorderedListOutlined,
+} from '@ant-design/icons';
+
+import { Button, Carousel, Tooltip, Menu, Dropdown, Tag, Input } from 'antd';
 import { useLocation } from 'react-router-dom'
 import { useDB } from 'react-pouchdb'
 import Hammer from 'react-hammerjs'
@@ -223,48 +234,50 @@ export default (props) => {
     )}
   </Menu>
 
-  return <div className='mimir'>
-    <nav>
-      <span title='Content' className='title-icon'>📖</span>
-      <Button title='Back' onClick={() => history.goBack()}><Icon type='arrow-left'/></Button>
-      <Link title='Home' to='/'><Button><Icon type='home'/></Button></Link>
-      {paths.length > 0 &&
-        <Dropdown overlay={pathList} trigger={['click', 'hover']}>
-          <Button title='Paths'><Icon type='unordered-list'/></Button>
-        </Dropdown>
-      }
-      <Button title='Images' type={view === 'images' ? 'primary' : 'default'} onClick={() => setView('images')}><Icon type='file-image'/></Button>
-      <Button title='HTML' type={view === 'html' ? 'primary' : 'default'} onClick={() => setView('html')}><Icon type='html5'/></Button>
-      <a href='//github.com/dhappy/mimis' className='github'>
-        <Button title='Github'><Icon type='github'/></Button>
-      </a>
-    </nav>
-    {view === 'images' && <div className='carousel'>
-      <Button className='nav left' onClick={() => carousel.current.prev()}><Icon type='arrow-left'/></Button>
-      <Button className='nav right' onClick={() => carousel.current.next()}><Icon type='arrow-right'/></Button>
-      <Carousel ref={carousel}>
-        {Object.values(images).map((img, idx) => (
-          <div key={idx}><Tooltip title={img}>
-            <Link to={`/book/${img}/index.html#img`}>
-              <img alt={img} src={img}/>
-            </Link>
-          </Tooltip></div>
-        ))}
-      </Carousel>
-    </div>}
-    {view === 'html' && <div className='content'>
-      {url ? '' : <div className='input'>
-        <h2>EPub URL:</h2>
-        <Input onPressEnter={evt => setURL(evt.target.value)}/>
-      </div>}
-      {styles.map((s, i) => <link key={i} rel='stylesheet' href={s}/>)}
-      <div className='frame' style={{fontSize: `${size}%`}} ref={frame}>
-        <Hammer onTap={onTap} onSwipe={onSwipe}><div className='content'>
-          {docs.map((d, i) => (
-            <div key={i} dangerouslySetInnerHTML={{__html: d.outerHTML}}/>
+  return (
+    <div className='mimir'>
+      <nav>
+        <span title='Content' className='title-icon'>📖</span>
+        <Button title='Back' onClick={() => history.goBack()}><ArrowLeftOutlined /></Button>
+        <Link title='Home' to='/'><Button><HomeOutlined /></Button></Link>
+        {paths.length > 0 &&
+          <Dropdown overlay={pathList} trigger={['click', 'hover']}>
+            <Button title='Paths'><UnorderedListOutlined /></Button>
+          </Dropdown>
+        }
+        <Button title='Images' type={view === 'images' ? 'primary' : 'default'} onClick={() => setView('images')}><FileImageOutlined /></Button>
+        <Button title='HTML' type={view === 'html' ? 'primary' : 'default'} onClick={() => setView('html')}><Html5Outlined /></Button>
+        <a href='//github.com/dhappy/mimis' className='github'>
+          <Button title='Github'><GithubOutlined /></Button>
+        </a>
+      </nav>
+      {view === 'images' && <div className='carousel'>
+        <Button className='nav left' onClick={() => carousel.current.prev()}><ArrowLeftOutlined /></Button>
+        <Button className='nav right' onClick={() => carousel.current.next()}><ArrowRightOutlined /></Button>
+        <Carousel ref={carousel}>
+          {Object.values(images).map((img, idx) => (
+            <div key={idx}><Tooltip title={img}>
+              <Link to={`/book/${img}/index.html#img`}>
+                <img alt={img} src={img}/>
+              </Link>
+            </Tooltip></div>
           ))}
-        </div></Hammer>
-      </div>
-    </div>}
-  </div>
+        </Carousel>
+      </div>}
+      {view === 'html' && <div className='content'>
+        {url ? '' : <div className='input'>
+          <h2>EPub URL:</h2>
+          <Input onPressEnter={evt => setURL(evt.target.value)}/>
+        </div>}
+        {styles.map((s, i) => <link key={i} rel='stylesheet' href={s}/>)}
+        <div className='frame' style={{fontSize: `${size}%`}} ref={frame}>
+          <Hammer onTap={onTap} onSwipe={onSwipe}><div className='content'>
+            {docs.map((d, i) => (
+              <div key={i} dangerouslySetInnerHTML={{__html: d.outerHTML}}/>
+            ))}
+          </div></Hammer>
+        </div>
+      </div>}
+    </div>
+  );
 }
