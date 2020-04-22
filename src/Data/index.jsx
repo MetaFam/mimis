@@ -4,7 +4,7 @@ import { useDB } from 'react-pouchdb'
 import { Html5Outlined } from '@ant-design/icons';
 //import { Carousel } from 'antd' // doesn't load
 import { Button } from 'antd';
-import { Link, useHistory } from 'react-router-dom'
+import { Link, Redirect, useHistory } from 'react-router-dom'
 import * as CarouselLib from 'react-responsive-carousel'
 import 'react-responsive-carousel/lib/styles/carousel.css'
 const Carousel = CarouselLib.Carousel
@@ -16,6 +16,7 @@ export default (props) => {
   const [book, setBook] = useState()
   const [epub, setEPub] = useState()
   const [html, setHTML] = useState()
+  const [redirect, setRedirect] = useState()
   const history = useHistory()
 
   const pullMimis = (key) => {
@@ -38,8 +39,6 @@ export default (props) => {
       .reduce((res, key) => res.add(contents[key]), new Set())
       setCovers([...covers])
 
-      console.log('C', covers)
-
       if(covers.size === 0) {
         console.debug('Mimis', path)
         contents['mimis.json'] && pullMimis(contents['mimis.json'])
@@ -61,7 +60,7 @@ export default (props) => {
     }
   }, [contents])
 
-  const onSelect = cover => history.push(`/cover/${path}`)
+  const onSelect = cover => setRedirect(`/cover/${path}`)
 
   const Head = () => {
     if(covers.length > 0) {
@@ -90,14 +89,18 @@ export default (props) => {
     }
   }
 
+  if(redirect) {
+    return <Redirect to={redirect}/>
+  }
+
   return (
     <div className='mimis-fileentry'>
       <Head/>
-      {epub && <a href={`/readium/?epub=//localhost:8080/ipfs/${epub}`} style={{position: 'absolute', top: 0, left: 0 }}>
+      {epub && <a href={`/readium/?epub=//localhost:8080/ipfs/${epub}`} style={{position: 'absolute', top: 0, left: '1em', fontSize: 'larger' }}>
         📖
       </a>}
       {html && <a href={`//ipfs.io/ipfs/${html}`}>
-        <Button style={{position: 'absolute', top: 0, left: 0 }}><Html5Outlined /></Button>
+        <Button style={{position: 'absolute', top: 0, left: '1em' }}><Html5Outlined /></Button>
       </a>}
       {covers.length === 0 && <ul className='mimis-filelist'>
         {docs.map((d, i) => <li key={i}>{d.path.slice(1).join('/')}</li>)}

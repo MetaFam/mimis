@@ -2,6 +2,8 @@
   margin: 0 4.5em !important;
 }
 
+/*
+// This is a denser display, but it doesn't work with ant-4
 .ant-row {
   display: grid ! important;
 
@@ -66,7 +68,7 @@
     grid-template-columns: repeat(9, 11%);
   }
 }
-
+*/
 .mimis-browse .ant-spin {
   margin-top: 2em;
 }

@@ -18,7 +18,7 @@ export default () => {
     <div style={{textAlign: 'center'}}>
       <CreatePathsDDoc log={logLine}/>
       <br/><br/>
-      <IPFSSlurp log={logLine} hash='QmWfePbZ3hG6YizbMZYxsEE7dRtEkAA1caqChpSrzDwNZK'/>
+      <IPFSSlurp log={logLine} hash='QmUy5dBHpAgafzBs4pfBBpt4eWHbRdd3ebfsNZwC8cXGkp'/>
       <br/><br/>
       <LoadFilesystem log={logLine} hash='QmXWjJRd7y4fM4ZDDWCmTpNRcDuQndGnRBRNYaMHfAfQrT'/>
     </div>

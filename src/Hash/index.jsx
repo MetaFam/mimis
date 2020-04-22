@@ -1,7 +1,7 @@
 import React from 'react'
 import './index.scss'
 import { Link, useParams, useHistory } from 'react-router-dom'
-import { ArrowLeft, HomeOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, HomeOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 
 export default () => {
@@ -13,7 +13,7 @@ export default () => {
   return (
     <React.Fragment>
       <span title='Content' className='title-icon'>📖</span>
-      <Button title='Back' onClick={() => history.goBack()}><ArrowLeft /></Button>
+      <Button title='Back' onClick={() => history.goBack()}><ArrowLeftOutlined /></Button>
       <Link title='Home' to='/'><Button><HomeOutlined /></Button></Link>
       <iframe src={IPFSUrl} />
     </React.Fragment>
