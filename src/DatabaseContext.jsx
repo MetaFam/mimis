@@ -7,7 +7,7 @@ export const sources = {
   Local: 'mimis',
 }
 
-let defCtx = Object.keys(sources)[0]
+let defCtx = Object.keys(sources)[2]
 let ls = localStorage.getItem('db')
 if(ls) defCtx = ls
 

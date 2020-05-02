@@ -18,9 +18,9 @@ export default () => {
     <div style={{textAlign: 'center'}}>
       <CreatePathsDDoc log={logLine}/>
       <br/><br/>
-      <IPFSSlurp log={logLine} hash='QmUy5dBHpAgafzBs4pfBBpt4eWHbRdd3ebfsNZwC8cXGkp'/>
+      <IPFSSlurp log={logLine} hash='Qma5SYYDCzzakZHhefnhGXHduDoiM8kJow9iSiaWp5WWmY'/>
       <br/><br/>
-      <LoadFilesystem log={logLine} hash='QmXWjJRd7y4fM4ZDDWCmTpNRcDuQndGnRBRNYaMHfAfQrT'/>
+      {/*<LoadFilesystem log={logLine} hash='QmXWjJRd7y4fM4ZDDWCmTpNRcDuQndGnRBRNYaMHfAfQrT'/>*/}
     </div>
     <ul>
       {log.map((line) => <li key={Math.random()}>{line}</li>)}

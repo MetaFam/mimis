@@ -1,10 +1,9 @@
 import React, { useContext, useEffect } from 'react'
 import { Table } from 'antd'
-import IPFSContext from '../IPFSContext'
-import { DBContext } from 'react-pouchdb/cjs'
+import { useDB } from 'react-pouchdb'
 
 export default () => {
-  const [ipfs] = useContext(IPFSContext)
+  const db = useDB()
 
   const columns = [
     {
@@ -46,7 +45,7 @@ export default () => {
 
   useEffect(() => {
     (async () => {
-      //db.allDocs()
+      db.allDocs()
     })()
   }, [])
 

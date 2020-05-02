@@ -34,11 +34,6 @@ export default () => {
         >
           <FAQ/>
         </TabPane>
-        <TabPane key='settings'
-          tab={<span><ControlOutlined /> Settings</span>}
-        >
-          <Settings/>
-        </TabPane>
       </Tabs>
     </SearchProvider>
   );
