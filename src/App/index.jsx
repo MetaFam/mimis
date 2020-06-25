@@ -6,12 +6,14 @@ import Home from '../Home'
 import View from '../View'
 import Book from '../Book'
 import Cover from '../Cover'
+import Table from '../Table'
 import { DatabaseProvider } from '../DatabaseContext'
 import { IPFSProvider } from '../IPFSContext'
 
 export default () => (
   <DatabaseProvider><IPFSProvider><Router>
     <div className="App">
+      <Route path='/data/' component={Table} />
       <Route path='/hash/*' component={Hash} />
       <Route path='/book/*' component={Book} />
       <Route path='/view/*' component={View} />
