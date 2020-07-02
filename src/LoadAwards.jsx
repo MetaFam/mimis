@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react'
-import { Button, Alert, Input } from 'antd'
+import { Button, Input } from '@material-ui/core'
 import { useDB } from 'react-pouchdb'
 import IPFSContext from './IPFSContext'
 
@@ -9,6 +9,7 @@ export default (props) => {
   const [ipfs] = useContext(IPFSContext)
   const [message, setMessage] = useState(null)
   const log = props.log || console.debug
+  const { label } = props
   const [key, setKey] = useState(props.hash)
   const defText = 'Parse:'
   const [text, setText] = useState(defText)
@@ -16,7 +17,7 @@ export default (props) => {
 
   const enque = (obj) => {
     queue.push(obj)
-    log(`Queued ${count} (${queue.length}): ${obj._id}`)
+    log(`Queued (${queue.length}): ${obj._id}`)
     console.log(`Queued ${queue.length}`, obj)
   }
 
@@ -56,17 +57,24 @@ export default (props) => {
     setText(defText)
   }
 
-  return <React.Fragment>
-    <Button
-      type='primary'
-      onClick={() => startWith(key)}
-      disabled={text !== defText}
-    >{text}</Button>
-    <Input
-      value={key}
-      onChange={evt => setKey(evt.target.value)}
-      style={{width: '60ex'}}
-    />
-    {message && <Alert message={message}/>}
-  </React.Fragment>
+  return (
+    !!label ? (
+      <Button disabled={text !== defText} onClick={() => startWith(key)}>
+        {text !== defText ? text : ''}{label}
+      </Button>
+    ) : (
+      <React.Fragment>
+        <Button
+          type='primary'
+          onClick={() => startWith(key)}
+          disabled={text !== defText}
+        >{text}</Button>
+        <Input
+          value={key}
+          onChange={evt => setKey(evt.target.value)}
+          style={{width: '60ex'}}
+        />
+      </React.Fragment>
+    )
+  )
 }
