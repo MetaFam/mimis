@@ -4,6 +4,10 @@
   "private": true,
   "dependencies": {
     "@ant-design/icons": "^4.0.6",
+    "@aragon/connect": "^0.4.2",
+    "@aragon/connect-thegraph-tokens": "^0.4.2",
+    "@aragon/connect-thegraph-voting": "^0.4.2",
+    "@aragon/test-helpers": "^2.1.0",
     "@iota/converter": "^1.0.0-beta.23",
     "@iota/core": "^1.0.0-beta.29",
     "@iota/extract-json": "^1.0.0-beta.23",
@@ -15,7 +19,7 @@
     "antd": "^4.1.3",
     "babel-plugin-import": "^1.13.0",
     "babel-preset-react-app": "^9.1.2",
-    "cids": "^0.7.2",
+    "cids": "^0.8.3",
     "difflib": "^0.2.4",
     "dot-prop": "^5.2.0",
     "file-saver": "^2.0.2",
@@ -26,6 +30,7 @@
     "less": "^3.11.1",
     "less-loader": "^5.0.0",
     "lodash": "^4.17.15",
+    "neo4j-driver": "^4.1.0",
     "node-sass": "^4.13.0",
     "pouchdb": "^7.1.1",
     "react": "^16.12.0",
@@ -37,7 +42,9 @@
     "react-responsive-carousel": "^3.1.51",
     "react-router": "^5.1.2",
     "react-router-dom": "^5.1.2",
-    "react-scripts": "^3.4.1"
+    "react-scripts": "^3.4.1",
+    "web3": "^1.2.11",
+    "web3-utils": "^1.2.9"
   },
   "scripts": {
     "start": "react-scripts start",
