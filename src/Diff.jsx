@@ -4,6 +4,10 @@ import {
   FormControl, InputLabel, OutlinedInput,
   makeStyles,
 } from '@material-ui/core'
+import {
+  ExpandMore as ExpandMoreIcon, ChevronRight as ChevronRightIcon,
+} from '@material-ui/icons'
+import { TreeView, TreeItem } from '@material-ui/lab'
 import CID from 'cids'
 import IPFSContext from './IPFSContext'
 
@@ -27,11 +31,20 @@ export default () => {
   const [cidOne, setCIDOne] = useState('QmRhXd65SWqbWxL8j3Ls2wBJxhmo8pvFGyFxZEadKKnriY')
   const [cidTwo, setCIDTwo] = useState('QmUxBA4fif4xRtmFWvjt4S26wgujqHFHkPrudp8dQkLYJ6')
   const [error, setError] = useState()
+  const [names, setNames] = useState([])
   const [ipfs] = useContext(IPFSContext)
   const classes = useStyles()
 
   if(error) {
 
+  }
+  
+  const ls = async (cid) => {
+    const entries = []
+    for await (const file of ipfs.ls(cid)) {
+      entries.push(file)
+    }
+    return entries
   }
 
   /* Development Steps:
@@ -44,48 +57,33 @@ export default () => {
   const compare = async (one, two) => {
     const title = `Comparing ${one} to ${two}`
     const cids = {}
-    const entriesOne = []
-    for await (const file of ipfs.ls(one)) {
-      entriesOne.push(file)
-    }
-    const entriesTwo = []
-    for await (const file of ipfs.ls(two)) {
-      entriesTwo.push(file)
-    }
-    // const lsOne = ipfs.ls(one)
-    // const lsTwo = ipfs.ls(two)
-    console.info(entriesOne, entriesTwo)
-
-    for(let entry of entriesTwo) {
-      cids[entry.cid] = entry
-      let match
-      // Same filename exists
-      if(match = entriesOne.find(e => e.name === entry.name)) {
-        console.log('Match', entry, match)
-        // No changes
-        if(match.cid === entry.cid) {
-          console.log('No Changes', match.cid, entry.cid)
-        } else {
-          console.log('Changed', match.cid, entry.cid)
-        }
-      // File removed
-      } else if(cids[entry.cid]) {
-        console.log('Rename', entry, cids[entry.cid])
-      } 
-    }
+    const entriesOne = ls(one)
+    const entriesTwo = ls(two)
+    const files = new Proxy({}, {
+      get: (object, property) => {
+        return object.hasOwnProperty(property) ? object[property] : {}
+      }
+    })
 
     for(let entry of entriesOne) {
-      cids[entry.cid] = entry
-      let match
-      // Same filename exists
-      if(match = entriesTwo.find(e => e.name === entry.name)) {
-        console.log('Match', entry, match)
-      // Same file 
-      } else if(cids[entry.cid]) {
-        console.log('Rename', entry, cids[entry.cid])
-      } 
+      files[entry.name] = { cidOne: entry.cid }
     }
+
+    for(let entry of entriesTwo) {
+      files[entry.name][cidTwo] = entry.cid
+    }
+
+    console.log(files)
+
+    const namesOne = entriesOne.map(e => e.name)
+    const namesTwo = entriesTwo.map(e => e.name)
+    setNames([...new Set(namesOne, namesTwo)])
   }
+
+  let validInput = false
+  try {
+    validInput = !!(new CID(cidOne) && new CID(cidTwo))
+  } catch(e) {}
 
   return (
     <Container>
@@ -98,8 +96,8 @@ export default () => {
           value={cidOne}
           onChange={evt => setCIDOne(evt.target.value)}
           color='primary'
-          startAdornment={<InputAdornment position="start">CID:</InputAdornment>}
-          labelWidth={60}
+          startAdornment={<InputAdornment position='start'>CID:</InputAdornment>}
+          labelWidth={50}
         />
       </FormControl>
       <span style={{margin: 'auto 1ex'}}>with</span>
@@ -112,15 +110,29 @@ export default () => {
           startAdornment={<InputAdornment position="start">CID:</InputAdornment>}
           onChange={evt => setCIDTwo(evt.target.value)}
           color='primary'
-          labelWidth={60}
+          labelWidth={25}
         />
       </FormControl>
       <Button
-        enabled={CID.isCID(cidOne) && CID.isCID(cidTwo)}
+        disabled={!validInput}
         color='primary'
         variant='contained'
         onClick={() => compare(cidOne, cidTwo)}
-      >Compare {cidOne.slice(0, 8)}…{cidOne.slice(-8)} and {cidTwo.slice(0, 8)}…{cidTwo.slice(-8)}</Button>
+      >Diff {cidOne.slice(0, 8)}…{cidOne.slice(-8)} &amp; {cidTwo.slice(0, 8)}…{cidTwo.slice(-8)}</Button>
+      <hr style={{width: '65%', margin: '3em auto', border: '2px solid'}}/>
+      <TreeView
+        defaultCollapseIcon={<ExpandMoreIcon />}
+        defaultExpanded={['root']}
+        defaultExpandIcon={<ChevronRightIcon />}
+      >
+        {names.map((name, i) => (
+          <TreeItem key={i} nodeId={i.toString()} label={
+            <div style={{display: 'flex'}}>
+              <span>{name}</span><b style={{flexGrow: 10, textAlign: 'right', marginRight: '1em'}}>{i}</b>
+            </div>
+          }/>
+        ))}
+      </TreeView>
     </Container>
   )
 }
