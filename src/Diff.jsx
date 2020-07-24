@@ -10,6 +10,7 @@ import {
 import { TreeView, TreeItem } from '@material-ui/lab'
 import CID from 'cids'
 import IPFSContext from './IPFSContext'
+import id from 'ipfs-http-client/src/id'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -27,11 +28,14 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
+const shortCID = (cid) => `${cid.slice(0, 8)}…${cid.slice(-8)}`
+
 export default () => {
-  const [cidOne, setCIDOne] = useState('QmRhXd65SWqbWxL8j3Ls2wBJxhmo8pvFGyFxZEadKKnriY')
-  const [cidTwo, setCIDTwo] = useState('QmUxBA4fif4xRtmFWvjt4S26wgujqHFHkPrudp8dQkLYJ6')
+  const [cidOne, setCIDOne] = useState('QmRqL7XqQPRbnuisxLaD2A9XVQLy8nnGgn7CvYN2w9qeY7')
+  const [cidTwo, setCIDTwo] = useState('QmRN4R2LkPF8e9k9VyBp4wsvkZSTcGn8wSTeDLUU1jdPLj')
   const [error, setError] = useState()
   const [names, setNames] = useState([])
+  const [files, setFiles] = useState([])
   const [ipfs] = useContext(IPFSContext)
   const classes = useStyles()
 
@@ -41,6 +45,7 @@ export default () => {
   
   const ls = async (cid) => {
     const entries = []
+    if(!cid) return []
     for await (const file of ipfs.ls(cid)) {
       entries.push(file)
     }
@@ -54,31 +59,102 @@ export default () => {
    *  4. Handle removed files
    *  5. Handle renamed files
    */
+  const compareStart = async (one, two) => {
+    const title = `Comparing ${shortCID(one)} to ${shortCID(two)}`
+    const root = { name: title, children: await compare(one, two) }
+    console.info(root)
+    setFiles([root])
+  }
+
   const compare = async (one, two) => {
-    const title = `Comparing ${one} to ${two}`
     const cids = {}
-    const entriesOne = ls(one)
-    const entriesTwo = ls(two)
-    const files = new Proxy({}, {
-      get: (object, property) => {
-        return object.hasOwnProperty(property) ? object[property] : {}
-      }
-    })
+    const entriesOne = await ls(one)
+    const entriesTwo = await ls(two)
+    const files = {}
 
     for(let entry of entriesOne) {
-      files[entry.name] = { cidOne: entry.cid }
+      files[entry.name] = {
+        cidOne: entry.cid, type: entry.type,        
+      }
     }
-
     for(let entry of entriesTwo) {
-      files[entry.name][cidTwo] = entry.cid
+      if(!files[entry.name]) files[entry.name] = {}
+      if(files[entry.name].type && files[entry.name].type !== entry.type) {
+        throw 'Entry changed type. Not supported.'
+      }
+      files[entry.name].type = entry.type
+      files[entry.name].cidTwo = entry.cid
     }
 
-    console.log(files)
-
-    const namesOne = entriesOne.map(e => e.name)
-    const namesTwo = entriesTwo.map(e => e.name)
-    setNames([...new Set(namesOne, namesTwo)])
+    const fileList = []
+    for(let name of Object.keys(files)) {
+      const file = files[name]
+      file.name = name
+      if(file.type === 'dir') {
+        file.children = await compare(file.cidOne, file.cidTwo)
+      }
+      fileList.push(file)
+    }
+    return fileList
   }
+
+  const mark = (cidOne, cidTwo) => {
+    if(!cidOne && !cidTwo) {
+      return <>
+        <span style={{display: 'inline-block', minWidth: '3em', textAlign: 'center'}}>From</span>
+        <span style={{display: 'inline-block', minWidth: '3em', textAlign: 'center'}}>To</span>
+      </>
+    } else if(cidOne && !cidTwo) {
+      return <>
+        <span style={{display: 'inline-block', minWidth: '3em', textAlign: 'center'}} title={cidOne}>✖</span>
+        <span style={{display: 'inline-block', minWidth: '3em'}}></span>
+      </>
+    } else if(!cidOne && cidTwo) {
+      return <>
+        <span style={{display: 'inline-block', minWidth: '3em'}}></span>
+        <span style={{display: 'inline-block', minWidth: '3em', textAlign: 'center'}} title={cidTwo}>✖</span>
+      </>
+    } else if(cidOne.equals(cidTwo)) {
+      return <>
+        <span style={{display: 'inline-block', minWidth: '3em', textAlign: 'center'}} title={cidOne}>✔</span>
+        <span style={{display: 'inline-block', minWidth: '3em', textAlign: 'center'}} title={cidTwo}>✔</span>
+      </>
+    } else {
+      return <>
+        <span style={{display: 'inline-block', minWidth: '3em', textAlign: 'center'}} title={cidOne}>✖</span>
+        <span style={{display: 'inline-block', minWidth: '3em', textAlign: 'center'}} title={cidTwo}>✖</span>
+      </>
+    }
+  }
+
+  const showDiff = (one, two) => {
+    if(one && !two) {
+      console.info('Removed')
+    } else if(!one && two) {
+      console.info('Added')
+    } else if(one.equals(two)) {
+      console.info('Same')
+    } else {
+      console.info('Changed')
+    }
+  }
+
+  const fileItem = (file) => (
+    <TreeItem key={file.name} nodeId={file.name}
+      label={
+        <div style={{display: 'flex'}}>
+          <span>{file.name}</span>
+          <span style={{flexGrow: 10, textAlign: 'right', marginRight: '1em'}}>
+            {mark(file.cidOne, file.cidTwo)}
+          </span>
+        </div>
+      }
+      onClick={() => file.type === 'file' && showDiff(file.cidOne, file.cidTwo)}
+    >
+      {file.children ? file.children.map(child => fileItem(child)) : null}
+    </TreeItem>
+  )
+
 
   let validInput = false
   try {
@@ -117,21 +193,15 @@ export default () => {
         disabled={!validInput}
         color='primary'
         variant='contained'
-        onClick={() => compare(cidOne, cidTwo)}
-      >Diff {cidOne.slice(0, 8)}…{cidOne.slice(-8)} &amp; {cidTwo.slice(0, 8)}…{cidTwo.slice(-8)}</Button>
-      <hr style={{width: '65%', margin: '3em auto', border: '2px solid'}}/>
+        onClick={() => compareStart(cidOne, cidTwo)}
+      >Diff {shortCID(cidOne)} &amp; {shortCID(cidTwo)}</Button>
+      <hr style={{width: '65%', margin: '2em auto', border: '2px solid'}}/>
       <TreeView
         defaultCollapseIcon={<ExpandMoreIcon />}
         defaultExpanded={['root']}
         defaultExpandIcon={<ChevronRightIcon />}
       >
-        {names.map((name, i) => (
-          <TreeItem key={i} nodeId={i.toString()} label={
-            <div style={{display: 'flex'}}>
-              <span>{name}</span><b style={{flexGrow: 10, textAlign: 'right', marginRight: '1em'}}>{i}</b>
-            </div>
-          }/>
-        ))}
+        {files.map(file => fileItem(file))}
       </TreeView>
     </Container>
   )
