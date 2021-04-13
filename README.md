@@ -79,8 +79,8 @@ So, in order to customize their representation on the map, a user would define a
 
 ## Algorithm
 
-#1. Start the search queue with the Mïmis root from IDX.
-#2. Each Mïmis node has an optional ordered list of DIDs of overriding users. If any are specified, add their Mïmis roots to the search queue in the order given for the DIDs.
-#3. While there is more than one element remaining in the path to be dereferenced, shift the first element and iterate over the search queue, looking for directory nodes that have a child element that matches the current path portion.
-#4. Each iteration produces a new search queue one level deeper in the tree.
-#5. If a node has overrides, those overrides are added to the search queue following the element being dereferenced. The node added to the queue is from the same position in the tree as is currently being defreferenced.
+1. Start the search queue with the Mïmis root from IDX.
+2. Each Mïmis node has an optional ordered list of DIDs of overriding users. If any are specified, add their Mïmis roots to the search queue in the order given for the DIDs.
+3. While there is more than one element remaining in the path to be dereferenced, shift the first element and iterate over the search queue, looking for directory nodes that have a child element that matches the current path portion.
+4. Each iteration produces a new search queue one level deeper in the tree.
+5. If a node has overrides, those overrides are added to the search queue following the element being dereferenced. The node added to the queue is from the same position in the tree as is currently being defreferenced.
