@@ -10,7 +10,7 @@ import {
 import { TreeView, TreeItem } from '@material-ui/lab'
 import CID from 'cids'
 import IPFSContext from './IPFSContext'
-import id from 'ipfs-http-client/src/id'
+import Diff from './Diff'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -34,7 +34,7 @@ export default () => {
   const [cidOne, setCIDOne] = useState('QmRqL7XqQPRbnuisxLaD2A9XVQLy8nnGgn7CvYN2w9qeY7')
   const [cidTwo, setCIDTwo] = useState('QmRN4R2LkPF8e9k9VyBp4wsvkZSTcGn8wSTeDLUU1jdPLj')
   const [error, setError] = useState()
-  const [names, setNames] = useState([])
+  const [diff, setDiff] = useState()
   const [files, setFiles] = useState([])
   const [ipfs] = useContext(IPFSContext)
   const classes = useStyles()
@@ -127,15 +127,24 @@ export default () => {
     }
   }
 
-  const showDiff = (one, two) => {
+  const diffFor = (one, two) => {
     if(one && !two) {
-      console.info('Removed')
+      return <>
+        <h1>Removed</h1>
+        <iframe style={{backgroundColor: 'rgba(255, 0, 0, 0.25)'}} sandbox='' src={`//ipfs.io/ipfs/${one}`}/>
+      </>
     } else if(!one && two) {
-      console.info('Added')
+      return <>
+        <h1>Added</h1>
+        <iframe style={{backgroundColor: 'rgba(0, 255, 0, 0.25)'}} sandbox='' src={`//ipfs.io/ipfs/${two}`}/>
+      </>
     } else if(one.equals(two)) {
-      console.info('Same')
+      return <>
+        <h1>No Changes</h1>
+        <iframe sandbox='' src={`//ipfs.io/ipfs/${one}`}/>
+      </>
     } else {
-      console.info('Changed')
+      return <Diff from={one} to={two}/>
     }
   }
 
@@ -149,7 +158,7 @@ export default () => {
           </span>
         </div>
       }
-      onClick={() => file.type === 'file' && showDiff(file.cidOne, file.cidTwo)}
+      onClick={() => file.type === 'file' && setDiff(diffFor(file.cidOne, file.cidTwo))}
     >
       {file.children ? file.children.map(child => fileItem(child)) : null}
     </TreeItem>
@@ -203,6 +212,7 @@ export default () => {
       >
         {files.map(file => fileItem(file))}
       </TreeView>
+      {diff}
     </Container>
   )
 }

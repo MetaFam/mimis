@@ -10,7 +10,7 @@ import Table from '../Table'
 import CoversToIPFS from '../CoversToIPFS'
 import AragonConnect from '../AragonConnect'
 import AragonAgent from '../AragonAgent'
-import Diff from '../Diff'
+import Diff from '../DiffViewer'
 import { DatabaseProvider } from '../DatabaseContext'
 import { IPFSProvider } from '../IPFSContext'
 
