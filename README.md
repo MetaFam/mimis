@@ -79,11 +79,11 @@ So, in order to customize their representation on the map, a user would define a
 
 ## Algorithm
 
-1. Start the search queue with the Mïmis root from IDX.
-2. Each Mïmis node has an optional ordered list of DIDs of overriding users. If any are specified, add their Mïmis roots to the search queue in the order given for the DIDs.
-3. While there is more than one element remaining in the path to be dereferenced, shift the first element and iterate over the search queue, looking for directory nodes that have a child element that matches the current path portion.
-4. Each iteration produces a new search queue one level deeper in the tree.
-5. If a node has overrides, those overrides are added to the search queue following the element being dereferenced. The node added to the queue is from the same position in the tree as is currently being defreferenced.
+1. Start the search queue with the Mïmis root from IDX, a path as an array of strings, and a descendDepth equal to the number of user references you wish to follow. If `descend = 0`, only information from your tree will be loaded. If `descend = 1`, your information and the direct users you specified will be referenced.
+2. If `children` exists on the root, and if it has an entry that matches the current element if the path, then add a child to the search tree for the dereferenced value of the entry with the path progressed one element. Keep `descend` the same in the child.
+3. If `overrides` exists on the root, and if `descend > 0`, add a child to the search tree for the Mïmis root from IDX for each of the listed DIDs with the base path. Decrement `descend` for the children.
+4. For each child added in #2 and #3, process as a new root using #1 until the path is exhausted.
+5. Once the expansion is complete, determine whether the URI is being dereferenced as a resource or a collection. As a resource, deliver the first (or most popular, or whatever), but some single resource. As a collection, deliver a JSON object describing the results of the search process, or, eventually, an interface for managing those collections and enhanching them with metadata in the form of new paths.
 
 ## Pathological Cases
 
