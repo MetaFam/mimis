@@ -12,11 +12,12 @@ export default ({
   ...props
 }) => (
   <Flex
-    direction="column" p={5}
+    direction="row-reverse" p={5}
     justify="center" align="center"
+    style={{ transform: 'rotate(-90deg)' }}
     {...local}
   >
-    {name && <Heading>{name}</Heading>}
+    {name && <Heading style={{ transform: 'rotate(90deg)' }}>{name}</Heading>}
     {((() => {
       if(Array.isArray(value)) {
         return <List {...{ value }} {...props}/>

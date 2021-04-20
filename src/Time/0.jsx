@@ -1,5 +1,5 @@
 import loadable from '@loadable/component'
-import { Text, Stack } from '@chakra-ui/react'
+import { Text, Stack, Path } from '@chakra-ui/react'
 
 const handlers = (
   ['Children', 'Path', 'Overrides', 'Variable'].map((c) => {
@@ -10,13 +10,13 @@ const handlers = (
 )
 
 export default () => (
-  <Variable name={<Text>t<sub>0</sub></Text>}>
-    <Variable name="Search Queue">
-      <Variable
+  <handlers.Variable name={<Text>t<sub>0</sub></Text>}>
+    <handlers.Variable name="Search Queue">
+      <handlers.Variable
         local={{ bg: 'aqua' }}
         name={
           <Stack textAlign="center">
-            <handlers.Path elements={[
+            <Path elements={[
               'Mïmis Root from IDX (∅)',
               'org',
               'MetaGame',
@@ -42,7 +42,7 @@ export default () => (
           'did:3:2…',
           'did:3:3…',
         ]}/>
-      </Variable>
-    </Variable>
-  </Variable>
+      </handlers.Variable>
+    </handlers.Variable>
+  </handlers.Variable>
 )

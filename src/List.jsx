@@ -3,10 +3,12 @@ import { ListItem, UnorderedList } from '@chakra-ui/react'
 
 const Variable = loadable(() => import('./Variable'))
 
-export default ({ value, colorFor = () => 'transparent' }) => (
+export default ({
+  value, propsFor = () => ({ bg: 'transparent' })
+}) => (
   <UnorderedList p={12} bg="orange">
     {(value.map((elem, index) => (
-      <ListItem key={index} bg={colorFor({ index })}>
+      <ListItem key={index} {...propsFor({ index })}>
         <Variable value={elem}/>
       </ListItem>
     )))}

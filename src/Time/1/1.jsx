@@ -23,7 +23,7 @@ export default () => (
       <Text>ceramic://A</Text>
     </Stack>
   }>
-    <Children
+    {/* <Children
       value={{
         book: 'ceramic://2…',
         celebrity: 'ceramic://B…',
@@ -32,6 +32,6 @@ export default () => (
         org: 'ceramic://4…',
       }}
       selected="org"
-    />
+    /> */}
   </Variable>
 )
