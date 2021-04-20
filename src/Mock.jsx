@@ -2,7 +2,7 @@ import D3Tree from './D3Tree'
 import { ceramic as Ceramic, idx as IDX } from './Data'
 
 function Path({ path = '/', searched = 0 }) {
-  console.info('path in Path Object', path, path?.active?.())
+  console.info('path in Path Object', { path, active: path?.active?.() })
   if(path.path) { //path instanceof Path) { // is always false
     this.path = path.path
     console.info('assigned path.path to path', { path: this.path })
@@ -14,6 +14,8 @@ function Path({ path = '/', searched = 0 }) {
     if(this.path.shift() !== '') { // starts with /
       throw new Error("Can't handle relative paths yet.")
     }
+  } else {
+    this.path = path
   }
 
 
@@ -23,7 +25,7 @@ function Path({ path = '/', searched = 0 }) {
 
   this.bump = () => ++this.searched
 
-  console.info('this.path of Path Object', this.path, this.active())
+  console.info('this.path of Path Object', { path: this.path, active: this.active() })
 
   this.search = (term) => {
     if(this.active() === term) {
@@ -36,31 +38,42 @@ function Path({ path = '/', searched = 0 }) {
 Path.prototype = []
 
 const subtree = ({ path, ceramic, didLook }) => {
+  const active = path.active()
+  console.info('BEGIN', { ceramic, active })
   if(didLook < 0) {
-    return { name: 'look = ${didLook}; Outside Search Tree' }
+    return { name: `look = ${didLook}; Outside Search Tree` }
   }
-  console.info('path in node function', { PATHH: path, SRCH: path.searched, active: path.active() })
+  console.info('path in subtree function', { path, SRCH: path.searched, active: path.active() })
   const resolution = Ceramic[ceramic]
-  const children = []
+  let children = []
   if(resolution) {
     const elem = resolution.children?.[path.active()]
     if(elem) {
-      console.info("path in children", path, elem)
-      const newPath = (
-        new Path({ path: path.path, searched: path.searched + 1 })
-      )
-      console.info("path post-copy in children", path, newPath)
+      console.info("path in child", { path, elem, active: path.active() })
+      // const newPath = (
+      //   new Path({ path: path.path, searched: path.searched + 1 })
+      // )
+      const old = path?.active?.()
+      path.bump()
+      console.info('post-bump in Mock', {
+        ldrn: resolution.children,
+        path,
+        elem,
+        children,
+        active: Object.assign([], path).active(),
+      })
+      console.info("path post-copy in child", { old, new: path?.active?.() })
       children.push(
         subtree({
-          path: newPath,
+          path,
           ceramic: elem,
           didLook,
         })
       )
     }
     if(resolution.overrides) {
-      console.info("path in overrides", path, resolution.overrides)
-      children.concat(
+      console.info("path in overrides", { path, overrides: resolution.overrides })
+      children = children.concat(
         ...resolution.overrides.map((child) => (
           begin({
             path: new Path({ path }),
@@ -70,17 +83,9 @@ const subtree = ({ path, ceramic, didLook }) => {
         ))
       )
     }
-    path.bump()
-    console.info('post-bump in Mock', {
-      ldrn: resolution.children,
-      path,
-      elem,
-      children,
-      active: Object.assign([], path).active(),
-    })
   }
   return {
-    name: path.active(),
+    name: active ?? resolution?.content,
     children,
   }
 }
@@ -93,8 +98,8 @@ const begin = ({ path, idx, didLook = 0 }) => {
     console.info('parsed path in Mock', { path, active: path?.active?.() })
   }
   return ({
-    name: `IDX Lookup of ${idx}`,
-    children: subtree({ path, ceramic: IDX[idx], didLook }),
+    name: idx,
+    children: [subtree({ path, ceramic: IDX[idx], didLook })],
   })
 }
 
@@ -102,6 +107,6 @@ export default () => (
   <D3Tree graph={begin({
     path: '/org/MetaGame/players/dysbulic/svg',
     idx: '∅',
-    didLook: 0,
+    didLook: 1,
   })}/>
 )

@@ -2,6 +2,12 @@ export const ceramic = {
   // Initial state pulled from IDX for the current user
   'ceramic://1…': {
     didLook: 1,
+    path: [
+      'org',
+      'MetaGame',
+      'players',
+      'dysbulic',
+    ],
     children: {
       book: 'ceramic://2…',
       geo: 'ceramic://3…',
@@ -68,7 +74,7 @@ export const ceramic = {
   'ceramic://7…': {
     didLook: 1,
     children: {
-      Players: 'ceramic://L…',
+      players: 'ceramic://L…',
       Quests: 'ceramic://M…',
       'Raid Map': 'ceramic://N…',
       SEED: 'ceramic://O…',
@@ -120,16 +126,31 @@ export const ceramic = {
   'ceramic://L…': {
     didLook: 1,
     children: {
-      Players: 'ceramic://L…',
-      Quests: 'ceramic://M…',
-      'Raid Map': 'ceramic://N…',
-      SEED: 'ceramic://O…',
+      dysbulic: 'ceramic://W…',
+      pΞTH: 'ceramic://X…',
+      luxumbra: 'ceramic://Y…',
+      'The Lone Rōnin': 'ceramic://Z…',
+    },
+  },
+  // 'dysbulic' entry from ceramic://L…
+  'ceramic://W…': {
+    didLook: 1,
+    children: {
+      bg: 'ceramic://a…',
+      profile: 'ceramic://b…',
+      svg: 'ceramic://c…',
     },
     overrides: [
-      'did:3:7…',
+      'did:3:0…',
     ],
   },
-
+  // 'svg' from ceramic://W…
+  'ceramic://c…': {
+    content: 'ipfs://1…',
+    children: {
+      'b&w': 'ceramic://c…',
+    }
+  }
 }
 
 export const idx = {
@@ -137,5 +158,8 @@ export const idx = {
   '∅(did:3:1…)': 'ceramic://0…',
   '∅(did:3:2…)': 'ceramic://D…',
   '∅(did:3:3…)': 'ceramic://H…',
+  '∅(did:3:4…)': 'ceramic://1…',
+  '∅(did:3:5…)': 'ceramic://1…',
+  '∅(did:3:6…)': 'ceramic://1…',
   '∅(did:3:7…)': 'ceramic://0…',
 }
