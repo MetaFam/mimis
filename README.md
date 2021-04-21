@@ -1,7 +1,35 @@
 Mïmisbrunnr
 ===========
 
-Mïmis is a composable filesystem built by walking a path from the root and building a render tree which is either evaluated to provide content or summarized to provide context.
+Mïmis is a composed filesystem built in a two-pass process. The first expands a rendering tree by consuming a user-specified path combined with the configuration of nodes. The second pass condenses that result to a composite representation that can be used to reason about the popularity and veracity of different choices.
+
+## Use Cases
+
+### Ancillae
+
+Each user prepares a list of written works they found most foundational to enabling them to navigate the world.
+
+Those lists are combined into a composite map that shows the popularity of various titles.
+
+The idea could be abstracted to any content type. Users create structures of the form `/top/movies/1` with the Ceramic URI from `/movie/A Clockwork Orange/`. That location contains metadata that allows the system to display `/top/movies/` coherently.
+
+### Tipping
+
+The system can track which users (DIDs) are responsible for their content and dispense recompense.
+
+I would like to create a system for recompensing the providers of data, and also create metadata such that creators can be compensated as well.
+
+### MetaGame's Raid Map
+
+The [Raid Map](//metafam.github.io/MetaFam/raid-map/) is a visualization of a group of projects and the associated participants.
+
+I want to allow users and projects to override their portion of the image to produce a composite from many authors.
+
+### Overriding Styles
+
+The system should allow you to specify an override for any position in the tree. This means that you could allow anyone to contribute a revised sytlesheet for any site.
+
+If you're anywhere in the net and don't like how something looks, you can change it. You can also publish your changes to others and they can spread virally.
 
 ## Conventions
 
@@ -18,7 +46,7 @@ All locations in the filesystem tree are intended to resolve for all coherent pa
 
 Because a node is intended to have multiple parent nodes, the parent directory, `../` doesn't necessarily have a single value, and the parent relationship isn't stored in any case.
 
-It means that if a node wants to refer to a parent, it must store a reference to the parent's Ceramic URI, or create a link consisting of a path and a root node.
+It means that if a node wants to refer to a parent, it must specify that path up from the root, `/` or creating a direct reference as a child of the current location: `parent/` → `../`.
 
 ### No File Extensions
 
@@ -92,6 +120,10 @@ So, in order to customize their representation on the map, a user would define `
 Some nodes are pathological in that they have absurdly large contents. For example, `/book/by/<author>/<title>/` where I would like to begin to collect all the world's writing in the form of exploded [EPubs](//www.w3.org/TR/epub-33/). The `by/` directory would have an entry for every name of every author.
 
 Ceramic updates are limited to 256KiB. A secondary data structure needs to be constructed to hold the hundreds of thousands entries – some sort of balanced tree. Then, for browsing, cache it in a system capable of quickly sorting and filtering it.
+
+### Shattering
+
+As a solution, I would like to create nodes that represent a tree structure within Mïmis. Entries are added to a node until it reaches capacity. At that point it "shatters" and replaces it's list with a set of children partitioning the search space.
 
 ## Cache Invalidation
 

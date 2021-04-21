@@ -1,5 +1,6 @@
-import D3Tree from './D3Tree'
+import React from 'react'
 import { ceramic as Ceramic, idx as IDX } from './Data'
+import D3Tree from './D3Tree'
 
 function Path({ path = '/', searched = 0 }) {
   console.info('path in Path Object', { path, active: path?.active?.() })
@@ -17,7 +18,6 @@ function Path({ path = '/', searched = 0 }) {
   } else {
     this.path = path
   }
-
 
   this.searched = searched
 
@@ -37,42 +37,23 @@ function Path({ path = '/', searched = 0 }) {
 }
 Path.prototype = []
 
+const zIndices = [...new Array(10)]
+
+console.info('ZI', { zIndices })
+
 const subtree = ({ path, ceramic, didLook }) => {
   const active = path.active()
   console.info('BEGIN', { ceramic, active })
   if(didLook < 0) {
-    return { name: `look = ${didLook}; Outside Search Tree` }
+    return {
+      name: `look = ${didLook}; Outside Search Tree`,
+      type: 'out-of-bounds',
+    }
   }
-  console.info('path in subtree function', { path, SRCH: path.searched, active: path.active() })
   const resolution = Ceramic[ceramic]
   let children = []
   if(resolution) {
-    const elem = resolution.children?.[path.active()]
-    if(elem) {
-      console.info("path in child", { path, elem, active: path.active() })
-      // const newPath = (
-      //   new Path({ path: path.path, searched: path.searched + 1 })
-      // )
-      const old = path?.active?.()
-      path.bump()
-      console.info('post-bump in Mock', {
-        ldrn: resolution.children,
-        path,
-        elem,
-        children,
-        active: Object.assign([], path).active(),
-      })
-      console.info("path post-copy in child", { old, new: path?.active?.() })
-      children.push(
-        subtree({
-          path,
-          ceramic: elem,
-          didLook,
-        })
-      )
-    }
     if(resolution.overrides) {
-      console.info("path in overrides", { path, overrides: resolution.overrides })
       children = children.concat(
         ...resolution.overrides.map((child) => (
           begin({
@@ -83,11 +64,26 @@ const subtree = ({ path, ceramic, didLook }) => {
         ))
       )
     }
+    const elem = resolution.children?.[path.active()]
+    if(elem) {
+      path.bump()
+      children.push(
+        subtree({
+          path,
+          ceramic: elem,
+          didLook,
+        })
+      )
+    }
   }
-  return {
+  const ret = {
     name: active ?? resolution?.content,
-    children,
+    type: active ? 'context' : 'content'
   }
+  if(children.length > 0) {
+    ret.children = children
+  }
+  return ret
 }
 
 const begin = ({ path, idx, didLook = 0 }) => {
@@ -103,8 +99,8 @@ const begin = ({ path, idx, didLook = 0 }) => {
   })
 }
 
-export default () => (
-  <D3Tree graph={begin({
+export default ({ Grapher = D3Tree }) => (
+  <Grapher graph={begin({
     path: '/org/MetaGame/players/dysbulic/svg',
     idx: '∅',
     didLook: 1,

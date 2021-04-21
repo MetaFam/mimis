@@ -6,7 +6,8 @@
   "author": "Will Holcomb <@dysbulic>",
   "homepage": "https://dysbulic.github.io/mimis/",
   "dependencies": {
-    "@chakra-ui/react": "^1.5.1",
+    "@chakra-ui/icons": "^1.0.11",
+    "@chakra-ui/react": "^1.5.2",
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
     "@loadable/babel-plugin": "^5.13.2",
@@ -18,6 +19,7 @@
     "framer-motion": "^4",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.3",
     "web-vitals": "^1.0.1"
   },
