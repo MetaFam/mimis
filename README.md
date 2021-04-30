@@ -1,13 +1,13 @@
 Mïmisbrunnr
 ===========
 
-Mïmis is a composed filesystem built from a DAG constructed by walking the path from the root and building a set of paths to search.
+Mïmis is a composable filesystem built by walking a path from the root and building a render tree which is either evaluated to provide content or summarized to provide context.
 
 ## Conventions
 
 ### No Parent Reference
 
-All locations in the filesystem tree are intended to have all coherent paths for the location resolve. So, for example, all of the following resolve to the same location:
+All locations in the filesystem tree are intended to resolve for all coherent paths. So, for example, all of the following resolve to the same location:
 
 * `/book/by/Ursula K. LeGuinn/The Dispossessed/`
 * `/book/by/LeGuinn/The Dispossessed/`
@@ -18,7 +18,7 @@ All locations in the filesystem tree are intended to have all coherent paths for
 
 Because a node is intended to have multiple parent nodes, the parent directory, `../` doesn't necessarily have a single value, and the parent relationship isn't stored in any case.
 
-It means that if a node wants to refer to a parent, it must specify that path up from the root, `/`.
+It means that if a node wants to refer to a parent, it must store a reference to the parent's Ceramic URI, or create a link consisting of a path and a root node.
 
 ### No File Extensions
 
@@ -45,7 +45,7 @@ The nodes in the DAG are of the format:
 }
 ```
 
-Where one of either `content` or `children` is specified. So, the root looks something like:
+Where either or both of `content` and `children` is specified. So, the root looks something like:
 
 ```
 {
@@ -59,9 +59,11 @@ Where one of either `content` or `children` is specified. So, the root looks som
 }
 ```
 
+## Raid Map
+
 The [MetaGame Raid Map](https://metafam.github.io/raid-map/) is an overview of the projects the organization is working on. The triangles at the center represent players, and they are included in the larger image using SVG `image` tags. The goal is to allow players to customize their representation in the map.
 
-So, for example, the node at `/org/MetaGame/Raid Map/Players/dysbulic/` would be:
+So, for example, the node at `/org/MetaGame/players/dysbulic/` would be:
 
 ```
 {
@@ -73,9 +75,9 @@ So, for example, the node at `/org/MetaGame/Raid Map/Players/dysbulic/` would be
 }
 ```
 
-When the node is loaded, the system will check for the existence of `/org/MetaGame/Raid Map/Players/dysbulic/` for the user did:3:kjzl…pfr717. If that node exists, all the paths in that node will be added (overwriting any existing entries) to the current context to create a composite.
+When the node is loaded, the system will check for the existence of `/org/MetaGame/players/dysbulic/` for the user `did:3:kjzl…pfr717`. If that node exists, all the paths in that node will be added (overwriting any existing entries) to the current composite context.
 
-So, in order to customize their representation on the map, a user would define a `svg` entry in the aforementioned directory.
+So, in order to customize their representation on the map, a user would define `/org/MetaGame/players/dysbulic/svg` in their directory.
 
 ## Algorithm
 
@@ -89,27 +91,25 @@ So, in order to customize their representation on the map, a user would define a
 
 Some nodes are pathological in that they have absurdly large contents. For example, `/book/by/<author>/<title>/` where I would like to begin to collect all the world's writing in the form of exploded [EPubs](//www.w3.org/TR/epub-33/). The `by/` directory would have an entry for every name of every author.
 
-Ceramic updates are limited to 256KiB. Some sort of data structure needs to be constructed to hold the hundreds of thousands entries. Some sort of balanced tree. Then, cache it in a system capable of quickly sorting and filtering it.
+Ceramic updates are limited to 256KiB. A secondary data structure needs to be constructed to hold the hundreds of thousands entries – some sort of balanced tree. Then, for browsing, cache it in a system capable of quickly sorting and filtering it.
 
 ## Cache Invalidation
 
 When a node changes, only the nodes on the path from it to the root need to be recalculated. *(This may be wrong. It would be true for a Merkle Tree, but I was considering working from XPath. An [XPath expression](//github.com/FontoXML/fontoxpath) can include siblings and text matching and whatnot, so a change in a node could have side effects anywhere in the tree.)*
 
-With Ceramic, nodes will not necessarily change in content, but the value will need to be recached. There is a change listening interface that lets me fix the cache with minimal effort.
+With Ceramic, nodes will not necessarily change in content, but the value will need to be recached.
 
 ## Queue Priority
 
-Instead of being a javascript string DID, an entry in the overrides array can be an object. There are *k* sections (by default 10) sections to the search queue, or it is easier to think of it as there are ten queue which are concatenated one after the other before they are combined.
+Instead of being a javascript string DID, an entry in the overrides array can be an object. There are *k* sections (by default 20: -9‒9) sections to the render tree, which, because the combination is is done using a preorder traversal, are concatenated one after the other overridding lower numbered sections.
 
-When the queue is finally being evaluated, the queue is traversed from the beginning and for each name within the resource stack of entries. If the path reference is for a singular entry, the first is returned. ~~Other entries in the queue are accessible using `<path>/<i>/<type>` (i.e. `/funny/1/jpg`) syntax. The queue exposes the property `.length`, and the methods `.forEach` and `.map`.~~
+Because of how the tree is divided, default entries that should be overwritten are placed in earlier sections, and immutable information that should not be overwritten is placed in later ones.
 
-B/c of how the queue is divided, default entries that should be overwritten are placed in earlier sections, and immutable information that should not be overwritten is placed in later ones.
-
-The user could reserve the 10ᵗʰ queue for their own use for information they want guaranteed to be in the final output.
+The user could reserve the +9ᵗʰ queue for information they want guaranteed to be in the final output.
 
 ## Styling
 
-File entries have override entries. This allows overriding only a `css` entry. Or, you could search all your contacts for `/funny/1/jpg` and build a composite.
+File entries have override entries. This allows overriding only a `css` entry.
 
 ## Sorting
 
