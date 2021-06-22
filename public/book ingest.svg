@@ -24,7 +24,7 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="4"
-     inkscape:cx="135.375"
+     inkscape:cx="135.25"
      inkscape:cy="102.625"
      inkscape:window-width="3440"
      inkscape:window-height="1373"
@@ -366,14 +366,14 @@
     <rect
        style="fill:#52d2ff;fill-opacity:1;fill-rule:evenodd;stroke:#000063;stroke-width:0.425715;stroke-linecap:round;stroke-linejoin:round"
        id="rect868-0"
-       width="100.79656"
-       height="19.713898"
+       width="100.79622"
+       height="36.980484"
        x="95.695251"
        y="79.734062"
        ry="6.7450333" />
     <text
        xml:space="preserve"
-       style="font-size:16px;line-height:1.25;font-family:sans-serif;text-align:center;text-anchor:middle;stroke-width:0.264583"
+       style="font-size:16px;line-height:1.05;font-family:sans-serif;text-align:center;text-anchor:middle;stroke-width:0.264583"
        x="146.78964"
        y="95.272606"
        id="text3292-9"><tspan
@@ -381,7 +381,12 @@
          id="tspan3290-1"
          style="font-size:16px;text-align:center;text-anchor:middle;stroke-width:0.264583"
          x="146.78964"
-         y="95.272606">Nomination</tspan></text>
+         y="95.272606">Nominee /</tspan><tspan
+         sodipodi:role="line"
+         style="font-size:16px;text-align:center;text-anchor:middle;stroke-width:0.264583"
+         x="146.78964"
+         y="112.0726"
+         id="tspan1889">Winner</tspan></text>
     <circle
        style="fill:#ff0000;fill-rule:evenodd;stroke:#00003b;stroke-opacity:1;stroke-width:1.00157474;stroke-miterlimit:4;stroke-dasharray:3.00472424,1.00157474;stroke-dashoffset:0"
        id="path96984-0"
