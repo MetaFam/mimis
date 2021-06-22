@@ -33,7 +33,7 @@ Mïmis is a filesystem built by processing doubly-linked lists of JSON-LD docume
 
 The handler for the `Book` context would be instantiated & it would create a graph of the form:
 
-![public/book%20ingest.svg]
+![Book Ingestion](public/book%20ingest.svg)
 
 ## Use Cases
 
