@@ -1,7 +1,39 @@
 Mïmisbrunnr
 ===========
 
-Mïmis is a composed filesystem built in a two-pass process. The first expands a rendering tree by consuming a user-specified path combined with the configuration of nodes. The second pass condenses that result to a composite representation that can be used to reason about the popularity and veracity of different choices.
+Mïmis is a filesystem built by processing doubly-linked lists of JSON-LD documents into a Neo4j property graph structure. For example, if the following document came through the pipeline:
+
+```javascript
+{
+  '@context': 'http://schema.org',
+  '@type': 'Book',
+  '@id': 'data://hash/sha256;base64,KN…k=',
+  sameAs: 'https://en.wikipedia.org/wiki/The_Catcher_in_the_Rye',
+  url: 'ipfs://Qm…?filetype=application/epub',
+  name: 'The Catcher in the Rye',
+  author: {
+    '@type': 'Person',
+    givenName: 'Jerome',
+    additionalName: 'David',
+    familyName: 'Salinger',
+    name: 'J.D. Salinger',
+  },
+  participant: {
+    '@type': 'Action',
+    object: {
+      '@id': '∅/award/National Book Award/Fiction/',
+      name: 'National Book Award for Fiction',
+    },
+    result: { name: 'Finalist' },
+    startTime: { startDate: '1952' },
+    endTime: { startDate: '1952' },
+  }
+}
+```
+
+The handler for the `Book` context would be instantiated & it would create a graph of the form:
+
+![public/book%20ingest.svg]
 
 ## Use Cases
 
@@ -30,6 +62,10 @@ I want to allow users and projects to override their portion of the image to pro
 The system should allow you to specify an override for any position in the tree. This means that you could allow anyone to contribute a revised sytlesheet for any site.
 
 If you're anywhere in the net and don't like how something looks, you can change it. You can also publish your changes to others and they can spread virally.
+
+### [Yggdrasil](//github.com/dhappy/yggdrasil)
+
+A gamification of the supply chain based on 13 teams which cover all aspects of consumption.
 
 ## Conventions
 
@@ -73,7 +109,7 @@ The nodes in the DAG are of the format:
 }
 ```
 
-Where either or both of `content` and `children` is specified. So, the root looks something like:
+Where one, either, or both of `content` and `children` is specified. A node may be dereferenced in a content context, such as when building a filesystem. In that case the data from the `content` property is used. So, the root looks something like:
 
 ```
 {

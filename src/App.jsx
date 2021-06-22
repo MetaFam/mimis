@@ -8,9 +8,10 @@ import {
   chakra,
 } from '@chakra-ui/react'
 import {
-  ChevronDownIcon, HamburgerIcon
+  ChevronDownIcon, HamburgerIcon,
 } from '@chakra-ui/icons'
 import D3RadialTree from './D3RadialTree'
+import Home from './Home'
 import Mock from './Mock'
 
 const overrides = {
@@ -52,16 +53,19 @@ export default () => (
             </MenuButton>
             <MenuList>
             <MenuItem>
-                <Link to='/'>🏡 Store as CBOR-DAG</Link>
+                <Link to='/' title="🏗🏡🏘🏙🏛🏤🏩🏥🏭🏟🏞🕌">⛪ Home</Link>
               </MenuItem>
               <MenuItem>
-                <Link to='/ceramic'>🎡 Store as Ceramic</Link>
+                <Link to='/mock' title="🥉💙💜❤💞⛺✈🎠💳🌃🚢🏝🗺">🦈 Mock</Link>
               </MenuItem>
               <MenuItem>
-                <Link to='/build'>✍ Build from DAG</Link>
+                <Link to='/mock/radial' title="🏚🏠🏡🌃🚆🌇🎡🚛⛴🛰🏝🌌🗽">🎡 Radial Mock</Link>
               </MenuItem>
               <MenuItem>
-                <Link to='/about'>📰 About</Link>
+                <Link to='/about' title="♑♒♓♈♉♊♋♌♍♎♏⛎♐">📰 About</Link>
+              </MenuItem>
+              <MenuItem>
+                <ChakraLink href='//github.com/MetaFam/mimis' title="">👨‍💻 Source</ChakraLink>
               </MenuItem>
             </MenuList>
           </>
@@ -71,7 +75,8 @@ export default () => (
         <Route path='/mock/radial'>
           <Mock Grapher={D3RadialTree}/>
         </Route>
-        <Route path='/' component={Mock}/>
+        <Route path='/mock' component={Mock}/>
+        <Route path='/' component={Home}/>
       </Switch>
     </Router>
   </ChakraProvider>

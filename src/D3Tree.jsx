@@ -102,5 +102,5 @@ export default ({ graph }) => {
   }
   useEffect(generate, [graph])
 
-  return <svg ref={svg}/>
+  return <svg style={{ width: '100vw', height: '100vh' }} ref={svg}/>
 }

@@ -1,5 +1,5 @@
-import Step from './Step'
-import Watch from './Watch'
+import Step from '../NestedBoxes/Step'
+import Watch from '../Watch'
 import T0 from './Time/0'
 import T1 from './Time/1'
 

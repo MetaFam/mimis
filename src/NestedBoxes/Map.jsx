@@ -3,7 +3,7 @@ import {
   Table, TableCaption, Tbody, Tr, Td,
 } from '@chakra-ui/react'
 
-const Variable = loadable(() => import('./Variable'))
+const Variable = loadable(() => import('../Variable'))
 
 export default ({
   name, value, color,
@@ -11,7 +11,6 @@ export default ({
   ...props
 }) => (
   <Table bg={color} p={5}>
-    {console.info('PRP', propsFor)}
     <Tbody>
       {(Object.entries(value).map(([name, val], idx) => (
         <Tr key={idx} {...propsFor(name)}>
