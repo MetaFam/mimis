@@ -1,6 +1,6 @@
 import loadable from '@loadable/component'
 
-const Variable = loadable(() => import('./Variable'))
+const Variable = loadable(() => import('../Variable'))
 
 export default ({ ...props }) => (
   <Variable

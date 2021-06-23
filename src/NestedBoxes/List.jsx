@@ -6,7 +6,7 @@ const Variable = loadable(() => import('./Variable'))
 export default ({
   value, propsFor = () => ({ bg: 'transparent' })
 }) => (
-  <UnorderedList p={12} bg="orange">
+  <UnorderedList p={5} bg="orange">
     {(value.map((elem, index) => (
       <ListItem key={index} {...propsFor({ index })}>
         <Variable value={elem}/>

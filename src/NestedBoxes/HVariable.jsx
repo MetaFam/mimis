@@ -3,8 +3,8 @@ import {
   Flex, Heading, Text, Wrap,
 } from '@chakra-ui/react'
 
-const List = loadable(() => import('./List'))
-const Map = loadable(() => import('./Map'))
+const List = loadable(() => import('../List'))
+const Map = loadable(() => import('../Map'))
 
 export default ({
   children = null, name, value,
