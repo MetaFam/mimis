@@ -7,9 +7,8 @@ Mïmis is a filesystem built by processing doubly-linked lists of JSON-LD docume
 {
   '@context': 'http://schema.org',
   '@type': 'Book',
-  '@id': 'data://hash/sha256;base64,KN…k=',
+  '@id': 'ceramic://',
   sameAs: 'https://en.wikipedia.org/wiki/The_Catcher_in_the_Rye',
-  url: 'ipfs://Qm…?filetype=application/epub',
   name: 'The Catcher in the Rye',
   author: {
     '@type': 'Person',
@@ -27,7 +26,16 @@ Mïmis is a filesystem built by processing doubly-linked lists of JSON-LD docume
     result: { name: 'Finalist' },
     startTime: { startDate: '1952' },
     endTime: { startDate: '1952' },
-  }
+  },
+  workExample: {
+    url: 'ipfs://QmP5YccJGfxihHvkzux2CRtuE9J5RgQ3j9aCsjNPWzFdqZ?filetype=application/epub',
+    identifier: [
+      { name: 'ISBN 10', value: '0316769487' },
+      { name: 'ISBN 13', value: '9780316769488' },
+    },
+    publisher: 'Little, Brown and Company',
+    datePublished: '1991',
+  },
 }
 ```
 
