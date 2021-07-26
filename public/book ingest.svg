@@ -4,11 +4,14 @@
 <svg
    width="100%"
    height="100%"
-   viewBox="0 0 277.72559 314.12323"
+   viewBox="0 0 277.72559 325.03635"
    version="1.1"
    id="svg5"
    inkscape:version="1.1 (c4e8f9e, 2021-05-24)"
    sodipodi:docname="book ingest.svg"
+   inkscape:export-filename="/home/will/.../program/mimis/public/book ingest.png"
+   inkscape:export-xdpi="248.88"
+   inkscape:export-ydpi="248.88"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -23,9 +26,9 @@
      inkscape:pagecheckerboard="1"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="5.6568542"
-     inkscape:cx="205.94485"
-     inkscape:cy="152.82345"
+     inkscape:zoom="2.8284271"
+     inkscape:cx="48.436815"
+     inkscape:cy="160.69002"
      inkscape:window-width="3440"
      inkscape:window-height="1373"
      inkscape:window-x="0"
@@ -646,12 +649,68 @@
          style="fill:context-stroke;fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
          id="path13373-9-7-7-8-0" />
     </marker>
+    <marker
+       style="overflow:visible"
+       id="DotS-9"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="DotS"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(0.2,0,0,0.2,1.48,0.2)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="m -2.5,-1 c 0,2.76 -2.24,5 -5,5 -2.76,0 -5,-2.24 -5,-5 0,-2.76 2.24,-5 5,-5 2.76,0 5,2.24 5,5 z"
+         id="path13413-1" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow2Mend-5-77"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow2Mend"
+       inkscape:isstock="true">
+      <path
+         transform="scale(-0.6)"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+         id="path13373-9-11" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="DotS-5-5"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="DotS"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(0.2,0,0,0.2,1.48,0.2)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="m -2.5,-1 c 0,2.76 -2.24,5 -5,5 -2.76,0 -5,-2.24 -5,-5 0,-2.76 2.24,-5 5,-5 2.76,0 5,2.24 5,5 z"
+         id="path13413-9-9" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow2Mend-5-7-7"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow2Mend"
+       inkscape:isstock="true">
+      <path
+         transform="scale(-0.6)"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+         id="path13373-9-7-76" />
+    </marker>
   </defs>
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-2.8999297,138.12646)">
+     transform="translate(-2.8999297,149.03958)">
     <g
        id="g113502">
       <circle
@@ -755,7 +814,7 @@
            id="tspan16554"
            style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.264583"
            x="95.105064"
-           y="69.365898">of</tspan></text>
+           y="69.365898">is</tspan></text>
     </g>
     <path
        style="fill:#000000;fill-opacity:1;stroke:#fefefe;stroke-width:2.37732;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker13978-9);marker-end:url(#Arrow2Mend-7)"
@@ -975,28 +1034,28 @@
          ry="6.7450333" />
       <text
          xml:space="preserve"
-         style="font-size:16px;line-height:1.25;font-family:sans-serif;text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="font-size:16px;line-height:1.25;font-family:sans-serif;text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#161616;stroke-width:0.3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.609131"
          x="28.482878"
          y="-49.349094"
          id="text3292-0-6"><tspan
            sodipodi:role="line"
            id="tspan3290-9-4"
-           style="font-size:16px;text-align:start;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           style="font-size:16px;text-align:start;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:#161616;stroke-width:0.3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.609131"
            x="28.482878"
            y="-49.349094">Publisher</tspan></text>
       <text
          xml:space="preserve"
-         style="font-size:9px;line-height:1.25;font-family:sans-serif;text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         style="font-size:9px;line-height:1.25;font-family:sans-serif;text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:#161616;stroke-width:0.3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.609131"
          x="27.946638"
          y="-39.820839"
          id="text16556-73-6-6-6"><tspan
            sodipodi:role="line"
-           style="font-size:9px;text-align:start;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           style="font-size:9px;text-align:start;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:#161616;stroke-width:0.3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.609131"
            x="27.946638"
            y="-39.820839"
            id="tspan4963-5">•name: Little, Brown</tspan><tspan
            sodipodi:role="line"
-           style="font-size:9px;text-align:start;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           style="font-size:9px;text-align:start;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:#161616;stroke-width:0.3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.609131"
            x="27.946638"
            y="-28.570839"
            id="tspan107742">              and Company</tspan></text>
@@ -1072,6 +1131,9 @@
        id="path13344-7-6-8-1-0"
        sodipodi:nodetypes="cc" />
     <g
+       id="g113502-7"
+       transform="translate(77.595046,37.605071)" />
+    <g
        id="g113467">
       <rect
          style="fill:#c2000d;fill-opacity:1;fill-rule:evenodd;stroke:#000063;stroke-width:0.425715;stroke-linecap:round;stroke-linejoin:round"
@@ -1109,6 +1171,37 @@
            y="156.41628"
            id="tspan65839">              Book Award</tspan></text>
     </g>
+    <g
+       id="g113497"
+       transform="translate(6.596423,28.88365)">
+      <circle
+         style="fill:#ff0000;fill-rule:evenodd;stroke:#eeeeff;stroke-width:1.00157;stroke-miterlimit:4;stroke-dasharray:3.00472, 1.00157;stroke-dashoffset:0;stroke-opacity:1"
+         id="path96984-8"
+         cx="202.56476"
+         cy="65.919136"
+         r="11.61306" />
+      <text
+         xml:space="preserve"
+         style="font-size:12px;line-height:1.25;font-family:sans-serif;text-align:center;text-anchor:middle;stroke-width:0.264583"
+         x="202.42703"
+         y="70.392769"
+         id="text16556-7-5"><tspan
+           sodipodi:role="line"
+           id="tspan16554-6-0"
+           style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.264583"
+           x="202.42703"
+           y="70.392769">for</tspan></text>
+    </g>
+    <path
+       style="fill:none;stroke:#fefefe;stroke-width:2.75528;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#DotS-9);marker-end:url(#Arrow2Mend-5-77)"
+       d="m 196.90724,98.776237 20.85507,17.735133"
+       id="path13344-7-63"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#DotS-5-5);marker-end:url(#Arrow2Mend-5-7-7)"
+       d="M 196.90724,98.776237 216.4074,115.28652"
+       id="path13344-7-6-9"
+       sodipodi:nodetypes="cc" />
     <g
        id="g113459">
       <rect
@@ -1191,24 +1284,25 @@
            y="28.849157">•name: Fiction</tspan></text>
     </g>
     <g
-       id="g113497">
+       id="g113492-9"
+       transform="translate(-36.662635,-12.402097)">
       <circle
          style="fill:#ff0000;fill-rule:evenodd;stroke:#eeeeff;stroke-width:1.00157;stroke-miterlimit:4;stroke-dasharray:3.00472, 1.00157;stroke-dashoffset:0;stroke-opacity:1"
-         id="path96984-8"
-         cx="202.56476"
-         cy="65.919136"
-         r="11.61306" />
+         id="path96984-88-3"
+         cx="240.20264"
+         cy="74.632317"
+         r="10.238701" />
       <text
          xml:space="preserve"
          style="font-size:12px;line-height:1.25;font-family:sans-serif;text-align:center;text-anchor:middle;stroke-width:0.264583"
-         x="202.42703"
-         y="70.392769"
-         id="text16556-7-5"><tspan
+         x="239.75728"
+         y="79.105949"
+         id="text16556-7-5-4-90"><tspan
            sodipodi:role="line"
-           id="tspan16554-6-0"
+           id="tspan16554-6-0-8-8"
            style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.264583"
-           x="202.42703"
-           y="70.392769">for</tspan></text>
+           x="239.75728"
+           y="79.105949">of</tspan></text>
     </g>
     <path
        style="fill:none;stroke:#ffffff;stroke-width:2.75528;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#DotS-4);marker-end:url(#Arrow2Mend-5-1)"
@@ -1220,43 +1314,52 @@
        d="M 179.85618,79.679283 209.75245,36.975897"
        id="path13344-7-0-6"
        sodipodi:nodetypes="cc" />
-    <rect
-       style="fill:#0071f4;fill-opacity:1;fill-rule:evenodd;stroke:#000063;stroke-width:0.425715;stroke-linecap:round;stroke-linejoin:round"
-       id="rect868-7-9-5"
-       width="159.70894"
-       height="42.951584"
-       x="61.672882"
-       y="-137.9136"
-       ry="6.7450333" />
-    <text
-       xml:space="preserve"
-       style="font-size:16px;line-height:1.25;font-family:sans-serif;text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
-       x="64.881882"
-       y="-122.21455"
-       id="text3292-7-3-1"><tspan
-         sodipodi:role="line"
-         id="tspan3290-11-9-1"
-         style="font-size:16px;text-align:start;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
-         x="64.881882"
-         y="-122.21455">eBook</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-size:9px;line-height:1.25;font-family:sans-serif;text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
-       x="68.898903"
-       y="-111.68462"
-       id="text16556-73-8-0"><tspan
-         sodipodi:role="line"
-         id="tspan16554-65-8-8"
-         style="font-size:9px;text-align:start;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
-         x="68.898903"
-         y="-111.68462">•url: ipfs://QmP…qZ</tspan><tspan
-         sodipodi:role="line"
-         style="font-size:9px;text-align:start;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
-         x="68.898903"
-         y="-100.43462"
-         id="tspan95358">•cover: ipfs://QmP…qZ/cover.jpg</tspan></text>
     <g
-       id="g113492">
+       id="g34607">
+      <rect
+         style="fill:#0071f4;fill-opacity:1;fill-rule:evenodd;stroke:#000063;stroke-width:0.425715;stroke-linecap:round;stroke-linejoin:round"
+         id="rect868-7-9-5"
+         width="159.70894"
+         height="53.864697"
+         x="61.672882"
+         y="-148.82672"
+         ry="6.7450333" />
+      <text
+         xml:space="preserve"
+         style="font-size:16px;line-height:1.25;font-family:sans-serif;text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
+         x="64.881882"
+         y="-131.97061"
+         id="text3292-7-3-1"><tspan
+           sodipodi:role="line"
+           id="tspan3290-11-9-1"
+           style="font-size:16px;text-align:start;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
+           x="64.881882"
+           y="-131.97061">eBook</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-size:9px;line-height:1.25;font-family:sans-serif;text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
+         x="68.898903"
+         y="-121.44069"
+         id="text16556-73-8-0"><tspan
+           sodipodi:role="line"
+           id="tspan16554-65-8-8"
+           style="font-size:9px;text-align:start;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
+           x="68.898903"
+           y="-121.44069">•url: ipfs://QmP…qZ</tspan><tspan
+           sodipodi:role="line"
+           style="font-size:9px;text-align:start;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
+           x="68.898903"
+           y="-110.19069"
+           id="tspan95358">•cover: ipfs://QmP…qZ/cover.jpg</tspan><tspan
+           sodipodi:role="line"
+           style="font-size:9px;text-align:start;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
+           x="68.898903"
+           y="-98.940689"
+           id="tspan34417">•mimetype: application/epub</tspan></text>
+    </g>
+    <g
+       id="g113492"
+       transform="translate(19.004866,-0.45447386)">
       <circle
          style="fill:#ff0000;fill-rule:evenodd;stroke:#eeeeff;stroke-width:1.00157;stroke-miterlimit:4;stroke-dasharray:3.00472, 1.00157;stroke-dashoffset:0;stroke-opacity:1"
          id="path96984-88"
@@ -1266,23 +1369,23 @@
       <text
          xml:space="preserve"
          style="font-size:12px;line-height:1.25;font-family:sans-serif;text-align:center;text-anchor:middle;stroke-width:0.264583"
-         x="240.14693"
-         y="79.19091"
+         x="239.75728"
+         y="79.105949"
          id="text16556-7-5-4"><tspan
            sodipodi:role="line"
            id="tspan16554-6-0-8"
            style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.264583"
-           x="240.14693"
-           y="79.19091">in</tspan></text>
+           x="239.75728"
+           y="79.105949">of</tspan></text>
     </g>
     <path
        style="fill:none;stroke:#fdfdfd;stroke-width:2.75528;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#DotS-4-1);marker-end:url(#Arrow2Mend-5-1-5)"
-       d="m 233.689,33.61747 -9.42444,81.90815"
+       d="m 254.17542,33.61747 -9.42444,81.90815"
        id="path13344-7-0-8"
        sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#DotS-4-1-2);marker-end:url(#Arrow2Mend-5-1-5-3)"
-       d="m 233.689,33.61747 -9.1213,79.85515"
+       d="m 254.17542,33.61747 -9.1213,79.85515"
        id="path13344-7-0-8-0"
        sodipodi:nodetypes="cc" />
     <text

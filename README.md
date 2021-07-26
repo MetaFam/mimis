@@ -20,19 +20,19 @@ Mïmis is a filesystem built by processing doubly-linked lists of JSON-LD docume
   participant: {
     '@type': 'Action',
     object: {
-      '@id': '∅/award/National Book Award/Fiction/',
+      '@id': 'tip://∅/award/National Book Award/Fiction/',
       name: 'National Book Award for Fiction',
     },
     result: { name: 'Finalist' },
-    startTime: { startDate: '1952' },
-    endTime: { startDate: '1952' },
+    startTime: '1952',
+    endTime: '1952',
   },
   workExample: {
     url: 'ipfs://QmP5YccJGfxihHvkzux2CRtuE9J5RgQ3j9aCsjNPWzFdqZ?filetype=application/epub',
     identifier: [
       { name: 'ISBN 10', value: '0316769487' },
       { name: 'ISBN 13', value: '9780316769488' },
-    },
+    ],
     publisher: 'Little, Brown and Company',
     datePublished: '1991',
   },
