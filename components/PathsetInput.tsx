@@ -1,8 +1,14 @@
-import { Box, Input, ListItem, UnorderedList, Wrap, WrapItem } from '@chakra-ui/react'
-import React, { ChangeEvent, KeyboardEvent, useState } from 'react'
-import type { Path, AddPathAtomProps, PathsetPosition, PathsetAtomPosition } from '../types'
-import { AddPathProps, PathsetPosition } from '../types';
-
+import {
+  Box, Button, Input, ListItem, UnorderedList,
+  Wrap, WrapItem,
+} from '@chakra-ui/react'
+import React, {
+  ChangeEvent, KeyboardEvent, useState,
+} from 'react'
+import type {
+  Path, AddPathAtomProps, AddPathProps,
+  PathsetPosition, PathsetAtomPosition,
+} from '../types'
 
 export const PathsetInput: React.FC<{
   onSubmit: (paths: Array<Path>) => void
@@ -89,7 +95,7 @@ export const PathsetInput: React.FC<{
           setPaths((paths) => addPathAtom({ paths, pidx, aidx }))
         }
         setFocused({ pidx, aidx: aidx + 1 })
-      } else if(evt.key === 'ArrowLeft' && evt.ctrlKey) {
+      } else if(evt.key === 'ArrowLeft' && evt.ctrlKey && evt.shiftKey) {
         if(aidx <= 0) {
           if(pidx > 0) {
             setFocused({ pidx: pidx - 1, aidx: paths[pidx - 1].length - 1 })
@@ -101,13 +107,25 @@ export const PathsetInput: React.FC<{
         } else {
           setFocused({ pidx, aidx: aidx - 1 })
         }
-      } else if(evt.key === 'ArrowRight' && evt.ctrlKey) {
+      } else if(evt.key === 'ArrowRight' && evt.ctrlKey && evt.shiftKey) {
         if(aidx >= paths[pidx].length - 1) {
           if(pidx < paths.length) {
             setFocused({ pidx: pidx + 1, aidx: 0 })
           }
         } else {
           setFocused({ pidx, aidx: aidx + 1 })
+        }
+      } else if(evt.key === 'ArrowDown' && evt.ctrlKey && evt.shiftKey) {
+        if(pidx < paths.length - 1) {
+          setFocused({
+            pidx: pidx + 1,
+            aidx: Math.min(aidx, paths[pidx + 1].length - 1) })
+        }
+      } else if(evt.key === 'ArrowUp' && evt.ctrlKey && evt.shiftKey) {
+        if(pidx > 0) {
+          setFocused({
+            pidx: pidx - 1,
+            aidx: Math.min(aidx, paths[pidx - 1].length - 1) })
         }
       }
     }
@@ -183,6 +201,17 @@ export const PathsetInput: React.FC<{
                           changed(target, pidx, aidx)
                         }}
                       />
+                      <Button
+                        position="relative"
+                        px={2}
+                        lineHeight={0.5}
+                        left={-10}
+                        opacity={0.25}
+                        _hover={{ opacity: 1}}
+                        onClick={() => {
+                          setPaths((paths) => removePathAtom({ paths, pidx, aidx }))
+                        }}
+                      >−</Button>
                       {aidx < path.length - 1 && (
                         <Box ml={10}>/</Box>
                       )}

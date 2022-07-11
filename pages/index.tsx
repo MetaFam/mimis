@@ -1,7 +1,9 @@
-import { chakra, Container, Heading } from '@chakra-ui/react'
+import {
+  chakra, Container, Heading, Link as ChakraLink,
+} from '@chakra-ui/react'
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import Link from 'next/link'
+import NextLink from 'next/link'
 import type { Path } from '../types'
 import { PathsetInput } from '../components'
 
@@ -31,8 +33,19 @@ const Home: NextPage = () => {
         />
       </chakra.main>
 
-      <chakra.footer>
-        Developed July 2022 for <Link href="https://fs.ethglobal.com">HackFS</Link>.
+      <chakra.footer
+        position="fixed"
+        bottom={4}
+        width="100%"
+        textAlign="center"
+      >
+        Developed July 2022 for
+        <ChakraLink
+          ml={3}
+          borderBottom="1px dashed"
+          _hover={{ borderBottom: '1px solid' }}
+          href="https://fs.ethglobal.com"
+        >HackFS</ChakraLink>.
       </chakra.footer>
     </Container>
   )
