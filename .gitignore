@@ -33,3 +33,7 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+.yarn/cache/
+.yarn/unplugged/
+.yarn/install-state.gz
+.yarn/plugins/

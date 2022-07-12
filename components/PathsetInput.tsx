@@ -211,9 +211,10 @@ export const PathsetInput: React.FC<{
                         onClick={() => {
                           setPaths((paths) => removePathAtom({ paths, pidx, aidx }))
                         }}
+                        bg="red" color="white"
                       >−</Button>
                       {aidx < path.length - 1 && (
-                        <Box ml={10}>/</Box>
+                        <Box ml={-5}>/</Box>
                       )}
                     </WrapItem>
                   )
