@@ -8,23 +8,29 @@ import type {
 } from 'next'
 import { providers } from 'ethers'
 
+const { JsonRpcProvider: JSONRPCProvider } = (
+  providers
+)
+
 const handler = async (
   req: NextApiRequest,
   res: NextApiResponse<string>,
 ) => {
   try {
-    const { ens, message: input, signature } = req.body
+    const { message: input, signature } = req.body
     if (!input) {
-      res.status(422).json({ message: 'Expected message object in body.' })
+      res.status(422).json({
+        message: 'Expected `message` in body.'
+      })
       return
     }
 
     const message = new SIWEMessage(input)
 
-    const ensProvider = new providers.JsonRpcProvider(
+    const mainnetProvider = new JSONRPCProvider(
       {
         allowGzip: true,
-        url: process.env.ENS_PROVIDER_URL,
+        url: process.env.MAINNET_PROVIDER_URL,
         headers: {
           Accept: '*/*',
           // Origin: `http://localhost:${PORT}`,
@@ -35,54 +41,93 @@ const handler = async (
       1,
     )
 
-    await infuraProvider.ready
+    await ensProvider.ready
 
     const fields: SIWEMessage = (
-      await message.validate(signature, ensProvider)
+      await message.validate(
+        signature, mainnetProvider
+      )
     )
 
-    if (fields.nonce !== req.session.nonce) {
+    if(fields.nonce !== req.session.nonce) {
+      await req.session.destroy()
+
       res.status(422).json({
-        message: 'Invalid nonce.',
+        message: (
+          'Invalid nonce. Session Destroyed.'
+          + ' Rerequest `/nonce`.'
+        ),
       })
       return
     }
 
-    req.session.siwe = fields
-    req.session.ens = ens
-    req.session.nonce = null
-    req.session.cookie.expires = (
-      new Date(fields.expirationTime)
-    )
-    await req.session.save()
-    
-    res.status(200)
-    .json({
-      address: fields.address,
-      ens: req.session.ens,
-            })
-            .end(),
-    );
-} catch (e) {
-    req.session.siwe = null;
-    req.session.nonce = null;
-    req.session.ens = null;
-    console.error(e);
-    switch (e) {
-        case ErrorTypes.EXPIRED_MESSAGE: {
-            req.session.save(() => res.status(440).json({ message: e.message }));
-            break;
-        }
-        case ErrorTypes.INVALID_SIGNATURE: {
-            req.session.save(() => res.status(422).json({ message: e.message }));
-            break;
-        }
-        default: {
-            req.session.save(() => res.status(500).json({ message: e.message }));
-            break;
-        }
+    const session = {
+      siwe: fields,
+      nonce: null
+      cookie: { expires: (
+        new Date(fields.expirationTime)
+      ) }
     }
-}
+    const ens = await ensProvider.lookupAddress(
+      fields.address
+    )
+    if(ens) {
+      Object.assign(session, { ens })
+
+      const ensResolver = (
+        mainnetProvider.getResolver(ens)
+      )
+      const avatar = await ensResolver.getAvatar()
+      console.debug({ avatar })
+      if(avatar) {
+        session.avatar = avatar.url
+      }
+      const text = await ensResolver.getText('𝔐𝔦̈𝔪𝔦𝔰')
+      if(text) {
+        session.𝔐𝔦̈𝔪𝔦𝔰 = text
+      }
+    }
+
+    Object.assign(req.session, session)
+    await req.session.save()
+ 
+    const output = {
+      address: fields.address,
+      ens,
+    }
+
+    console.debug({
+      session, 'req.session': req.session, fields, output
+    })
+
+    res.status(200).json(output)
+  } catch(err) {
+    const { message } = err
+
+    Object.assign(req.session, {
+      siwe: null,
+      nonce: null,
+      ens: null,
+    })
+    await req.session.save()
+
+    console.error({ err })
+
+    switch(err) {
+      case ErrorTypes.EXPIRED_MESSAGE: {
+        res.status(440).json({ message })
+        break
+      }
+      case ErrorTypes.INVALID_SIGNATURE: {
+        res.status(422).json({ message })
+        break
+      }
+      default: {
+        res.status(500).json({ message })
+        break
+      }
+    }
+  }
 }
 
 export default withIronSessionApiRoute(
