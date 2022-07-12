@@ -1,5 +1,5 @@
 import { sessionOpts } from '../../config'
-import { SiweMessage as SIWEMessage } from 'siwe'
+import { ErrorTypes, SiweMessage as SIWEMessage } from 'siwe'
 import {
   withIronSessionApiRoute
 } from 'iron-session/next'
@@ -7,7 +7,8 @@ import type {
   NextApiRequest, NextApiResponse,
 } from 'next'
 import { providers } from 'ethers'
-import { APIError } from '../../types'
+import { APIError, LoginResponse, Maybe } from '../../types'
+import { IronSession } from 'iron-session'
 
 const { JsonRpcProvider: JSONRPCProvider } = (
   providers
@@ -15,8 +16,13 @@ const { JsonRpcProvider: JSONRPCProvider } = (
 
 const handler = async (
   req: NextApiRequest,
-  res: NextApiResponse<string | APIError>,
+  res: NextApiResponse<LoginResponse | APIError>,
 ) => {
+  const reqSesh = req.session as IronSession & {
+    nonce: string
+    expirationTime: number
+  }
+
   try {
     const { message: input, signature } = req.body
     if (!input) {
@@ -53,14 +59,14 @@ const handler = async (
 
     await mainnetProvider.ready
 
-    const fields: SIWEMessage = (
+    const siwe: SIWEMessage = (
       await message.validate(
         signature, mainnetProvider
       )
     )
 
-    if(fields.nonce !== req.session.nonce) {
-      await req.session.destroy()
+    if(siwe.nonce !== reqSesh.nonce) {
+      await reqSesh.destroy()
 
       res.status(422).json({
         message: (
@@ -71,55 +77,65 @@ const handler = async (
       return
     }
 
-    const session = {
-      siwe: fields,
+    const session: {
+      siwe: SIWEMessage,
+      nonce: Maybe<string>,
+      cookie: { expires: Date },
+      avatar?: string,
+      '𝔐𝔦̈𝔪𝔦𝔰'?: string
+    } = {
+      siwe,
       nonce: null,
-      cookie: { expires: (
-        new Date(fields.expirationTime)
-      ) },
+      cookie: {
+        expires: (
+          new Date(Number(siwe.expirationTime))
+        )
+      },
     }
-    const ens = await ensProvider.lookupAddress(
-      fields.address
+    const ens = await mainnetProvider.lookupAddress(
+      siwe.address
     )
     if(ens) {
       Object.assign(session, { ens })
 
       const ensResolver = (
-        mainnetProvider.getResolver(ens)
+        await mainnetProvider.getResolver(ens)
       )
-      const avatar = await ensResolver.getAvatar()
-      console.debug({ avatar })
-      if(avatar) {
-        session.avatar = avatar.url
-      }
-      const text = await ensResolver.getText('𝔐𝔦̈𝔪𝔦𝔰')
-      if(text) {
-        session.𝔐𝔦̈𝔪𝔦𝔰 = text
+      if(ensResolver) {
+        const avatar = await ensResolver.getAvatar()
+        console.debug({ avatar })
+        if(avatar) {
+          session.avatar = avatar.url
+        }
+        const text = await ensResolver.getText('𝔐𝔦̈𝔪𝔦𝔰')
+        if(text) {
+          session['𝔐𝔦̈𝔪𝔦𝔰'] = text
+        }
       }
     }
 
-    Object.assign(req.session, session)
-    await req.session.save()
+    Object.assign(reqSesh, session)
+    await reqSesh.save()
  
     const output = {
-      address: fields.address,
+      address: siwe.address,
       ens,
     }
 
     console.debug({
-      session, 'req.session': req.session, fields, output
+      session, reqSesh, siwe, output
     })
 
     res.status(200).json(output)
   } catch(err) {
-    const { message } = err
+    const { message } = err as Error
 
-    Object.assign(req.session, {
+    Object.assign(reqSesh, {
       siwe: null,
       nonce: null,
       ens: null,
     })
-    await req.session.save()
+    await reqSesh.save()
 
     console.error({ err })
 
