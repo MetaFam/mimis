@@ -2,6 +2,10 @@ export type Maybe<T> = T | null
 
 export type Path = Array<string>
 
+export type APIError = {
+  message: string
+}
+
 export type LoginResponse = {
   ens: string
   address: string
@@ -22,4 +26,4 @@ export type AddPathAtomProps = {
 } & PathsetAtomPosition
 export type AddPathProps = {
   path?: Path
-} & PathsetPosition
+} & PathsetAtomPosition

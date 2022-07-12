@@ -7,6 +7,7 @@ import type {
   NextApiRequest, NextApiResponse,
 } from 'next'
 import { providers } from 'ethers'
+import { APIError } from '../../types'
 
 const { JsonRpcProvider: JSONRPCProvider } = (
   providers
@@ -14,7 +15,7 @@ const { JsonRpcProvider: JSONRPCProvider } = (
 
 const handler = async (
   req: NextApiRequest,
-  res: NextApiResponse<string>,
+  res: NextApiResponse<string | APIError>,
 ) => {
   try {
     const { message: input, signature } = req.body
@@ -26,6 +27,15 @@ const handler = async (
     }
 
     const message = new SIWEMessage(input)
+
+    if(!process.env.MAINNET_PROVIDER_URL) {
+      res.status(500).json({
+        message: (
+          'Missing `$MAINNET_PROVIDER_URL`. Configure server.'
+        ),
+      })
+      return
+    }
 
     const mainnetProvider = new JSONRPCProvider(
       {
@@ -41,7 +51,7 @@ const handler = async (
       1,
     )
 
-    await ensProvider.ready
+    await mainnetProvider.ready
 
     const fields: SIWEMessage = (
       await message.validate(
@@ -63,10 +73,10 @@ const handler = async (
 
     const session = {
       siwe: fields,
-      nonce: null
+      nonce: null,
       cookie: { expires: (
         new Date(fields.expirationTime)
-      ) }
+      ) },
     }
     const ens = await ensProvider.lookupAddress(
       fields.address
