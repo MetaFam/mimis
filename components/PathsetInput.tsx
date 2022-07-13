@@ -7,7 +7,8 @@ import React, {
 } from 'react'
 import type {
   Path, AddPathAtomProps, AddPathProps,
-  PathsetPosition, PathsetAtomPosition,
+  PathsetAtomPosition,
+  RemovePathAtomProps, RemovePathProps,
 } from '../types'
 
 export const PathsetInput: React.FC<{
@@ -17,24 +18,39 @@ export const PathsetInput: React.FC<{
     const [paths, setPaths] = useState<Array<Path>>([['']])
     const [focused, setFocused] = useState({ pidx: 0, aidx: 0 })
 
-    const addPathAtom = ({ paths, atom = '', pidx, aidx }: AddPathAtomProps) => ([
-      ...paths.slice(0, pidx),
-      [
-        ...paths[pidx].slice(0, aidx + 1),
-        atom,
-        ...paths[pidx].slice(aidx + 1),
-      ],
-      ...paths.slice(pidx + 1),
-    ])
+    const removeAtom = ({ aidx, pidx }: PathsetAtomPosition) => {
+      setPaths((paths) => {
+        const path = paths[pidx]
+        if(path.length <= 1) {
+          return removePath({ paths, pidx })
+        } else {
+          return removePathAtom({ paths, pidx, aidx })
+        }
+      })
+    }
 
-    const removePathAtom = ({ paths, pidx, aidx }: PathsetAtomPosition) => ([
-      ...paths.slice(0, pidx),
-      [
-        ...paths[pidx].slice(0, aidx),
-        ...paths[pidx].slice(aidx + 1),
-      ],
-      ...paths.slice(pidx + 1),
-    ])
+    const addPathAtom = (
+      ({ paths, atom = '', pidx, aidx }: AddPathAtomProps) => ([
+        ...paths.slice(0, pidx),
+        [
+          ...paths[pidx].slice(0, aidx + 1),
+          atom,
+          ...paths[pidx].slice(aidx + 1),
+        ],
+        ...paths.slice(pidx + 1),
+      ])
+    )
+    
+    const removePathAtom = (
+      ({ paths, pidx, aidx }: RemovePathAtomProps) => ([
+        ...paths.slice(0, pidx),
+        [
+          ...paths[pidx].slice(0, aidx),
+          ...paths[pidx].slice(aidx + 1),
+        ],
+        ...paths.slice(pidx + 1),
+      ])
+    )
 
     const addPath = ({ paths, path = [''], pidx }: AddPathProps) => ([
       ...paths.slice(0, pidx + 1),
@@ -42,7 +58,7 @@ export const PathsetInput: React.FC<{
       ...paths.slice(pidx + 1),
     ])
 
-    const removePath = ({ paths, pidx }: PathsetPosition) => ([
+    const removePath = ({ paths, pidx }: RemovePathProps) => ([
       ...paths.slice(0, pidx),
       ...paths.slice(pidx + 1),
     ])
@@ -62,7 +78,7 @@ export const PathsetInput: React.FC<{
         setFocused({ pidx, aidx: aidx + 1 })
       } else if(evt.key === 'Enter') {
         evt.preventDefault()
-        setPaths((paths) => addPath({ paths, pidx, aidx }))
+        setPaths((paths) => addPath({ paths, pidx }))
         setFocused({ pidx: pidx + 1, aidx: 0 })
       } else if(evt.key === 'Backspace' && evt.ctrlKey) {
         evt.preventDefault()
@@ -147,6 +163,7 @@ export const PathsetInput: React.FC<{
         ],
         ...paths.slice(pidx + 1),
       ]))
+      setFocused({ pidx, aidx })
     }
 
     return (
@@ -171,15 +188,25 @@ export const PathsetInput: React.FC<{
                     focused.pidx === pidx
                     && focused.aidx === aidx
                   )
+                  const multiple = (
+                    paths.length > 1 || paths[0].length > 1
+                  )
                   return (
                     <WrapItem
                       key={index}
-                      m={0}
+                      m="auto" p={0}
+                      sx={{
+                        'button': { opacity: 0.3 },
+                        '&:hover button': { opacity: 1 },
+                      }}
                     >
                       <Input
                         value={atom}
                         textAlign="center"
-                        w="7em" m={0}
+                        w="7em" m={0} p="0 0.25rem"
+                        height="auto"
+                        bg="#FFFF0066"
+                        borderColor="#00000066"
                         autoFocus={focus}
                         id={`atom-${index}`}
                         _focus={{ bg: '#0000FF33' }}
@@ -201,20 +228,22 @@ export const PathsetInput: React.FC<{
                           changed(target, pidx, aidx)
                         }}
                       />
-                      <Button
-                        position="relative"
-                        px={2}
-                        lineHeight={0.5}
-                        left={-10}
-                        opacity={0.25}
-                        _hover={{ opacity: 1}}
-                        onClick={() => {
-                          setPaths((paths) => removePathAtom({ paths, pidx, aidx }))
-                        }}
-                        bg="red" color="white"
-                      >−</Button>
+                      {multiple && (
+                        <Button
+                          position="relative"
+                          p="0.2rem 0.1rem"
+                          h="auto" w="auto" minW="auto"
+                          lineHeight={0.5}
+                          left={-2}
+                          _hover={{ opacity: 1}}
+                          onClick={() => {
+                            removeAtom({ aidx, pidx })
+                          }}
+                          bg="red" color="white"
+                        >−</Button>
+                      )}
                       {aidx < path.length - 1 && (
-                        <Box ml={-5}>/</Box>
+                        <Box ml={-1}>/</Box>
                       )}
                     </WrapItem>
                   )

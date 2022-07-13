@@ -49,7 +49,6 @@ const handler = async (
         url: process.env.MAINNET_PROVIDER_URL,
         headers: {
           Accept: '*/*',
-          // Origin: `http://localhost:${PORT}`,
           'Accept-Encoding': 'gzip, deflate, br',
           'Content-Type': 'application/json',
         },
@@ -71,6 +70,7 @@ const handler = async (
       res.status(422).json({
         message: (
           'Invalid nonce. Session Destroyed.'
+          + ` Got ${siwe.nonce}; wanted ${reqSesh.nonce}.`
           + ' Rerequest `/nonce`.'
         ),
       })
@@ -126,7 +126,7 @@ const handler = async (
       session, reqSesh, siwe, output
     })
 
-    res.status(200).json(output)
+    res.status(201).json(output)
   } catch(err) {
     const { message } = err as Error
 

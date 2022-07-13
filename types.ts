@@ -19,9 +19,13 @@ export type LoginResponse = {
 export type MeResponse = {
   ens?: Maybe<string>
   avatar?: Maybe<string>
-  account: string
-  siwe?: typeof SIWEMessage
+  address: string
+  siwe?: SIWEMessage
   expirationTime?: number
+}
+
+export type LogoutResponse = {
+  success: boolean
 }
 
 export type NonceResponse = {
@@ -31,16 +35,25 @@ export type NonceResponse = {
 // Used by PathsetInput to track the active
 // path atom and specify its movement through
 // the the list of lists.
+export type Pathset = Array<Path>
+export type PathsetArg = {
+  paths: Pathset
+}
 export type PathsetPosition = {
-  paths: Array<Path>
   pidx: number
 }
 export type PathsetAtomPosition = {
   aidx: number
 } & PathsetPosition
+export type RemovePathAtomProps = (
+  PathsetArg & PathsetAtomPosition
+)
 export type AddPathAtomProps = {
-  atom?: string
-} & PathsetAtomPosition
+    atom?: string
+} & RemovePathAtomProps
+export type RemovePathProps = (
+  PathsetArg & PathsetPosition
+)
 export type AddPathProps = {
-  path?: Path
-} & PathsetAtomPosition
+    path?: Path
+} & RemovePathProps

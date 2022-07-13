@@ -21,7 +21,7 @@ const handler = async (
   if(!process.env.SESSION_PASSWORD) {
     res.status(500)
     .send({
-      message: '$SESSION_PASSWORD not configured.'
+      message: '`$SESSION_PASSWORD` not configured.'
     })
   } else {
     reqSesh.nonce = generateNonce()
