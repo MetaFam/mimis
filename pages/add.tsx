@@ -10,7 +10,7 @@ import { PathsetInput } from '../components'
 import { LoginButton } from '../components/LoginButton'
 import { PermaOptions } from '../components/PermaOptions'
 
-const Home: NextPage = () => {
+const Add: NextPage = () => {
   const submit = (paths: Array<Path>) => {
     console.info({ paths })
   }
@@ -71,4 +71,4 @@ const Home: NextPage = () => {
   )
 }
 
-export default Home
+export default Add

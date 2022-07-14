@@ -16,6 +16,7 @@ declare global {
 export const useSIWE = () => {
   const [address, setAddress] = useState<Maybe<string>>(null) 
   const [name, setName] = useState<Maybe<string>>(null) 
+  const [status, setStatus] = useState<Maybe<string>>(null) 
   const [connected, setConnected] = (
     useState(false)
   )
@@ -55,47 +56,58 @@ export const useSIWE = () => {
   const connect = async () => {
     if(!provider) return
 
-    await provider.send('eth_requestAccounts', [])
+    try {
+      await provider.send('eth_requestAccounts', [])
+      const signer = provider.getSigner()
+      const address = await signer.getAddress()
 
-    const statement = 'Login to Mimis'
+      const statement = 'Login to Mimis'
 
-    const nonceRes = await fetch(`/api/nonce`, {
-      credentials: 'same-origin',
-    })
-    const nonce = await nonceRes.text()
+      setStatus('Getting nonce…')
 
-    const signer = provider.getSigner()
-    const address = await signer.getAddress()
+      const nonceRes = await fetch(`/api/nonce`, {
+        credentials: 'same-origin',
+      })
+      const nonce = await nonceRes.text()
 
-    const messageBase = new SIWEMessage({
-        domain: host ?? 'default',
-        address,
-        statement,
-        uri: origin ?? 'example://default',
-        version: '1',
-        chainId: 1,
-        nonce,
-    })
-    const message = messageBase.prepareMessage()
+      setStatus('Building message…')
 
-    const signature = await signer.signMessage(message)
+      const messageBase = new SIWEMessage({
+          domain: host ?? 'default',
+          address,
+          statement,
+          uri: origin ?? 'example://default',
+          version: '1',
+          chainId: 1,
+          nonce,
+      })
+      const message = messageBase.prepareMessage()
 
-    const loginRes = await fetch('/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ message, signature }),
-      credentials: 'same-origin',
-    })
-    const auth = await loginRes.json()
-    console.info({ auth })
-    const { ens: name } = auth as MeResponse
+      setStatus('Signing message…')
 
-    setConnected(true)
-    setName(name ?? null)
-    setAddress(address)
+      const signature = await signer.signMessage(message)
 
+      setStatus('Logging in…')
+
+      const loginRes = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message, signature }),
+        credentials: 'same-origin',
+      })
+      const auth = await loginRes.json()
+      console.info({ auth })
+      const { ens: name } = auth as MeResponse
+
+      setConnected(true)
+      setName(name ?? null)
+      setAddress(address)
+    } finally {
+      setStatus(null)
+    }
+    
     console.info({ name, address })
   }
  

@@ -14,21 +14,26 @@ const handler = async (
   req: NextApiRequest,
   res: NextApiResponse<string | APIError>,
 ) => {
-  const reqSesh = (
-    req.session as IronSession & NonceResponse
-  )
+  try {
+    const reqSesh = (
+      req.session as IronSession & NonceResponse
+    )
 
-  if(!process.env.SESSION_PASSWORD) {
+    if(!process.env.SESSION_PASSWORD) {
+      res.status(500)
+      .send({
+        message: '`$SESSION_PASSWORD` not configured.'
+      })
+    } else {
+      reqSesh.nonce = generateNonce()
+      await reqSesh.save()
+
+      res.status(200)
+      .send(reqSesh.nonce)
+    }
+  } catch(err) {
     res.status(500)
-    .send({
-      message: '`$SESSION_PASSWORD` not configured.'
-    })
-  } else {
-    reqSesh.nonce = generateNonce()
-    await reqSesh.save()
-
-    res.status(200)
-    .send(reqSesh.nonce)
+    .send({ message: (err as Error).message })
   }
 }
 
