@@ -40,7 +40,7 @@ export const PathsetInput: React.FC<{
         ...paths.slice(pidx + 1),
       ])
     )
-    
+
     const removePathAtom = (
       ({ paths, pidx, aidx }: RemovePathAtomProps) => ([
         ...paths.slice(0, pidx),
@@ -105,7 +105,10 @@ export const PathsetInput: React.FC<{
           setPaths((paths) => addPathAtom({ paths, pidx, aidx: -1 }))
         }
         setFocused({ pidx, aidx: aidx - 1 })
-      } else if(evt.key === 'Tab') {
+      } else if(
+        evt.key === 'Tab'
+        || (evt.key === ' ' && !evt.ctrlKey)
+      ) {
         evt.preventDefault()
         if(aidx >= paths[pidx].length - 1) {
           setPaths((paths) => addPathAtom({ paths, pidx, aidx }))
@@ -143,7 +146,39 @@ export const PathsetInput: React.FC<{
             pidx: pidx - 1,
             aidx: Math.min(aidx, paths[pidx - 1].length - 1) })
         }
+      } else if(evt.key === ' ' && evt.ctrlKey) {
+        const element = evt.target as HTMLInputElement
+        setText({
+          element,
+          text: `${element.value} `,
+          pidx,
+          aidx,
+        })
       }
+    }
+
+    const setText = (
+      { element, text, pidx, aidx}:
+      {
+        element: HTMLElement
+        text: string
+        pidx: number
+        aidx: number
+      }
+    ) => {
+      element.style.width = '0'
+      element.style.width = `min(30vw, ${element.scrollWidth + 4}px)`
+
+      setPaths((paths) => ([
+        ...paths.slice(0, pidx),
+        [
+          ...paths[pidx].slice(0, aidx),
+          text,
+          ...paths[pidx].slice(aidx + 1),
+        ],
+        ...paths.slice(pidx + 1),
+      ]))
+      setFocused({ pidx, aidx })
     }
 
     const changed = (
@@ -151,19 +186,12 @@ export const PathsetInput: React.FC<{
       pidx: number,
       aidx: number,
     ) => {
-      target.style.width = '0'
-      target.style.width = `min(30vw, ${target.scrollWidth + 4}px)`
-
-      setPaths((paths) => ([
-        ...paths.slice(0, pidx),
-        [
-          ...paths[pidx].slice(0, aidx),
-          target.value,
-          ...paths[pidx].slice(aidx + 1),
-        ],
-        ...paths.slice(pidx + 1),
-      ]))
-      setFocused({ pidx, aidx })
+      setText({
+        element: target,
+        text: target.value,
+        pidx,
+        aidx,
+      })
     }
 
     return (
