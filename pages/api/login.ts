@@ -98,20 +98,16 @@ const handler = async (
     if(ens) {
       Object.assign(session, { ens })
 
-      const ensResolver = (
-        await mainnetProvider.getResolver(ens)
-      )
-      if(ensResolver) {
-        const avatar = await ensResolver.getAvatar()
-        console.debug({ avatar })
-        if(avatar) {
-          session.avatar = avatar.url
-        }
-        const text = await ensResolver.getText('𝔐𝔦̈𝔪𝔦𝔰')
-        if(text) {
-          session['𝔐𝔦̈𝔪𝔦𝔰'] = text
-        }
-      }
+      // const ensResolver = (
+      //   await mainnetProvider.getResolver(ens)
+      // )
+      // if(ensResolver) {
+      //   const avatar = await ensResolver.getAvatar()
+      //   console.debug({ avatar })
+      //   if(avatar) {
+      //     session.avatar = avatar.url
+      //   }
+      // }
     }
 
     Object.assign(reqSesh, session)

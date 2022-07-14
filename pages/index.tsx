@@ -1,4 +1,5 @@
 import {
+  Box,
   chakra, Container, Flex, Heading, Image, Link as ChakraLink,
 } from '@chakra-ui/react'
 import type { NextPage } from 'next'
@@ -14,7 +15,7 @@ const Home: NextPage = () => {
   }
 
   return (
-    <Container>
+    <Box>
       <Head>
         <title>Forest</title>
         <meta
@@ -49,19 +50,19 @@ const Home: NextPage = () => {
 
       <chakra.footer
         position="fixed"
-        bottom={4}
-        width="100%"
+        bottom={0}
+        w="full"
         textAlign="center"
       >
         Developed July 2022 for
         <ChakraLink
-          ml={3}
+          ml={1}
           borderBottom="1px dashed"
           _hover={{ borderBottom: '1px solid' }}
           href="https://fs.ethglobal.com"
         >HackFS</ChakraLink>.
       </chakra.footer>
-    </Container>
+    </Box>
   )
 }
 
