@@ -1,5 +1,5 @@
 import {
-  Box, Button, Input, ListItem, UnorderedList,
+  Box, Button, Input, ListItem, ListProps, UnorderedList,
   Wrap, WrapItem,
 } from '@chakra-ui/react'
 import React, {
@@ -12,9 +12,9 @@ import type {
 } from '../types'
 
 export const PathsetInput: React.FC<{
-  onSubmit: (paths: Array<Path>) => void
-}> = (
-  ({ onSubmit }) => {
+  onSubmit?: (paths: Array<Path>) => void
+} & ListProps> = (
+  ({ onSubmit, ...props }) => {
     const [paths, setPaths] = useState<Array<Path>>([['']])
     const [focused, setFocused] = useState({ pidx: 0, aidx: 0 })
 
@@ -64,7 +64,7 @@ export const PathsetInput: React.FC<{
     ])
 
     const submit = () => {
-      onSubmit(paths)
+      onSubmit?.(paths)
     }
 
     const keydown = (
@@ -195,92 +195,87 @@ export const PathsetInput: React.FC<{
     }
 
     return (
-      <Box
-        as="form"
-        onSubmit={submit}
-      >
-        <UnorderedList>
-          {paths.map((path, pidx) => (
-            <ListItem key={pidx}>
-              <Wrap>
-                {path.map((atom, aidx) => {
-                  const index = (
-                    paths
-                    .slice(0, pidx)
-                    .map((pth) => pth.length)
-                    .reduce((acc, val) => acc = val, 0)
-                    + 1
-                    + aidx + 1
-                  )
-                  const focus = (
-                    focused.pidx === pidx
-                    && focused.aidx === aidx
-                  )
-                  const multiple = (
-                    paths.length > 1 || paths[0].length > 1
-                  )
-                  return (
-                    <WrapItem
-                      key={index}
-                      m="auto" p={0}
-                      sx={{
-                        'button': { opacity: 0.3 },
-                        '&:hover button': { opacity: 1 },
-                      }}
-                    >
-                      <Input
-                        value={atom}
-                        textAlign="center"
-                        w="7em" m={0} p="0 0.25rem"
-                        height="auto"
-                        bg="#FFFF0066"
-                        borderColor="#00000066"
-                        autoFocus={focus}
-                        id={`atom-${index}`}
-                        _focus={{ bg: '#0000FF33' }}
-                        ref={(ref: HTMLInputElement) => {
-                          if(ref) {
-                            if(focus) {
-                              setTimeout(() => ref.focus(), 0)
-                            }
-                            ref.style.width = '0'
-                            ref.style.width = (
-                              `max(2em, min(30vw, ${ref.scrollWidth + 4}px))`
-                            )
+      <UnorderedList {...props}>
+        {paths.map((path, pidx) => (
+          <ListItem key={pidx}>
+            <Wrap>
+              {path.map((atom, aidx) => {
+                const index = (
+                  paths
+                  .slice(0, pidx)
+                  .map((pth) => pth.length)
+                  .reduce((acc, val) => acc = val, 0)
+                  + 1
+                  + aidx + 1
+                )
+                const focus = (
+                  focused.pidx === pidx
+                  && focused.aidx === aidx
+                )
+                const multiple = (
+                  paths.length > 1 || paths[0].length > 1
+                )
+                return (
+                  <WrapItem
+                    key={index}
+                    m="auto" p={0}
+                    sx={{
+                      'button': { opacity: 0.3 },
+                      '&:hover button': { opacity: 1 },
+                    }}
+                  >
+                    <Input
+                      value={atom}
+                      textAlign="center"
+                      w="7em" m={0} p="0 0.25rem"
+                      height="auto"
+                      bg="#FFFF0066"
+                      borderColor="#00000066"
+                      autoFocus={focus}
+                      id={`atom-${index}`}
+                      _focus={{ bg: '#0000FF33' }}
+                      ref={(ref: HTMLInputElement) => {
+                        if(ref) {
+                          if(focus) {
+                            setTimeout(() => ref.focus(), 0)
                           }
+                          ref.style.width = '0'
+                          ref.style.width = (
+                            `max(2em, min(30vw, ${ref.scrollWidth + 4}px))`
+                          )
+                        }
+                      }}
+                      onKeyDown={(evt: KeyboardEvent<HTMLInputElement>) => {
+                        keydown(evt, pidx, aidx)
+                      }}
+                      onChange={({ target }: ChangeEvent<HTMLInputElement>) => {
+                        changed(target, pidx, aidx)
+                      }}
+                    />
+                    {multiple && (
+                      <Button
+                        position="relative"
+                        p="0.2rem 0.1rem"
+                        h="auto" w="auto" minW="auto"
+                        lineHeight={0.5}
+                        left={-2}
+                        _hover={{ opacity: 1}}
+                        onClick={() => {
+                          removeAtom({ aidx, pidx })
                         }}
-                        onKeyDown={(evt: KeyboardEvent<HTMLInputElement>) => {
-                          keydown(evt, pidx, aidx)
-                        }}
-                        onChange={({ target }: ChangeEvent<HTMLInputElement>) => {
-                          changed(target, pidx, aidx)
-                        }}
-                      />
-                      {multiple && (
-                        <Button
-                          position="relative"
-                          p="0.2rem 0.1rem"
-                          h="auto" w="auto" minW="auto"
-                          lineHeight={0.5}
-                          left={-2}
-                          _hover={{ opacity: 1}}
-                          onClick={() => {
-                            removeAtom({ aidx, pidx })
-                          }}
-                          bg="red" color="white"
-                        >−</Button>
-                      )}
-                      {aidx < path.length - 1 && (
-                        <Box ml={-1}>/</Box>
-                      )}
-                    </WrapItem>
-                  )
-                })}
-              </Wrap>
-            </ListItem>
-          ))}
-        </UnorderedList>
-      </Box>
+                        bg="red" color="white"
+                      >−</Button>
+                    )}
+                    {aidx < path.length - 1 && (
+                      <Box ml={-1}>/</Box>
+                    )}
+                  </WrapItem>
+                )
+              })}
+            </Wrap>
+          </ListItem>
+        ))}
+      </UnorderedList>
     )
   }
 )

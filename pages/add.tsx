@@ -1,73 +1,76 @@
 import {
-  Box,
-  chakra, Container, Flex, Heading, Image, Link as ChakraLink,
+  chakra, Button, Flex, Input, Stack, Text,
 } from '@chakra-ui/react'
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import NextLink from 'next/link'
-import type { Path } from '../types'
 import { PathsetInput } from '../components'
-import { LoginButton } from '../components/LoginButton'
-import { PermaOptions } from '../components/PermaOptions'
+import { ChangeEvent, FormEvent, useState } from 'react'
+import { Maybe } from '../types';
 
 const Add: NextPage = () => {
-  const submit = (paths: Array<Path>) => {
-    console.info({ paths })
+  const [cid, setCID] = useState<Maybe<string>>(null)
+
+  const submit = async (evt: FormEvent) => {
+    evt.preventDefault()
+
+    const response = await fetch('/api/add', {
+      method: 'POST',
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        cid,
+      })
+    })
+
+    console.info({ evt })
   }
 
   return (
-    <Box>
+    <>
       <Head>
-        <title>Forest</title>
-        <meta
-          name="description"
-          content="Context forest filesystem"
-        />
-        <link rel="icon" href="/favicon.png" />
+        <title>𝔐: Add Resource</title>
       </Head>
 
-      <chakra.header my={2}>
-        <Flex justify="center" align="center">
-          <Image
-            src="logo.svg"
-            alt="Logo"
-            maxH="5vh"
-          />
-          <Heading fontSize="4vh" m={0} ml={10}>
-            𝔐𝔦̈𝔪𝔦𝔰
-          </Heading>
-        </Flex>
-        <LoginButton
-          position="fixed"
-          right="0.25vw" top="0.25vw"
-        />
-      </chakra.header>
-
       <chakra.main>
-        <PathsetInput
+        <Stack
+          as="form"
           onSubmit={submit}
-        />
-        <PermaOptions
-          position="fixed"
-          right="2vw" top="20vh"
-        />
+        >
+          <Flex justify="center" align="center">
+            <Text mr={0.5}>ipfs://</Text>
+            <Input
+              placeholder="IPFS CID"
+              value={cid ?? ''}
+              onChange={
+                (
+                  { target: { value }}:
+                  ChangeEvent<HTMLInputElement>
+                ) => {
+                  setCID(value)
+                }
+              }
+              required
+              borderColor="#00000088"
+              width={[
+                '100%',
+                'calc(100% - 20vw)',
+                'calc(100% - 40vw)',
+              ]}
+            />
+          </Flex>
+          <PathsetInput
+            mx={[0, '10vw', '20vw']}
+          />
+          <Flex justify="center">
+            <Button
+              colorScheme="green"
+              type="submit"
+            >
+              Add Resource
+            </Button>
+          </Flex>
+        </Stack>
       </chakra.main>
-
-      <chakra.footer
-        position="fixed"
-        bottom={0}
-        w="full"
-        textAlign="center"
-      >
-        Developed July 2022 for
-        <ChakraLink
-          ml={1}
-          borderBottom="1px dashed"
-          _hover={{ borderBottom: '1px solid' }}
-          href="https://fs.ethglobal.com"
-        >HackFS</ChakraLink>.
-      </chakra.footer>
-    </Box>
+    </>
   )
 }
 
