@@ -1,5 +1,5 @@
 import { sessionOpts } from '../../config'
-import { APIError, Maybe, MeResponse, Path, Pathset } from '../../types'
+import { AddResponse, APIError, Maybe, MeResponse, Path, Pathset } from '../../types'
 import {
   withIronSessionApiRoute
 } from 'iron-session/next'
@@ -13,10 +13,13 @@ import {
 import JSON5 from 'json5'
 import Neo4j, { Driver } from 'neo4j-driver'
 
-const { NEO4J_DATABASE: database } = process.env
+const { NEO4J_DATABASE: database, DEBUG = false } = process.env
 
 export const splitDot = ((str: string) => {
   const [_str, name, ext] = str.match(/^(.+)\.([^\.]{1,8})$/) ?? []
+  if(ext == null) {
+    return { name: str }
+  }
   return { name, ext }
 })
 
@@ -29,8 +32,6 @@ export const setUUIDs = async (
 ) => {
   let db = neo4j.session({ database })
   try {
-    console.info('Constraint')
-
     await db.run(`
       CREATE CONSTRAINT IF NOT EXISTS ON (a:${label})
       ASSERT a.uuid IS UNIQUE
@@ -45,8 +46,6 @@ export const setUUIDs = async (
 
   // db = neo4j.session({ database })
   // try {
-  //   console.info('APOC')
-
   //   await db.run(`
   //     CALL apoc.uuid.install("${label}", { addToExistingNodes: true })
   //   `)
@@ -66,10 +65,11 @@ const mkImport = async (
   }
 ) => {
     const query = `
-      MERGE (u:User)-[:IMPORTED]->(dir:Directory)
+      MERGE (u:User)-[imp:IMPORTED]->(dir:Directory)
       ON CREATE SET
         u.ens = $ens,
         u.ethAddress = $address,
+        imp.at = localdatetime(),
         dir.uuid = apoc.create.uuid()
       RETURN dir.uuid as uuid
     `
@@ -77,9 +77,11 @@ const mkImport = async (
 
     const db = neo4j.session({ database })
     try {
+      if(DEBUG) console.info({ query, params })
+
       const result = await db.run(query, params)
 
-      if(result.records.length > 1) {
+      if(result.records.length !== 1) {
         console.warn(
           `Returned ${result.records.length} root directories.`
         )
@@ -95,14 +97,12 @@ const mkImport = async (
 }
 
 const mkResource = async (
-  { neo4j, rootId, paths, cid, ens, address }:
+  { neo4j, rootId, paths, cid }:
   {
     neo4j: Driver
-    rootId: number
+    rootId: string
     paths: Pathset
     cid: CID
-    ens: Maybe<string>
-    address: string
   }
 ) => {
   await Promise.all(paths.map(async (path) => {
@@ -125,32 +125,43 @@ const mkResource = async (
       )
     )
     children.push(
-      `MERGE (d${path.length - 1})-[c${path.length}:CHILD { name: $name${path.length} }]->(r1:Resource)`
+      `MERGE
+        (d${path.length - 1})
+        -[
+          c${path.length}:CHILD
+          { name: $name${path.length} }
+        ]->
+        (r1:Resource)`
     )
 
-    const names = path.map((_segment, idx) => (
-      `c${idx + 1}.name = $name${idx + 1}`
-    ))
-    const params: Record<string, unknown> = {
-      rootId, cid: cid.toString()
-    }
+    const ds = path.slice(0, -1).map(
+      (_segment, idx) => (
+        `d${idx + 1}.uuid = apoc.create.uuid()`
+      )
+    )
+
     const query = `
       MATCH (d0:Directory { uuid: $rootId })
       ${children.join("\n      ")}
-      MERGE (r1)-[ref:REFERENCES]->(s:Source)
+      MERGE (src:Source { cid: $cid })
+      MERGE (r1)-[ref:REFERENCES]->(src)
       ON CREATE SET
-        ref.order = 1,
-        s.cid = $cid
+        ${ds.join(', ')},
+        r1.uuid = apoc.create.uuid(),
+        ref.order = 1
       RETURN null
     `
 
+    const params: Record<string, unknown> = {
+      rootId, cid: cid.toString()
+    }
     Object.assign(params, Object.fromEntries(
       path.map((segment, idx) => [
         `name${idx + 1}`, segment
       ])
     ))
 
-    console.info({ query, params })
+    if(DEBUG) console.info({ query, params })
 
     const db = neo4j.session({ database })
     try {
@@ -164,17 +175,15 @@ const mkResource = async (
 }
 
 const mkLink = async (
-  { neo4j, rootId, paths, destination, ens, address }:
+  { neo4j, rootId, paths, destination }:
   {
     neo4j: Driver
-    rootId: number
+    rootId: string
     paths: Pathset
     destination: Path
-    ens: Maybe<string>
-    address: string
   }
 ) => {
-  await Promise.all(paths.map((path: Path) => {
+  await Promise.all(paths.map(async (path: Path) => {
     let front
     const work = { in: [...path], out: [...destination] }
     do {
@@ -195,9 +204,8 @@ const mkLink = async (
             const { name, ext } = splitDot(path.pop() as string)
             path.push(name)
             return [direction, ext]
-          } else {
-            return null
           }
+          return null
         }
       )
       .filter((elem) => !!elem) as Array<[PropertyKey, string]>
@@ -209,15 +217,41 @@ const mkLink = async (
       })
     }
 
+    const children = work.in.map(
+      (_segment, idx) => (
+        `MERGE (d${idx})-[c${idx + 1}:CHILD { name: $name${idx + 1} }]->(d${idx + 1}:Directory)`
+      )
+    )
+
     const db = neo4j.session({ database })
     try {
-      // await db.run(query, params)
+      const query = `
+        MATCH (d0:Directory { uuid: $rootId })
+        ${children.join("\n        ")}
+        MERGE
+          (d${work.in.length - 1})
+          -[c${work.in.length + 1}:CHILD { name: $name${work.in.length + 1} }]->
+          (d${work.in.length})
+        RETURN null
+      `
+      const [last] = work.out.slice(-1)
+      const params = {
+        rootId, [`name${work.in.length + 1}`]: last
+      }
+      Object.assign(params, Object.fromEntries(
+        work.in.map((segment, idx) => [
+          `name${idx + 1}`, segment
+        ])
+      ))
+
+      if(DEBUG) console.info({ query, params })
+
+      await db.run(query, params)
     } catch(err) {
       console.error((err as Error).message)
     } finally {
-      // await db.close()
+      await db.close()
     }
-    console.info(`ln -s ${work.in.join('――')} ${work.out.join('――')}`)
   }))
 }
 
@@ -226,7 +260,7 @@ const intake = async (
   {
     neo4j: Driver
     ipfs: IPFSHTTPClient
-    rootId: number
+    rootId: string
     cid: CID | string
     path?: Path
     ens: Maybe<string>
@@ -262,8 +296,6 @@ const intake = async (
             rootId,
             paths: [resource],
             destination: path,
-            ens,
-            address,
           })
         }
       }
@@ -274,8 +306,6 @@ const intake = async (
         rootId,
         paths: [resource],
         cid: entry.cid,
-        ens,
-        address,
       })
     }
   }
@@ -284,7 +314,7 @@ const intake = async (
 
 const handler = async (
   req: NextApiRequest,
-  res: NextApiResponse<MeResponse | APIError>,
+  res: NextApiResponse<AddResponse | APIError>,
 ) => {
   const reqSesh = (
     req.session as IronSession & MeResponse
@@ -338,13 +368,9 @@ const handler = async (
   )
 
   try {
-    console.info('Starting!')
-
     await setUUIDs({ neo4j, label: 'Directory' })
 
     const rootId = await mkImport({ neo4j, ens, address })
-
-    console.info('Next:', rootId)
 
     const ipfs = ipfsHTTPClient({ url })
 
@@ -352,12 +378,8 @@ const handler = async (
       neo4j, ipfs, rootId, cid, ens, address
     })
 
-    console.info('Intook:', count)
-
-    res.status(200)
-    .json({ address, ens, avatar: reqSesh.avatar })
+    res.status(200).json({ count })
   } finally {
-    console.info('Disconnecting')
     await neo4j.close()
   }
 }

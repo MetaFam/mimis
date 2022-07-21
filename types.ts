@@ -24,6 +24,10 @@ export type MeResponse = {
   expirationTime?: number
 }
 
+export type AddResponse = {
+  count: number
+}
+
 export type LogoutResponse = {
   success: boolean
 }
