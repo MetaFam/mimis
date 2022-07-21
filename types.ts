@@ -38,7 +38,7 @@ export type NonceResponse = {
 
 // Used by PathsetInput to track the active
 // path atom and specify its movement through
-// the the list of lists.
+// the list of lists.
 export type Pathset = Array<Path>
 export type PathsetArg = {
   paths: Pathset
@@ -61,3 +61,8 @@ export type RemovePathProps = (
 export type AddPathProps = {
     path?: Path
 } & RemovePathProps
+
+export type NamedAddress = {
+  address: string
+  ens?: string
+}

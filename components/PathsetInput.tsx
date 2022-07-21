@@ -3,23 +3,38 @@ import {
   Wrap, WrapItem,
 } from '@chakra-ui/react'
 import React, {
-  ChangeEvent, KeyboardEvent, useState,
+  ChangeEvent, Dispatch, KeyboardEvent, SetStateAction, useEffect, useState,
 } from 'react'
 import type {
   Path, AddPathAtomProps, AddPathProps,
   PathsetAtomPosition,
-  RemovePathAtomProps, RemovePathProps,
+  RemovePathAtomProps, RemovePathProps, Pathset,
 } from '../types'
 
 export const PathsetInput: React.FC<{
-  onSubmit?: (paths: Array<Path>) => void
+  onSubmit?: (paths: Pathset) => void
+  paths?: Pathset
+  setPaths?: Dispatch<SetStateAction<Pathset>>
 } & ListProps> = (
-  ({ onSubmit, ...props }) => {
-    const [paths, setPaths] = useState<Array<Path>>([['']])
+  ({
+    onSubmit,
+    paths: externalPaths,
+    setPaths: setExternalPaths,
+    ...props
+  }) => {
+    const [internalPaths, setInternalPaths] = useState<Pathset>([['']])
+    const paths = externalPaths ?? internalPaths
+    const setPaths = setExternalPaths ?? setInternalPaths
     const [focused, setFocused] = useState({ pidx: 0, aidx: 0 })
 
+    useEffect(() => {
+      if(paths.length === 0) {
+        setPaths([['']])
+      }
+    }, [paths, setPaths])
+
     const removeAtom = ({ aidx, pidx }: PathsetAtomPosition) => {
-      setPaths((paths) => {
+      setPaths((paths: Pathset) => {
         const path = paths[pidx]
         if(path.length <= 1) {
           return removePath({ paths, pidx })
@@ -49,7 +64,7 @@ export const PathsetInput: React.FC<{
           ...paths[pidx].slice(aidx + 1),
         ],
         ...paths.slice(pidx + 1),
-      ])
+      ]) as Pathset
     )
 
     const addPath = ({ paths, path = [''], pidx }: AddPathProps) => ([
@@ -61,7 +76,7 @@ export const PathsetInput: React.FC<{
     const removePath = ({ paths, pidx }: RemovePathProps) => ([
       ...paths.slice(0, pidx),
       ...paths.slice(pidx + 1),
-    ])
+    ]) as Pathset
 
     const submit = () => {
       onSubmit?.(paths)

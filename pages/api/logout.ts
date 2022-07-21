@@ -8,11 +8,6 @@ import type {
 } from 'next'
 import { IronSession } from 'iron-session';
 
-type NamedAddress = {
-  address: string
-  ens?: string
-}
-
 const handler = async (
   req: NextApiRequest,
   res: NextApiResponse<LogoutResponse | APIError>,

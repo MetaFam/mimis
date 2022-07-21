@@ -1,11 +1,12 @@
 import {
-  chakra, Button, Flex, Input, Stack, Text,
+  chakra, Button, Flex, Input, Stack, Text, useToast,
 } from '@chakra-ui/react'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import { PathsetInput } from '../components'
 import { ChangeEvent, FormEvent, useState } from 'react'
-import { Maybe } from '../types'
+import type { Maybe, Pathset } from '../types'
+import JSON5 from 'json5'
 
 const Add: NextPage = () => {
   const [cid, setCID] = useState<Maybe<string>>(null)
@@ -14,6 +15,8 @@ const Add: NextPage = () => {
       process.env.NEXT_PUBLIC_IPFS_URL ?? null
     )
   )
+  const [paths, setPaths] = useState<Pathset>([])
+  const toast = useToast()
 
   const submit = async (evt: FormEvent) => {
     evt.preventDefault()
@@ -21,13 +24,38 @@ const Add: NextPage = () => {
     const response = await fetch('/api/add', {
       method: 'POST',
       credentials: 'same-origin',
-      body: JSON.stringify({
+      body: JSON5.stringify({
         cid,
         endpoint,
+        paths,
       })
     })
+    const text = await response.text()
+    const { count, message } = JSON5.parse(text)
 
-    console.info({ evt })
+    if(count != null) {
+      toast({
+        variant: 'top-accent',
+        title: `${count} Actions`,
+        description: (
+          `The input of ${cid} resulted in the creation`
+          + ` of ${count} artifact${count === 1 ? '' : 's'}.`
+        ),
+        status: 'success',
+        duration: 9000,
+        isClosable: true,
+      })
+    }
+    if(message != null) {
+      toast({
+        variant: 'left-accent',
+        title: 'Error: Message',
+        description: `Error: “${message}”`,
+        status: 'error',
+        duration: 15000,
+        isClosable: true,
+      })
+    }
   }
 
   return (
@@ -85,9 +113,12 @@ const Add: NextPage = () => {
               ]}
             />
           </Flex>
-          <PathsetInput
-            mx={[0, '10vw', '20vw']}
-          />
+          <Flex mx={[0, 10, 32]}>
+            <PathsetInput
+              {...{ paths, setPaths } }
+              mx={[0, '10vw', '20vw']}
+            />
+          </Flex>
           <Flex justify="center">
             <Button
               colorScheme="green"

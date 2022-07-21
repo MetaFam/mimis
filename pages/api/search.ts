@@ -319,33 +319,13 @@ const handler = async (
     req.session as IronSession & MeResponse
   )
 
-  if (!reqSesh.siwe) {
-    res.status(401)
-    .json({ message: 'You have to login.' })
-
-    return
-  }
-
-  const { ens = null, siwe: { address } } = reqSesh
-  const payload = JSON5.parse(req.body)
-  const { cid, endpoint: url, paths = [[]] } = (
-    payload
+  const { ens = null, siwe: { address = null } = {} } = (
+    reqSesh
   )
+  const payload = JSON5.parse(req.body)
+  const { paths = [[]] } = payload
 
   if(DEBUG) console.info({ payload })
-
-  if(!cid || cid.trim() === '') {
-    res.status(422)
-    .json({ message: 'Request body should include `cid`.' })
-
-    return
-  }
-  if(!url || url.trim() === '') {
-    res.status(422)
-    .json({ message: 'Request body should include `endpoint`.' })
-
-    return
-  }
 
   const vars = [
     'NEO4J_URL',
@@ -372,21 +352,7 @@ const handler = async (
   )
 
   try {
-    await setUUIDs({ neo4j, label: 'Directory' })
-    await setUUIDs({ neo4j, label: 'Resource' })
-
-    const rootId = await mkImport({ neo4j, ens, address })
-
-    const ipfs = ipfsHTTPClient({ url })
-
-    const counts = await Promise.all(
-      paths.map(async (path: Path) => (
-        await intake({ neo4j, ipfs, rootId, cid, path })
-      ))
-    )
-    const count = counts.reduce((acc, count) => acc + count, 0)
-
-    res.status(200).json({ count })
+    res.status(200).json({ message: '¡success!' })
   } finally {
     await neo4j.close()
   }
