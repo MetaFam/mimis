@@ -29,7 +29,6 @@ const handler = async (
   }
   res.status(200)
   .json({
-    // message: '🖕🏿🖕🏿¡Fuck TypeScript!🖕🏿🖕🏿',
     address: reqSesh.siwe.address,
     ens: reqSesh.ens ?? undefined,
     avatar: reqSesh.avatar,
