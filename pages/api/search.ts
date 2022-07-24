@@ -1,5 +1,5 @@
 import { sessionOpts } from '../../config'
-import { AddResponse, APIError, Maybe, MeResponse, Path, Pathset } from '../../types'
+import { AddResponse, APIError, Maybe, MeResponse, Path, Pathset, SearchResponse } from '../../types'
 import {
   withIronSessionApiRoute
 } from 'iron-session/next'
@@ -7,11 +7,9 @@ import type {
   NextApiRequest, NextApiResponse,
 } from 'next'
 import { IronSession } from 'iron-session'
-import {
-  CID, create as ipfsHTTPClient, IPFSHTTPClient
-} from 'ipfs-http-client'
 import JSON5 from 'json5'
 import Neo4j, { Driver } from 'neo4j-driver'
+import { info } from 'console'
 
 const { NEO4J_DATABASE: database, DEBUG = false } = process.env
 
@@ -27,293 +25,47 @@ export const any = (arr: Array<unknown>) => (
   !!arr.some && arr.some(() => true)
 )
 
-export const setUUIDs = async (
-  { neo4j, label }: { neo4j: Driver, label: string}
-) => {
-  let db = neo4j.session({ database })
-  try {
-    const query = `
-      CREATE CONSTRAINT IF NOT EXISTS ON (a:${label})
-      ASSERT a.uuid IS UNIQUE
-    `
-    await db.run(query)
-
-    if(DEBUG) console.info({ query })
-  } catch(err) {
-    console.error((err as Error).message)
-  } finally {
-    await db.close()
-  }
-
-  // This hangs when run against the Sandbox.
-
-  // db = neo4j.session({ database })
-  // try {
-  //   await db.run(`
-  //     CALL apoc.uuid.install("${label}", { addToExistingNodes: true })
-  //   `)
-  // } catch(err) {
-  //   console.error((err as Error).message)
-  // } finally {
-  //   await db.close()
-  // }
-}
-
-const mkImport = async (
-  { neo4j, ens, address }:
-  {
-    neo4j: Driver
-    ens: Maybe<string>
-    address: string
-  }
-) => {
-    const query = `
-      MERGE (u:User)-[imp:IMPORTED]->(dir:Directory)
-      ON CREATE SET
-        u.ens = $ens,
-        u.ethAddress = $address,
-        imp.at = localdatetime(),
-        dir.uuid = apoc.create.uuid()
-      RETURN dir.uuid as uuid
-    `
-    const params = { ens, address }
-
-    if(DEBUG) console.info({ query, params })
-
-    const db = neo4j.session({ database })
-    try {
-      const result = await db.run(query, params)
-
-      if(result.records.length !== 1) {
-        console.warn(
-          `Returned ${result.records.length} root directories.`
+const mkQuery = (paths: Pathset) => {
+  let count = 0
+  const vars: Record<string, string> = {}
+  const matches = paths.map((path) => {
+    const segments = path.map((segment) => {
+      console.info({ segment })
+      if(segment === '**') {
+        return `-[:CHILD*0..8]->`
+      } else if(segment === '') {
+        return `-[:CHILD]->`
+      } else {
+        vars[`segment${++count}`] = segment
+        return (
+          `-[c${count}:CHILD]->`
         )
       }
+    })
+    return `MATCH (:Root)${segments.join('()')}(res)`
+  })
 
-      return result.records[0].get('uuid')
-    } catch(err) {
-      console.error((err as Error).message)
-      return null
-    } finally {
-      await db.close()
-    }
-}
-
-const mkResource = async (
-  { neo4j, rootId, paths, cid }:
-  {
-    neo4j: Driver
-    rootId: string
-    paths: Pathset
-    cid: CID
-  }
-) => {
-  await Promise.all(paths.map(async (path) => {
-    let [last] = path.slice(-1)
-    const { name, ext } = splitDot(last)
-
-    if(name && ext) {
-      path.pop()
-      const newPath = [name]
-      if(name !== ext) { // svg.svg files exist
-        newPath.push(ext)
-      }
-      path.push(...newPath)
-    }
-
-    [last] = path.slice(-1)
-    const children = path.slice(0, -1).map(
-      (_segment, idx) => (
-        `MERGE (d${idx})-[c${idx + 1}:CHILD { name: $name${idx + 1} }]->(d${idx + 1}:Directory)`
-      )
-    )
-    children.push(
-      `MERGE
-        (d${path.length - 1})
-        -[
-          c${path.length}:CHILD
-          { name: $name${path.length} }
-        ]->
-        (r1:Resource)`
-    )
-
-    const ds = path.slice(0, -1).map(
-      (_segment, idx) => (
-        `d${idx + 1}.uuid = apoc.create.uuid()`
-      )
-    )
-
-    const query = `
-      MATCH (d0:Directory { uuid: $rootId })
-      ${children.join("\n      ")}
-      MERGE (src:Source { cid: $cid })
-      MERGE (r1)-[ref:REFERENCES]->(src)
-      ON CREATE SET
-        ${ds.join(', ')},
-        r1.uuid = apoc.create.uuid(),
-        ref.order = 1
-      RETURN null
-    `
-
-    const params: Record<string, unknown> = {
-      rootId, cid: cid.toString()
-    }
-    Object.assign(params, Object.fromEntries(
-      path.map((segment, idx) => [
-        `name${idx + 1}`, segment
-      ])
+  const wheres = (
+    Object.keys(vars).map((variable, idx) => (
+      `c${idx + 1}.name = $${variable}`
     ))
+  )
 
-    if(DEBUG) console.info({ query, params })
-
-    const db = neo4j.session({ database })
-    try {
-      await db.run(query, params)
-    } catch(err) {
-      console.error((err as Error).message)
-    } finally {
-      await db.close()
-    }
-  }))
-}
-
-const mkLink = async (
-  { neo4j, rootId, paths, destination }:
-  {
-    neo4j: Driver
-    rootId: string
-    paths: Pathset
-    destination: Path
+  let statement = `
+    MATCH (res:Resource)-->(src:Source)
+    ${matches.join("\n      ")}
+  `
+  if(wheres.length > 0) {
+    statement += `WHERE ${wheres.join(' AND ')}`
   }
-) => {
-  await Promise.all(paths.map(async (path: Path) => {
-    let front
-    const work = { in: [...path], out: [...destination] }
-    do {
-      front = work.out.shift()
-      if(front === '..') {
-        work.in.pop()
-      }
-    } while(front && ['.', '..'].includes(front))
+  statement += `\nRETURN DISTINCT src.cid as cid`
 
-    if(front) {
-      work.out.unshift(front)
-    }
-
-    const ext = Object.fromEntries(
-      Object.entries(work).map(
-        ([direction, path]: [PropertyKey, Path]) => {
-          if(any(path)) {
-            const { name, ext } = splitDot(path.pop() as string)
-            path.push(name)
-            return [direction, ext]
-          }
-          return null
-        }
-      )
-      .filter((elem) => !!elem) as Array<[PropertyKey, string]>
-    )
-
-    if(ext.in !== ext.out) {
-      Object.entries(ext).forEach(([direction, ext]) => {
-        work[direction as 'in' | 'out'].push(ext)
-      })
-    }
-
-    const children = work.in.map(
-      (_segment, idx) => (
-        `MERGE (d${idx})-[c${idx + 1}:CHILD { name: $name${idx + 1} }]->(d${idx + 1}:Directory)`
-      )
-    )
-
-    const db = neo4j.session({ database })
-    try {
-      const query = `
-        MATCH (d0:Directory { uuid: $rootId })
-        ${children.join("\n        ")}
-        MERGE
-          (d${work.in.length - 1})
-          -[c${work.in.length + 1}:CHILD { name: $name${work.in.length + 1} }]->
-          (d${work.in.length})
-        RETURN null
-      `
-      const [last] = work.out.slice(-1)
-      const params = {
-        rootId, [`name${work.in.length + 1}`]: last
-      }
-      Object.assign(params, Object.fromEntries(
-        work.in.map((segment, idx) => [
-          `name${idx + 1}`, segment
-        ])
-      ))
-
-      if(DEBUG) console.info({ query, params })
-
-      await db.run(query, params)
-    } catch(err) {
-      console.error((err as Error).message)
-    } finally {
-      await db.close()
-    }
-  }))
-}
-
-const intake = async (
-  { neo4j, ipfs, rootId, cid, path = [], count = 0 }:
-  {
-    neo4j: Driver
-    ipfs: IPFSHTTPClient
-    rootId: string
-    cid: CID | string
-    path?: Path
-    count?: number
-  }
-) => {
-  for await (const entry of ipfs.ls(cid)) {
-    count++
-
-    const resource = [...path, entry.name]
-
-    const isDir = entry.type === 'dir'
-    let isLink = false
-
-    if(isDir) {
-      count += await intake({
-        neo4j,
-        ipfs,
-        rootId,
-        cid: entry.cid,
-        path: resource,
-      })
-    } else if(entry.size < 250) {
-      for await (const link of ipfs.cat(entry.cid)) {
-        const maybeRef = link.toString()
-        if(isLink = !/[<\n]/.test(maybeRef)) { // symlink?
-          const path = maybeRef.split('/')
-          await mkLink({
-            neo4j,
-            rootId,
-            paths: [resource],
-            destination: path,
-          })
-        }
-      }
-    }
-    if(!isDir && !isLink) {
-      await mkResource({
-        neo4j,
-        rootId,
-        paths: [resource],
-        cid: entry.cid,
-      })
-    }
-  }
-  return count
+  return { statement, vars }
 }
 
 const handler = async (
   req: NextApiRequest,
-  res: NextApiResponse<AddResponse | APIError>,
+  res: NextApiResponse<SearchResponse | APIError>,
 ) => {
   const reqSesh = (
     req.session as IronSession & MeResponse
@@ -322,10 +74,18 @@ const handler = async (
   const { ens = null, siwe: { address = null } = {} } = (
     reqSesh
   )
-  const payload = JSON5.parse(req.body)
-  const { paths = [[]] } = payload
+  const pathsSpec = req.query.paths ?? req.body
 
-  if(DEBUG) console.info({ payload })
+  if(!pathsSpec) {
+    res.status(422)
+    .json({ message: 'GET parameters should include JSON `paths`.' })
+
+    return
+  }
+
+  const paths = JSON5.parse(pathsSpec)
+
+  if(DEBUG) console.info({ paths })
 
   const vars = [
     'NEO4J_URL',
@@ -351,9 +111,24 @@ const handler = async (
     { encrypted: 'ENCRYPTION_OFF' },
   )
 
+  const db = neo4j.session({ database })
   try {
-    res.status(200).json({ message: '¡success!' })
+    const { statement, vars } = mkQuery(paths)
+
+    if(DEBUG) console.info({ statement, vars })
+
+    const result = await db.run(statement, vars)
+
+    const cids = result.records.map(
+      (rec) => rec.get('cid')
+    )
+
+    res.status(200).json(cids)
+  } catch(err) {
+    console.error((err as Error).message)
+    return null
   } finally {
+    await db.close()
     await neo4j.close()
   }
 }

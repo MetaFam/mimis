@@ -12,7 +12,7 @@ const Add: NextPage = () => {
   const [cid, setCID] = useState<Maybe<string>>(null)
   const [endpoint, setEndpoint] = (
     useState<Maybe<string>>(
-      process.env.NEXT_PUBLIC_IPFS_URL ?? null
+      process.env.NEXT_PUBLIC_IPFS_API_URL ?? null
     )
   )
   const [paths, setPaths] = useState<Pathset>([])

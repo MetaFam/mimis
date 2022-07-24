@@ -103,7 +103,7 @@ export const PathsetInput: React.FC<{
             if(paths.length > 1) {
               setFocused({
                 pidx: pidx - 1,
-                aidx: paths[pidx - 1].length - 1,
+                aidx: (paths[pidx - 1]?.length ?? 0) - 1,
               })
               return removePath({ paths, pidx })
             } else {

@@ -68,7 +68,7 @@ const mkImport = async (
   }
 ) => {
     const query = `
-      MERGE (u:User)-[imp:IMPORTED]->(dir:Directory)
+      MERGE (u:User)-[imp:IMPORTED]->(dir:Directory:Root)
       ON CREATE SET
         u.ens = $ens,
         u.ethAddress = $address,
@@ -144,7 +144,7 @@ const mkResource = async (
     )
 
     const query = `
-      MATCH (d0:Directory { uuid: $rootId })
+      MATCH (d0:Directory:Root { uuid: $rootId })
       ${children.join("\n      ")}
       MERGE (src:Source { cid: $cid })
       MERGE (r1)-[ref:REFERENCES]->(src)
@@ -229,7 +229,7 @@ const mkLink = async (
     const db = neo4j.session({ database })
     try {
       const query = `
-        MATCH (d0:Directory { uuid: $rootId })
+        MATCH (d0:Directory:Root { uuid: $rootId })
         ${children.join("\n        ")}
         MERGE
           (d${work.in.length - 1})
