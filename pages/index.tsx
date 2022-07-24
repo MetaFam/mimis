@@ -3,13 +3,13 @@ import {
 } from '@chakra-ui/react'
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import type { Maybe, Path, Pathset } from '../types'
+import type { Maybe, Pathset } from '../types'
 import { PathsetInput } from '../components'
 import { useEffect, useRef, useState } from 'react'
 import JSON5 from 'json5'
 
 const Home: NextPage = () => {
-  const [paths, setPaths] = useState<Pathset>([])
+  const [paths, setPaths] = useState<Pathset>([['**']])
   const abortController = useRef<Maybe<AbortController>>(null)
   const [cids, setCIDs] = useState<Array<string>>([])
   const [loading, setLoading] = useState(false)
