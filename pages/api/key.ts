@@ -9,6 +9,7 @@ import type {
   NextApiRequest, NextApiResponse,
 } from 'next'
 import { IronSession } from 'iron-session';
+import { verifyNeo4j } from '../../lib/helpers'
 
 const handler = async (
   req: NextApiRequest,
@@ -19,29 +20,21 @@ const handler = async (
   )
 
   if (!reqSesh.siwe) {
-    res.status(401)
-    .json({ message: 'You have to login.' })
+    res.status(401).json({ message: 'You have to login.' })
 
     return
   }
 
-  const vars = [
-    'NEO4J_URL',
-    'NEO4J_USERNAME',
-    'NEO4J_PASSWORD',
-    'NEO4J_DATABASE',
-  ]
-  for(let variable in vars) {
-    if(!process.env[variable]) {
-      res.status(422).json({
-        message: `\`\$${variable}\` unspecified.`
-      })
-      return
-    }
+  try {
+    verifyNeo4j()
+  } catch(error) {
+    const { message } = error as Error
+    res.status(422).json({ message })
+    return
   }
 
   const driver = neo4j.driver(
-    process.env.NEO4J_URL!,
+    process.env.NEO4J_URI!,
     neo4j.auth.basic(
       process.env.NEO4J_USERNAME!,
       process.env.NEO4J_PASSWORD!,

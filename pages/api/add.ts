@@ -12,6 +12,7 @@ import {
 } from 'ipfs-http-client'
 import JSON5 from 'json5'
 import Neo4j, { Driver } from 'neo4j-driver'
+import { verifyNeo4j } from '../../lib/helpers'
 
 const { NEO4J_DATABASE: database, DEBUG = false } = process.env
 
@@ -334,41 +335,28 @@ const handler = async (
 
   if(DEBUG) console.info({ payload })
 
-  if(!cid || cid.trim() === '') {
-    res.status(422)
-    .json({ message: 'Request body should include `cid`.' })
-
-    return
-  }
-  if(!url || url.trim() === '') {
-    res.status(422)
-    .json({ message: 'Request body should include `endpoint`.' })
-
-    return
-  }
-
-  const vars = [
-    'NEO4J_URL',
-    'NEO4J_USERNAME',
-    'NEO4J_PASSWORD',
-    'NEO4J_DATABASE',
-  ]
-  for(const variable of vars) {
-    if(!process.env[variable]) {
-      res.status(422).json({
-        message: `\`\$${variable}\` unspecified.`
-      })
-      return
+  try {
+    if(!cid || cid.trim() === '') {
+      throw new Error('Request body should include `cid`.')
     }
+    if(!url || url.trim() === '') {
+      throw new Error('Request body should include `endpoint`.')
+    }
+
+    verifyNeo4j()
+  } catch(error) {
+    const { message } = error as Error
+    res.status(422).json({ message })
+    return
   }
 
   const neo4j = Neo4j.driver(
-    process.env.NEO4J_URL!,
+    process.env.NEO4J_URI!,
     Neo4j.auth.basic(
       process.env.NEO4J_USERNAME!,
       process.env.NEO4J_PASSWORD!,
     ),
-    { encrypted: 'ENCRYPTION_OFF' },
+    // { encrypted: 'ENCRYPTION_OFF' },
   )
 
   try {

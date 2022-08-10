@@ -9,7 +9,7 @@ import type {
 import { IronSession } from 'iron-session'
 import JSON5 from 'json5'
 import Neo4j, { Driver } from 'neo4j-driver'
-import { info } from 'console'
+import { verifyNeo4j } from '../../lib/helpers'
 
 const { NEO4J_DATABASE: database, DEBUG = false } = process.env
 
@@ -76,10 +76,14 @@ const handler = async (
   )
   const pathsSpec = req.query.paths ?? req.body
 
-  if(!pathsSpec) {
-    res.status(422)
-    .json({ message: 'GET parameters should include JSON `paths`.' })
-
+  try {
+    if(!pathsSpec) {
+      throw new Error('GET parameters should include JSON5 `paths`.')
+    }
+    verifyNeo4j()
+  } catch(error) {
+    const { message } = error as Error
+    res.status(422).json({ message })
     return
   }
 
@@ -87,31 +91,18 @@ const handler = async (
 
   if(DEBUG) console.info({ paths })
 
-  const vars = [
-    'NEO4J_URL',
-    'NEO4J_USERNAME',
-    'NEO4J_PASSWORD',
-    'NEO4J_DATABASE',
-  ]
-  for(const variable of vars) {
-    if(!process.env[variable]) {
-      res.status(422).json({
-        message: `\`\$${variable}\` unspecified.`
-      })
-      return
-    }
-  }
-
   const neo4j = Neo4j.driver(
-    process.env.NEO4J_URL!,
+    process.env.NEO4J_URI!,
     Neo4j.auth.basic(
       process.env.NEO4J_USERNAME!,
       process.env.NEO4J_PASSWORD!,
     ),
-    { encrypted: 'ENCRYPTION_OFF' },
+    // { encrypted: 'ENCRYPTION_OFF' },
   )
 
   const db = neo4j.session({ database })
+  let cids: Maybe<Array<string>> = null
+  let message = null
   try {
     const { statement, vars } = mkQuery(paths)
 
@@ -119,17 +110,22 @@ const handler = async (
 
     const result = await db.run(statement, vars)
 
-    const cids = result.records.map(
+    cids = result.records.map(
       (rec) => rec.get('cid')
     )
-
-    res.status(200).json(cids)
   } catch(err) {
-    console.error((err as Error).message)
-    return null
+    message = (err as Error).message
   } finally {
     await db.close()
     await neo4j.close()
+  }
+
+  if(message) {
+    res.status(500).json({ message })
+  } else if(cids) {
+    res.status(200).json(cids)
+  } else {
+    res.status(500).json({ message: 'Don’t know how we got here.' })
   }
 }
 

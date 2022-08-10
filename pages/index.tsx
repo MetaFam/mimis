@@ -28,13 +28,18 @@ const Home: NextPage = () => {
           { signal: abortController.current.signal },
         )
         abortController.current = null
-        console.info({ results })
-        setLoading(false)
-        setCIDs(JSON5.parse(await results.text()))
+        const { cids, message } = JSON5.parse(await results.text())
+        if(!results.ok) {
+          throw new Error(message)
+        } else {
+          setCIDs(cids)
+        }
       } catch(err) {
         if(!(err instanceof DOMException)) {
           console.error((err as Error).message)
         }
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -55,6 +60,35 @@ const Home: NextPage = () => {
             <WrapItem key={cid}>
               <Image
                 w="2rem" maxH="2rem"
+                sx={{
+                  '@keyframes grow': {
+                    from: {
+                      w: '2rem',
+                      maxH: '2rem',
+                    },
+                    to: {
+                      w: '5rem',
+                      maxH: '5rem',
+                    }
+                  },
+                  '@keyframes shrink': {
+                    from: {
+                      w: '5rem',
+                      maxH: '5rem',
+                    },
+                    to: {
+                      w: '2rem',
+                      maxH: '2rem',
+                    }
+                  },
+                  animationName: 'shrink',
+                  animationDuration: '1s',
+                }}
+                _hover={{
+                  animationName: 'grow',
+                  animationDuration: '1.5s',
+                  animationFillMode: 'forwards',
+                }}
                 alt=""
                 src={`${GATEWAY}${cid}`}
               />
