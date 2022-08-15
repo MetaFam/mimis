@@ -1,5 +1,7 @@
-import { sessionOpts } from '../../config'
-import { ErrorTypes, SiweMessage as SIWEMessage } from 'siwe'
+import { sessionOpts } from '@/config'
+import {
+  ErrorTypes, SiweMessage as SIWEMessage,
+} from 'siwe'
 import {
   withIronSessionApiRoute
 } from 'iron-session/next'
@@ -7,7 +9,7 @@ import type {
   NextApiRequest, NextApiResponse,
 } from 'next'
 import { providers } from 'ethers'
-import { APIError, LoginResponse, Maybe } from '../../types'
+import { APIError, LoginResponse, Maybe } from '@/types'
 import { IronSession } from 'iron-session'
 
 const { JsonRpcProvider: JSONRPCProvider } = (

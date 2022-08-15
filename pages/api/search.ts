@@ -1,5 +1,7 @@
-import { sessionOpts } from '../../config'
-import { AddResponse, APIError, Maybe, MeResponse, Path, Pathset, SearchResponse } from '../../types'
+import { sessionOpts } from '@/config'
+import {
+  APIError, Maybe, MeResponse, Pathset, SearchResponse,
+} from '@/types'
 import {
   withIronSessionApiRoute
 } from 'iron-session/next'
@@ -8,8 +10,8 @@ import type {
 } from 'next'
 import { IronSession } from 'iron-session'
 import JSON5 from 'json5'
-import Neo4j, { Driver } from 'neo4j-driver'
-import { verifyNeo4j } from '../../lib/helpers'
+import Neo4j from 'neo4j-driver'
+import { verifyNeo4j } from '@/lib/helpers'
 
 const { NEO4J_DATABASE: database, DEBUG = false } = process.env
 
@@ -30,7 +32,6 @@ const mkQuery = (paths: Pathset) => {
   const vars: Record<string, string> = {}
   const matches = paths.map((path) => {
     const segments = path.map((segment) => {
-      console.info({ segment })
       if(segment === '**') {
         return `-[:CHILD*0..8]->`
       } else if(segment === '') {
@@ -78,7 +79,9 @@ const handler = async (
 
   try {
     if(!pathsSpec) {
-      throw new Error('GET parameters should include JSON5 `paths`.')
+      throw new Error(
+        'GET parameters should include JSON5 `paths`.'
+      )
     }
     verifyNeo4j()
   } catch(error) {
@@ -97,7 +100,6 @@ const handler = async (
       process.env.NEO4J_USERNAME!,
       process.env.NEO4J_PASSWORD!,
     ),
-    // { encrypted: 'ENCRYPTION_OFF' },
   )
 
   const db = neo4j.session({ database })
@@ -108,7 +110,9 @@ const handler = async (
 
     if(DEBUG) console.info({ statement, vars })
 
-    const result = await db.run(statement, vars)
+    const result = await db.readTransaction((tx) => (
+      tx.run(statement, vars)
+    ))
 
     cids = result.records.map(
       (rec) => rec.get('cid')
@@ -123,7 +127,7 @@ const handler = async (
   if(message) {
     res.status(500).json({ message })
   } else if(cids) {
-    res.status(200).json(cids)
+    res.status(200).json({ cids })
   } else {
     res.status(500).json({ message: 'Don’t know how we got here.' })
   }

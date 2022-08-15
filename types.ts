@@ -28,9 +28,9 @@ export type AddResponse = {
   count: number
 }
 
-export type SearchResponse = (
-  Array<string>
-)
+export type SearchResponse = {
+  cids: Array<string>
+}
 
 export type LogoutResponse = {
   success: boolean

@@ -1,6 +1,8 @@
 import type { AppProps } from 'next/app'
-import { chakra, ChakraProvider, Flex, Heading, Image, Link } from '@chakra-ui/react'
-import { LoginButton, PermaOptions } from '../components'
+import {
+  chakra, ChakraProvider, Flex, Heading, Image, Link,
+} from '@chakra-ui/react'
+import { LoginButton, PermaOptions } from '@/components'
 import Head from 'next/head'
 
 export const Forest = (

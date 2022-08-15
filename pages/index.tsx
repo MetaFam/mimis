@@ -3,8 +3,8 @@ import {
 } from '@chakra-ui/react'
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import type { Maybe, Pathset } from '../types'
-import { PathsetInput } from '../components'
+import type { Maybe, Pathset } from '@/types'
+import { PathsetInput } from '@/components'
 import { useEffect, useRef, useState } from 'react'
 import JSON5 from 'json5'
 
@@ -19,6 +19,7 @@ const Home: NextPage = () => {
     const search = async () => {
       try {
         setLoading(true)
+
         abortController.current?.abort()
         abortController.current = new AbortController()
         const results = await fetch(
@@ -28,7 +29,9 @@ const Home: NextPage = () => {
           { signal: abortController.current.signal },
         )
         abortController.current = null
-        const { cids, message } = JSON5.parse(await results.text())
+
+        const body = await results.text()
+        const { cids, message } = JSON5.parse(body)
         if(!results.ok) {
           throw new Error(message)
         } else {
@@ -56,7 +59,7 @@ const Home: NextPage = () => {
         <PathsetInput {...{ paths, setPaths }} mb={5}/>
         {loading && <Spinner thickness='5'/>}
         <Wrap mr={32} mb={10}>
-          {cids.map((cid) => (
+          {cids?.map((cid) => (
             <WrapItem key={cid}>
               <Image
                 w="2rem" maxH="2rem"

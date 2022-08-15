@@ -1,5 +1,5 @@
-import { sessionOpts } from '../../config'
-import { APIError, MeResponse } from '../../types'
+import { sessionOpts } from '@/config'
+import { APIError, MeResponse } from '@/types'
 import crypto from 'node:crypto'
 import neo4j from 'neo4j-driver'
 import {
@@ -9,7 +9,7 @@ import type {
   NextApiRequest, NextApiResponse,
 } from 'next'
 import { IronSession } from 'iron-session';
-import { verifyNeo4j } from '../../lib/helpers'
+import { verifyNeo4j } from '@/lib/helpers'
 
 const handler = async (
   req: NextApiRequest,

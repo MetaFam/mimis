@@ -1,4 +1,4 @@
-import { sessionOpts } from '../../config'
+import { sessionOpts } from '@/config'
 import { generateNonce } from 'siwe'
 import {
   withIronSessionApiRoute
@@ -7,7 +7,7 @@ import type {
   NextApiRequest, NextApiResponse,
 } from 'next'
 import { IronSession } from 'iron-session'
-import { APIError, MeResponse, NonceResponse } from '../../types'
+import { APIError, NonceResponse } from '@/types'
 
 
 const handler = async (

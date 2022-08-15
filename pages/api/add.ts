@@ -1,4 +1,4 @@
-import { sessionOpts } from '../../config'
+import { sessionOpts } from '@/config'
 import { AddResponse, APIError, Maybe, MeResponse, Path, Pathset } from '../../types'
 import {
   withIronSessionApiRoute
@@ -12,7 +12,7 @@ import {
 } from 'ipfs-http-client'
 import JSON5 from 'json5'
 import Neo4j, { Driver } from 'neo4j-driver'
-import { verifyNeo4j } from '../../lib/helpers'
+import { verifyNeo4j } from '@/lib/helpers'
 
 const { NEO4J_DATABASE: database, DEBUG = false } = process.env
 
@@ -37,7 +37,7 @@ export const setUUIDs = async (
       CREATE CONSTRAINT IF NOT EXISTS ON (a:${label})
       ASSERT a.uuid IS UNIQUE
     `
-    await db.run(query)
+    await db.writeTransaction((tx) => tx.run(query))
 
     if(DEBUG) console.info({ query })
   } catch(err) {
@@ -83,7 +83,9 @@ const mkImport = async (
 
     const db = neo4j.session({ database })
     try {
-      const result = await db.run(query, params)
+      const result = await db.writeTransaction((tx) => (
+        tx.run(query, params)
+      ))
 
       if(result.records.length !== 1) {
         console.warn(
@@ -169,7 +171,9 @@ const mkResource = async (
 
     const db = neo4j.session({ database })
     try {
-      await db.run(query, params)
+      await db.writeTransaction((tx) => (
+        tx.run(query, params)
+      ))
     } catch(err) {
       console.error((err as Error).message)
     } finally {
@@ -250,7 +254,9 @@ const mkLink = async (
 
       if(DEBUG) console.info({ query, params })
 
-      await db.run(query, params)
+      await db.writeTransaction((tx) => (
+        tx.run(query, params)
+      ))
     } catch(err) {
       console.error((err as Error).message)
     } finally {
@@ -356,7 +362,6 @@ const handler = async (
       process.env.NEO4J_USERNAME!,
       process.env.NEO4J_PASSWORD!,
     ),
-    // { encrypted: 'ENCRYPTION_OFF' },
   )
 
   try {

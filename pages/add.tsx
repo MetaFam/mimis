@@ -1,11 +1,11 @@
 import {
-  chakra, Button, Flex, Input, Stack, Text, useToast,
+  chakra, Button, Flex, Input, Stack, Text, useToast, Spinner,
 } from '@chakra-ui/react'
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import { PathsetInput } from '../components'
+import { PathsetInput } from '@/components'
 import { ChangeEvent, FormEvent, useState } from 'react'
-import type { Maybe, Pathset } from '../types'
+import type { Maybe, Pathset } from '@/types'
 import JSON5 from 'json5'
 
 const Add: NextPage = () => {
@@ -17,9 +17,12 @@ const Add: NextPage = () => {
   )
   const [paths, setPaths] = useState<Pathset>([])
   const toast = useToast()
+  const [processing, setProcessing] = useState(false)
 
   const submit = async (evt: FormEvent) => {
     evt.preventDefault()
+
+    setProcessing(true)
 
     const response = await fetch('/api/add', {
       method: 'POST',
@@ -56,6 +59,7 @@ const Add: NextPage = () => {
         isClosable: true,
       })
     }
+    setProcessing(false)
   }
 
   return (
@@ -124,7 +128,13 @@ const Add: NextPage = () => {
               colorScheme="green"
               type="submit"
             >
-              Add Resource
+              {processing ? (
+                <>
+                  <Spinner mr={3}/> Processing
+                </>
+              ) : (
+                <>Add Resource</>
+              )}
             </Button>
           </Flex>
         </Stack>

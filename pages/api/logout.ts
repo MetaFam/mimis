@@ -1,5 +1,7 @@
-import { sessionOpts } from '../../config'
-import { APIError, LogoutResponse, MeResponse } from '../../types'
+import { sessionOpts } from '@/config'
+import {
+  APIError, LogoutResponse, MeResponse,
+} from '@/types'
 import {
   withIronSessionApiRoute
 } from 'iron-session/next'
