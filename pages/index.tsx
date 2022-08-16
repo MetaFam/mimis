@@ -1,19 +1,29 @@
 import {
-  chakra, Box, Spinner, Image, Wrap, WrapItem,
+  chakra, Box, Spinner, Image, Wrap, WrapItem, Flex,
 } from '@chakra-ui/react'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import type { Maybe, Pathset } from '@/types'
 import { PathsetInput } from '@/components'
-import { useEffect, useRef, useState } from 'react'
+import { Dispatch, SetStateAction, useEffect, useRef, useState, useContext } from 'react';
 import JSON5 from 'json5'
+import { httpURL } from '@/lib/helpers'
+import { useMover } from '@/lib/useMover'
+import { SettingsContext } from '@/lib/SettingsContext'
 
-const Home: NextPage = () => {
+export const Home: NextPage = () => {
   const [paths, setPaths] = useState<Pathset>([['**']])
   const abortController = useRef<Maybe<AbortController>>(null)
+  const [, setPending] = useState<Array<string>>([])
   const [cids, setCIDs] = useState<Array<string>>([])
   const [loading, setLoading] = useState(false)
-  const GATEWAY = process.env.NEXT_PUBLIC_IPFS_GATEWAY_URL
+  const [remaining, setRemaining] = useState(0)
+  const { limitedRate } = useContext(SettingsContext)
+  useMover({
+    setFrom: setPending as Dispatch<SetStateAction<unknown[]>>,
+    setTo: setCIDs as Dispatch<SetStateAction<unknown[]>>,
+    setRemaining,
+  })
 
   useEffect(() => {
     const search = async () => {
@@ -32,11 +42,14 @@ const Home: NextPage = () => {
 
         const body = await results.text()
         const { cids, message } = JSON5.parse(body)
+
+        setCIDs([])
+
         if(!results.ok) {
           throw new Error(message)
-        } else {
-          setCIDs(cids)
         }
+
+        setPending(cids)
       } catch(err) {
         if(!(err instanceof DOMException)) {
           console.error((err as Error).message)
@@ -55,50 +68,33 @@ const Home: NextPage = () => {
         <title>𝔐𝔦̈𝔪𝔦𝔰</title>
       </Head>
 
-      <chakra.main>
-        <PathsetInput {...{ paths, setPaths }} mb={5}/>
-        {loading && <Spinner thickness='5'/>}
-        <Wrap mr={32} mb={10}>
-          {cids?.map((cid) => (
-            <WrapItem key={cid}>
-              <Image
-                w="2rem" maxH="2rem"
-                sx={{
-                  '@keyframes grow': {
-                    from: {
-                      w: '2rem',
-                      maxH: '2rem',
-                    },
-                    to: {
-                      w: '5rem',
-                      maxH: '5rem',
-                    }
-                  },
-                  '@keyframes shrink': {
-                    from: {
-                      w: '5rem',
-                      maxH: '5rem',
-                    },
-                    to: {
-                      w: '2rem',
-                      maxH: '2rem',
-                    }
-                  },
-                  animationName: 'shrink',
-                  animationDuration: '1s',
-                }}
-                _hover={{
-                  animationName: 'grow',
-                  animationDuration: '1.5s',
-                  animationFillMode: 'forwards',
-                }}
-                alt=""
-                src={`${GATEWAY}${cid}`}
-              />
-            </WrapItem>
-          ))}
-        </Wrap>
-      </chakra.main>
+      <PathsetInput {...{ paths, setPaths }} mb={5}/>
+      {loading && <Spinner thickness='5'/>}
+      {remaining > 0 && (
+        <Flex>
+          {remaining} Remaining
+          <chakra.em ml={3}>
+            (The IPFS gateway is rate limited{' '}
+            {(60 * 1000) / limitedRate} requests per minute.)
+          </chakra.em>
+        </Flex>
+      )}
+      <Wrap mr={32} mb={10}>
+        {cids?.map((cid) => (
+          <WrapItem key={cid}>
+            <Image
+              w="2rem" maxH="2rem"
+              transition="all 1s"
+              _hover={{
+                w: '5rem',
+                maxH: '5rem',
+              }}
+              alt=""
+              src={httpURL(`ipfs://${cid}`) ?? undefined}
+            />
+          </WrapItem>
+        ))}
+      </Wrap>
     </Box>
   )
 }

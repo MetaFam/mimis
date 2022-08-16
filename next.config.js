@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  // causes a double render in React 18
+  reactStrictMode: false,
   swcMinify: true,
 }
 

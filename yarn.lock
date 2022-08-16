@@ -3365,6 +3365,7 @@ __metadata:
     ipfs-http-client: ^57.0.3
     iron-session: ^6.1.3
     json5: ^2.2.1
+    multiformats: ^9.7.1
     neo4j-driver: ^4.4.6
     next: 12.2.2
     react: 18.2.0
@@ -4359,6 +4360,13 @@ __metadata:
   version: 9.7.0
   resolution: "multiformats@npm:9.7.0"
   checksum: 6904d9d9f4ed764e9e61d064948f4590159fc85d9da5629e8ccad7fd84e55d7d9f6e8ffd471a27ac04fdc857acc4858b61cf579c87f45cca4d98a5a6ef200bf3
+  languageName: node
+  linkType: hard
+
+"multiformats@npm:^9.7.1":
+  version: 9.7.1
+  resolution: "multiformats@npm:9.7.1"
+  checksum: 9193a4b55573dc88053a357e5f9562696d7cc47669e5ce5d7e147e3db1ec3f793567d7943c7e20271af9acd1e48c1679d0dfe932094333b16ed7f9f2ccf9197f
   languageName: node
   linkType: hard
 

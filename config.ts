@@ -3,19 +3,19 @@ export const sessionOpts = (() => {
     process.env
   )
 
-  if(!SESSION_PASSWORD) {
-    throw new Error(
-      'Missing: `$SESSION_PASSWORD` to encrypt session store.'
-    )
-  }
-
   return ({
     cookieName: (
       SESSION_COOKIE_NAME ?? '𝔐𝔦̈𝔪𝔦𝔰-default'
     ),
-    password: SESSION_PASSWORD,
+    password: SESSION_PASSWORD ?? 'This is a password.',
     cookieOptions: {
       secure: NODE_ENV === "production",
     },
   })
 })()
+
+export const ipfsLinkPattern = (
+  process.env.IPFS_LINK_PATTERN
+  ?? 'https://{v1cid}.ipfs.dweb.link/{path}'
+  ?? 'https://ipfs.io/ipfs/{cid}/{path}'
+)
