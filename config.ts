@@ -1,3 +1,5 @@
+import exp from "constants"
+
 export const sessionOpts = (() => {
   const { NODE_ENV, SESSION_PASSWORD, SESSION_COOKIE_NAME } = (
     process.env
@@ -19,3 +21,7 @@ export const ipfsLinkPattern = (
   ?? 'https://{v1cid}.ipfs.dweb.link/{path}'
   ?? 'https://ipfs.io/ipfs/{cid}/{path}'
 )
+export const ipfsLimitingDelay = 60 * 1000 / 100 // 100 per minute
+
+export const gwPatternKey = 'Mïmis-Gateway-Pattern'
+export const limitingDelayKey = 'Mïmis-Gateway-Limiting-Delay'

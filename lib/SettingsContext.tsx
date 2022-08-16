@@ -1,21 +1,51 @@
-import React, { createContext, ReactNode, useState } from 'react'
+import React, { createContext, ReactNode, useCallback, useState } from 'react'
+import { ipfsLinkPattern, gwPatternKey, limitingDelayKey, ipfsLimitingDelay } from '@/config'
 
 export const SettingsContext = createContext({
-  limitedRate: 0,
-  setRate: (limit: number) => {},
+  limitingDelay: 0,
+  gwPattern: ipfsLinkPattern,
+  setDelay: (limit: number) => {},
+  setGwPattern: (pattern: string) => {},
 })
 
 export const Settings: React.FC<{
   children: ReactNode
 }> = ({ children }) => {
-  const [limitedRate, setRate] = useState(
-    60 * 1000 / 100, // 100 per minute
-  )
+  const [limitingDelay, setDelay] = useState(() => {
+    if(typeof localStorage !== 'undefined') {
+      return Number(
+        localStorage?.getItem(limitingDelayKey)
+        ?? ipfsLimitingDelay
+      )
+    }
+  })
+  const [gwPattern,setGwPattern] = useState(() => {
+    if(typeof localStorage !== 'undefined') {
+      const pattern = (
+        localStorage?.getItem(gwPatternKey) as string
+        ?? ipfsLinkPattern
+      )
+      return pattern.replace(/^https?:\/\//, '')
+    }
+  })
+  const wrappedSetGwPattern = useCallback((pattern: string) => {
+    localStorage.setItem(gwPatternKey, pattern)
+    setGwPattern(pattern)
+  }, [])
+
+  const wrappedSetDelay = useCallback((delay: number) => {
+    console.log({limitingDelayKey, delay})
+    localStorage.setItem(limitingDelayKey, delay.toString())
+    setDelay(delay)
+  }, [])
+
 
   return (
     <SettingsContext.Provider value={{
-      limitedRate,
-      setRate,
+      limitingDelay: limitingDelay ?? ipfsLimitingDelay,
+      gwPattern: gwPattern ?? ipfsLinkPattern,
+      setDelay: wrappedSetDelay,
+      setGwPattern: wrappedSetGwPattern,
     }}>
       {children}
     </SettingsContext.Provider>
