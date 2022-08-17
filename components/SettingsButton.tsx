@@ -1,7 +1,7 @@
 import { ipfsLimitingDelay, ipfsLinkPattern } from '@/config';
 import { SettingsContext } from '@/lib/SettingsContext';
 import { chakra, Button, ButtonProps, FormControl, FormLabel, Input, InputGroup, InputLeftAddon, InputRightAddon, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, useDisclosure, Spacer, Flex, Stack } from '@chakra-ui/react';
-import React, { useCallback, useContext, useState } from 'react'
+import React, { useContext, useState } from 'react'
 
 export const SettingsButton = (
   React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -65,48 +65,48 @@ export const SettingsButton = (
 
               <ModalFooter>
                 <Stack w="full">
-                <Flex mb={5}>
-                  <Button 
-                    colorScheme="blue"
-                    mr={3}
-                    onClick={() => {
-                      setGw('{v1cid}.ipfs.localhost:8080/{path}')
-                      setDelay(0)
-                    }}
-                  >
-                    Use <chakra.code ml={2}>localhost</chakra.code>
-                  </Button>
-                  <Button
-                    colorScheme="blue"
-                    onClick={() => {
-                      setGw(ipfsLinkPattern.replace(/^https?:\/\//, ''))
-                      setDelay(ipfsLimitingDelay)
-                    }}
-                  >
-                    Use Defaults
-                  </Button>
-                </Flex>
+                  <Flex mb={5}>
+                    <Button 
+                      colorScheme="blue"
+                      mr={3}
+                      onClick={() => {
+                        setGw('{v1cid}.ipfs.localhost:8080/{path}')
+                        setDelay(0)
+                      }}
+                    >
+                      Use <chakra.code ml={2}>localhost</chakra.code>
+                    </Button>
+                    <Button
+                      colorScheme="blue"
+                      onClick={() => {
+                        setGw(ipfsLinkPattern.replace(/^https?:\/\//, ''))
+                        setDelay(ipfsLimitingDelay)
+                      }}
+                    >
+                      Use Defaults
+                    </Button>
+                  </Flex>
 
-                <Flex alignSelf="end">
-                  <Button
-                    colorScheme='red'
-                    mr={3}
-                    onClick={onClose}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    colorScheme='green'
-                    mr={3}
-                    onClick={() => {
-                      setGwPattern(gw)
-                      setLimitingDelay(delay)
-                      onClose()
-                    }}
-                  >
-                    Save
-                  </Button>
-                </Flex>
+                  <Flex alignSelf="end">
+                    <Button
+                      colorScheme="red"
+                      mr={3}
+                      onClick={onClose}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      colorScheme="green"
+                      mr={3}
+                      onClick={() => {
+                        setGwPattern(gw)
+                        setLimitingDelay(delay)
+                        onClose()
+                      }}
+                    >
+                      Save
+                    </Button>
+                  </Flex>
                 </Stack>
               </ModalFooter>
             </ModalContent>
