@@ -12,7 +12,7 @@ export const useMover = (
       setRemaining: Dispatch<SetStateAction<number>>
     }
   ) => {
-    const { limitedRate } = useContext(SettingsContext)
+    const { limitingDelay } = useContext(SettingsContext)
     const interval = useRef<NodeJS.Timer>()
 
     const move = useCallback(() => {
@@ -40,8 +40,8 @@ export const useMover = (
 
     useEffect(() => {
       clearInterval(interval.current)
-      if(limitedRate > 0) {
-        interval.current = setInterval(move, limitedRate)
+      if(limitingDelay > 0) {
+        interval.current = setInterval(move, limitingDelay)
       } else {
         setFrom((from) => {
           setTo(from)
@@ -49,7 +49,8 @@ export const useMover = (
           return []
         })
       }
-    }, [limitedRate, move, setFrom, setTo, setRemaining])
+    }, [limitingDelay, move, setFrom, setTo, setRemaining])
   }
 )
 
+export default useMover

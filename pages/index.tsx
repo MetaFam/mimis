@@ -5,7 +5,9 @@ import type { NextPage } from 'next'
 import Head from 'next/head'
 import type { Maybe, Pathset } from '@/types'
 import { PathsetInput } from '@/components'
-import { Dispatch, SetStateAction, useEffect, useRef, useState, useContext } from 'react';
+import {
+  Dispatch, SetStateAction, useEffect, useRef, useState, useContext,
+} from 'react';
 import JSON5 from 'json5'
 import { httpURL } from '@/lib/helpers'
 import { useMover } from '@/lib/useMover'
@@ -18,7 +20,7 @@ export const Home: NextPage = () => {
   const [cids, setCIDs] = useState<Array<string>>([])
   const [loading, setLoading] = useState(false)
   const [remaining, setRemaining] = useState(0)
-  const { limitedRate } = useContext(SettingsContext)
+  const { limitingDelay } = useContext(SettingsContext)
   useMover({
     setFrom: setPending as Dispatch<SetStateAction<unknown[]>>,
     setTo: setCIDs as Dispatch<SetStateAction<unknown[]>>,
@@ -75,7 +77,7 @@ export const Home: NextPage = () => {
           {remaining} Remaining
           <chakra.em ml={3}>
             (The IPFS gateway is rate limited{' '}
-            {(60 * 1000) / limitedRate} requests per minute.)
+            {(60 * 1000) / limitingDelay} requests per minute.)
           </chakra.em>
         </Flex>
       )}
