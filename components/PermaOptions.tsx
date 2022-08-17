@@ -54,12 +54,13 @@ export const PermaOptions = ({ ...props }) => {
       >
         <Link
           href="//github.com/dhappy/forests/"
+          target="_blank"
           _hover={{ textDecoration: 'none' }}
         >
           <Button
             border="2px solid #00000088"
             borderRadius="50%"
-            h="2rem" w="2rem"
+            h="2rem" w="2rem" pt={0.5}
             minW="auto"
             title="GitHub"
           >
