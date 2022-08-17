@@ -1,6 +1,8 @@
 import { CID } from 'multiformats/cid'
 import { ipfsLinkPattern } from '@/config'
 import { Maybe } from '@/types'
+import { useContext } from 'react'
+import { SettingsContext } from './SettingsContext'
 
 export const verifyNeo4j = () => {
   const vars = [
@@ -17,6 +19,7 @@ export const verifyNeo4j = () => {
 }
 
 export const httpURL = (uri?: Maybe<string>) => {
+  const { gwPattern } = useContext(SettingsContext)
   const [, origCID, path] = (
     uri?.match(/^(?:ipfs|dweb):(?:\/\/)?([^/]+)(?:\/(.*))?$/) ?? []
   )
@@ -25,7 +28,7 @@ export const httpURL = (uri?: Maybe<string>) => {
     const cid = CID.parse(origCID)
     const v0CID = cid.toV0().toString()
     const v1CID = cid.toV1().toString()
-    const pattern = ipfsLinkPattern
+    const pattern = `http://${gwPattern}`
     return (
       encodeURI(
         pattern

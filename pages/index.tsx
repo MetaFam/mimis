@@ -16,12 +16,14 @@ import { SettingsContext } from '@/lib/SettingsContext'
 export const Home: NextPage = () => {
   const [paths, setPaths] = useState<Pathset>([['**']])
   const abortController = useRef<Maybe<AbortController>>(null)
-  const [, setPending] = useState<Array<string>>([])
+  const [pending, setPending] = useState<Array<string>>([])
+  console.log({pending})
   const [cids, setCIDs] = useState<Array<string>>([])
   const [loading, setLoading] = useState(false)
   const [remaining, setRemaining] = useState(0)
   const { limitingDelay } = useContext(SettingsContext)
   useMover({
+    from: pending, 
     setFrom: setPending as Dispatch<SetStateAction<unknown[]>>,
     setTo: setCIDs as Dispatch<SetStateAction<unknown[]>>,
     setRemaining,
