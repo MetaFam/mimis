@@ -127,6 +127,7 @@ export const Home: NextPage = () => {
                     setErrors((errs) => ({ ...errs, [cid]: 'Probably Gateway Timeout, Maybe Rate Limiting' }))
                   }}
                   onClick={() => navigator.clipboard.writeText(ipfsURL)}
+                  crossOrigin="anonymous"
                 />
               )}
             </WrapItem>

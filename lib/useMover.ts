@@ -1,5 +1,5 @@
 import {
-  Dispatch, SetStateAction, useCallback, useContext, useEffect, useRef,
+  Dispatch, SetStateAction, useCallback, useContext, useRef,
 } from 'react'
 import { SettingsContext } from '@/lib/SettingsContext'
 
