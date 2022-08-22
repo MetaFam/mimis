@@ -125,8 +125,10 @@ const handler = async (
   }
 
   if(message) {
+    if(DEBUG) console.info(`Returning: "${message}".`)
     res.status(500).json({ message })
   } else if(cids) {
+    if(DEBUG) console.info(`Returning ${cids.length} CIDs.`)
     res.status(200).json({ cids })
   } else {
     res.status(500).json({ message: 'Don’t know how we got here.' })

@@ -5,12 +5,10 @@ import { SettingsContext } from '@/lib/SettingsContext'
 
 export const useMover = (
   (
-    { from, setFrom, setTo, setRemaining }:
+    { setFrom, setTo }:
     {
-      from: Array<unknown>
       setFrom: Dispatch<SetStateAction<Array<unknown>>>
       setTo: Dispatch<SetStateAction<Array<unknown>>>
-      setRemaining: Dispatch<SetStateAction<number>>
     }
   ) => {
     const { limitingDelay } = useContext(SettingsContext)
@@ -18,13 +16,11 @@ export const useMover = (
     const move = useCallback(() => {
       setFrom((from: Array<unknown>) => {
         if(from.length === 0) {
-          setRemaining(0)
           return from // w/o this `from` changes on every render & blows the stack
         }
 
         if(limitingDelay === 0) {
           setTo((to: Array<unknown>) => [...to, ...from])
-          setRemaining(0)
           return []
         }
 
@@ -40,14 +36,13 @@ export const useMover = (
           }
           return to
         })
-        setRemaining(from.length - 1)
 
         return from.slice(1)
       })
-    }, [limitingDelay, setFrom, setRemaining, setTo])
+    }, [limitingDelay, setFrom, setTo])
 
     const interval = useRef<NodeJS.Timer>()
-    useEffect(() => {
+    return useCallback(() => {
       const clear = () => clearInterval(interval.current)
 
       clear()

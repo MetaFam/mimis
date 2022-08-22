@@ -1,5 +1,6 @@
 import {
-  chakra, Box, Spinner, Image, Wrap, WrapItem, Flex, Text, Alert, AlertIcon, AlertTitle, AlertDescription,
+  chakra, Box, Spinner, Image, Wrap, WrapItem, Flex,
+  Alert, AlertIcon, AlertTitle, AlertDescription, Tooltip,
 } from '@chakra-ui/react'
 import type { NextPage } from 'next'
 import Head from 'next/head'
@@ -19,15 +20,13 @@ export const Home: NextPage = () => {
   const [pending, setPending] = useState<Array<string>>([])
   const [cids, setCIDs] = useState<Array<string>>([])
   const [loading, setLoading] = useState(false)
-  const [remaining, setRemaining] = useState(0)
   const { limitingDelay, gwPattern } = useContext(SettingsContext)
   const [error, setError] = useState<Maybe<string>>(null)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
-  useMover({
-    from: pending, 
+  const move = useMover({
     setFrom: setPending as Dispatch<SetStateAction<unknown[]>>,
     setTo: setCIDs as Dispatch<SetStateAction<unknown[]>>,
-    setRemaining,
   })
 
   useEffect(() => {
@@ -37,6 +36,7 @@ export const Home: NextPage = () => {
 
         abortController.current?.abort()
         abortController.current = new AbortController()
+
         const results = await fetch(
           `/api/search?${new URLSearchParams({
             paths: JSON5.stringify(paths)
@@ -55,14 +55,17 @@ export const Home: NextPage = () => {
         }
 
         setPending(cids)
+
+        move()
+
+        setLoading(false)
       } catch(err) {
         if(!(err instanceof DOMException)) {
           const message = (err as Error).message
           console.error({ message })
           setError(message)
+          setLoading(false)
         }
-      } finally {
-        setLoading(false)
       }
     }
 
@@ -84,12 +87,12 @@ export const Home: NextPage = () => {
       </Head>
 
       <PathsetInput {...{ paths, setPaths }} mb={5}/>
-      {loading && <Spinner thickness='5'/>}
-      {remaining > 0 && (
-        <Flex>
-          {remaining} Remaining
-          <chakra.em ml={3}>
-            (The IPFS gateway is rate limited{' '}
+      {loading && <Flex justify="center"><Spinner thickness="5px"/></Flex>}
+      {pending.length > 0 && (
+        <Flex justify="center">
+          <chakra.b mr={2} fontSize="150%" mt={-2}>{pending.length}</chakra.b> Remaining
+          <chakra.em ml={2}>
+            (The IPFS gateway is rate limited to{' '}
             {(60 * 1000) / limitingDelay} requests per minute.)
           </chakra.em>
         </Flex>
@@ -97,16 +100,26 @@ export const Home: NextPage = () => {
       <Wrap mr={32} mb={10}>
         {cids?.map((cid) => (
           <WrapItem key={cid}>
-            <Image
-              w="2rem" maxH="2rem"
-              transition="all 1s"
-              _hover={{
-                w: '5rem',
-                maxH: '5rem',
-              }}
-              alt=""
-              src={httpURL(`ipfs://${cid}`, { gwPattern }) ?? undefined}
-            />
+            {errors[cid] ? (
+              <Tooltip label={errors[cid]}>
+                <Box bg="red" w="2rem" h="2rem" border="dasdhed"/>
+              </Tooltip>
+            ) : (
+              <Image
+                w="2rem" maxH="2rem"
+                transition="all 1s"
+                _hover={{
+                  w: '5rem',
+                  maxH: '5rem',
+                }}
+                alt=""
+                src={httpURL(`ipfs://${cid}`, { gwPattern }) ?? undefined}
+                onError={(evt) => {
+                  console.warn({ evt })
+                  setErrors((errs) => ({ ...errs, [cid]: 'Gateway Timeout' }))
+                }}
+              />
+            )}
           </WrapItem>
         ))}
       </Wrap>

@@ -1,5 +1,5 @@
 import {
-  chakra, Button, Flex, Input, Stack, Text, useToast, Spinner,
+  chakra, Button, Flex, Input, Stack, Text, useToast, Spinner, Tooltip,
 } from '@chakra-ui/react'
 import type { NextPage } from 'next'
 import Head from 'next/head'
@@ -73,7 +73,15 @@ const Add: NextPage = () => {
           onSubmit={submit}
         >
           <Flex justify="center" align="center">
-            <Text mr={0.5}>IPFS API:</Text>
+            <Tooltip label={`Note: This requires ${window.location.host} be whitelisted for API access in the IPFS configuration.`}>
+              <Text
+                mr={0.5}
+                borderBottom="dotted"
+                _hover={{ borderBottom: 'dashed' }}
+              >
+                IPFS API:
+              </Text>
+            </Tooltip>
             <Input
               placeholder="IPFS API Endpoint"
               value={endpoint ?? ''}

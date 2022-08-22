@@ -55,7 +55,7 @@ export const SettingsButton = (
                       }}
                     />
                     <InputRightAddon>
-                      <sup><span title="milliseconds">ms</span> wait </sup> ⁄ <sub>job</sub>
+                      <sup><span title="milliseconds">ms</span> wait </sup> ⁄ <sub>resource</sub>
                     </InputRightAddon>
                   </InputGroup>
                 </FormControl>
@@ -68,7 +68,7 @@ export const SettingsButton = (
                       colorScheme="blue"
                       mr={3}
                       onClick={() => {
-                        setGw('https://{v1cid}.ipfs.localhost:8080/{path}')
+                        setGw('http://{v1cid}.ipfs.localhost:8080/{path}')
                         setDelay(0)
                       }}
                     >
