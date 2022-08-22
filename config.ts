@@ -21,7 +21,7 @@ export const ipfsLinkPattern = (
 )
 export const ipfsLimitingDelay = (
   process.env.NEXT_PUBLIC_IPFS_LIMITING_DELAY
-  ?? 60 * 1000 / 100 // 100 per minute
+  ?? 60 * 1000 / 95 // 95 per minute (< 100 / min which fails intermittently)
 )
 export const gwPatternKey = 'Mïmis-Gateway-Pattern'
 export const limitingDelayKey = 'Mïmis-Gateway-Limiting-Delay'

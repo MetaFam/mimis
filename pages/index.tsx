@@ -94,35 +94,46 @@ export const Home: NextPage = () => {
           <chakra.b mr={2} fontSize="150%" mt={-2}>{pending.length}</chakra.b> Remaining
           <chakra.em ml={2}>
             (The IPFS gateway is rate limited to{' '}
-            {(60 * 1000) / limitingDelay} requests per minute.)
+            {(60 * 1000 * 100) % limitingDelay === 0 ? '' : '~'}
+            {((60 * 1000) / limitingDelay).toFixed(2).replace(/\.?0+$/g, '')} requests per minute.)
           </chakra.em>
         </Flex>
       )}
       <Wrap mr={32} mb={10}>
-        {cids?.map((cid) => (
-          <WrapItem key={cid}>
-            {errors[cid] ? (
-              <Tooltip label={errors[cid]}>
-                <Box bg="red" w="2rem" h="2rem" border="dashed"/>
-              </Tooltip>
-            ) : (
-              <Image
-                w="2rem" maxH="2rem"
-                transition="all 1s"
-                _hover={{
-                  w: '5rem',
-                  maxH: '5rem',
-                }}
-                alt=""
-                src={httpURL(`ipfs://${cid}`, { gwPattern }) ?? undefined}
-                onError={(evt) => {
-                  console.warn({ evt })
-                  setErrors((errs) => ({ ...errs, [cid]: 'Gateway Timeout' }))
-                }}
-              />
-            )}
-          </WrapItem>
-        ))}
+        {cids?.map((cid) => {
+          const ipfsURL = `ipfs://${cid}`
+
+          return (
+            <WrapItem key={cid}>
+              {errors[cid] ? (
+                <Tooltip label={`${errors[cid]} (${ipfsURL} ⧉)`}>
+                  <Box
+                    bg="red" w="2rem" h="2rem"
+                    border="2px dashed black"
+                    onClick={() => navigator.clipboard.writeText(ipfsURL)}
+                  />
+                </Tooltip>
+              ) : (
+                <Tooltip label={`${ipfsURL} ⧉`}>
+                  <Image
+                    w="2rem" maxH="2rem"
+                    transition="all 1s"
+                    _hover={{
+                      w: '5rem',
+                      maxH: '5rem',
+                    }}
+                    alt={ipfsURL}
+                    src={httpURL(ipfsURL, { gwPattern }) ?? undefined}
+                    onError={(evt) => {
+                      setErrors((errs) => ({ ...errs, [cid]: 'Probably Gateway Timeout' }))
+                    }}
+                    onClick={() => navigator.clipboard.writeText(ipfsURL)}
+                  />
+                </Tooltip>
+              )}
+            </WrapItem>
+          )
+        })}
       </Wrap>
     </Box>
   )
