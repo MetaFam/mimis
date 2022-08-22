@@ -73,7 +73,7 @@ const Add: NextPage = () => {
           onSubmit={submit}
         >
           <Flex justify="center" align="center">
-            <Tooltip label={`Note: This requires ${window.location.host} be whitelisted for API access in the IPFS configuration.`}>
+            <Tooltip label={`Note: This requires ${typeof window === 'undefined' ? '𝚞𝚗𝚔𝚗𝚘𝚠𝚗 𝚑𝚘𝚜𝚝' : window.location.host} be whitelisted for API access in the IPFS configuration.`}>
               <Text
                 mr={0.5}
                 borderBottom="dotted"

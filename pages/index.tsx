@@ -49,6 +49,7 @@ export const Home: NextPage = () => {
         const { cids, message } = JSON5.parse(body)
 
         setCIDs([])
+        setErrors({})
 
         if(!results.ok) {
           throw new Error(message)
@@ -102,7 +103,7 @@ export const Home: NextPage = () => {
           <WrapItem key={cid}>
             {errors[cid] ? (
               <Tooltip label={errors[cid]}>
-                <Box bg="red" w="2rem" h="2rem" border="dasdhed"/>
+                <Box bg="red" w="2rem" h="2rem" border="dashed"/>
               </Tooltip>
             ) : (
               <Image
