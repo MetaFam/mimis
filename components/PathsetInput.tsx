@@ -6,7 +6,7 @@ import React, {
   ChangeEvent, Dispatch, KeyboardEvent, SetStateAction, useEffect, useState,
 } from 'react'
 import type {
-  Path, AddPathAtomProps, AddPathProps,
+  AddPathAtomProps, AddPathProps,
   PathsetAtomPosition,
   RemovePathAtomProps, RemovePathProps, Pathset,
 } from '../types'

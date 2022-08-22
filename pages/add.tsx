@@ -117,11 +117,11 @@ const Add: NextPage = () => {
               ]}
             />
           </Flex>
-          <Flex mx={[0, 10, 32]}>
-            <PathsetInput
-              {...{ paths, setPaths } }
-              mx={[0, '10vw', '20vw']}
-            />
+          <Flex px={[0, '10vw', '20vw']} direction="column">
+            <Text fontSize="110%">
+              Paths where the resource should appear:
+            </Text>
+            <PathsetInput {...{ paths, setPaths } } />
           </Flex>
           <Flex justify="center">
             <Button
