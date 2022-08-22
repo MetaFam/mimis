@@ -1,5 +1,5 @@
 import {
-  chakra, Box, Spinner, Image, Wrap, WrapItem, Flex,
+  chakra, Box, Spinner, Image, Wrap, WrapItem, Flex, Text, Alert,
 } from '@chakra-ui/react'
 import type { NextPage } from 'next'
 import Head from 'next/head'
@@ -68,6 +68,15 @@ export const Home: NextPage = () => {
 
   return (
     <Box>
+      <Alert status="error">
+        <Text>
+          Switching from Neo4j Sandbox <em>(deleted every seven days)</em> to Neo4j Aura <em>(cloud-based)</em> introduced a dependency error. It either doesn’t load the final result, or recurses forever.
+        </Text>
+        <Text>
+          I’m aware of the issue and addressing it as quickly as possible.
+        </Text>
+      </Alert>
+
       <Head>
         <title>𝔐𝔦̈𝔪𝔦𝔰</title>
       </Head>
