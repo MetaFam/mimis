@@ -114,22 +114,20 @@ export const Home: NextPage = () => {
                   />
                 </Tooltip>
               ) : (
-                <Tooltip label={`${ipfsURL} ⧉`}>
-                  <Image
-                    w="2rem" maxH="2rem"
-                    transition="all 1s"
-                    _hover={{
-                      w: '5rem',
-                      maxH: '5rem',
-                    }}
-                    alt={ipfsURL}
-                    src={httpURL(ipfsURL, { gwPattern }) ?? undefined}
-                    onError={(evt) => {
-                      setErrors((errs) => ({ ...errs, [cid]: 'Probably Gateway Timeout' }))
-                    }}
-                    onClick={() => navigator.clipboard.writeText(ipfsURL)}
-                  />
-                </Tooltip>
+                <Image
+                  w="2rem" maxH="2rem"
+                  transition="all 1s"
+                  _hover={{
+                    w: '5rem',
+                    maxH: '5rem',
+                  }}
+                  alt={ipfsURL}
+                  src={httpURL(ipfsURL, { gwPattern }) ?? undefined}
+                  onError={(evt) => {
+                    setErrors((errs) => ({ ...errs, [cid]: 'Probably Gateway Timeout, Maybe Rate Limiting' }))
+                  }}
+                  onClick={() => navigator.clipboard.writeText(ipfsURL)}
+                />
               )}
             </WrapItem>
           )
