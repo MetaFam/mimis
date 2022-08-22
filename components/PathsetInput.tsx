@@ -219,7 +219,7 @@ export const PathsetInput: React.FC<{
                   paths
                   .slice(0, pidx)
                   .map((pth) => pth.length)
-                  .reduce((acc, val) => acc = val, 0)
+                  .reduce((acc, val) => acc + val, 0)
                   + 1
                   + aidx + 1
                 )

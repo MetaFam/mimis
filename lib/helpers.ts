@@ -27,10 +27,9 @@ export const httpURL = (uri: Maybe<string>, { gwPattern = ipfsLinkPattern }) => 
     const cid = CID.parse(origCID)
     const v0CID = cid.toV0().toString()
     const v1CID = cid.toV1().toString()
-    const pattern = `http://${gwPattern}`
     return (
       encodeURI(
-        pattern
+        gwPattern
         .replace(/{cid}/g, origCID)
         .replace(/{v0cid}/g, v0CID)
         .replace(/{v1cid}/g, v1CID)

@@ -7,13 +7,12 @@ import { PathsetInput } from '@/components'
 import { ChangeEvent, FormEvent, useState } from 'react'
 import type { Maybe, Pathset } from '@/types'
 import JSON5 from 'json5'
+import { ipfsAPIURL } from '@/config'
 
 const Add: NextPage = () => {
   const [cid, setCID] = useState<Maybe<string>>(null)
   const [endpoint, setEndpoint] = (
-    useState<Maybe<string>>(
-      process.env.NEXT_PUBLIC_IPFS_API_URL ?? null
-    )
+    useState<Maybe<string>>(ipfsAPIURL)
   )
   const [paths, setPaths] = useState<Pathset>([])
   const toast = useToast()

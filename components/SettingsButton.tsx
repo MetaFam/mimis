@@ -34,7 +34,6 @@ export const SettingsButton = (
                 <FormControl mb={3}>
                   <FormLabel>IPFS Gateway Pattern</FormLabel>
                   <InputGroup>
-                    <InputLeftAddon>https://</InputLeftAddon>
                     <Input
                       placeholder="Pattern"
                       value={gw}
@@ -60,7 +59,6 @@ export const SettingsButton = (
                     </InputRightAddon>
                   </InputGroup>
                 </FormControl>
-
               </ModalBody>
 
               <ModalFooter>
@@ -70,7 +68,7 @@ export const SettingsButton = (
                       colorScheme="blue"
                       mr={3}
                       onClick={() => {
-                        setGw('{v1cid}.ipfs.localhost:8080/{path}')
+                        setGw('https://{v1cid}.ipfs.localhost:8080/{path}')
                         setDelay(0)
                       }}
                     >
@@ -79,8 +77,8 @@ export const SettingsButton = (
                     <Button
                       colorScheme="blue"
                       onClick={() => {
-                        setGw(ipfsLinkPattern.replace(/^https?:\/\//, ''))
-                        setDelay(ipfsLimitingDelay)
+                        setGw(ipfsLinkPattern)
+                        setDelay(Number(ipfsLimitingDelay))
                       }}
                     >
                       Use Defaults

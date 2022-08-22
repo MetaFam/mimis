@@ -25,7 +25,7 @@ export const Settings: React.FC<{
         localStorage?.getItem(gwPatternKey) as string
         ?? ipfsLinkPattern
       )
-      return pattern.replace(/^https?:\/\//, '')
+      return pattern
     }
   })
   const wrappedSetGwPattern = useCallback((pattern: string) => {
@@ -42,7 +42,7 @@ export const Settings: React.FC<{
 
   return (
     <SettingsContext.Provider value={{
-      limitingDelay: limitingDelay ?? ipfsLimitingDelay,
+      limitingDelay: limitingDelay ?? Number(ipfsLimitingDelay),
       gwPattern: gwPattern ?? ipfsLinkPattern,
       setDelay: wrappedSetDelay,
       setGwPattern: wrappedSetGwPattern,
