@@ -18,8 +18,7 @@ export const verifyNeo4j = () => {
   }
 }
 
-export const httpURL = (uri?: Maybe<string>) => {
-  const { gwPattern } = useContext(SettingsContext)
+export const httpURL = (uri: Maybe<string>, { gwPattern = ipfsLinkPattern }) => {
   const [, origCID, path] = (
     uri?.match(/^(?:ipfs|dweb):(?:\/\/)?([^/]+)(?:\/(.*))?$/) ?? []
   )

@@ -21,7 +21,7 @@ export const Home: NextPage = () => {
   const [cids, setCIDs] = useState<Array<string>>([])
   const [loading, setLoading] = useState(false)
   const [remaining, setRemaining] = useState(0)
-  const { limitingDelay } = useContext(SettingsContext)
+  const { limitingDelay, gwPattern } = useContext(SettingsContext)
   useMover({
     from: pending, 
     setFrom: setPending as Dispatch<SetStateAction<unknown[]>>,
@@ -103,7 +103,7 @@ export const Home: NextPage = () => {
                 maxH: '5rem',
               }}
               alt=""
-              src={httpURL(`ipfs://${cid}`) ?? undefined}
+              src={httpURL(`ipfs://${cid}`, { gwPattern }) ?? undefined}
             />
           </WrapItem>
         ))}

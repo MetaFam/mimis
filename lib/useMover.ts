@@ -42,9 +42,10 @@ export const useMover = (
         }
         return []
       })
-    }, [setFrom, setRemaining, setTo])
+    }, [limitingDelay, setFrom, setRemaining, setTo])
 
     useEffect(() => {
+      // pretty sure this doesn't shut down right
       let interval: NodeJS.Timer | undefined
       if(limitingDelay > 0) {
         interval = setInterval(move, limitingDelay)
