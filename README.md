@@ -1,3 +1,5 @@
+![](public/header.svg)
+
 # 𝔐𝔦̈𝔪𝔦𝔰
 
 𝔐𝔦̈𝔪𝔦𝔰 is a collaborative “filesystem” for [IPFS](//ipfs.io) resources. It varies from a traditional directory tree in the following ways:
