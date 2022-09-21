@@ -25,9 +25,9 @@
      inkscape:deskcolor="#505050"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="2"
-     inkscape:cx="101"
-     inkscape:cy="159.5"
+     inkscape:zoom="4"
+     inkscape:cx="273"
+     inkscape:cy="223.25"
      inkscape:window-width="3440"
      inkscape:window-height="1328"
      inkscape:window-x="0"
@@ -908,9 +908,9 @@
        sodipodi:nodetypes="cc" />
     <path
        style="fill:none;fill-opacity:1;stroke:#0f0b0b;stroke-width:2.565;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:0.64352;marker-start:url(#Dot-2-7-4-9-9);marker-end:url(#TriangleStart-2-4-2-0-6);paint-order:stroke fill markers"
-       d="m 435.88969,192.79428 c 36.93106,2.89689 19.89325,-30.01263 16.11236,-46.66943"
+       d="m 435.88969,192.79428 c 14.29293,1.12114 25.23894,0.36246 25.68818,-9.80475 0.96047,-21.73721 -8.42177,-64.94099 -10.73939,-75.15133"
        id="path1836-7-0-4-8-4"
-       sodipodi:nodetypes="cc" />
+       sodipodi:nodetypes="csc" />
     <circle
        style="opacity:1;fill:#eecaaf;fill-opacity:0.329376;stroke:#04330a;stroke-width:5.01165;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.745034;paint-order:stroke fill markers"
        id="path44283"
