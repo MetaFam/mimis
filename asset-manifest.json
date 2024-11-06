@@ -1,17 +1,17 @@
 {
   "files": {
-    "main.js": "/mimis/static/js/main.63bd8145.chunk.js",
-    "main.js.map": "/mimis/static/js/main.63bd8145.chunk.js.map",
-    "runtime-main.js": "/mimis/static/js/runtime-main.fa62e9f5.js",
-    "runtime-main.js.map": "/mimis/static/js/runtime-main.fa62e9f5.js.map",
-    "static/js/2.88fe0b64.chunk.js": "/mimis/static/js/2.88fe0b64.chunk.js",
-    "static/js/2.88fe0b64.chunk.js.map": "/mimis/static/js/2.88fe0b64.chunk.js.map",
+    "main.js": "/mimis/static/js/main.b384559e.chunk.js",
+    "main.js.map": "/mimis/static/js/main.b384559e.chunk.js.map",
+    "runtime-main.js": "/mimis/static/js/runtime-main.7ab0e164.js",
+    "runtime-main.js.map": "/mimis/static/js/runtime-main.7ab0e164.js.map",
+    "static/js/2.ed780546.chunk.js": "/mimis/static/js/2.ed780546.chunk.js",
+    "static/js/2.ed780546.chunk.js.map": "/mimis/static/js/2.ed780546.chunk.js.map",
     "index.html": "/mimis/index.html",
-    "static/js/2.88fe0b64.chunk.js.LICENSE.txt": "/mimis/static/js/2.88fe0b64.chunk.js.LICENSE.txt"
+    "static/js/2.ed780546.chunk.js.LICENSE.txt": "/mimis/static/js/2.ed780546.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
-    "static/js/runtime-main.fa62e9f5.js",
-    "static/js/2.88fe0b64.chunk.js",
-    "static/js/main.63bd8145.chunk.js"
+    "static/js/runtime-main.7ab0e164.js",
+    "static/js/2.ed780546.chunk.js",
+    "static/js/main.b384559e.chunk.js"
   ]
 }
