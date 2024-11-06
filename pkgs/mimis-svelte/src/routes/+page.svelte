@@ -1,31 +1,105 @@
 <script lang="ts">
-	import Counter from './Counter.svelte';
-	import welcome from '$lib/images/svelte-welcome.webp';
-	import welcomeFallback from '$lib/images/svelte-welcome.png';
+	import TreeView from 'react-accessible-treeview'
+
+	type Node = {
+		name: string
+		children?: Array<number>
+		id: number
+		parent: number | null
+	}
+
+	let nodes = $state<Array<Node>>([])
+	let statuses = $state<Array<string>>([])
+
+	const pick = async () => {
+		const read = async ({
+			dir, parent,
+		}: {
+			dir: FileSystemDirectoryHandle
+			parent?: Node | null
+		}) => {
+			statuses.push(`Traversing: ${dir.name}`)
+
+			const here: Node = {
+				name: dir.name,
+				children: [],
+				id: nodes.length,
+				parent: parent?.id ?? null,
+			}
+			nodes.push(here)
+
+			for await (const handle of dir.values()) {
+				if(handle.kind === 'directory') {
+					const node = (
+						await read({
+							dir: handle, parent: here,
+						})
+					)
+					here.children?.push(node.id)
+				} else {
+					statuses.push(`Leaf: ${handle.name}`)
+
+					const file = {
+						name: handle.name,
+						id: nodes.length,
+						parent: here.id,
+					}
+					nodes.push(file)
+					here.children?.push(file.id)
+				}
+			}
+			return here
+		}
+		await read({
+			dir: await window.showDirectoryPicker()
+		})
+		console.debug({ nodes })
+		statuses = []
+	}
 </script>
 
 <svelte:head>
-	<title>Home</title>
-	<meta name="description" content="Svelte demo app" />
+	<title>Mïmis</title>
+	<meta name="description" content="Collaborative filesystem" />
 </svelte:head>
 
-<section>
-	<h1>
-		<span class="welcome">
-			<picture>
-				<source srcset={welcome} type="image/webp" />
-				<img src={welcomeFallback} alt="Welcome" />
-			</picture>
-		</span>
+<h1>Mïmis: Collaborative Filesystem</h1>
 
-		to your new<br />SvelteKit app
-	</h1>
+<section class="flex align-center">
+	{#if statuses.length > 0}
+		<ol>
+			{#each statuses.slice(-35) as status}
+				<li>{status}</li>
+			{/each}
+		</ol>
+	{:else}
+		<button onclick={pick} class="btn btn-primary bg-green">
+			Pick a Directory to Spider
+		</button>
+	{/if}
 
-	<h2>
-		try editing <strong>src/routes/+page.svelte</strong>
-	</h2>
-
-	<Counter />
+	{#if nodes.length > 0}
+		<TreeView
+			data={nodes}
+			aria-label="Mïmis Filesystem"
+			nodeRenderer={
+				(
+					{ element, getNodeProps, level }: {
+						element: Node
+						getNodeProps: () => Record<string, string>
+						level: number
+					}
+				) => (
+					<div
+						{...getNodeProps()}
+						style={{ paddingLeft: 20 * (level - 1) }}
+					>
+						{element.name}
+					</div>
+				)
+			}
+		/>
+	{/if}
 </section>
 
 <style>
@@ -41,19 +115,13 @@
 		width: 100%;
 	}
 
-	.welcome {
-		display: block;
-		position: relative;
-		width: 100%;
-		height: 0;
-		padding: 0 0 calc(100% * 495 / 2048) 0;
-	}
+	ol {
+		list-style-type: none;
+		counter-reset: reversed(line);
 
-	.welcome img {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		top: 0;
-		display: block;
+		li::marker {
+			counter-increment: line;
+  		content: "L:" counter(line) ": ";
+		}
 	}
 </style>

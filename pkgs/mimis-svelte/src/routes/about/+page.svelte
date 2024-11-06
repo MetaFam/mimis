@@ -1,26 +1,23 @@
 <svelte:head>
-	<title>About</title>
-	<meta name="description" content="About this app" />
+	<title>About Mïmis</title>
+	<meta
+		name="description"
+		content="Mïmis: Collaborative Filesystem"
+	/>
 </svelte:head>
 
-<div class="text-column">
-	<h1>About this app</h1>
+<section class="text-column">
+	<h1>About Mïmis</h1>
 
-	<p>
-		This is a <a href="https://svelte.dev/docs/kit">SvelteKit</a> app. You can make your own by typing
-		the following into your command line and following the prompts:
-	</p>
+	<p>Mïmis is a collaborative filesystem. It functions by publishing <a href="https://ipld.io/docs/codecs/known/dag-cbor/">CBOR-DAG</a>s describing context trees to <a href="https://ipfs.io">IPFS</a> where they are picked up & cached in a <a href="https://neo4j.org">Neo4j</a> instance.</p>
 
-	<pre>npx sv create</pre>
+	<img src="architecture.svg" alt="Mïmis Architecture"/>
 
-	<p>
-		The page you're looking at is purely static HTML, with no client-side interactivity needed.
-		Because of that, we don't need to load any JavaScript. Try viewing the page's source, or opening
-		the devtools network panel and reloading.
-	</p>
+	<p>Each user has their own tree and it is possible to browse and subscribe to sections of other users' trees.</p>
+</section>
 
-	<p>
-		The <a href="/sverdle">Sverdle</a> page illustrates SvelteKit's data loading and form handling. Try
-		using it with JavaScript disabled!
-	</p>
-</div>
+<style>
+	img {
+		margin-block: 2rem;
+	}
+</style>
