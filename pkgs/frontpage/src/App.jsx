@@ -5,11 +5,7 @@ import {
 import {
   ChakraProvider, extendTheme, Menu, MenuItem,
   MenuButton, Button, MenuList, Link as ChakraLink,
-  chakra,
 } from '@chakra-ui/react'
-import {
-  ChevronDownIcon, HamburgerIcon,
-} from '@chakra-ui/icons'
 import D3RadialTree from './D3RadialTree'
 import Home from './Home'
 import Mock from './Mock'
@@ -49,7 +45,7 @@ export default () => (
               isActive={isOpen} as={Button}
               position='fixed' top='1rem' left='1rem'
             >
-              {isOpen ? <ChevronDownIcon/> : <HamburgerIcon/>}
+              {isOpen ? '⟱' : '☰'}
             </MenuButton>
             <MenuList>
             <MenuItem>
