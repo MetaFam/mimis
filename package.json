@@ -5,7 +5,10 @@
   "author": "dysbulic <dys@dhappy.org>",
   "homepage": "https://dysbulic.github.io/mimis/",
   "type": "module",
-  "workspaces": ["pkgs/*"],
+  "workspaces": {
+    "packages": ["pkgs/*"],
+    "nohoist": ["**/tailwindcss"]
+  },
   "scripts": {
     "start": "npm run dev --workspace=mimis-svelte"
   },

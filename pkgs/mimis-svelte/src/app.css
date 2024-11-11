@@ -17,6 +17,7 @@
 	--column-margin-top: 4rem;
 	font-family: var(--font-body);
 	color: var(--color-text);
+	--min-browser-width: 15rem;
 }
 
 body {
