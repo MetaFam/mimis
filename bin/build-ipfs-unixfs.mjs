@@ -74,11 +74,11 @@ try {
     })
     readable.pipe(writeable)
 
-    for (const block of blocks) {
+    for(const block of blocks) {
       await writer.put(block)
     }
 
-    console.debug({ Close: await writer.close() })
+    await writer.close()
     await writePromise
     await outFile.close()
   }
