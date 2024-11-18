@@ -1,15 +1,22 @@
 #!/usr/bin/env node
 
 import { create as ipfsClient } from 'kubo-rpc-client'
-import { prepare, encode } from '@ipld/dag-pb'
+import { prepare, encode, code as pbCode } from '@ipld/dag-pb'
 import { UnixFS } from 'ipfs-unixfs'
 import { sha256 } from 'multiformats/hashes/sha2'
+import { CID } from 'multiformats/cid'
+import { CarWriter } from '@ipld/car'
+import { Readable } from 'node:stream'
+import fs from 'node:fs/promises'
 
 const max = 25
 const ipfs = ipfsClient('http://localhost:5001')
+const genCAR = true
+const doInsert = false
+const outFile = await fs.open('output.car', 'w')
 
 try {
-  const links = []
+  const links = [], blocks = []
 
   for(const i of Array.from({ length: max }).map((_, i) => (i + 1))) {
     const content = `Hello, ${i} World!`
@@ -22,8 +29,16 @@ try {
     })
     const fileNode = prepare({ Data: file.marshal(), Links: [] })
     const fileBytes = encode(fileNode)
-    const start = await ipfs.block.put(fileBytes, { format: 'dag-pb' })
-    links.push({ Hash: start, Name: `hello #${i}.txt`, Tsize: Number(file.fileSize()) })
+    let cid
+    if(doInsert) {
+      cid = await ipfs.block.put(fileBytes, { format: 'dag-pb' })
+    }
+    if(!cid) {
+      const hash = await sha256.digest(fileBytes)
+      cid = CID.createV1(pbCode, hash)
+    }
+    blocks.push({ bytes: fileBytes, cid })
+    links.push({ Hash: cid, Name: `hello #${i}.txt`, Tsize: Number(file.fileSize()) })
   }
 
   const dir = new UnixFS({
@@ -38,8 +53,37 @@ try {
     })
   )
   const dirBytes = encode(dirNode)
-  const final  = await ipfs.block.put(dirBytes, { format: 'dag-pb' })
-  console.info(`Final CID: ${final}`)
+  let cid
+  if(doInsert) {
+    cid = await ipfs.block.put(dirBytes, { format: 'dag-pb' })
+  }
+  if(!cid) {
+    const hash = await sha256.digest(dirBytes)
+    cid = CID.createV1(pbCode, hash)
+  }
+  blocks.push({ bytes: dirBytes, cid })
+
+  if(genCAR) {
+    const { writer, out } = await CarWriter.create([cid])
+    const writeable = outFile.createWriteStream()
+    
+    const readable = Readable.from(out)
+    const writePromise = new Promise((resolve, reject) => {
+      writeable.on('finish', resolve)
+      writeable.on('error', reject)
+    })
+    readable.pipe(writeable)
+
+    for (const block of blocks) {
+      await writer.put(block)
+    }
+
+    console.debug({ Close: await writer.close() })
+    await writePromise
+    await outFile.close()
+  }
+
+  console.info(`Final CID: ${cid}`)
 } catch(error) {
   console.error(`Error: ${error.message}`)
   console.error(error.stack)
