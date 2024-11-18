@@ -23,7 +23,4 @@
 {/if}
 
 <style>
-  img {
-    max-width: calc(100% - var(--min-browser-width));
-  }
 </style>
