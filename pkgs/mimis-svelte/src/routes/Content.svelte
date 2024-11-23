@@ -1,6 +1,7 @@
 <script lang="ts">
   let { content }: { content: File } = $props()
   let url = $state<string>()
+  let text = $state<string>()
 
   const [, ext] = Array.from(/([^.]+)$/.exec(content.name) ?? [])
   switch(ext) {
@@ -12,6 +13,7 @@
     }
     default: {
       url = undefined
+      content.text().then((t) => { text = t })
     }
   }
 </script>
@@ -19,7 +21,7 @@
 {#if url}
   <img src={url} alt={content.name} />
 {:else}
-  <pre>{content.text()}</pre>
+  <pre>{text}</pre>
 {/if}
 
 <style>

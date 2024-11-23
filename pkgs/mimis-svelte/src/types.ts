@@ -5,6 +5,7 @@ export type Node = {
 	title: string
 	children?: Array<Node>
 	handle?: FileSystemFileHandle
+	cid?: string
 }
 
 export type GitIgnore = {

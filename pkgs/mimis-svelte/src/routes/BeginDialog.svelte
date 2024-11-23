@@ -2,10 +2,12 @@
 
   let {
     open = $bindable(false),
-    dirs = $bindable([]),
+    onsubmit,
   }: {
     open: boolean
-    dirs: Array<FileSystemDirectoryHandle | File>
+    onsubmit?: (
+      (dirs: Array<FileSystemDirectoryHandle /* | File */>) => void
+    ),
   } = $props()
 
   let dir = $state<FileSystemDirectoryHandle>()
@@ -16,7 +18,15 @@
     const dirVal = (
       form.elements.namedItem('dir') as HTMLInputElement
     )
-    dirs = dir ? [dir] : Array.from(dirVal.files ?? [])
+    const dirs = (
+      // (dir ? [dir] : Array.from(dirVal?.files ?? []))
+      [dir].filter(f => !!f)
+    )
+    if(dirs.length === 0) {
+      throw new Error('No directory selected.')
+    }
+    onsubmit?.(dirs)
+    open = false
     console.debug({ form, dirs })
   }
 </script>

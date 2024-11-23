@@ -9,9 +9,9 @@ type Handles = (
 )
 
 export const readTree = ({
-  statuses, dirs,
+  onStatusUpdate, dirs,
 }: {
-  statuses: Array<string>, dirs: Handles,
+  onStatusUpdate: (msg: string) => void, dirs: Handles,
 }) => {
   if(Array.isArray(dirs)) {
     return Promise.all(
@@ -40,7 +40,7 @@ export const readTree = ({
     } catch(e) {}
 
     const current = `${path}${dir.name}/`
-    statuses.push(`Traversing: ${current}`)
+    onStatusUpdate?.(`Traversing: ${current}`)
 
     const here: Node = {
       type: 'directory',
@@ -51,7 +51,7 @@ export const readTree = ({
     for await (const handle of dir.values()) {
       const next = `${current}${handle.name}`
       if(gitignores.some(gi => gi.ig.ignores(next))) {
-        statuses.push(`Ignoring: ${next}`)
+        onStatusUpdate?.(`Ignoring: ${next}`)
         continue
       }
       if(handle.kind === 'directory') {
@@ -60,7 +60,7 @@ export const readTree = ({
         )
         here.children?.push(node)
       } else {
-        statuses.push(`Leaf: ${next}`)
+        onStatusUpdate?.(`Leaf: ${next}`)
 
         const node: Node = {
           type: 'file',
