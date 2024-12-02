@@ -46,3 +46,13 @@
   <input type="file" id="car" accept=".car" />
   <button>Upload</button>
 </form>
+
+<style>
+  form {
+    display: flex;
+    gap: 1rem;
+    place-items: center;
+    justify-content: center;
+    margin-top: 3rem;
+  }
+</style>

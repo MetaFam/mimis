@@ -13,7 +13,7 @@
 	let name = $state<string>()
 	let content = $state<File>()
 	let car = $state<string>()
-	let tree: Wunderbaum
+	let tree = $state<Wunderbaum>()
 	let statuses = $state<Array<string>>([])
 	let showBegin = $state<boolean>(false)
 
@@ -69,7 +69,7 @@
 	<title>Mïmis</title>
 	<meta
 		name="description"
-		content="Collaborative filesystem"
+		content="Collaborative Filesystem"
 	/>
 </svelte:head>
 

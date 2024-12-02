@@ -14,7 +14,7 @@
     ]
   },
   "scripts": {
-    "start": "pnpm run dev --workspace=mimis-svelte",
+    "start": "pnpm  --filter=mimis-svelte run dev",
     "w3": "pnpm --package=@web3-storage/w3cli dlx w3",
     "car": "pnpm dlx ipfs-car"
   },
