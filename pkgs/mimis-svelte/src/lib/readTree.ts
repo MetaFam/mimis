@@ -1,5 +1,5 @@
 import ignore from 'ignore'
-import type { GitIgnore, Node } from "../types"
+import type { DirNode, GitIgnore, Node } from "../types"
 
 let gitignores: Array<GitIgnore> = []
 
@@ -9,69 +9,118 @@ type Handles = (
 )
 
 export const readTree = ({
-  onStatusUpdate, dirs,
+  onStatusUpdate, dirs, gitignores: ignores = true,
 }: {
-  onStatusUpdate: (msg: string) => void, dirs: Handles,
+  onStatusUpdate: (msg: string) => void
+  dirs: Handles
+  gitignores?: boolean
 }) => {
-  if(Array.isArray(dirs)) {
-    return Promise.all(
-      dirs.map(async (dir) => await read(dir))
-    )
-  } else if(dirs instanceof FileSystemDirectoryHandle) {
-    return read(dirs)
-  } else {
-    throw new Error('Invalid Input: `dirs`')
+  if(!Array.isArray(dirs)) {
+    dirs = [dirs]
   }
+  return Promise.all(
+    dirs.map(async (dir) => (await read(dir)))
+  )
 
   async function read(
     dir: FileSystemDirectoryHandle,
     path: string = '',
   ) {
-    try {
-      const gitignore = await (
-        dir.getFileHandle('.gitignore')
-      )
-      if(gitignore) {
-        const ig = ignore()
-        const file = await gitignore.getFile()
-        ig.add((await file.text()).split('\n'))
-        gitignores.push({ ig, path })
-      }
-    } catch(e) {}
-
     const current = `${path}${dir.name}/`
     onStatusUpdate?.(`Traversing: ${current}`)
 
-    const here: Node = {
+    if(ignores) {
+      try {
+        if(gitignores.length === 0) {
+          const defaults = ignore()
+          defaults.add(['**/.git'])
+          gitignores.push({ ig: defaults, path: current })
+        }
+
+        const gitignore = await (
+          dir.getFileHandle('.gitignore')
+        )
+        if(gitignore) {
+          const ig = ignore()
+          const file = await gitignore.getFile()
+          const patterns = (
+            (await file.text()).split(/\s*\n\s*/m)
+          )
+          ig.add(patterns)
+          gitignores.push({ ig, path: current })
+        }
+      } catch(e) {}
+    }
+
+    const here: DirNode = {
       type: 'directory',
       title: dir.name,
       children: [],
+      size: 0,
+      childCount: 0,
     }
 
-    for await (const handle of dir.values()) {
+    type Handle = (
+      FileSystemDirectoryHandle
+      | FileSystemFileHandle
+    )
+
+    handles: for await (const handle of (
+      dir as unknown as { values: () => Array<Handle> }
+    ).values()) {
       const next = `${current}${handle.name}`
-      if(gitignores.some(gi => gi.ig.ignores(next))) {
-        onStatusUpdate?.(`Ignoring: ${next}`)
-        continue
-      }
-      if(handle.kind === 'directory') {
-        const node = (
-          await read(handle, current)
-        )
-        here.children?.push(node)
-      } else {
-        onStatusUpdate?.(`Leaf: ${next}`)
-
-        const node: Node = {
-          type: 'file',
-          title: handle.name,
-          handle,
+      const ignored = gitignores.some((gi) => {
+        if(!next.startsWith(gi.path)) {
+          throw new Error(
+            `Invalid Path: "${next}", doesn't start with "${gi.path}".`
+          )
         }
-        here.children?.push(node)
+        const short = next.substring(gi.path.length)
+        if(short !== '') {
+          if(
+            gi.ig.ignores(short)
+            || gi.ig.ignores(short.replace(/^\/+/, ''))
+            || (
+              handle.kind === 'directory'
+              && gi.ig.ignores(`${short}/`)
+            )
+           ) {
+            onStatusUpdate?.(`Ignoring: ${next}`)
+            return true
+          }
+        }
+      })
+
+      if(!ignored) {
+        let node
+        if(handle.kind === 'directory') {
+          node = (
+            await read(handle, current)
+          )
+          here.childCount += node.childCount
+        } else {
+          onStatusUpdate?.(`Leaf: ${next}`)
+
+          const file = await handle.getFile()
+          node = {
+            type: 'file',
+            title: handle.name,
+            size: file.size,
+            handle,
+          }
+          here.childCount += 1
+        }
+        if(node) {
+          here.size += node.size
+          here.children?.push(node as Node)
+        }
       }
+
     }
 
-    gitignores = gitignores.filter((gi) => (gi.path.length > path.length))
+    gitignores = gitignores.filter(
+      (gi) => (gi.path.length < current.length)
+    )
 
     return here
   }

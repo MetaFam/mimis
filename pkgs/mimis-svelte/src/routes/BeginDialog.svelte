@@ -1,5 +1,4 @@
 <script lang="ts">
-
   let {
     open = $bindable(false),
     onsubmit,
@@ -9,6 +8,15 @@
       (dirs: Array<FileSystemDirectoryHandle /* | File */>) => void
     ),
   } = $props()
+  let dialog = $state<HTMLDialogElement>()
+
+  $effect(() => {
+    if(open) {
+      dialog?.showModal()
+    } else {
+      dialog?.close()
+    }
+  })
 
   let dir = $state<FileSystemDirectoryHandle>()
 
@@ -27,11 +35,10 @@
     }
     onsubmit?.(dirs)
     open = false
-    console.debug({ form, dirs })
   }
 </script>
 
-<dialog {open}>
+<dialog bind:this={dialog}>
   <h1>Import A Directory Tree</h1>
 
   <form onsubmit={submit}>
@@ -49,7 +56,8 @@
         {/if}
       </label>
     {:else}
-      <input id="dir" type="file" webkitdirectory multiple/>
+      <p>Warning: This program uses <code>showDirectoryPicker()</code> to retrieve a <code>FileSystemDirectoryHandle</code>. As of this writing, 26 November 2024, Chrome & Opera are the only browsers that make this function available.</p>
+      <p>Specifically, <em>this</em> browser doesn't have support for <code>showDirectoryPicker</code>.</p>
     {/if}
     <label>
       <input id="gitignore" type="checkbox" checked />
@@ -68,7 +76,7 @@
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    translate: -50% -50%;
     z-index: 100;
   }
 

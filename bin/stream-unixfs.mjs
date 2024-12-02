@@ -66,6 +66,7 @@ for(const i of range) {
   await file.write(new TextEncoder().encode(content))
   console.info(`Main: Wrote Content: ${content}`)
   const link = await file.close()
+  console.debug({ link })
   console.debug({ 'Main: CID': link.cid })
   const name = `hello #${i}.txt`
   dir.set(name, link)

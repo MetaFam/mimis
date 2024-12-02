@@ -34,9 +34,7 @@ body {
 		linear-gradient(180deg, var(--color-bg-0) 0%, var(--color-bg-1) 15%, var(--color-bg-2) 50%);
 }
 
-h1,
-h2,
-p {
+h1, h2, p {
 	font-weight: 400;
 }
 
@@ -82,8 +80,7 @@ pre {
 	margin: 0 auto;
 }
 
-input,
-button {
+input, button {
 	font-size: inherit;
 	font-family: inherit;
 }
@@ -108,4 +105,27 @@ button:focus:not(:focus-visible) {
 	position: absolute;
 	width: 1px;
 	white-space: nowrap;
+}
+
+button, .button {
+	border: 2px outset;
+	padding: 0.5rem 0.75rem;
+	border-radius: 0.5rem;
+	background-color: blue;
+	color: white;
+	margin-bottom: 2rem;
+
+  &:hover {
+		border-style: inset;
+		translate: 2px 2px;
+		background-color: blueviolet;
+	}
+}
+
+.wb-numeric {
+	text-align: right;
+}
+
+.wb-header .wb-col {
+	text-align: left;
 }

@@ -1,15 +1,19 @@
 <script lang="ts">
 	import { Wunderbaum } from 'wunderbaum'
 	import Content from './Content.svelte'
-	import BeginDialog from './BeginDialog.svelte';
-  import { readTree } from '$lib/readTree';
+	import BeginDialog from './BeginDialog.svelte'
+  import { readTree } from '$lib/readTree'
 	import 'wunderbaum/dist/wunderbaum.css'
 	import 'bootstrap-icons/font/bootstrap-icons.css'
-  import { ingestTree } from '$lib/ingestTree';
+  import { ingestTree } from '$lib/ingestTree'
+	import type { DirNode, Node } from '../types'
+	import { wunderFiles } from '$lib/wunderFiles'
+	import { cloneWithout } from '$lib/cloneWithout'
 
 	let name = $state<string>()
 	let content = $state<File>()
 	let car = $state<string>()
+	let tree: Wunderbaum
 	let statuses = $state<Array<string>>([])
 	let showBegin = $state<boolean>(false)
 
@@ -19,17 +23,20 @@
 				dirs,
 				onStatusUpdate: (s) => { statuses.push(s) },
 			})
-			.then(([root]) => {
-				return ingestTree({
-					root,
-					onStatusUpdate: (s) => { statuses.push(s) },
-				})
+			.then((roots) => {
+				const select = (node: Node) => {
+					node.selected = true
+					for(const child of (node as DirNode).children ?? []) {
+						select(child)
+					}
+					return node
+				}
+				return roots.map((root) => select(root))
 			})
-			.then(({ root, car: link }) => {
-				car = link
-				new Wunderbaum({
-					element: document.getElementById('fs-tree') as HTMLDivElement,
-					source: root,
+			.then((roots) => {
+				tree = wunderFiles({
+					source: roots,
+					mount: 'fs-tree',
 					activate: async (evt) => {
 						if(!evt.node.data.handle) {
 							name = content = undefined
@@ -43,6 +50,19 @@
 			.finally(() => { statuses = [] })
 		}
 	}
+
+	const ingest = async () => {
+		if(!tree) throw new Error('No tree defined.')
+
+		try {
+			car = await ingestTree({
+				root: tree.root,
+				onStatusUpdate: (s) => { statuses.push(s) },
+			})
+		} finally {
+			statuses = []
+		}
+	}
 </script>
 
 <svelte:head>
@@ -53,11 +73,9 @@
 	/>
 </svelte:head>
 
-<h1>Mïmis: Collaborative Filesystem</h1>
-
-{#if car}
-	<a href={car} download="spider.car">Download</a>
-{/if}
+<header>
+	<h1>Mïmis: Collaborative Filesystem</h1>
+</header>
 
 <main class="flex align-center">
 	{#if statuses.length > 0}
@@ -67,15 +85,27 @@
 			{/each}
 		</ol>
 	{:else}
-		<button onclick={() => { showBegin = true }} class="btn btn-primary bg-green">
-			Begin A Spider
-		</button>
+		<nav>
+			<button onclick={() => { showBegin = true }} class="btn btn-primary bg-green">
+				Begin A Spider
+			</button>
+			{#if tree}
+				<button onclick={ingest} class="btn btn-primary bg-green">
+					Generate CAR Archive
+				</button>
+			{/if}
+			{#if car}
+				<a href={car} class="button" download={`spider.${new Date().toISOString()}.car`}`>
+					Download <code>spider.car</code>
+				</a>
+			{/if}
+		</nav>
 	{/if}
 
 	<BeginDialog bind:open={showBegin} onsubmit={load}/>
 
 	<section id="display">
-		<div id="fs-tree" class:accompanied={!content}></div>
+		<div id="fs-tree" class:accompanied={!!content}></div>
 		{#if content}
 			<div id="content">
 				{#if name}
@@ -88,11 +118,15 @@
 </main>
 
 <style>
+	header {
+		margin-top: 7.5vh;
+	}
 	main {
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
+		margin-block: 3rem;
 
 		#display {
 			display: flex;
@@ -103,7 +137,7 @@
 		#fs-tree {
 			min-width: var(--min-browser-width);
 			max-height: 90vh;
-			max-width: 50ch;
+			max-width: 150ch;
 		}
 
 		#display, .accompanied {
@@ -143,5 +177,12 @@
 			counter-increment: line;
   		content: "L:" counter(line) ": ";
 		}
+	}
+
+	nav {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 3rem;
 	}
 </style>
