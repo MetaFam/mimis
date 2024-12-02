@@ -1,7 +1,10 @@
 import type { WunderbaumOptions } from 'wb_options'
 import { Wunderbaum } from 'wunderbaum'
 
-export const wunderFiles = ({ mount, ...opts }: { mount: string } & Partial<WunderbaumOptions>) => {
+export const wunderFiles = (
+  { mount, ...opts }:
+  { mount: string } & Partial<WunderbaumOptions>
+) => {
   const element = (
     document.getElementById(mount) as HTMLDivElement
   )

@@ -22,7 +22,7 @@ import type { WunderbaumNode } from 'wb_node'
 // }
 
 export const ingestTree = async (
-  { root, selected, onStatusUpdate }:
+  { root, onStatusUpdate }:
   {
     root: WunderbaumNode
     onStatusUpdate: (m: string) => void

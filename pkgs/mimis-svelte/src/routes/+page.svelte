@@ -95,7 +95,7 @@
 				</button>
 			{/if}
 			{#if car}
-				<a href={car} class="button" download={`spider.${new Date().toISOString()}.car`}`>
+				<a href={car} class="button" download={`spider.${new Date().toISOString()}.car`}>
 					Download <code>spider.car</code>
 				</a>
 			{/if}

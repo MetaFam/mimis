@@ -1,5 +1,5 @@
-export const cloneWithout: unknown = (
-  root: unknown, attrs: Array<string>,
+export const cloneWithout: any = (
+  root: any, attrs: Array<string>,
 ) => {
   if(Array.isArray(root)) {
     return root.map((node) => cloneWithout(node, attrs))
