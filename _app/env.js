@@ -1,1 +1,1 @@
-export const env={}
+export const env={"PUBLIC_NEO4J_URI":"neo4j+s://c7fe659d.databases.neo4j.io","PUBLIC_NEO4J_USER":"neo4j","PUBLIC_NEO4J_PASSWORD":"wv7jCNLXwDEe2ttTHh-Z4u-1V5nykezWEWvVgrx-VDc"}
