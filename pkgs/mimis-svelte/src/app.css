@@ -120,6 +120,10 @@ button, .button {
 		translate: 2px 2px;
 		background-color: blueviolet;
 	}
+
+	&:active {
+		background-color: green;
+	}
 }
 
 .wb-numeric {
