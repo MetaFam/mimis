@@ -20,6 +20,7 @@ export type FileNode = {
 	cid?: string
 	selected?: boolean
 	size: number
+	childCount: 0
 }
 
 export type GitIgnore = {

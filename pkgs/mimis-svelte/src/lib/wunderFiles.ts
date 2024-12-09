@@ -1,5 +1,6 @@
 import type { WunderbaumOptions } from 'wb_options'
 import { Wunderbaum } from 'wunderbaum'
+import { formatBytes } from './formatBytes'
 
 export const wunderFiles = (
   { mount, ...opts }:
@@ -22,8 +23,8 @@ export const wunderFiles = (
     columns: [
       { id: '*', title: 'Path', width: '300px' },
       {
-        id: 'childCount', title: 'Children',
-        width: '70px',	classes: 'wb-numeric',
+        id: 'childCount', title: 'Count',
+        width: '95px',	classes: 'wb-numeric',
       },
       {
         id: 'size', title: 'Size',
@@ -38,11 +39,11 @@ export const wunderFiles = (
       )) {
         if(col.elem) {
           let val = node.data[col.id]
+          if(!!val && col.id === 'size') {
+            val = formatBytes(val)
+          }
           if(typeof val === 'number') {
             val = val.toLocaleString()
-          }
-          if(!!val && col.id === 'size') {
-            val = `${val} B`
           }
           col.elem.textContent = val
         }

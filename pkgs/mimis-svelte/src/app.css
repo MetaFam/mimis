@@ -124,6 +124,17 @@ button, .button {
 	&:active {
 		background-color: green;
 	}
+
+	&:disabled {
+		opacity: 0.5;
+		background-color: grey;
+		color: lightgrey;
+
+		&:hover {
+			translate: 0 0;
+			border-style: outset;
+		}
+	}
 }
 
 .wb-numeric {
