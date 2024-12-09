@@ -13,6 +13,12 @@ export const wunderFiles = (
     element,
     selectMode: 'hier',
     checkbox: true,
+    columnsFilterable: true,
+    columnsResizable: true,
+    columnsSortable: true,
+    columnsMenu: true,
+    fixedCol: false,
+
     columns: [
       { id: '*', title: 'Path', width: '300px' },
       {

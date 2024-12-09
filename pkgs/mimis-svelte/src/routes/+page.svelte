@@ -2,13 +2,12 @@
 	import { Wunderbaum } from 'wunderbaum'
 	import Content from './Content.svelte'
 	import BeginDialog from './BeginDialog.svelte'
-  import { readTree } from '$lib/readTree'
+  import { spiderTree } from '$lib/spiderTree'
+	import { wunder2CAR } from '$lib/wunder2CAR'
+	import { wunderFiles } from '$lib/wunderFiles'
+	import { selectAll } from '$lib/selectAll'
 	import 'wunderbaum/dist/wunderbaum.css'
 	import 'bootstrap-icons/font/bootstrap-icons.css'
-  import { ingestTree } from '$lib/ingestTree'
-	import type { DirNode, Node } from '../types'
-	import { wunderFiles } from '$lib/wunderFiles'
-	import { cloneWithout } from '$lib/cloneWithout'
 
 	let name = $state<string>()
 	let content = $state<File>()
@@ -19,20 +18,11 @@
 
 	const load = (dirs: Array<FileSystemDirectoryHandle>) => {
 		if(dirs.length > 0) {
-			readTree({
+			spiderTree({
 				dirs,
 				onStatusUpdate: (s) => { statuses.push(s) },
 			})
-			.then((roots) => {
-				const select = (node: Node) => {
-					node.selected = true
-					for(const child of (node as DirNode).children ?? []) {
-						select(child)
-					}
-					return node
-				}
-				return roots.map((root) => select(root))
-			})
+			.then(selectAll)
 			.then((roots) => {
 				tree = wunderFiles({
 					source: roots,
@@ -55,7 +45,7 @@
 		if(!tree) throw new Error('No tree defined.')
 
 		try {
-			car = await ingestTree({
+			car = await wunder2CAR({
 				root: tree.root,
 				onStatusUpdate: (s) => { statuses.push(s) },
 			})

@@ -21,7 +21,7 @@ import type { WunderbaumNode } from 'wb_node'
 //   encode: UnixFS.encodeRaw,
 // }
 
-export const ingestTree = async (
+export const wunder2CAR = async (
   { root, onStatusUpdate }:
   {
     root: WunderbaumNode

@@ -8,7 +8,7 @@ type Handles = (
   | FileSystemDirectoryHandle
 )
 
-export const readTree = ({
+export const spiderTree = ({
   onStatusUpdate, dirs, gitignores: ignores = true,
 }: {
   onStatusUpdate: (msg: string) => void
