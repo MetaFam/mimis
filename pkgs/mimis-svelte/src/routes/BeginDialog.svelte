@@ -42,7 +42,7 @@
   <h1>Import A Directory Tree</h1>
 
   <form onsubmit={submit}>
-    {#if window.showDirectoryPicker}
+    {#if !!window.showDirectoryPicker}
       <label>
         <button type="button" onclick={async () => {
           dir = await window.showDirectoryPicker()
@@ -59,11 +59,15 @@
       <p>Warning: This program uses <code>showDirectoryPicker()</code> to retrieve a <code>FileSystemDirectoryHandle</code>. As of this writing, 26 November 2024, Chrome & Opera are the only browsers that make this function available.</p>
       <p>Specifically, <em>this</em> browser doesn't have support for <code>showDirectoryPicker</code>.</p>
     {/if}
-    <label>
-      <input id="gitignore" type="checkbox" checked />
-      <span>Respect <code>.gitignore</code>s</span>
-    </label>
-    <button>Review Import</button>
+    {#if !!window.showDirectoryPicker}
+      <label>
+        <input id="gitignore" type="checkbox" checked />
+        <span>Respect <code>.gitignore</code>s</span>
+      </label>
+      <button>Review Import</button>
+    {:else}
+      <button onclick={() => (open = false)}>😿 Sorry 😿</button>
+    {/if}
   </form>
 </dialog>
 

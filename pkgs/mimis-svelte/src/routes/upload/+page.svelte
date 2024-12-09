@@ -101,6 +101,16 @@
   {/if}
 </form>
 
+<style>
+  form {
+    display: flex;
+    gap: 1rem;
+    place-items: center;
+    justify-content: center;
+    margin-top: 3rem;
+  }
+</style>
+
 <div id="fs-tree"></div>
 
 <style>
