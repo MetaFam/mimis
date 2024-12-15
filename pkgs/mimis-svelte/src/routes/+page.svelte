@@ -13,6 +13,9 @@
 	let content = $state<File>()
 	let car = $state<string>()
 	let tree = $state<Wunderbaum>()
+	let filename = $derived(
+		`${tree?.root.children?.[0].title ?? 'spider'}.${new Date().toISOString()}.car`
+	)
 	let statuses = $state<Array<string>>([])
 	let showBegin = $state<boolean>(false)
 
@@ -85,8 +88,8 @@
 				</button>
 			{/if}
 			{#if car}
-				<a href={car} class="button" download={`spider.${new Date().toISOString()}.car`}>
-					Download <code>spider.car</code>
+				<a href={car} class="button" download={filename}>
+					Download <code>{filename}</code>
 				</a>
 			{/if}
 		</nav>

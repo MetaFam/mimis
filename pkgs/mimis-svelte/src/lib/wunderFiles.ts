@@ -1,6 +1,7 @@
 import type { WunderbaumOptions } from 'wb_options'
 import { Wunderbaum } from 'wunderbaum'
 import { formatBytes } from './formatBytes'
+import type { Node } from '../types'
 
 export const wunderFiles = (
   { mount, ...opts }:
@@ -10,6 +11,25 @@ export const wunderFiles = (
     document.getElementById(mount) as HTMLDivElement
   )
   element.replaceChildren()
+
+  const columns = [
+    { id: '*', title: 'Path', width: '300px' },
+    {
+      id: 'childCount', title: 'Count',
+      width: '95px',	classes: 'wb-numeric',
+    },
+    {
+      id: 'size', title: 'Size',
+      width: '120px',	classes: 'wb-numeric',
+    },
+  ]
+  if((opts.source?.[0] as Node).cid) {
+    columns.push({
+      id: 'cid', title: 'CID',
+      width: '200px',
+    })
+  }
+
   return new Wunderbaum({
     element,
     selectMode: 'hier',
@@ -19,18 +39,8 @@ export const wunderFiles = (
     columnsSortable: true,
     columnsMenu: true,
     fixedCol: false,
+    columns,
 
-    columns: [
-      { id: '*', title: 'Path', width: '300px' },
-      {
-        id: 'childCount', title: 'Count',
-        width: '95px',	classes: 'wb-numeric',
-      },
-      {
-        id: 'size', title: 'Size',
-        width: '120px',	classes: 'wb-numeric',
-      },
-    ],
     render: (evt) => {
       const { node } = evt
 
@@ -44,6 +54,9 @@ export const wunderFiles = (
           }
           if(typeof val === 'number') {
             val = val.toLocaleString()
+          }
+          if(!!val && col.id === 'cid') {
+            val = `${val.slice(0, 10)}…${val.slice(-13)}`
           }
           col.elem.textContent = val
         }

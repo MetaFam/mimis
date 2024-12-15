@@ -38,50 +38,48 @@
   }
 </script>
 
-<dialog bind:this={dialog}>
-  <h1>Import A Directory Tree</h1>
+<section id="dialog">
+  <dialog bind:this={dialog}>
+    <h1>Import A Directory Tree</h1>
 
-  <form onsubmit={submit}>
-    {#if !!window.showDirectoryPicker}
-      <label>
-        <button type="button" onclick={async () => {
-          dir = await window.showDirectoryPicker()
-        }}>
-          Pick Directory
-        </button>
-        {#if dir}
-          <span>{dir.name}</span>
-        {:else}
-          <span>No directory selected.</span>
-        {/if}
-      </label>
-    {:else}
-      <p>Warning: This program uses <code>showDirectoryPicker()</code> to retrieve a <code>FileSystemDirectoryHandle</code>. As of this writing, 26 November 2024, Chrome & Opera are the only browsers that make this function available.</p>
-      <p>Specifically, <em>this</em> browser doesn't have support for <code>showDirectoryPicker</code>.</p>
-    {/if}
-    {#if !!window.showDirectoryPicker}
-      <label>
-        <input id="gitignore" type="checkbox" checked />
-        <span>Respect <code>.gitignore</code>s</span>
-      </label>
-      <button>Review Import</button>
-    {:else}
-      <button onclick={() => (open = false)}>😿 Sorry 😿</button>
-    {/if}
-  </form>
-</dialog>
+    <form onsubmit={submit}>
+      {#if !!window.showDirectoryPicker}
+        <label>
+          <button type="button" onclick={async () => {
+            dir = await window.showDirectoryPicker()
+          }}>
+            Pick Directory
+          </button>
+          {#if dir}
+            <span>{dir.name}</span>
+          {:else}
+            <span>No directory selected.</span>
+          {/if}
+        </label>
+      {:else}
+        <p>Warning: This program uses <code>showDirectoryPicker()</code> to retrieve a <code>FileSystemDirectoryHandle</code>. As of this writing, 26 November 2024, Chrome & Opera are the only browsers that make this function available.</p>
+        <p>Specifically, <em>this</em> browser doesn't have support for <code>showDirectoryPicker</code>.</p>
+      {/if}
+      {#if !!window.showDirectoryPicker}
+        <label>
+          <input id="gitignore" type="checkbox" checked />
+          <span>Respect <code>.gitignore</code>s</span>
+        </label>
+        <button>Review Import</button>
+      {:else}
+        <button onclick={() => (open = false)}>😿 Sorry 😿</button>
+      {/if}
+    </form>
+  </dialog>
+</section>
 
 <style>
   dialog {
     padding: 2rem;
-    border: 1px solid black;
     border-radius: 0.5rem;
-    background-color: white;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    translate: -50% -50%;
     z-index: 100;
+    max-width: max(40vw, 35ch);
+    text-align: justify;
   }
 
   form {
