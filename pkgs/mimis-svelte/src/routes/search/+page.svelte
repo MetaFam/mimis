@@ -23,6 +23,7 @@
     chip = chip.trim()
     if(!!chip) {
       chips.push(chip)
+      fileCID = null
     }
   }
   const removeChip = (index: number) => {

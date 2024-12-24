@@ -17,16 +17,19 @@
 		</svg>
 		<ul>
 			<li aria-current={$page.url.pathname === '/' ? 'page' : undefined}>
-				<a href="/">Spider</a>
+				<a href="/">🕷</a>
 			</li>
 			<li aria-current={$page.url.pathname.startsWith('/upload') ? 'page' : undefined}>
-				<a href="/upload">Upload</a>
+				<a href="/upload">⇭</a>
 			</li>
 			<li aria-current={$page.url.pathname.startsWith('/search') ? 'page' : undefined}>
-				<a href="/search">Search</a>
+				<a href="/search">&#x1F50E;&#xFE0E;</a>
 			</li>
 			<li aria-current={$page.url.pathname === '/about' ? 'page' : undefined}>
-				<a href="/about">About</a>
+				<a href="/about">🛈</a>
+			</li>
+			<li aria-current={$page.url.pathname.startsWith('/settings') ? 'page' : undefined}>
+				<a href="/settings">⚙</a>
 			</li>
 		</ul>
 		<svg viewBox="0 0 2 3" aria-hidden="true">
@@ -100,6 +103,10 @@
 		height: 100%;
 	}
 
+	li[aria-current='page']	a {
+		color: green;
+	}
+
 	li[aria-current='page']::before {
 		--size: 6px;
 		content: '';
@@ -119,14 +126,15 @@
 		padding: 0 0.5rem;
 		color: var(--color-text);
 		font-weight: 700;
-		font-size: 0.8rem;
+		font-size: 1.25rem;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
 		text-decoration: none;
-		transition: color 0.2s linear;
+		transition: color 0.2s linear, font-size 0.1s ease-in-out;
 	}
 
 	a:hover {
 		color: var(--color-theme-1);
+		font-size: 1.75rem;
 	}
 </style>

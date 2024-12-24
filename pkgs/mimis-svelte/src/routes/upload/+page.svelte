@@ -40,8 +40,6 @@
     if(!tree) throw new Error('No tree to mount.')
     const cid = wunder2Neo4j(tree.root, mount)
   }
-
-  $inspect({ valid: car.disabled })
   </script>
 
 <svelte:head>
