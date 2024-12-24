@@ -1,3 +1,4 @@
+/** Convert a `ReadableStream` to an async itrerator.  */
 export async function* stream2AsyncIterator(stream: ReadableStream) {
   const reader = stream.getReader()
   try {

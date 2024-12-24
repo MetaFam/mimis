@@ -1,5 +1,6 @@
 import type { Node, DirNode } from '../types'
 
+/** Add a `selected = true` attribute to every node in a tree. */
 export function selectAll(roots: Array<Node>) {
   const select = (node: Node) => {
     node.selected = true

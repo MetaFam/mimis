@@ -1,5 +1,5 @@
 import ignore from 'ignore'
-import type { DirNode, GitIgnore, Node } from "../types"
+import type { DirNode, GitIgnore, Node } from '../types'
 
 let gitignores: Array<GitIgnore> = []
 
@@ -8,6 +8,11 @@ type Handles = (
   | FileSystemDirectoryHandle
 )
 
+/**
+ * Walk a directory tree using a file handle from the browser,
+ * and generate a structure appropriate for generating a
+ * Wunderbaum tree.
+ */
 export const spiderTree = ({
   onStatusUpdate, dirs, gitignores: ignores = true,
 }: {
@@ -115,7 +120,6 @@ export const spiderTree = ({
           here.children?.push(node as Node)
         }
       }
-
     }
 
     gitignores = gitignores.filter(

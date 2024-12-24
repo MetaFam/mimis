@@ -59,7 +59,7 @@
 </script>
 
 <svelte:head>
-	<title>Mïmis</title>
+	<title>Mïmis: Spider</title>
 	<meta
 		name="description"
 		content="Collaborative Filesystem"

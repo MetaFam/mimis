@@ -3,6 +3,10 @@ import type { Node, DirNode } from '../types'
 import { stream2AsyncIterator } from './stream2AsyncIterator'
 import { decode } from '@ipld/dag-pb'
 
+/**
+ * Convert a CAR file to a structure appropriate for
+ * generating a Wunderbaum tree.
+ */
 export async function car2Tree(file: File) {
   const reader = await CarBlockIterator.fromIterable(
     stream2AsyncIterator(file.stream())

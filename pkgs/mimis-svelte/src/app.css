@@ -114,7 +114,6 @@ button, .button {
 	border-radius: 0.5rem;
 	background-color: blue;
 	color: white;
-	margin-bottom: 2rem;
 
   &:hover {
 		border-style: inset;

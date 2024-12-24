@@ -1,3 +1,6 @@
+/**
+ * Deep clone an object skipping a spcified list of attributes.
+ */
 export const cloneWithout: any = (
   root: any, attrs: Array<string>,
 ) => {

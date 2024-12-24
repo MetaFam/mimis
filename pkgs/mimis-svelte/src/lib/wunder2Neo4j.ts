@@ -1,15 +1,10 @@
-import neo4j from 'neo4j-driver'
-import {
-  PUBLIC_NEO4J_URI as uri,
-  PUBLIC_NEO4J_USER as user,
-  PUBLIC_NEO4J_PASSWORD as pass,
-} from '$env/static/public'
 import type { WunderbaumNode } from 'wb_node'
+import { getNeo4j } from '$lib/neo4jDriver'
 
 export async function wunder2Neo4j(
   root: WunderbaumNode, mountPath: Array<string> = [],
 ) {
-  const driver = neo4j.driver(uri, neo4j.auth.basic(user, pass))
+  const driver = getNeo4j()
 
   try {
     const rootCID = await ingest(root, structuredClone(mountPath))
