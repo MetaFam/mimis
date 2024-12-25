@@ -1,5 +1,6 @@
-<script lang="ts">
+<script lang="ts" module>
   import { searchTree } from '$lib/searchTree'
+  import { toHTTP } from '$lib/toHTTP'
 
   let chips = $state<Array<string>>([])
   let resultPromise = $derived.by(async () => {
@@ -28,6 +29,7 @@
   }
   const removeChip = (index: number) => {
     chips.splice(index, 1)
+    fileCID = null
   }
 </script>
 
@@ -80,7 +82,7 @@
     {/await}
     {#if fileCID}
       <object
-        data={`ipfs://${fileCID}`}
+        data={toHTTP({ cid: fileCID })}
         title={`ipfs://${fileCID}`}
       >
         <p>
@@ -125,5 +127,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+  }
+  object {
+    min-height: 80dvh;
+    margin-block-start: 1rem;
   }
 </style>

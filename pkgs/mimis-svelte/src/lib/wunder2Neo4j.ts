@@ -9,6 +9,7 @@ export async function wunder2Neo4j(
   try {
     const rootCID = await ingest(root, structuredClone(mountPath))
     console.info(`Mounted ${rootCID} at /${mountPath.join('/')}/.`)
+    return rootCID
   } finally {
     await driver.close()
   }
@@ -115,5 +116,6 @@ export async function wunder2Neo4j(
         return child.data.cid
       }
     }
+    return node.data.cid
   }
 }

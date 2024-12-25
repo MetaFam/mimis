@@ -4,12 +4,15 @@
   import { selectAll } from '$lib/selectAll'
   import { car2Tree } from '$lib/car2Tree';
   import { wunder2Neo4j } from '$lib/wunder2Neo4j';
+  import Toastify from 'toastify-js'
   import 'bootstrap-icons/font/bootstrap-icons.css'
   import 'wunderbaum/dist/wunderbaum.css'
+  import 'toastify-js/src/toastify.css'
 
   class CAR {
     form = $state<HTMLFormElement>()
     disabled = $state<boolean>(!this.form?.checkValidity())
+    generating = $state<boolean>(false)
   }
 
   let tree = $state<Wunderbaum>()
@@ -18,7 +21,6 @@
 
   const submitCAR = async (evt: SubmitEvent) => {
     evt.preventDefault()
-
     const input: HTMLInputElement | null = (
       car.form?.querySelector('input[type="file"]') ?? null
     )
@@ -36,9 +38,27 @@
 
   const submitMount = async (evt: SubmitEvent) => {
     evt.preventDefault()
-    const mount = path.split('/').filter(Boolean)
-    if(!tree) throw new Error('No tree to mount.')
-    const cid = wunder2Neo4j(tree.root, mount)
+    try {
+      car.generating = true
+      const mount = path.split('/').filter(Boolean)
+      if(!tree) throw new Error('No tree to mount.')
+      const cid: string = await wunder2Neo4j(tree.root, mount)
+      Toastify({
+        text: `Loaded: ipfs://${cid.slice(0, 5)}…${cid.slice(-5)}`,
+        duration: 8_000,
+        destination: `https://w3s.link/ipfs/${cid}`,
+        newWindow: true,
+        close: true,
+        gravity: 'bottom', // `top` or `bottom`
+        position: 'center', // `left`, `center` or `right`
+        stopOnFocus: true, // Prevents dismissing of toast on hover
+        style: {
+          background: "linear-gradient(to right, #00b09b, #96c93d)",
+        },
+      }).showToast()
+    } finally {
+      car.generating = false
+    }
   }
   </script>
 
@@ -56,7 +76,7 @@
 {#if !!tree}
   <form onsubmit={submitMount}>
     <input placeholder="/system/mount/point/" bind:value={path}/>
-    <button>Neo4j Import</button>
+    <button disabled={car.generating}>Neo4j Import</button>
   </form>
 {/if}
 
