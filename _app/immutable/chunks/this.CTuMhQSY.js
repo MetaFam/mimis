@@ -1,0 +1,1 @@
+import{ad as h,ae as k,e as S,X as T,af as c}from"./runtime.CRsO_40P.js";function t(r,f){return r===f||(r==null?void 0:r[c])===f}function A(r={},f,a,q){return h(()=>{var i,s;return k(()=>{i=s,s=[],S(()=>{r!==a(...s)&&(f(r,...s),i&&t(a(...i),r)&&f(null,...i))})}),()=>{T(()=>{s&&t(a(...s),r)&&f(null,...s)})}}),r}export{A as b};
