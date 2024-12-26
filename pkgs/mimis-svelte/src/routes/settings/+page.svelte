@@ -1,4 +1,4 @@
-<script type="ts">
+<script lang="ts">
   import { settings } from '$lib/settings.svelte';
 </script>
 
