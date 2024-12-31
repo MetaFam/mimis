@@ -9,7 +9,10 @@
       <label>
         <fieldset>
           <legend>IPFS Conversion</legend>
-          <input bind:value={settings.ipfsConversion}/>
+          <input
+            bind:value={settings.ipfsConversion}
+            onchange={() => settings.save()}
+          />
         </fieldset>
       </label>
     </fieldset>

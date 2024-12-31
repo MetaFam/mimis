@@ -5,7 +5,7 @@
   let chips = $state<Array<string>>([])
   let resultPromise = $derived.by(async () => {
     const result = await searchTree(chips)
-    console.debug({ result })
+    console.debug({ result, p0: result[0]?.get('path') })
     return result
   })
   let fileCID = $state<string | null>(null)
@@ -24,12 +24,10 @@
     chip = chip.trim()
     if(!!chip) {
       chips.push(chip)
-      fileCID = null
     }
   }
   const removeChip = (index: number) => {
     chips.splice(index, 1)
-    fileCID = null
   }
 </script>
 
@@ -65,38 +63,35 @@
         <ul id="result">
           {#each result as res}
             <li>
-              <button onclick={() => {
-                if(res.get('child').labels.includes('File')) {
-                  fileCID = res.get('child').properties.cid
-                  console.debug({ fileCID })
-                } else {
-                  addChip(res.get('path'))
-                }
-              }}>
-                {res.get('path')}
-              </button>
+              {#if res.get('child').labels.includes('File')}
+                <h2>/{res.get('path')?.join('/')}/{res.get('container')}</h2>
+                <object
+                  data={toHTTP({ cid: res.get('child').properties.cid })}
+                  title={`ipfs://${res.get('child').properties.cid}`}
+                >
+                  <p>
+                    Could not display
+                    <a
+                      target="_blank"
+                      href={
+                        `https://w3s.link/ipfs/${res.get('child').properties.cid}`
+                      }
+                    >
+                      ipfs://{res.get('child').properties.cid}
+                    </a>.
+                  </p>
+                </object>
+              {:else}
+                <button onclick={() => addChip(res.get('container'))}>
+                  {res.get('container')}
+                </button>
+              {/if}
             </li>
           {/each}
         </ul>
       {/if}
     {/await}
-    {#if fileCID}
-      <object
-        data={toHTTP({ cid: fileCID })}
-        title={`ipfs://${fileCID}`}
-      >
-        <p>
-          Could not display
-          <a
-            target="_blank"
-            href={`https://w3s.link/ipfs/${fileCID}`}
-          >
-            ipfs://{fileCID}
-          </a>.
-        </p>
-      </object>
-    {/if}
-  </section>
+    </section>
 </main>
 
 <style>
@@ -130,6 +125,12 @@
   }
   object {
     min-height: 80dvh;
-    margin-block-start: 1rem;
+    max-width: 100dvh;
+    margin-block: 1rem;
+  }
+  h2 {
+    text-align: center;
+    font-weight: bolder;
+    margin-block-start: 2rem;
   }
 </style>

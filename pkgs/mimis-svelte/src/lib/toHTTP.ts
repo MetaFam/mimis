@@ -3,7 +3,7 @@ import { settings } from '$lib/settings.svelte'
 export const toHTTP = ({
   url, cid,
 }: {
-  url?: string; cid?: string;
+  url?: string | null; cid?: string | null;
 }) => {
   if((!url && !cid) || (url && cid)) {
     throw new Error('Must provide either `url` xor `cid`.')
