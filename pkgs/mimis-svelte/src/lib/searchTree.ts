@@ -22,11 +22,15 @@ export const searchTree = async (path: Array<string>) => {
         WHERE size(elements) = size(pathElems)
         AND ALL(
           i IN range(0, size(pathElems) - 1)
-          WHERE
+          WHERE (
             pathElems[i] = '*'
             OR elements[i] = pathElems[i]
+          )
         )
-        RETURN DISTINCT elements as path, children.path as container, child
+        RETURN DISTINCT
+          elements as path,
+          children.path as container,
+          child
       `
     ))
     const result = await session.run(query, { elems: path })
