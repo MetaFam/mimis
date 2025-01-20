@@ -1,13 +1,18 @@
-<script lang="ts" module>
+<script lang="ts" >
+  import Toastify from 'toastify-js'
+  import { page } from '$app/state';
   import { searchTree } from '$lib/searchTree'
   import { toHTTP } from '$lib/toHTTP'
-  import Toastify from 'toastify-js'
   import 'toastify-js/src/toastify.css'
 
   let chips = $state<Array<string>>([])
   let resultPromise = $derived.by(async () => {
     try {
-      const result = await searchTree(chips)
+      const limit = page.url.query.get('limit')
+      const offset = page.url.query.get('offset')
+      const result = await searchTree({
+        path: chips, limit, offset,
+      })
       return result
     } catch(error) {
       Toastify({
@@ -44,6 +49,24 @@
   const removeChip = (index: number) => {
     chips.splice(index, 1)
   }
+  const removeLastChip = () => {
+    removeChip(-1)
+  }
+
+  $effect(() => {
+    const keydown = (evt: KeyboardEvent) => {
+      if(
+        evt.key === 'ArrowLeft'
+        && evt.target === document.body
+      ) {
+        removeLastChip()
+      }
+    }
+    window.addEventListener('keydown', keydown)
+    return () => {
+      window.removeEventListener('keydown', keydown)
+    }
+  })
 </script>
 
 <svelte:head>

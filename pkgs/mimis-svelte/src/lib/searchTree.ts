@@ -1,6 +1,13 @@
 import { getNeo4j } from '$lib/neo4jDriver'
 
-export const searchTree = async (path: Array<string>) => {
+export const searchTree = async (
+  { path, limit = 200, offset = 0 }:
+  {
+    path: Array<string>,
+    limit?: number,
+    offset?: number,
+  }
+) => {
   const driver = getNeo4j()
   try {
     const session = driver.session()
@@ -27,13 +34,17 @@ export const searchTree = async (path: Array<string>) => {
             OR elements[i] = pathElems[i]
           )
         )
+        LIMIT $limit
+        SKIP $offset
         RETURN DISTINCT
           elements as path,
           children.path as container,
           child
       `
     ))
-    const result = await session.run(query, { elems: path })
+    const result = await session.run(
+      query, { elems: path, limit, offset }
+    )
     await session.close()
     return result.records
   } finally {
