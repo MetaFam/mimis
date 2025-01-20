@@ -1,47 +1,70 @@
+import {
+  PUBLIC_IPFS_PATTERN as pattern,
+  PUBLIC_NEO4J_URI as uri,
+  PUBLIC_NEO4J_USER as user,
+  PUBLIC_NEO4J_PASSWORD as pass,
+} from '$env/static/public'
+
 class Settings {
   static keys = {
     ipfsPattern: 'mimis-setting-ipfs-pattern',
-  }
+    neo4jURL: 'mimis-setting-neo4j-url',
+    neo4jUser: 'mimis-setting-neo4j-user',
+    neo4jPass: 'mimis-setting-neo4j-pass',
+  } as const
   static defaults = {
-    [Settings.keys.ipfsPattern]: 'http://localhost:8080/ipfs/{cid}',
+    [Settings.keys.ipfsPattern]: (
+      pattern ?? 'http://localhost:8080/ipfs/{cid}'
+    ),
+    [Settings.keys.neo4jURL]: uri ?? 'bolt://localhost:7687',
+    [Settings.keys.neo4jUser]: user ?? 'neo4j',
+    [Settings.keys.neo4jPass]: pass ?? 'neo4j',
   }
 
-  ipfsConversion = $state(
-    typeof localStorage === 'undefined' ? (
-      Settings.defaults[Settings.keys.ipfsPattern]
-    ) : (
-      localStorage.getItem(Settings.keys.ipfsPattern)
-      ?? (() => {
-        const defaultVal = Settings.defaults[
-          Settings.keys.ipfsPattern
-        ]
-        localStorage.setItem(
-          Settings.keys.ipfsPattern,
-          defaultVal,
-        )
-        return defaultVal
-      })()
+  valueOf(key: keyof typeof Settings.keys) {
+    return (
+      typeof localStorage === 'undefined' ? (
+        Settings.defaults[Settings.keys[key]]
+      ) : (
+        localStorage.getItem(Settings.keys[key])
+        ?? (() => {
+          const defaultVal = Settings.defaults[
+            Settings.keys[key]
+          ]
+          localStorage.setItem(
+            Settings.keys[key],
+            defaultVal,
+          )
+          return defaultVal
+        })()
+      )
     )
-  )
+  }
 
-  save(key?: string) {
-    if(key === Settings.keys.ipfsPattern) {
-      if(
-        this.ipfsConversion == null
-        || this.ipfsConversion === ''
-      ) {
+  ipfsPattern = $state(this.valueOf('ipfsPattern'))
+  neo4jURL = $state(this.valueOf('neo4jURL'))
+  neo4jUser = $state(this.valueOf('neo4jUser'))
+  neo4jPass = $state(this.valueOf('neo4jPass'))
+
+  save(key?: keyof typeof Settings.keys) {
+    if(key != null) {
+      if(this[key] == null || this[key] === '') {
         if(typeof localStorage !== 'undefined') {
-          localStorage.removeItem(Settings.keys.ipfsPattern)
+          localStorage.removeItem(Settings.keys[key])
         }
       } else {
         localStorage.setItem(
-          Settings.keys.ipfsPattern,
-          this.ipfsConversion,
+          Settings.keys[key],
+          this[key],
         )
       }
     } else if(key == null) {
-      for(const key of Object.values(Settings.keys)) {
-        this.save(key ?? 'Unknown Key')
+      for(
+        const key of
+        Object.keys(Settings.keys) as
+        Array<keyof typeof Settings.keys>
+      ) {
+        this.save(key)
       }
     } else {
       console.error(`Unknown Key: ${key}`)

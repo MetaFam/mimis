@@ -1,12 +1,27 @@
 <script lang="ts" module>
   import { searchTree } from '$lib/searchTree'
   import { toHTTP } from '$lib/toHTTP'
+  import Toastify from 'toastify-js'
+  import 'toastify-js/src/toastify.css'
 
   let chips = $state<Array<string>>([])
   let resultPromise = $derived.by(async () => {
-    const result = await searchTree(chips)
-    console.debug({ result, p0: result[0]?.get('path') })
-    return result
+    try {
+      const result = await searchTree(chips)
+      return result
+    } catch(error) {
+      Toastify({
+        text: (error as Error).message,
+        duration: 16_000,
+        close: true,
+        gravity: 'bottom', // `top` or `bottom`
+        position: 'center', // `left`, `center` or `right`
+        stopOnFocus: true, // Prevents dismissing of toast on hover
+        style: {
+          background: "linear-gradient(to right, #00b09b, #96c93d)",
+        },
+      }).showToast()
+    }
   })
   let fileCID = $state<string | null>(null)
 

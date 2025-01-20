@@ -20,8 +20,8 @@ export const toHTTP = ({
     throw new Error('Could not determine `cid`.')
   }
   return (
-    settings.ipfsConversion
+    settings.ipfsPattern
     .replace('{cid}', cid)
-    .replace('{path}', path.join('/'))
+    .replace('{path}', `/${path.join('/')}`)
   )
 }

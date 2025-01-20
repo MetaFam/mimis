@@ -10,11 +10,37 @@
         <fieldset>
           <legend>IPFS Conversion</legend>
           <input
-            bind:value={settings.ipfsConversion}
+            bind:value={settings.ipfsPattern}
             onchange={() => settings.save()}
           />
         </fieldset>
       </label>
+      <fieldset>
+        <legend>Neo4j</legend>
+        <ul id="neo4j">
+          <li><label>
+            <span>URL:</span>
+            <input
+              bind:value={settings.neo4jURL}
+              onchange={() => settings.save()}
+            />
+          </label></li>
+          <li><label>
+            <span>Username:</span>
+            <input
+              bind:value={settings.neo4jUser}
+              onchange={() => settings.save()}
+            />
+          </label></li>
+          <li><label>
+            <span>Password:</span>
+            <input
+              bind:value={settings.neo4jPass}
+              onchange={() => settings.save()}
+            />
+          </label></li>
+        </ul>
+      </fieldset>
     </fieldset>
   </form>
 </main>
@@ -27,8 +53,8 @@
     height: 100vh;
   }
   form {
-    width: 100%;
-    max-width: 400px;
+    width: 75ch;
+    max-width: 100%;
     padding: 1rem;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -43,5 +69,27 @@
     padding: 0.5rem;
     border: 1px solid #ccc;
     border-radius: 5px;
+  }
+  #neo4j {
+    display: grid;
+    grid-template-columns: 0fr 1fr;
+    align-items: center;
+    gap: 0.5em;
+    & span {
+      justify-self: end;
+    }
+    & li, & label {
+      display: contents;
+    }
+
+    @media (width < 50ch) {
+      display: flex;
+      flex-direction: column;
+      align-items: start;
+
+      & input {
+        margin-inline-start: 1em;
+      }
+    }
   }
 </style>
