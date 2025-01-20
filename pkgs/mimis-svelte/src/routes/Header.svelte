@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import logo from '$lib/images/svelte-logo.svg';
 	import github from '$lib/images/github.svg';
 </script>
@@ -16,20 +16,20 @@
 			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z" />
 		</svg>
 		<ul>
-			<li aria-current={$page.url.pathname === '/' ? 'page' : undefined}>
+			<li aria-current={['', '#/'].includes(page.url.hash) ? 'page' : undefined}>
 				<a href="/">🕷</a>
 			</li>
-			<li aria-current={$page.url.pathname.startsWith('/upload') ? 'page' : undefined}>
-				<a href="/upload">⇭</a>
+			<li aria-current={page.url.hash.startsWith('#/upload') ? 'page' : undefined}>
+				<a href="/#/upload">⇭</a>
 			</li>
-			<li aria-current={$page.url.pathname.startsWith('/search') ? 'page' : undefined}>
-				<a href="/search">&#x1F50E;&#xFE0E;</a>
+			<li aria-current={page.url.hash.startsWith('#/search') ? 'page' : undefined}>
+				<a href="/#/search">&#x1F50E;&#xFE0E;</a>
 			</li>
-			<li aria-current={$page.url.pathname === '/about' ? 'page' : undefined}>
-				<a href="/about">🛈</a>
+			<li aria-current={page.url.hash === '#/about' ? 'page' : undefined}>
+				<a href="/#/about">🛈</a>
 			</li>
-			<li aria-current={$page.url.pathname.startsWith('/settings') ? 'page' : undefined}>
-				<a href="/settings">⚙</a>
+			<li aria-current={page.url.hash.startsWith('#/settings') ? 'page' : undefined}>
+				<a href="/#/settings">⚙</a>
 			</li>
 		</ul>
 		<svg viewBox="0 0 2 3" aria-hidden="true">

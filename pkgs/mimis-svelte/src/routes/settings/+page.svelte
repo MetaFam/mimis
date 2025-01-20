@@ -39,6 +39,13 @@
               onchange={() => settings.save()}
             />
           </label></li>
+          <li><label>
+            <span>Limit:</span>
+            <input
+              bind:value={settings.limit}
+              onchange={() => settings.save()}
+            />
+          </label></li>
         </ul>
       </fieldset>
     </fieldset>

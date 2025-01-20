@@ -3,6 +3,7 @@ import {
   PUBLIC_NEO4J_URI as uri,
   PUBLIC_NEO4J_USER as user,
   PUBLIC_NEO4J_PASSWORD as pass,
+  PUBLIC_LIMIT as limit,
 } from '$env/static/public'
 
 class Settings {
@@ -11,15 +12,20 @@ class Settings {
     neo4jURL: 'mimis-setting-neo4j-url',
     neo4jUser: 'mimis-setting-neo4j-user',
     neo4jPass: 'mimis-setting-neo4j-pass',
+    limit: 'mimis-setting-limit',
   } as const
   static defaults = {
     [Settings.keys.ipfsPattern]: (
-      pattern ?? 'http://localhost:8080/ipfs/{cid}'
+      pattern ?? 'http://localhost:8080/ipfs/{cid}{path}'
     ),
     [Settings.keys.neo4jURL]: uri ?? 'bolt://localhost:7687',
     [Settings.keys.neo4jUser]: user ?? 'neo4j',
     [Settings.keys.neo4jPass]: pass ?? 'neo4j',
+    [Settings.keys.limit]: limit ?? '125',
   }
+
+  // valueOf(key: Omit<keyof typeof Settings.keys, 'limit'>): string
+  // valueOf(key: 'limit'): number
 
   valueOf(key: keyof typeof Settings.keys) {
     return (
@@ -33,7 +39,7 @@ class Settings {
           ]
           localStorage.setItem(
             Settings.keys[key],
-            defaultVal,
+            String(defaultVal),
           )
           return defaultVal
         })()
@@ -45,6 +51,7 @@ class Settings {
   neo4jURL = $state(this.valueOf('neo4jURL'))
   neo4jUser = $state(this.valueOf('neo4jUser'))
   neo4jPass = $state(this.valueOf('neo4jPass'))
+  limit = $state(this.valueOf('limit'))
 
   save(key?: keyof typeof Settings.keys) {
     if(key != null) {
@@ -55,7 +62,7 @@ class Settings {
       } else {
         localStorage.setItem(
           Settings.keys[key],
-          this[key],
+          String(this[key]),
         )
       }
     } else if(key == null) {

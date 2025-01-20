@@ -10,6 +10,7 @@ const config = {
 				fallback: '404.html',
 				strict: true,
 		}),
+		router: { type: 'hash' },
 },}
 
 export default config
