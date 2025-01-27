@@ -25,6 +25,9 @@
 			<li aria-current={page.url.hash.startsWith('#/search') ? 'page' : undefined}>
 				<a href="/#/search">&#x1F50E;&#xFE0E;</a>
 			</li>
+			<li aria-current={page.url.hash.startsWith('#/list') ? 'page' : undefined}>
+				<a href="/#/list">𝍤</a>
+			</li>
 			<li aria-current={page.url.hash === '#/about' ? 'page' : undefined}>
 				<a href="/#/about">🛈</a>
 			</li>

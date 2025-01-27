@@ -48,8 +48,8 @@ export const searchTree = async (
     const result = await session.run(
       query, {
         elems: path,
-        limit: parseInt(Number(limit).toFixed(0)),
-        offset: parseInt(Number(offset).toFixed(0)),
+        limit: BigInt(limit),
+        offset: BigInt(offset),
       }
     )
     await session.close()

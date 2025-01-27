@@ -1,5 +1,6 @@
 import {
   PUBLIC_IPFS_PATTERN as pattern,
+  PUBLIC_IPFS_API as api,
   PUBLIC_NEO4J_URI as uri,
   PUBLIC_NEO4J_USER as user,
   PUBLIC_NEO4J_PASSWORD as pass,
@@ -9,6 +10,7 @@ import {
 class Settings {
   static keys = {
     ipfsPattern: 'mimis-setting-ipfs-pattern',
+    ipfsAPI: 'mimis-setting-ipfs-api',
     neo4jURL: 'mimis-setting-neo4j-url',
     neo4jUser: 'mimis-setting-neo4j-user',
     neo4jPass: 'mimis-setting-neo4j-pass',
@@ -16,37 +18,49 @@ class Settings {
   } as const
   static defaults = {
     [Settings.keys.ipfsPattern]: (
-      pattern ?? 'http://localhost:8080/ipfs/{cid}{path}'
+      pattern || 'http://localhost:8080/ipfs/{cid}{path}'
     ),
-    [Settings.keys.neo4jURL]: uri ?? 'bolt://localhost:7687',
-    [Settings.keys.neo4jUser]: user ?? 'neo4j',
-    [Settings.keys.neo4jPass]: pass ?? 'neo4j',
-    [Settings.keys.limit]: limit ?? '125',
+    [Settings.keys.ipfsAPI]: (
+      api || 'http://localhost:5001/api/v0'
+    ),
+    [Settings.keys.neo4jURL]: uri || 'bolt://localhost:7687',
+    [Settings.keys.neo4jUser]: user || 'neo4j',
+    [Settings.keys.neo4jPass]: pass || 'neo4j',
+    [Settings.keys.limit]: limit || 125,
   }
 
-  // valueOf(key: Omit<keyof typeof Settings.keys, 'limit'>): string
-  // valueOf(key: 'limit'): number
-
+  valueOf(key: Omit<keyof typeof Settings.keys, 'limit'>): string
+  valueOf(key: 'limit'): number
   valueOf(key: keyof typeof Settings.keys) {
     return (
       typeof localStorage === 'undefined' ? (
         Settings.defaults[Settings.keys[key]]
       ) : (
-        localStorage.getItem(Settings.keys[key])
-        ?? (() => {
-          const defaultVal = Settings.defaults[
+        (() => {
+          let value = (
+            localStorage.getItem(Settings.keys[key])
+          )
+          let defaultVal = Settings.defaults[
             Settings.keys[key]
           ]
-          localStorage.setItem(
-            Settings.keys[key],
-            String(defaultVal),
-          )
-          return defaultVal
+          if(value) {
+            if(typeof defaultVal === 'string') {
+              return value
+            } else {
+              return Number(value)
+            }
+          } else {
+            localStorage.setItem(
+              Settings.keys[key], String(defaultVal),
+            )
+            return defaultVal
+          }
         })()
       )
     )
   }
 
+  ipfsAPI = $state(this.valueOf('ipfsAPI'))
   ipfsPattern = $state(this.valueOf('ipfsPattern'))
   neo4jURL = $state(this.valueOf('neo4jURL'))
   neo4jUser = $state(this.valueOf('neo4jUser'))

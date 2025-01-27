@@ -6,15 +6,29 @@
   <form>
     <fieldset>
       <legend>Settings</legend>
-      <label>
-        <fieldset>
-          <legend>IPFS Conversion</legend>
-          <input
-            bind:value={settings.ipfsPattern}
-            onchange={() => settings.save()}
-          />
-        </fieldset>
-      </label>
+      <fieldset>
+        <legend>IPFS</legend>
+          <ul id="ipfs">
+          <li><label>
+            <fieldset>
+              <legend>Gateway</legend>
+              <input
+                bind:value={settings.ipfsPattern}
+                onchange={() => settings.save()}
+              />
+            </fieldset>
+          </label></li>
+          <li><label>
+            <fieldset>
+              <legend>API</legend>
+              <input
+                bind:value={settings.ipfsAPI}
+                onchange={() => settings.save()}
+              />
+            </fieldset>
+          </label></li>
+        </ul>
+      </fieldset>
       <fieldset>
         <legend>Neo4j</legend>
         <ul id="neo4j">
@@ -35,12 +49,13 @@
           <li><label>
             <span>Password:</span>
             <input
+              type="password"
               bind:value={settings.neo4jPass}
               onchange={() => settings.save()}
             />
           </label></li>
           <li><label>
-            <span>Limit:</span>
+            <span>Results Per Page Limit:</span>
             <input
               bind:value={settings.limit}
               onchange={() => settings.save()}
@@ -62,14 +77,14 @@
   form {
     width: 75ch;
     max-width: 100%;
-    padding: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 5px;
   }
   fieldset {
     border: 1px solid #CCCC;
     padding: 1rem;
     margin: 0.25rem;
+  }
+  legend {
+    padding-inline: 0.5rem;
   }
   input {
     width: 100%;
