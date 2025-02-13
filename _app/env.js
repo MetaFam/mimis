@@ -1,1 +1,1 @@
-export const env={"PUBLIC_NEO4J_URI":"neo4j+s://c7fe659d.databases.neo4j.io","PUBLIC_NEO4J_USER":"neo4j","PUBLIC_NEO4J_PASSWORD":"wv7jCNLXwDEe2ttTHh-Z4u-1V5nykezWEWvVgrx-VDc","PUBLIC_IPFS_PATTERN":"http://localhost:8080/ipfs/{cid}{path}","PUBLIC_IPFS_API":"","PUBLIC_LIMIT":"100"}
+export const env={"PUBLIC_NEO4J_URI":"neo4j+s://neo4j.mimis.dhappy.org","PUBLIC_NEO4J_USER":"neo4j","PUBLIC_NEO4J_PASSWORD":"This is my secure Neo4j password #3!!","PUBLIC_IPFS_PATTERN":"http://localhost:8080/ipfs/{cid}{path}","PUBLIC_IPFS_API":"","PUBLIC_LIMIT":"100"}
