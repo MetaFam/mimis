@@ -2,6 +2,8 @@
   import { toHTTP } from '$lib/toHTTP'
   import type { Entry } from './+page.svelte'
   import { page } from '$app/state'
+  import DeleteConfirm from './DeleteConfirm.svelte';
+    import Display from './Display.svelte';
 
   const debug = !!page.url.searchParams.get('debug')
 
@@ -13,20 +15,7 @@
   let content = $state<HTMLElement | null>(null)
   if(datum == null) throw new Error(' `null` `datum`.')
   const { cid, title, type } = datum
-
-  let mime = $derived.by(() => {
-    if(type == null) return 'undefined'
-
-    const [_, klass, ext] = (
-      Array.from(type.match(/^([^/]+)\/(.*)$/) ?? [])
-    )
-    if(debug) console.debug({ klass, ext })
-    if(ext !== 'svg+xml') {
-      return klass
-    } else {
-      return 'object'
-    }
-  })
+  let deleteConfirm = $state<HTMLDialogElement | null>(null)
 
   const togglePlay = (
     media: HTMLElement | null,
@@ -116,6 +105,8 @@
         togglePlay(content)
         evt.preventDefault()
       } finally {}
+    } else if(evt.key === 'd') {
+      deleteConfirm?.showModal()
     }
   }}
   onkeydown={(evt) => {
@@ -136,7 +127,7 @@
 >
   <summary
     tabindex={0}
-    onkeydown={(evt) => {
+    onkeypress={(evt) => {
       const details = (
         (evt.target as HTMLElement).closest('details')
       )
@@ -151,49 +142,18 @@
         if(details.open) togglePlay(content)
         toggleOpen(details, { open: true })
         evt.preventDefault()
+      } else if(evt.key === 'd') {
+        deleteConfirm?.showModal()
       }
     }}
   >{title}</summary>
-  {#if mime === 'image'}
-    <img
-      bind:this={content}
-      src={toHTTP({ cid })}
-      alt={title}
-    />
-  {:else if mime === 'audio'}
-    <audio
-      controls
-      bind:this={content}
-      tabindex={-1}
-    >
-      <source
-        src={toHTTP({ cid })}
-        {type}
-      />
-    </audio>
-  {:else if mime === 'video'}
-    <video
-      controls
-      bind:this={content}
-      tabindex={-1}
-    >
-      <source
-        src={toHTTP({ cid })}
-        {type}
-      />
-      <track kind="captions"/>
-    </video>
-  {:else}
-    <object
-      bind:this={content}
-      data={toHTTP({ cid })}
-      {title}
-      {type}
-    >
-      <p>Your browser can't render an <code>&lt;object&gt;</code> of type <q>{type}</q>.</p>
-    </object>
-  {/if}
+  <Display {datum} {content}/>
 </details>
+
+<DeleteConfirm
+  {datum}
+  bind:handle={deleteConfirm}
+/>
 
 <style>
   details::before {
@@ -235,19 +195,6 @@
     & summary {
       position: relative;
       cursor: pointer;
-    }
-
-    & img, & video, & object {
-      max-height: 80vh;
-      max-width: 90%;
-      display: block;
-      margin-inline: auto;
-      border-radius: 0.5rem;
-      border: 2px solid color-mix(in oklab, var(--bg), #0009 90%);
-    }
-    & object {
-      min-width: 50%;
-      pointer-events: none;
     }
 
     &:hover {

@@ -25,6 +25,7 @@
   let history = $state<Array<Array<Entry>>>([])
   let progress = $state(0)
   let total = $state(0)
+  let count = $state(0)
 
   async function addEntries(
     files: File | Array<File>
@@ -40,22 +41,27 @@
         progress += bytes
       },
     }
-    let cids = []
+    let infos = []
+    let idx = 0
     const results = await ipfs.addAll(files, options)
     for await (const { cid } of results) {
-      cids.push(cid)
-    }
-    cids.forEach((cid, idx) => {
-      entries.push({
-        id: entries.length,
+      infos.push({
+        id: ++count,
         cid: cid.toString(),
         title: (
-          files[idx].name.split('.').slice(0, -1).join('.')
+          files[idx].name.replace(/\.[^.]*$/, '')
         ),
         type: files[idx].type,
       })
-    })
+      idx++
+    }
+    const existing = entries.map(({ cid }) => cid)
+    const unique = infos.filter((info) => (
+      !existing.includes(info.cid)
+    ))
+    entries = entries.concat(unique)
   }
+
   async function handleFiles(evt: Event) {
     try {
       evt.preventDefault()
@@ -113,6 +119,13 @@
     }
   />
 </svelte:head>
+
+<svelte:document
+  ondatum-delete={(evt: CustomEvent) => {
+    const { id } = evt.detail
+    entries = entries.filter((entry) => entry.id !== id)
+  }}
+/>
 
 <header>
   <h1>Merge List</h1>
@@ -314,6 +327,18 @@
     & li:nth-of-type(10n + 4),
     & li:nth-of-type(10n + 5) {
       --fg: color-mix(in oklab, var(--bg), #000 75%);
+    }
+
+    :global(li:has(details[open])) {
+      --bg: color-mix(in oklab, green, #5555 90%);
+    }
+
+    :global(li:focus-within:has(details)) {
+      --bg: green;
+    }
+
+    & li:hover, :global(li:has(details[open]):hover) {
+      --bg: yellow;
     }
 
     & .drop-indicator {
