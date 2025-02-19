@@ -1,0 +1,4 @@
+# Mïmis Graph Structure
+
+## Goals
+

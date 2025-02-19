@@ -1,181 +1,26 @@
-<script lang="ts">
-	import { Wunderbaum } from 'wunderbaum'
-	import Content from './Content.svelte'
-	import BeginDialog from './BeginDialog.svelte'
-  import { spiderTree } from '$lib/spiderTree'
-	import { wunder2CAR } from '$lib/wunder2CAR'
-	import { wunderFiles } from '$lib/wunderFiles'
-	import { selectAll } from '$lib/selectAll'
-	import 'wunderbaum/dist/wunderbaum.css'
-	import 'bootstrap-icons/font/bootstrap-icons.css'
-
-	let name = $state<string>()
-	let content = $state<File>()
-	let car = $state<string>()
-	let tree = $state<Wunderbaum>()
-	let filename = $derived(
-		`${tree?.root.children?.[0].title ?? 'spider'}.${new Date().toISOString()}.car`
-	)
-	let statuses = $state<Array<string>>([])
-	let showBegin = $state<boolean>(false)
-
-	const load = (dirs: Array<FileSystemDirectoryHandle>) => {
-		if(dirs.length > 0) {
-			spiderTree({
-				dirs,
-				onStatusUpdate: (s) => { statuses.push(s) },
-			})
-			.then(selectAll)
-			.then((roots) => {
-				tree = wunderFiles({
-					source: roots,
-					mount: 'fs-tree',
-					activate: async (evt) => {
-						if(!evt.node.data.handle) {
-							name = content = undefined
-						} else {
-							name = evt.node.title
-							content = await evt.node.data.handle.getFile()
-						}
-					},
-				})
-			})
-			.finally(() => { statuses = [] })
-		}
-	}
-
-	const ingest = async () => {
-		if(!tree) throw new Error('No tree defined.')
-
-		try {
-			car = await wunder2CAR({
-				root: tree.root,
-				onStatusUpdate: (s) => { statuses.push(s) },
-			})
-		} finally {
-			statuses = []
-		}
-	}
-</script>
-
 <svelte:head>
-	<title>Mïmis: Spider</title>
-	<meta
-		name="description"
-		content="Collaborative Filesystem"
-	/>
+  <title>The Mïmis File System</title>
 </svelte:head>
 
 <header>
-	<h1>Mïmis: Collaborative Filesystem</h1>
+  <h1>Mïmis: A Collaborative Filesystem</h1>
 </header>
 
-<main class="flex align-center">
-	{#if statuses.length > 0}
-		<ol>
-			{#each statuses.slice(-35) as status}
-				<li>{status}</li>
-			{/each}
-		</ol>
-	{:else}
-		<nav>
-			<button onclick={() => { showBegin = true }} class="btn btn-primary bg-green">
-				Begin A Spider
-			</button>
-			{#if tree}
-				<button onclick={ingest} class="btn btn-primary bg-green">
-					Generate CAR Archive
-				</button>
-			{/if}
-			{#if car}
-				<a href={car} class="button" download={filename}>
-					Download <code>{filename}</code>
-				</a>
-			{/if}
-		</nav>
-	{/if}
+<main>
+  <p>Mïmis is a system to aid in the collaborative creation of content. Work is ongoing & there's a smattering of functionality currently:</p>
 
-	<BeginDialog bind:open={showBegin} onsubmit={load}/>
-
-	<section id="display">
-		<div id="fs-tree" class:accompanied={!!content}></div>
-		{#if content}
-			<div id="content">
-				{#if name}
-					<h2>{name}</h2>
-				{/if}
-				<Content {content}/>
-			</div>
-		{/if}
-	</section>
+  <ul>
+    <li><a href="/#/spider"><strong>Spider</strong></a>: Will read a directory tree from the local file system and produce an IPFS content archive <em>(CAR file)</em>.</li>
+    <li><a href="/#/upload"><strong>Upload</strong></a>: Will take a CAR file and insert its contents into a Neo4j instance used to store the directory tree.</li>
+    <li><a href="/#/browse"><strong>Browse</strong></a>: Will allow navigating the structure stored in Neo4j.</li>
+    <li><a href="/#/list"><strong>List</strong></a>: Will allow creating ordered lists of content that will be combined with others' lists to create recommendations.</li>
+    <li><a href="/#/settings"><strong>Settings</strong></a>: Will allow viewing recommendations based on the lists created by others.</li>
+  </ul>
 </main>
 
 <style>
-	header {
-		margin-top: 7.5vh;
-	}
-	main {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		margin-block: 3rem;
-
-		#display {
-			display: flex;
-			align-items: flex-start;
-			justify-content: center;
-		}
-
-		#fs-tree {
-			min-width: var(--min-browser-width);
-			max-height: 90vh;
-			max-width: 150ch;
-		}
-
-		#display, .accompanied {
-			width: 100%;
-		}
-
-		#fs-tree {
-			resize: horizontal;
-		}
-
-		#content {
-			flex-grow: 1;
-			max-width: 120ch;
-
-			h2 {
-				font-size: clamp(2rem, 2.5vw + 1em, 3rem);
-				font-weight: bold;
-				text-align: center;
-			}
-		}
-	}
-
-	h1 {
-		width: 100%;
-	}
-
-	a {
-		display: inline-block;
-		margin-inline: auto;
-	}
-
-	ol {
-		list-style-type: none;
-		counter-reset: reversed(line);
-
-		li::marker {
-			counter-increment: line;
-  		content: "L:" counter(line) ": ";
-		}
-	}
-
-	nav {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		gap: 3rem;
-	}
+  main {
+    max-width: 75ch;
+    margin-inline: auto;
+  }
 </style>

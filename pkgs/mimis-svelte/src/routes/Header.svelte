@@ -17,22 +17,32 @@
 		</svg>
 		<ul>
 			<li aria-current={['', '#/'].includes(page.url.hash) ? 'page' : undefined}>
-				<a href="/">🕷</a>
+				<a href="/" id="home">🏡︎</a>
+				<dialog open>Home</dialog>
+			</li>
+			<li aria-current={page.url.hash.startsWith('#/spider') ? 'page' : undefined}>
+				<a href="/#/spider">🕷</a>
+				<dialog open>Spider</dialog>
 			</li>
 			<li aria-current={page.url.hash.startsWith('#/upload') ? 'page' : undefined}>
 				<a href="/#/upload">⇭</a>
+				<dialog open>Upload</dialog>
 			</li>
 			<li aria-current={page.url.hash.startsWith('#/search') ? 'page' : undefined}>
-				<a href="/#/search">&#x1F50E;&#xFE0E;</a>
+				<a href="/#/browse">📖&#xFE0E;</a>
+				<dialog open>Browse</dialog>
 			</li>
 			<li aria-current={page.url.hash.startsWith('#/list') ? 'page' : undefined}>
 				<a href="/#/list">𝍤</a>
+				<dialog open>List</dialog>
 			</li>
 			<li aria-current={page.url.hash === '#/about' ? 'page' : undefined}>
 				<a href="/#/about">🛈</a>
+				<dialog open>About</dialog>
 			</li>
 			<li aria-current={page.url.hash.startsWith('#/settings') ? 'page' : undefined}>
 				<a href="/#/settings">⚙</a>
+				<dialog open>Settings</dialog>
 			</li>
 		</ul>
 		<svg viewBox="0 0 2 3" aria-hidden="true">
@@ -75,7 +85,27 @@
 	nav {
 		display: flex;
 		justify-content: center;
-		--background: rgba(255, 255, 255, 0.7);
+		--background: light-dark(#FFFA, #000A);
+
+		& li a {
+			anchor-name: --nav-link;
+		}
+
+		& li dialog {
+			opacity: 0;
+			position: absolute;
+			position-anchor: --nav-link;
+			top: calc(anchor(--nav-link bottom) + 0.5rem);
+			padding: 0.25rem;
+			border: none;
+			pointer-events: none;
+			transition: opacity 0.2s ease-in-out;
+		}
+
+		& li:hover dialog {
+			opacity: 1;
+			transition: opacity 0.5s ease-in-out;
+		}
 	}
 
 	svg {

@@ -1,6 +1,6 @@
 {
 	"name": "mimis-svelte",
-	"version": "0.0.1",
+	"version": "0.1.1",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
@@ -35,7 +35,7 @@
 		"eslint-plugin-svelte": "^2.36.0",
 		"gh-pages": "^6.2.0",
 		"globals": "^15.0.0",
-		"svelte": "^5.1.14",
+		"svelte": "^5.20.1",
 		"svelte-check": "^4.0.6",
 		"tailwindcss": "^3.4.14",
 		"typescript": "^5.6.3",
@@ -49,6 +49,7 @@
 		"neo4j-driver": "^5.26.0",
 		"react-accessible-treeview": "^2.10.0",
 		"sortablejs": "^1.15.6",
+		"svelte-pragmatic-sortable": "^0.3.12",
 		"toastify-js": "^1.12.0",
 		"wunderbaum": "^0.11.0"
 	}

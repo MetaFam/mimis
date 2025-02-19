@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { settings } from '$lib/settings.svelte';
+  import { settings } from '$lib/settings.svelte'
+
+  let pwVisible = $state(false)
 </script>
 
 <main>
@@ -48,11 +50,17 @@
           </label></li>
           <li><label>
             <span>Password:</span>
-            <input
-              type="password"
-              bind:value={settings.neo4jPass}
-              onchange={() => settings.save()}
-            />
+            <span class="iconed-input">
+              <input
+                type={pwVisible ? 'text' : 'password'}
+                bind:value={settings.neo4jPass}
+                onchange={() => settings.save()}
+              />
+              <button
+                onclick={() => pwVisible = !pwVisible}
+                class="icon"
+              >👁</button>
+            </span>
           </label></li>
           <li><label>
             <span>Results Per Page Limit:</span>
@@ -87,17 +95,33 @@
     padding-inline: 0.5rem;
   }
   input {
-    width: 100%;
+    width: 97%;
     padding: 0.5rem;
     border: 1px solid #ccc;
     border-radius: 5px;
+    field-sizing: content;
+  }
+  .iconed-input {
+    position: relative;
+  }
+  .iconed-input .icon {
+    padding: 0 0.1rem;
+    width: fit-content;
+    position: absolute;
+    right: 0.5rem;
+    top: 0.4rem;
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
   }
   #neo4j {
     display: grid;
     grid-template-columns: 0fr 1fr;
     align-items: center;
     gap: 0.5em;
-    & span {
+    & > span {
       justify-self: end;
     }
     & li, & label {

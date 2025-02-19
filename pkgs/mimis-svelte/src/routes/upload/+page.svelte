@@ -66,21 +66,27 @@
   <title>Upload a CAR</title>
 </svelte:head>
 
-<form bind:this={car.form} onsubmit={submitCAR}>
-  <input
-    type="file" required accept=".car"
-    onchange={() => car.disabled = !car.form?.checkValidity()}
-  />
-  <button disabled={car.disabled}>Read CAR</button>
-</form>
-{#if !!tree}
-  <form onsubmit={submitMount}>
-    <input placeholder="/system/mount/point/" bind:value={path}/>
-    <button disabled={car.generating}>Neo4j Import</button>
-  </form>
-{/if}
+<header>
+  <h1>Upload a CAR File to Mïmis
+</header>
 
-<div id="fs-tree"></div>
+<main>
+  <form bind:this={car.form} onsubmit={submitCAR}>
+    <input
+      type="file" required accept=".car"
+      onchange={() => car.disabled = !car.form?.checkValidity()}
+    />
+    <button disabled={car.disabled}>Read CAR</button>
+  </form>
+  {#if !!tree}
+    <form onsubmit={submitMount}>
+      <input placeholder="/system/mount/point/" bind:value={path}/>
+      <button disabled={car.generating}>Neo4j Import</button>
+    </form>
+  {/if}
+
+  <div id="fs-tree"></div>
+</main>
 
 <style>
   form {
