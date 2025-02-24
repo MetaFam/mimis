@@ -1,1 +1,0 @@
-import{Q as n}from"./CmuRJ650.js";function u(e,o){{const t=document.body;e.autofocus=!0,n(()=>{document.activeElement===t&&e.focus()})}}let r=!1;function a(){r||(r=!0,document.addEventListener("reset",e=>{Promise.resolve().then(()=>{var o;if(!e.defaultPrevented)for(const t of e.target.elements)(o=t.__on_r)==null||o.call(t)})},{capture:!0}))}export{a,u as b};
