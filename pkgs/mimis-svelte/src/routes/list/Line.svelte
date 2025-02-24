@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { toHTTP } from '$lib/toHTTP'
   import type { Entry } from './+page.svelte'
   import { page } from '$app/state'
-  import DeleteConfirm from './DeleteConfirm.svelte';
-    import Display from './Display.svelte';
+  import DeleteConfirm from './DeleteConfirm.svelte'
+  import Display from './Display.svelte'
+  import Zoomed from './Zoomed.svelte'
+  import context from './context.svelte'
 
   const debug = !!page.url.searchParams.get('debug')
 
@@ -11,22 +12,44 @@
     constructor() { super('Not a media element.') }
   }
 
-  let { datum = $bindable(null) }: { datum: Entry | null } = $props()
+  let {
+    datum = $bindable(null), index,
+  }: {
+    datum: Entry | null, index: number
+  } = $props()
+  let summary = $state<HTMLElement | null>(null)
   let content = $state<HTMLElement | null>(null)
   if(datum == null) throw new Error(' `null` `datum`.')
-  const { cid, title, type } = datum
+  const { id: itemId, cid, title, type } = datum
+  let open = $state(false)
+  let details = $state<HTMLDetailsElement | null>(null)
   let deleteConfirm = $state<HTMLDialogElement | null>(null)
+  let zoomed = $state<HTMLDialogElement | null>(null)
+  const { single, showAll } = context
 
-  const togglePlay = (
+  $effect(() => {
+    const listener = (event: Event) => {
+      zoomed?.showModal()
+    }
+    content?.addEventListener('dblclick', listener)
+    return () => content?.removeEventListener('dblclick', listener)
+  })
+
+  $effect(() => {
+    if(index === 0) summary?.focus()
+  })
+
+  function togglePlay(
     media: HTMLElement | null,
     options?: {
       play?: boolean | null
       pitch?: boolean | null
     }
-  ) => {
+  ) {
     const { play = null, pitch = null } = options ?? {}
     if(!(media instanceof HTMLMediaElement)) {
       if(pitch === false) return
+      if(debug) console.debug({ rejecting: media })
       throw new NotMediaError()
     }
     if((media.paused || play === true) && play !== false) {
@@ -37,30 +60,68 @@
       media.pause()
     }
   }
+  // @ts-expect-error
+  context.register(togglePlay, { itemId })
 
-  const toggleOpen = (
+  function toggleOpen(
     details: HTMLDetailsElement,
     options?: { open?: boolean | null }
-  ) => {
-    const { open = null } = options ?? {}
-    if((details?.open || open === true) && open !== false) {
+  ) {
+    if(
+      (details?.open || options?.open === true)
+      && options?.open !== false
+    ) {
+      if(debug) console.debug({ opening: details })
       details.open = true
+      open = true
     } else {
       if(debug) console.debug({ closing: details })
       if(!details) return
       details.removeAttribute('open')
+      open = false
       togglePlay(content, { play: false, pitch: false })
     }
+  }
+  // @ts-expect-error
+  context.register(toggleOpen, { itemId })
+
+  const togglePlayOrOpen = () => {
+    try {
+      togglePlay(content)
+    } catch(error) {
+      if(details) toggleOpen(details)
+    }
+  }
+
+  function zoom() {
+    if(debug) console.debug({ zoom: {
+      datum, open: zoomed?.open, modal: zoomed?.matches(':modal'),
+    } })
+    if(zoomed?.matches(':modal')) {
+      zoomed?.close()
+    } else {
+      zoomed?.showModal()
+    }
+  }
+  context.register(zoom, { itemId })
+
+  function remove() {
+    deleteConfirm?.showModal()
+  }
+  context.register(remove, { itemId })
+
+  const openProp: { open?: boolean } = {}
+  if(debug) console.debug({ open })
+  if(open || showAll) {
+    openProp.open = true
   }
 </script>
 
 <svelte:document
-  onclick={(evt) => {
-    if(debug) console.debug({ doc: { clicked: evt.target } })
-    if(
-      (evt.target as HTMLElement).closest('li')
-      != content?.closest('li')
-    ) {
+  onclick={({ target }) => {
+    if(debug) console.debug({ doc: { clicked: target } })
+    const item = (target as HTMLElement).closest('li')
+    if(item && item != content?.closest('li')) {
       togglePlay(content, { play: false, pitch: false })
     }
   }}
@@ -68,45 +129,47 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <details
-  name="file"
-  id="deets-{Math.floor(Math.random() * 1000000)}"
+  {...openProp}
+  bind:this={details}
+  name="file{single ? '' : index + 1}"
+  id="deets-{index + 1}"
   onclick={(evt) => {
-    const details = evt.currentTarget
-    if(debug) console.debug({
-      clicked: evt.target,
-      'child-of': details,
-    })
+    const { currentTarget: details, target } = evt
+    if(debug) console.debug({ 'details:onclick': {
+      '🔑': evt.key,
+      clicked: target,
+      details,
+      media: content instanceof HTMLMediaElement,
+      targeted: target === content,
+      evt,
+    } })
     if(
-      evt.target instanceof HTMLMediaElement
+      target === content
+      && content instanceof HTMLMediaElement
       && details.open
     ) {
+      evt.preventDefault()
       togglePlay(content)
-      evt.preventDefault()
     } else if(details.open) {
-      toggleOpen(details, { open: false })
       evt.preventDefault()
+      toggleOpen(details, { open: false })
     }
   }}
   onkeypress={(evt) => {
     const details = evt.currentTarget
-    if(debug) console.debug({
+    if(debug) console.debug({ 'details:onkeypress': {
       '🔑': evt.key,
       open: details.open,
-    })
+    } })
     if(evt.key === 'Escape') {
-      toggleOpen(evt.currentTarget, { open: false })
-    } else if(evt.key === 'Enter') {
-      if(details.open) {
+      toggleOpen(details, { open: false })
+    } else if(details.open) {
+      if(evt.key === 'Enter') {
+        evt.preventDefault()
         toggleOpen(details, { open: false })
-        evt.preventDefault()
+      } else if(evt.key === ' ') {
+        togglePlayOrOpen()
       }
-    } else if(evt.key === ' ') {
-      try {
-        togglePlay(content)
-        evt.preventDefault()
-      } finally {}
-    } else if(evt.key === 'd') {
-      deleteConfirm?.showModal()
     }
   }}
   onkeydown={(evt) => {
@@ -127,27 +190,26 @@
 >
   <summary
     tabindex={0}
+    bind:this={summary}
     onkeypress={(evt) => {
       const details = (
-        (evt.target as HTMLElement).closest('details')
+        evt.currentTarget.closest('details')
       )
       if(!details) return
-      if(debug) console.debug({
+      if(debug) console.debug({ 'summary:onclick': {
         '🔑': evt.key,
         open: details?.open,
         content,
-      })
-      console.debug({ summary: content })
-      if(evt.key === ' ') {
-        if(details.open) togglePlay(content)
-        toggleOpen(details, { open: true })
+        evt,
+      } })
+      if(details.open && evt.key === ' ') {
         evt.preventDefault()
-      } else if(evt.key === 'd') {
-        deleteConfirm?.showModal()
+        evt.stopImmediatePropagation()
+        // togglePlayOrOpen()
       }
     }}
   >{title}</summary>
-  <Display {datum} {content}/>
+  <Display {datum} bind:content/>
 </details>
 
 <DeleteConfirm
@@ -155,9 +217,14 @@
   bind:handle={deleteConfirm}
 />
 
+<Zoomed
+  {datum}
+  bind:handle={zoomed}
+/>
+
 <style>
   details::before {
-    content: "⸬ " counter(entry) " ⸬";
+    content: "⣿ " counter(entry) " ⣿";
     counter-increment: entry;
     font-weight: bold;
     position: absolute;
@@ -185,6 +252,11 @@
         opacity var(--anim-dur),
         block-size var(--anim-dur)
       ;
+    }
+
+    summary {
+      margin-inline-start: 1.25rem;
+      text-indent: -1.5rem;
     }
 
     &[open]::details-content {

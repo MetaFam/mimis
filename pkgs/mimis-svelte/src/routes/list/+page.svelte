@@ -10,12 +10,14 @@
 <script lang="ts" >
   import Toastify from 'toastify-js'
   import { create as createIPFS } from 'kubo-rpc-client'
-  import { SortableList } from 'svelte-pragmatic-sortable'
   import type { Version } from 'multiformats'
+  import { tick } from 'svelte'
   import { settings } from '$lib/settings.svelte'
   import row from './Line.svelte'
   import preview from './Preview.svelte'
-    import { tick } from 'svelte';
+  import SortableList from './SortableList.svelte'
+  import Shortcuts from './Shortcuts.svelte'
+  import context from './context.svelte';
 
   let entries = $state<Array<Entry>>([])
   let ipfs = createIPFS(settings.ipfsAPI)
@@ -26,6 +28,8 @@
   let progress = $state(0)
   let total = $state(0)
   let count = $state(0)
+  let files = $state<HTMLInputElement | null>(null)
+  let shortcuts = $state<HTMLDialogElement | null>(null)
 
   async function addEntries(
     files: File | Array<File>
@@ -96,6 +100,7 @@
       saving = false
     }
   }
+  context.register(save)
 
   function undo() {
     if(history.length === 0) return
@@ -107,6 +112,25 @@
       await tick()
     })
   }
+  context.register(undo)
+
+  function keyboard() {
+    shortcuts?.showModal()
+  }
+  context.register(keyboard)
+
+  async function showAll() {
+    context.single = false
+    context.showAll = true
+    await tick()
+    context.showAll = false
+  }
+  context.register(showAll)
+
+  function add() {
+    files?.click()
+  }
+  context.register(add)
 </script>
 
 <svelte:head>
@@ -123,7 +147,25 @@
 <svelte:document
   ondatum-delete={(evt: CustomEvent) => {
     const { id } = evt.detail
+    history.push([...entries])
     entries = entries.filter((entry) => entry.id !== id)
+  }}
+  onkeypress={(evt) => {
+    if(evt.key === 'a') {
+      files?.click()
+    } else if(evt.key === '?') {
+      keyboard()
+    } else if(evt.key === 's') {
+      save()
+    } else if(evt.key === 'u') {
+      undo()
+    } else if(evt.key === 'v') {
+      showAll()
+    } else if(evt.key === 'z') {
+      context.retrieve('zoom', { useActive: true })()
+    } else if(evt.key === 'd') {
+      context.retrieve('remove', { useActive: true })()
+    }
   }}
 />
 
@@ -137,11 +179,7 @@
       <button
         id="add-file"
         type="button"
-        onclick={(evt) => {(
-          evt.currentTarget.form
-          ?.elements
-          .namedItem('toAdd') as HTMLInputElement
-        ).click()}}
+        onclick={(evt) => files?.click()}
         disabled={loading}
       >
         {#if loading}
@@ -152,13 +190,13 @@
             </progress>
           </section>
         {:else}
-          Add a File
+          Add Files
         {/if}
       </button>
       <input
+        bind:this={files}
         type="file"
-        accept="image/*,video/*"
-        name="toAdd"
+        accept="image/*,video/*,audio/*"
         multiple
         onchange={handleFiles}
       />
@@ -169,8 +207,9 @@
         type="button"
         onclick={save}
         disabled={!changes || saving}
+        class:saving
       >
-        {saving ? 'Saving…' : 'Save'}
+        <span>🖫</span>
       </button>
       <button
         id="undo"
@@ -178,12 +217,33 @@
         onclick={undo}
         disabled={history.length === 0 || saving}
       >
-        Undo
+        ↺
+      </button>
+      <button
+        id="shortcuts"
+        type="button"
+        onclick={keyboard}
+      >
+        ⌨
+      </button>
+      <button
+        id="show"
+        type="button"
+        onclick={showAll}
+        disabled={entries.length === 0}
+      >
+        ⟱
       </button>
     </section>
   </form>
 
-  <SortableList id="entries" bind:data={entries} bind:history {row} {preview}/>
+  {#if entries.length === 0}
+    <p>No entries yet.</p>
+  {:else}
+    <SortableList id="entries" bind:data={entries} bind:history {row} {preview}/>
+  {/if}
+
+  <Shortcuts bind:handle={shortcuts}/>
 </main>
 
 <style>
@@ -204,6 +264,14 @@
   button#add-file {
     position: sticky;
     top: 3rem;
+  }
+  button#save.saving span, button#save:hover span {
+    display: block;
+    transform-origin: 50% 40%;
+    animation: spin 1s linear infinite forwards;
+  }
+  @keyframes spin {
+    to { rotate: 360deg }
   }
   section#controls {
     position: fixed;

@@ -1,13 +1,21 @@
 <script lang="ts">
-  import Display from "./Display.svelte";
+  import { tick } from 'svelte'
+  import Display from './Display.svelte'
 
   let {
     datum,
     handle = $bindable<HTMLDialogElement | null>(null),
   } = $props()
+  let remove = $state<HTMLButtonElement | null>(null)
 </script>
 
-<dialog bind:this={handle}>
+<dialog
+  bind:this={handle}
+  onopen={() => {
+    console.debug({ opened: handle })
+    tick().then(() => remove?.focus())
+  }}
+>
   <h1>Delete {datum.title}?</h1>
   <button
     id="x"
@@ -26,6 +34,7 @@
       ><u>C</u>ancel</button>
       <button
         id="delete"
+        bind:this={remove}
         accesskey="r"
         onclick={() => {
           const evt = new CustomEvent(
@@ -44,6 +53,7 @@
     position: relative;
     display: block;
     --max-height: 50vh;
+    --max-width: 50%;
   }
   nav {
     display: flex;
@@ -71,5 +81,16 @@
   button#delete {
     background-color: red;
     color: white;
+
+  }
+
+  button:focus {
+    border-color: yellow;
+    animation: pulse ease-in-out forwards infinite 0.5s;
+  }
+
+  @keyframes pulse {
+    from { opacity: 1 }
+    to { opacity: 0.75 }
   }
 </style>

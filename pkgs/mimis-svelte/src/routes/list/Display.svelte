@@ -68,12 +68,11 @@
 <style>
   img, video, object {
     max-height: var(--max-height, 80vh);
-    max-width: 90%;
+    max-width: var(--max-width, 90%);
     display: block;
     margin-inline: auto;
     border-radius: 0.5rem;
     border: 2px solid color-mix(in oklab, var(--bg), #0009 90%);
-    pointer-events: none;
   }
   object {
     min-width: 50%;

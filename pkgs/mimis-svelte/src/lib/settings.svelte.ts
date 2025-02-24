@@ -15,6 +15,7 @@ class Settings {
     neo4jUser: 'mimis-setting-neo4j-user',
     neo4jPass: 'mimis-setting-neo4j-pass',
     limit: 'mimis-setting-limit',
+    debugging: 'mimis-setting-debugging',
   } as const
   static defaults = {
     [Settings.keys.ipfsPattern]: (
@@ -26,28 +27,32 @@ class Settings {
     [Settings.keys.neo4jURL]: uri || 'bolt://localhost:7687',
     [Settings.keys.neo4jUser]: user || 'neo4j',
     [Settings.keys.neo4jPass]: pass || 'neo4j',
-    [Settings.keys.limit]: limit || 125,
+    [Settings.keys.limit]: limit ? Number(limit) : 125,
+    [Settings.keys.debugging]: false,
   }
 
   valueOf(key: Omit<keyof typeof Settings.keys, 'limit'>): string
   valueOf(key: 'limit'): number
+  valueOf(key: 'debugging'): boolean
   valueOf(key: keyof typeof Settings.keys) {
     return (
       typeof localStorage === 'undefined' ? (
         Settings.defaults[Settings.keys[key]]
       ) : (
         (() => {
-          let value = (
+          const value = (
             localStorage.getItem(Settings.keys[key])
           )
-          let defaultVal = Settings.defaults[
+          const defaultVal = Settings.defaults[
             Settings.keys[key]
           ]
           if(value) {
-            if(typeof defaultVal === 'string') {
-              return value
-            } else {
+            if(typeof defaultVal === 'number') {
               return Number(value)
+            } else if(typeof defaultVal === 'boolean') {
+              return Boolean(value)
+            } else {
+              return value
             }
           } else {
             localStorage.setItem(
@@ -66,6 +71,7 @@ class Settings {
   neo4jUser = $state(this.valueOf('neo4jUser'))
   neo4jPass = $state(this.valueOf('neo4jPass'))
   limit = $state(this.valueOf('limit'))
+  debugging = $state(this.valueOf('debugging'))
 
   save(key?: keyof typeof Settings.keys) {
     if(key != null) {
