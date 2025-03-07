@@ -17,7 +17,10 @@
   import preview from './Preview.svelte'
   import SortableList from './SortableList.svelte'
   import Shortcuts from './Shortcuts.svelte'
-  import context from './context.svelte';
+  import context from './context.svelte'
+  import 'toastify-js/src/toastify.css'
+
+  const debug = new URLSearchParams(location.search).has('debug')
 
   let entries = $state<Array<Entry>>([])
   let ipfs = createIPFS(settings.ipfsAPI)
@@ -34,36 +37,49 @@
   async function addEntries(
     files: File | Array<File>
   ) {
-    if(!Array.isArray(files)) files = [files]
-    total = (
-      files.reduce((acc, { size }) => acc + size, 0)
-    )
-    const options = {
-      chunker: 'rabin',
-      cidVersion: 1 as Version,
-      progress: (bytes: number) => {
-        progress += bytes
-      },
+    try {
+      if(!Array.isArray(files)) files = [files]
+      total = (
+        files.reduce((acc, { size }) => acc + size, 0)
+      )
+
+      const options = {
+        chunker: 'rabin',
+        cidVersion: 1 as Version,
+        progress: (bytes: number) => {
+          progress += bytes
+        },
+        timeout: 30_000,
+      }
+      if(debug) console.debug({ Adding: files, 'Total Size': total, options })
+      let infos = []
+      let idx = 0
+      for await (const { cid } of ipfs.addAll(files, options)) {
+        infos.push({
+          id: ++count,
+          cid: cid.toString(),
+          title: (
+            files[idx].name.replace(/\.[^.]*$/, '')
+          ),
+          type: files[idx].type,
+        })
+        idx++
+      }
+      if(debug) console.debug({ Added: infos })
+      const existing = entries.map(({ cid }) => cid)
+      const unique = infos.filter(({ cid }) => (
+        !existing.includes(cid)
+      ))
+      if(debug) console.debug({ infos, 'Unique Entries': unique })
+      entries = entries.concat(unique)
+    } catch(err) {
+      console.error({ 'IPFS Add Error': err })
+      if((err as { response?: { status: number } }).response?.status === 0) {
+        throw new Error('Couldn’t connect to IPFS.')
+      } else {
+        throw err
+      }
     }
-    let infos = []
-    let idx = 0
-    const results = await ipfs.addAll(files, options)
-    for await (const { cid } of results) {
-      infos.push({
-        id: ++count,
-        cid: cid.toString(),
-        title: (
-          files[idx].name.replace(/\.[^.]*$/, '')
-        ),
-        type: files[idx].type,
-      })
-      idx++
-    }
-    const existing = entries.map(({ cid }) => cid)
-    const unique = infos.filter((info) => (
-      !existing.includes(info.cid)
-    ))
-    entries = entries.concat(unique)
   }
 
   async function handleFiles(evt: Event) {
@@ -201,41 +217,45 @@
         onchange={handleFiles}
       />
     </label>
-    <section id="controls">
+  </form>
+  <ul id="controls">
+    <li>
       <button
         id="save"
         type="button"
         onclick={save}
         disabled={!changes || saving}
         class:saving
-      >
-        <span>🖫</span>
-      </button>
+      >🖫</button>
+      <dialog open>Save</dialog>
+    </li>
+    <li>
       <button
         id="undo"
         type="button"
         onclick={undo}
         disabled={history.length === 0 || saving}
-      >
-        ↺
-      </button>
+      >↺</button>
+      <dialog open>Undo</dialog>
+    </li>
+    <li>
       <button
         id="shortcuts"
         type="button"
         onclick={keyboard}
-      >
-        ⌨
-      </button>
+      >⌨</button>
+      <dialog open>Shortcuts</dialog>
+    </li>
+    <li>
       <button
         id="show"
         type="button"
         onclick={showAll}
         disabled={entries.length === 0}
-      >
-        ⟱
-      </button>
-    </section>
-  </form>
+      >⟱</button>
+      <dialog open>Show All</dialog>
+    </li>
+  </ul>
 
   {#if entries.length === 0}
     <p>No entries yet.</p>
@@ -273,10 +293,37 @@
   @keyframes spin {
     to { rotate: 360deg }
   }
-  section#controls {
+  ul#controls {
     position: fixed;
+    list-style: none;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
     top: 1.5rem;
     right: 1.5rem;
+
+    & li {
+      position: relative;
+    }
+
+    & li dialog {
+      opacity: 0;
+      transition: opacity 0.25s ease-in-out;
+      padding: 0.25rem;
+      margin: 1rem 0;
+      border: none;
+      pointer-events: none;
+      white-space: pre;
+      text-align: center;
+    }
+
+    & li:hover dialog {
+      opacity: 1;
+    }
+
+    #shortcuts + dialog, #show + dialog {
+      margin-inline-start: -1rem;
+    }
   }
   input[type=file] {
     opacity: 0;

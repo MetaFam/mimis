@@ -87,15 +87,9 @@
 		justify-content: center;
 		--background: light-dark(#FFFA, #000A);
 
-		& li a {
-			anchor-name: --nav-link;
-		}
-
 		& li dialog {
 			opacity: 0;
 			position: absolute;
-			position-anchor: --nav-link;
-			top: calc(anchor(--nav-link bottom) + 0.5rem);
 			padding: 0.25rem;
 			border: none;
 			pointer-events: none;

@@ -58,9 +58,7 @@ class Context {
         this.#items.set(itemId, {})
       }
       if(this.retrieve(func.name, { itemId }) != null) {
-        throw new Error(
-          `Function "${func.name}" already registered for item #${itemId}.`
-        )
+        console.warn(`Redefining function: ${func.name} for item: ${itemId}`)
       }
       this.#items.get(itemId)[func.name] = func
     }
