@@ -1,0 +1,1 @@
+import{a7 as h,a6 as k,d as S,K as T,a8 as c}from"./DO4L_uWg.js";function t(r,i){return r===i||(r==null?void 0:r[c])===i}function A(r={},i,a,q){return h(()=>{var f,s;return k(()=>{f=s,s=[],S(()=>{r!==a(...s)&&(i(r,...s),f&&t(a(...f),r)&&i(null,...f))})}),()=>{T(()=>{s&&t(a(...s),r)&&i(null,...s)})}}),r}export{A as b};
