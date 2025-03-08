@@ -2,6 +2,7 @@
   import Hammer from 'hammerjs'
   import Display from './Display.svelte'
   import context from './context.svelte'
+  import { toggle } from '$lib';
 
   let {
     datum, handle = $bindable<HTMLDialogElement | null>(null)
@@ -9,21 +10,118 @@
   let content = $state<HTMLElement | null>(null)
   const { debug } = context
 
+  type Adjustment = { factor?: number, scale?: number }
+  type Media = HTMLMediaElement
+
+  function zoom({ factor = 1, scale = 0 }: Adjustment) {
+    if(!content) throw new Error('`content` is null.')
+    const style = getComputedStyle(content)
+    let current = Number(style.scale)
+    if(isNaN(current)) current = 1
+    let next = (current * factor) + scale
+    if(debug) console.debug({ zoom: current, factor, scale, next })
+    content.style.scale = String(next)
+    handle.style.setProperty('--max-width', 'auto')
+    handle.style.setProperty('--max-height', 'auto')
+  }
+
+  function crank({ factor = 1, scale = 0 }: Adjustment) {
+    if(!content) throw new Error('`content` is null.')
+    if(!(content instanceof HTMLMediaElement)) {
+      if(debug) console.warn('`content` is not a media element.')
+    } else {
+      const current = content.volume
+      let next = (current * factor) + scale
+      if(debug) console.debug({ volume: current, factor, scale, next })
+    }
+  }
+
+  function seek({ factor = 1, scale = 0 }: Adjustment) {
+    if(!content) throw new Error('`content` is null.')
+    if(!(content instanceof HTMLMediaElement)) {
+      if(debug) console.warn('`content` is not a media element.')
+    } else {
+      const current = content.currentTime
+      let next = (current * factor) + scale
+      if(debug) console.debug({ time: current, factor, scale, next })
+      content.currentTime = next
+    }
+  }
+
+  const toggles = (() => {
+    const controls = ['play|pause', '(un)?mute', 'fullscreen'] as const
+    const out = Object.fromEntries(controls.map((key) => [key, () => {}]))
+    if(!content) throw new Error('`content` is null.')
+    if(!(content instanceof HTMLMediaElement)) {
+      if(debug) console.warn('`content` is not a media element.')
+    } else {
+      const media = content as Media
+      Object.assign(out, {
+        'play|pause': toggle({
+          condition: () => media.paused,
+          branch: {
+            if: () => media.play(),
+            else: () => media.pause(),
+          },
+        }),
+        '(un)?mute': toggle({
+          branch: { if: () => media.muted = !media.muted },
+        }),
+        'fullscreen': toggle({
+          condition: () => !!document.fullscreenElement,
+          branch: {
+            if: () => document.exitFullscreen(),
+            else: () => media.requestFullscreen(),
+          },
+        })
+      } as const)
+    }
+    return out
+  })()
+
+  function shift(Δ: number) {
+    let next = handle
+    const up = Δ >= 0
+    if(Math.abs(Δ) > 0) {
+      do {
+        next = (
+          next.closest('li')
+          ?.[up ? 'previousElementSibling' : 'nextElementSibling']
+          ?.querySelector('.zoom')
+        )
+
+        if(!next) {
+          next = (
+            handle.closest('li')
+            ?.parentElement
+            ?.[up ? 'lastElementChild' : 'firstElementChild']
+            ?.querySelector('.zoom')
+          )
+        }
+
+        Δ += up ? -1 : 1
+      } while(Math.abs(Δ) > 0 && !!next)
+    }
+
+    if(next) {
+      handle.close()
+      next.showModal()
+    }
+  }
+
   $effect(() => {
     const mc = new Hammer(handle)
-    mc.on('panright', () => {
-      if(content && content instanceof HTMLMediaElement) {
-        content.currentTime += 2
-      }
-    })
-    mc.on('panleft', () => {
-      if(content && content instanceof HTMLMediaElement) {
-        content.currentTime -= 2
-      }
-    })
-    mc.on('doubletap', () => {
-      handle.close()
-    })
+    mc.get('pinch').set({ enable: true })
+    mc.on('swiperight', () => { shift(1) })
+    mc.on('swipeleft', () => { shift(-1) })
+    mc.on('panright', () => { seek({ scale: 2 }) })
+    mc.on('panleft', () => { seek({ scale: -2 }) })
+    mc.on('panup', () => { crank({ scale: 20 }) })
+    mc.on('pandown', () => { crank({ scale: -20 }) })
+    mc.on('pinchin', () => { zoom({ factor : 0.8 }) })
+    mc.on('pinchout', () => { zoom({ factor: 1.2 }) })
+    mc.on('tap', () => { toggles['play/pause']?.() })
+    mc.on('doubletap', () => { handle.close() })
   })
 </script>
 
@@ -33,92 +131,23 @@
   bind:this={handle}
   onclick={() => {}}
   onkeydown={(evt) => {
+    evt.stopImmediatePropagation()
     if(['z', 'Escape'].includes(evt.key)) {
       handle.close()
-      evt.stopPropagation()
-    } else if(['Enter', 'ArrowRight', 'ArrowDown'].includes(evt.key)) {
-      evt.stopImmediatePropagation()
-      let next = (
-        handle.closest('li')
-        ?.nextElementSibling
-        ?.querySelector('.zoom')
-      )
-      if(!next) {
-        next = (
-          handle.closest('li')
-          ?.parentElement
-          ?.firstElementChild
-          ?.querySelector('.zoom')
-        )
-      }
-      if(next) {
-        handle.close()
-        next.showModal()
-      }
-    } else if(['ArrowLeft', 'ArrowUp'].includes(evt.key)) {
-      evt.stopImmediatePropagation()
-      let prev = (
-        handle.closest('li')
-        ?.previousElementSibling
-        ?.querySelector('.zoom')
-      )
-      if(!prev) {
-        prev = (
-          handle.closest('li')
-          ?.parentElement
-          ?.lastElementChild
-          ?.querySelector('.zoom')
-        )
-      }
-      if(prev) {
-        handle.close()
-        prev.showModal()
-      }
+    } else if(['Enter', 'ArrowRight'].includes(evt.key)) {
+      shift(1)
+    } else if(['ArrowLeft'].includes(evt.key)) {
+      shift(-1)
     } else if([' '].includes(evt.key) && content instanceof HTMLMediaElement) {
-      evt.preventDefault()
-      if(content.paused) {
-        content.play()
-      } else {
-        content.pause()
-      }
+      toggles['play|pause']()
     } else if(['m'].includes(evt.key) && content instanceof HTMLMediaElement) {
-      evt.preventDefault()
-      if(content.muted) {
-        content.muted = false
-      } else {
-        content.muted = true
-      }
-    } else if(['+'].includes(evt.key)) {
-      evt.stopImmediatePropagation()
-      const style = {
-        dialog: getComputedStyle(handle),
-        content: getComputedStyle(content),
-      }
-      const axes = ['width', 'height'] as const
-      const [width, height] = (
-        axes.map(
-          (axis) => style.dialog.getPropertyValue(`--max-${axis}`)
-        )
-      )
-      const parse = (value: string) => {
-        const [_, scale, unit] = value.match(/([0-9.]+)(\D+)/) ?? []
-        return { scale: Number(scale), unit }
-      }
-      const size = { width: parse(width), height: parse(height) } as const
-      const ratio = style.content.getPropertyValue('aspect-ratio')
-      if(content && !/\d|\./g.test(ratio)) {
-        const bbox = content.getBoundingClientRect()
-        const ar = String(bbox.width / bbox.height)
-        if(debug) console.debug({ resizing: bbox, ratio, new: ar })
-        content.style.setProperty('aspect-ratio', ar)
-      }
-      const bigger = Object.fromEntries(axes.map((axis) => (
-        [axis, `${size[axis].scale * 1.2}${size[axis].unit}`]
-      )))
-      if(debug) console.debug({ size, bigger })
-      axes.forEach((axis) => {
-        handle.style.setProperty(`--max-${axis}`, bigger[axis])
-      })
+      toggles['(un)?mute']()
+    } else if(['+', '='].includes(evt.key)) {
+      zoom({ factor: 1.2 })
+    } else if(['-', '_'].includes(evt.key)) {
+      zoom({ factor: 0.8 })
+    } else if(['f'].includes(evt.key) && content instanceof HTMLMediaElement) {
+      toggles['fullscreen']()
     } else {
       console.debug({ 'dialog:onkeypress': { '🔑': evt.key } })
     }
