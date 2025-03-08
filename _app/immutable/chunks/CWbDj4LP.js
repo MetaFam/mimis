@@ -1,0 +1,1 @@
+import{m as r,n as c,o as s,E as i,q as h,v as m,w as p}from"./CFSPKoXQ.js";function u(o,t,f){r&&c();var e=o,a,n;s(()=>{a!==(a=t())&&(n&&(p(n),n=null),a&&(n=h(()=>f(e,a))))},i),r&&(e=m)}export{u as c};
