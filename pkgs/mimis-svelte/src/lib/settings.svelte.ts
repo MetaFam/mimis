@@ -1,3 +1,4 @@
+import { page } from "$app/state";
 import {
   PUBLIC_IPFS_PATTERN as pattern,
   PUBLIC_IPFS_API as api,
@@ -28,7 +29,7 @@ class Settings {
     [Settings.keys.neo4jUser]: user || 'neo4j',
     [Settings.keys.neo4jPass]: pass || 'neo4j',
     [Settings.keys.limit]: limit ? Number(limit) : 125,
-    [Settings.keys.debugging]: false,
+    [Settings.keys.debugging]: page.url.searchParams.has('debug'),
   }
 
   valueOf(key: Omit<keyof typeof Settings.keys, 'limit'>): string
@@ -46,7 +47,7 @@ class Settings {
           const defaultVal = Settings.defaults[
             Settings.keys[key]
           ]
-          if(value) {
+          if(value != null) {
             if(typeof defaultVal === 'number') {
               return Number(value)
             } else if(typeof defaultVal === 'boolean') {

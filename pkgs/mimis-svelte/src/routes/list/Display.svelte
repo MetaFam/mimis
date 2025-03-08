@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { page } from "$app/state";
   import { toHTTP } from "$lib/toHTTP";
+  import context from "./context.svelte";
 
-  const debug = !!page.url.searchParams.get('debug')
+  const { debug } = context
 
   let {
     datum,
@@ -27,12 +27,14 @@
 
 {#if mime === 'image'}
   <img
+    id={cid}
     bind:this={content}
     src={toHTTP({ cid })}
     alt={title}
   />
 {:else if mime === 'audio'}
   <audio
+    id={cid}
     controls
     bind:this={content}
     tabindex={-1}
@@ -44,6 +46,7 @@
   </audio>
 {:else if mime === 'video'}
   <video
+    id={cid}
     controls
     bind:this={content}
     tabindex={-1}
@@ -56,6 +59,7 @@
   </video>
 {:else}
   <object
+    id={cid}
     bind:this={content}
     data={toHTTP({ cid })}
     {title}
@@ -67,14 +71,22 @@
 
 <style>
   img, video, object {
-    max-height: var(--max-height, 80vh);
+    max-height: var(--max-height, 90vh);
     max-width: var(--max-width, 90%);
     display: block;
     margin-inline: auto;
     border-radius: 0.5rem;
     border: 2px solid color-mix(in oklab, var(--bg), #0009 90%);
+    min-height: 5dvh;
   }
+
   object {
-    min-width: 50%;
+    min-width: min(75vw, var(--max-width, 90%));
+  }
+
+  @media(width <= 1024px) {
+    img, video, object {
+      border: none;
+    }
   }
 </style>

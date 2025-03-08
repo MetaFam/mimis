@@ -1,5 +1,6 @@
 <script lang="ts">
   import { settings } from '$lib/settings.svelte'
+  import context from '../list/context.svelte';
 
   let pwVisible = $state(false)
 </script>
@@ -9,8 +10,24 @@
     <fieldset>
       <legend>Settings</legend>
       <fieldset>
+        <legend>General</legend>
+        <ul id="general">
+          <li><label class="line">
+            <input
+              type="checkbox"
+              bind:checked={settings.debugging}
+              onchange={({ target: { checked } }: { target: { checked: boolean } }) => {
+                context.debug = checked
+                settings.save()
+              }}
+            />
+            <span>:Debug Messages</span>
+          </label></li>
+        </ul>
+      </fieldset>
+      <fieldset>
         <legend>IPFS</legend>
-          <ul id="ipfs">
+        <ul id="ipfs">
           <li><label>
             <fieldset>
               <legend>Gateway</legend>
@@ -94,12 +111,20 @@
   legend {
     padding-inline: 0.5rem;
   }
-  input {
+  input:is(:not([type]), [type="text"], [type="password"]) {
     width: 97%;
     padding: 0.5rem;
     border: 1px solid #ccc;
     border-radius: 5px;
     field-sizing: content;
+  }
+  .line {
+    display: flex;
+    justify-content: flex-start;
+
+    & > span {
+      white-space: nowrap;
+    }
   }
   .iconed-input {
     position: relative;

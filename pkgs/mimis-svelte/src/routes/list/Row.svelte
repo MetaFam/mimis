@@ -16,6 +16,7 @@
 </script>
 
 <script lang="ts" generics="R extends Record<string | symbol, unknown>">
+  import { page } from '$app/state';
   import {
     draggable,
     dropTargetForElements,
@@ -39,6 +40,7 @@
   import DropIndicator from './DropIndicator.svelte'
   import context from './context.svelte'
 
+  const { debug } = context
   const idle: DragState = { type: 'idle' }
 
   let {
@@ -58,6 +60,7 @@
 
   let item = $state<HTMLLIElement | null>(null)
   let status = $state<DragState>(idle)
+  let open = $state(false)
 
   $effect(() => {
     invariant(item)
@@ -128,25 +131,33 @@
       }),
     )
   })
+
+  const setId = () => { context.activeId = datum?.id ?? null }
 </script>
 
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <li
   data-element-id={datum?.id}
   bind:this={item}
   class={rowClasses?.(status.type)}
   style:view-transition-name={`item-${datum?.id}`}
-  onfocusin={(evt) => { context.activeId = datum?.id ?? null }}
+  onfocusin={setId}
+  onkeypress={() => {}}
+  onclick={(evt) => {
+    setId()
+    if(!evt.ctrlKey || !open) {
+      context.retrieve('toggleOpen', { useActive: true })()
+    }
+  }}
 >
-  <div>
-    <script lang="ts">
-      // @ts-ignore
-    </script>
-    <Row bind:datum {index}/>
-  </div>
+  <Row bind:datum bind:open {index}/>
   {#if status.type === 'is-dragging-over' && status.closestEdge}
     <DropIndicator edge={status.closestEdge} gap={'0.5rem'}/>
   {/if}
 </li>
 
 <style>
+  li {
+    cursor: pointer;
+  }
 </style>

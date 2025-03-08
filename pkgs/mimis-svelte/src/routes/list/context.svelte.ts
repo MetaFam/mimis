@@ -1,46 +1,28 @@
 import { page } from '$app/state'
+import { settings } from '$lib/settings.svelte'
 
 class Context {
+  single = $state(true)
   #settings = $state(new Map())
   #functions = $state(new Map())
   #items = $state(new Map())
   #activeId = $state<number | null>(null)
 
-  #debug = true // page.url.searchParams.has('debug')
-
-  #keys = {
-    single: Symbol('single'),
-    showAll: Symbol('showAll'),
-  }
+  debug = $state(page.url.searchParams.has('debug') || settings.debugging)
 
   getSetting(key: symbol) {
     if(!this.#initialized) this.#initialize()
     return this.#settings.get(key)
   }
   setSetting(key: symbol, value: unknown) {
-    console.debug({ setting: { [key.toString()]: value } })
+    if(this.debug) console.debug({ setting: { [key.toString()]: value } })
     return this.#settings.set(key, value)
-  }
-
-  set single(single: boolean) {
-    this.setSetting(this.#keys.single, single)
-  }
-  get single() {
-    return this.getSetting(this.#keys.single) as boolean
-  }
-
-  set showAll(showAll: boolean) {
-    this.setSetting(this.#keys.showAll, showAll)
-  }
-  get showAll() {
-    return this.getSetting(this.#keys.showAll) as boolean
   }
 
   #initialized = false
   #initialize() {
     this.#initialized = true
     this.single = true
-    this.showAll = false
   }
 
   register(
@@ -48,7 +30,7 @@ class Context {
     options?: { itemId: number },
   ) {
     const { itemId } = options ?? {}
-    if(this.#debug) console.debug(
+    if(this.debug) console.debug(
       { registering: { itemId, name: func.name } }
     )
     if(itemId == null) {
@@ -58,7 +40,9 @@ class Context {
         this.#items.set(itemId, {})
       }
       if(this.retrieve(func.name, { itemId }) != null) {
-        console.warn(`Redefining function: ${func.name} for item: ${itemId}`)
+        if(this.debug) console.warn(
+          `Redefining function: ${func.name} for item: ${itemId}`
+        )
       }
       this.#items.get(itemId)[func.name] = func
     }
@@ -75,18 +59,42 @@ class Context {
     }
     const id = useActive ? this.activeId : itemId
     if(name == null) {
-      if(this.#debug) console.debug({ retrieving: { itemId, useActive } })
+      if(this.debug) console.debug({ retrieving: { itemId, useActive } })
       return this.#items.get(id)
     }
     if(itemId == null && useActive != true) {
-      if(this.#debug) console.debug({ retrieving: { name } })
+      if(this.debug) console.debug({ retrieving: { name } })
       return this.#functions.get(name)
     }
     return this.#items.get(id)[name]
   }
 
+  retrieveAll(name: string) {
+    return this.#items.values().map((group) => group[name]).filter(Boolean)
+  }
+
+  any(name: string) {
+    const funcs = this.retrieveAll(name)
+    let any = false
+    for(const func of funcs) {
+      any ||= func()
+      if(any) break
+    }
+    return any
+  }
+
+  all(name: string) {
+    const funcs = this.retrieveAll(name)
+    let all = true
+    for(const func of funcs) {
+      all &&= func()
+      if(!all) break
+    }
+    return all
+  }
+
   set activeId(id: number | null) {
-    if(this.#debug) console.debug({ activeId: id })
+    if(this.debug) console.debug({ activeId: id })
     this.#activeId = id
   }
   get activeId() {

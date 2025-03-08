@@ -20,7 +20,7 @@
   import context from './context.svelte'
   import 'toastify-js/src/toastify.css'
 
-  const debug = new URLSearchParams(location.search).has('debug')
+  const { debug } = context
 
   let entries = $state<Array<Entry>>([])
   let ipfs = createIPFS(settings.ipfsAPI)
@@ -49,7 +49,7 @@
         progress: (bytes: number) => {
           progress += bytes
         },
-        timeout: 30_000,
+        timeout: 60_000,
       }
       if(debug) console.debug({ Adding: files, 'Total Size': total, options })
       let infos = []
@@ -137,11 +137,20 @@
 
   async function showAll() {
     context.single = false
-    context.showAll = true
-    await tick()
-    context.showAll = false
+    const funcs = context.retrieveAll('toggleOpen')
+    for(const toggleOpen of funcs) {
+      toggleOpen({ open: true })
+    }
   }
   context.register(showAll)
+
+  async function hideAll() {
+    const funcs = context.retrieveAll('toggleOpen')
+    for(const toggleOpen of funcs) {
+      toggleOpen({ open: false })
+    }
+  }
+  context.register(hideAll)
 
   function add() {
     files?.click()
@@ -177,6 +186,8 @@
       undo()
     } else if(evt.key === 'v') {
       showAll()
+    } else if(evt.key === 'h') {
+      hideAll()
     } else if(evt.key === 'z') {
       context.retrieve('zoom', { useActive: true })()
     } else if(evt.key === 'd') {
@@ -251,9 +262,29 @@
         id="show"
         type="button"
         onclick={showAll}
-        disabled={entries.length === 0}
+        disabled={entries.length === 0 || context.any('isOpen')}
       >⟱</button>
       <dialog open>Show All</dialog>
+    </li>
+    <li>
+      <button
+        id="hide"
+        type="button"
+        onclick={hideAll}
+        disabled={entries.length === 0 || !context.any('isOpen')}
+      >⟰</button>
+      <dialog open>Hide All</dialog>
+    </li>
+    <li>
+      <label class="button" id="single">
+        <input
+          type="checkbox"
+          bind:checked={context.single}
+          style:display="none"
+        />
+        Ⅰ
+      </label>
+      <dialog open>Single<br/>Visible</dialog>
     </li>
   </ul>
 
@@ -271,12 +302,15 @@
     interpolate-size: allow-keywords;
     --bg: var(--color, currentColor);
   }
+  header {
+    padding-top: 2rem;
+  }
   main {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    flex-grow: 1;
   }
   button {
     z-index: 10;
@@ -292,6 +326,12 @@
   }
   @keyframes spin {
     to { rotate: 360deg }
+  }
+  label.button:has(input) {
+    --bg: red;
+  }
+  label.button:has(input:checked) {
+    --bg: green;
   }
   ul#controls {
     position: fixed;
@@ -321,13 +361,13 @@
       opacity: 1;
     }
 
-    #shortcuts + dialog, #show + dialog {
+    & :is(#shortcuts, #show, #hide, #single) + dialog {
       margin-inline-start: -1rem;
     }
   }
+
   input[type=file] {
-    opacity: 0;
-    position: absolute;
+    display: none;
   }
 
   :global(.sortable-list) {
@@ -335,7 +375,8 @@
     list-style: none;
     margin-block: 2rem;
     margin-inline: auto;
-    width: 420px;
+    box-sizing: border-box;
+    width: min(100%, 420px);
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -343,7 +384,7 @@
     border-radius: 0.5rem;
     padding: 0.5rem;
 
-    & li {
+    & :global(li) {
       position: relative;
       border: 2px solid var(--bg);
       border-radius: 0.5rem;
@@ -351,101 +392,96 @@
 
       &:hover {
         background-color: color-mix(in oklab, var(--bg), transparent);
-        cursor: grab;
       }
-    }
 
-    & li                 { --bg: cyan }
-    & li:nth-of-type(1)  { --bg: color-mix(in oklab, red, #FFF 25%) }
-    & li:nth-of-type(2)  { --bg: color-mix(in oklab, red, #FFF 15%) }
-    & li:nth-of-type(3)  { --bg: color-mix(in oklab, red, #FFF 5%) }
-    & li:nth-of-type(4)  { --bg: color-mix(in oklab, red, #FFF 0%) }
-    & li:nth-of-type(5)  { --bg: color-mix(in oklab, red, #000 10%) }
-    & li:nth-of-type(6)  { --bg: color-mix(in oklab, red, #000 20%) }
-    & li:nth-of-type(7)  { --bg: color-mix(in oklab, red, #000 30%) }
-    & li:nth-of-type(8)  { --bg: color-mix(in oklab, red, #000 40%) }
-    & li:nth-of-type(9)  { --bg: color-mix(in oklab, red, #000 60%) }
-    & li:nth-of-type(10) { --bg: color-mix(in oklab, red, #000 75%) }
-    & li:nth-of-type(11) { --bg: color-mix(in oklab, orange, #FFF 25%) }
-    & li:nth-of-type(12) { --bg: color-mix(in oklab, orange, #FFF 15%) }
-    & li:nth-of-type(13) { --bg: color-mix(in oklab, orange, #FFF 5%) }
-    & li:nth-of-type(14) { --bg: color-mix(in oklab, orange, #FFF 0%) }
-    & li:nth-of-type(15) { --bg: color-mix(in oklab, orange, #000 10%) }
-    & li:nth-of-type(16) { --bg: color-mix(in oklab, orange, #000 20%) }
-    & li:nth-of-type(17) { --bg: color-mix(in oklab, orange, #000 30%) }
-    & li:nth-of-type(18) { --bg: color-mix(in oklab, orange, #000 40%) }
-    & li:nth-of-type(19) { --bg: color-mix(in oklab, orange, #000 60%) }
-    & li:nth-of-type(20) { --bg: color-mix(in oklab, orange, #000 75%) }
-    & li:nth-of-type(21) { --bg: color-mix(in oklab, yellow, #FFF 25%) }
-    & li:nth-of-type(22) { --bg: color-mix(in oklab, yellow, #FFF 15%) }
-    & li:nth-of-type(23) { --bg: color-mix(in oklab, yellow, #FFF 5%) }
-    & li:nth-of-type(24) { --bg: color-mix(in oklab, yellow, #FFF 0%) }
-    & li:nth-of-type(25) { --bg: color-mix(in oklab, yellow, #000 10%) }
-    & li:nth-of-type(26) { --bg: color-mix(in oklab, yellow, #000 20%) }
-    & li:nth-of-type(27) { --bg: color-mix(in oklab, yellow, #000 30%) }
-    & li:nth-of-type(28) { --bg: color-mix(in oklab, yellow, #000 40%) }
-    & li:nth-of-type(29) { --bg: color-mix(in oklab, yellow, #000 60%) }
-    & li:nth-of-type(30) { --bg: color-mix(in oklab, yellow, #000 75%) }
-    & li:nth-of-type(31) { --bg: color-mix(in oklab, green, #FFF 25%) }
-    & li:nth-of-type(32) { --bg: color-mix(in oklab, green, #FFF 15%) }
-    & li:nth-of-type(33) { --bg: color-mix(in oklab, green, #FFF 5%) }
-    & li:nth-of-type(34) { --bg: color-mix(in oklab, green, #FFF 0%) }
-    & li:nth-of-type(35) { --bg: color-mix(in oklab, green, #000 10%) }
-    & li:nth-of-type(36) { --bg: color-mix(in oklab, green, #000 20%) }
-    & li:nth-of-type(37) { --bg: color-mix(in oklab, green, #000 30%) }
-    & li:nth-of-type(38) { --bg: color-mix(in oklab, green, #000 40%) }
-    & li:nth-of-type(39) { --bg: color-mix(in oklab, green, #000 60%) }
-    & li:nth-of-type(40) { --bg: color-mix(in oklab, green, #000 75%) }
-    & li:nth-of-type(41) { --bg: color-mix(in oklab, cyan, #FFF 25%) }
-    & li:nth-of-type(42) { --bg: color-mix(in oklab, cyan, #FFF 15%) }
-    & li:nth-of-type(43) { --bg: color-mix(in oklab, cyan, #FFF 5%) }
-    & li:nth-of-type(44) { --bg: color-mix(in oklab, cyan, #FFF 0%) }
-    & li:nth-of-type(45) { --bg: color-mix(in oklab, cyan, #000 10%) }
-    & li:nth-of-type(46) { --bg: color-mix(in oklab, cyan, #000 20%) }
-    & li:nth-of-type(47) { --bg: color-mix(in oklab, cyan, #000 30%) }
-    & li:nth-of-type(48) { --bg: color-mix(in oklab, cyan, #000 40%) }
-    & li:nth-of-type(49) { --bg: color-mix(in oklab, cyan, #000 60%) }
-    & li:nth-of-type(50) { --bg: color-mix(in oklab, cyan, #000 75%) }
-    & li:nth-of-type(51) { --bg: color-mix(in oklab, blue, #FFF 25%) }
-    & li:nth-of-type(52) { --bg: color-mix(in oklab, blue, #FFF 15%) }
-    & li:nth-of-type(53) { --bg: color-mix(in oklab, blue, #FFF 5%) }
-    & li:nth-of-type(54) { --bg: color-mix(in oklab, blue, #FFF 0%) }
-    & li:nth-of-type(55) { --bg: color-mix(in oklab, blue, #000 10%) }
-    & li:nth-of-type(56) { --bg: color-mix(in oklab, blue, #000 20%) }
-    & li:nth-of-type(57) { --bg: color-mix(in oklab, blue, #000 30%) }
-    & li:nth-of-type(58) { --bg: color-mix(in oklab, blue, #000 40%) }
-    & li:nth-of-type(59) { --bg: color-mix(in oklab, blue, #000 60%) }
-    & li:nth-of-type(60) { --bg: color-mix(in oklab, blue, #000 75%) }
-    & li:nth-of-type(61) { --bg: color-mix(in oklab, indigo, #FFF 25%) }
-    & li:nth-of-type(62) { --bg: color-mix(in oklab, indigo, #FFF 15%) }
-    & li:nth-of-type(63) { --bg: color-mix(in oklab, indigo, #FFF 5%) }
-    & li:nth-of-type(64) { --bg: color-mix(in oklab, indigo, #FFF 0%) }
-    & li:nth-of-type(65) { --bg: color-mix(in oklab, indigo, #000 10%) }
-    & li:nth-of-type(66) { --bg: color-mix(in oklab, indigo, #000 20%) }
-    & li:nth-of-type(67) { --bg: color-mix(in oklab, indigo, #000 30%) }
-    & li:nth-of-type(68) { --bg: color-mix(in oklab, indigo, #000 40%) }
-    & li:nth-of-type(69) { --bg: color-mix(in oklab, indigo, #000 60%) }
-    & li:nth-of-type(70) { --bg: color-mix(in oklab, indigo, #000 75%) }
-    & li:nth-of-type(71) { --bg: color-mix(in oklab, violet, #FFF 25%) }
-    & li:nth-of-type(72) { --bg: color-mix(in oklab, violet, #FFF 15%) }
-    & li:nth-of-type(73) { --bg: color-mix(in oklab, violet, #FFF 5%) }
-    & li:nth-of-type(74) { --bg: color-mix(in oklab, violet, #FFF 0%) }
-    & li:nth-of-type(75) { --bg: color-mix(in oklab, violet, #000 10%) }
-    & li:nth-of-type(76) { --bg: color-mix(in oklab, violet, #000 20%) }
-    & li:nth-of-type(77) { --bg: color-mix(in oklab, violet, #000 30%) }
-    & li:nth-of-type(78) { --bg: color-mix(in oklab, violet, #000 40%) }
-    & li:nth-of-type(79) { --bg: color-mix(in oklab, violet, #000 60%) }
-    & li:nth-of-type(80) { --bg: color-mix(in oklab, violet, #000 75%) }
-    & li:nth-of-type(10n + 1),
-    & li:nth-of-type(10n + 2),
-    & li:nth-of-type(10n + 3),
-    & li:nth-of-type(10n + 4),
-    & li:nth-of-type(10n + 5) {
-      --fg: color-mix(in oklab, var(--bg), #000 75%);
-    }
-
-    :global(li:has(details[open])) {
-      --bg: color-mix(in oklab, green, #5555 90%);
+      &                 { --bg: cyan }
+      &:nth-of-type(1)  { --bg: color-mix(in oklab, red, #FFF 25%) }
+      &:nth-of-type(2)  { --bg: color-mix(in oklab, red, #FFF 15%) }
+      &:nth-of-type(3)  { --bg: color-mix(in oklab, red, #FFF 5%) }
+      &:nth-of-type(4)  { --bg: color-mix(in oklab, red, #FFF 0%) }
+      &:nth-of-type(5)  { --bg: color-mix(in oklab, red, #000 10%) }
+      &:nth-of-type(6)  { --bg: color-mix(in oklab, red, #000 20%) }
+      &:nth-of-type(7)  { --bg: color-mix(in oklab, red, #000 30%) }
+      &:nth-of-type(8)  { --bg: color-mix(in oklab, red, #000 40%) }
+      &:nth-of-type(9)  { --bg: color-mix(in oklab, red, #000 60%) }
+      &:nth-of-type(10) { --bg: color-mix(in oklab, red, #000 75%) }
+      &:nth-of-type(11) { --bg: color-mix(in oklab, orange, #FFF 25%) }
+      &:nth-of-type(12) { --bg: color-mix(in oklab, orange, #FFF 15%) }
+      &:nth-of-type(13) { --bg: color-mix(in oklab, orange, #FFF 5%) }
+      &:nth-of-type(14) { --bg: color-mix(in oklab, orange, #FFF 0%) }
+      &:nth-of-type(15) { --bg: color-mix(in oklab, orange, #000 10%) }
+      &:nth-of-type(16) { --bg: color-mix(in oklab, orange, #000 20%) }
+      &:nth-of-type(17) { --bg: color-mix(in oklab, orange, #000 30%) }
+      &:nth-of-type(18) { --bg: color-mix(in oklab, orange, #000 40%) }
+      &:nth-of-type(19) { --bg: color-mix(in oklab, orange, #000 60%) }
+      &:nth-of-type(20) { --bg: color-mix(in oklab, orange, #000 75%) }
+      &:nth-of-type(21) { --bg: color-mix(in oklab, yellow, #FFF 25%) }
+      &:nth-of-type(22) { --bg: color-mix(in oklab, yellow, #FFF 15%) }
+      &:nth-of-type(23) { --bg: color-mix(in oklab, yellow, #FFF 5%) }
+      &:nth-of-type(24) { --bg: color-mix(in oklab, yellow, #FFF 0%) }
+      &:nth-of-type(25) { --bg: color-mix(in oklab, yellow, #000 10%) }
+      &:nth-of-type(26) { --bg: color-mix(in oklab, yellow, #000 20%) }
+      &:nth-of-type(27) { --bg: color-mix(in oklab, yellow, #000 30%) }
+      &:nth-of-type(28) { --bg: color-mix(in oklab, yellow, #000 40%) }
+      &:nth-of-type(29) { --bg: color-mix(in oklab, yellow, #000 60%) }
+      &:nth-of-type(30) { --bg: color-mix(in oklab, yellow, #000 75%) }
+      &:nth-of-type(31) { --bg: color-mix(in oklab, green, #FFF 25%) }
+      &:nth-of-type(32) { --bg: color-mix(in oklab, green, #FFF 15%) }
+      &:nth-of-type(33) { --bg: color-mix(in oklab, green, #FFF 5%) }
+      &:nth-of-type(34) { --bg: color-mix(in oklab, green, #FFF 0%) }
+      &:nth-of-type(35) { --bg: color-mix(in oklab, green, #000 10%) }
+      &:nth-of-type(36) { --bg: color-mix(in oklab, green, #000 20%) }
+      &:nth-of-type(37) { --bg: color-mix(in oklab, green, #000 30%) }
+      &:nth-of-type(38) { --bg: color-mix(in oklab, green, #000 40%) }
+      &:nth-of-type(39) { --bg: color-mix(in oklab, green, #000 60%) }
+      &:nth-of-type(40) { --bg: color-mix(in oklab, green, #000 75%) }
+      &:nth-of-type(41) { --bg: color-mix(in oklab, cyan, #FFF 25%) }
+      &:nth-of-type(42) { --bg: color-mix(in oklab, cyan, #FFF 15%) }
+      &:nth-of-type(43) { --bg: color-mix(in oklab, cyan, #FFF 5%) }
+      &:nth-of-type(44) { --bg: color-mix(in oklab, cyan, #FFF 0%) }
+      &:nth-of-type(45) { --bg: color-mix(in oklab, cyan, #000 10%) }
+      &:nth-of-type(46) { --bg: color-mix(in oklab, cyan, #000 20%) }
+      &:nth-of-type(47) { --bg: color-mix(in oklab, cyan, #000 30%) }
+      &:nth-of-type(48) { --bg: color-mix(in oklab, cyan, #000 40%) }
+      &:nth-of-type(49) { --bg: color-mix(in oklab, cyan, #000 60%) }
+      &:nth-of-type(50) { --bg: color-mix(in oklab, cyan, #000 75%) }
+      &:nth-of-type(51) { --bg: color-mix(in oklab, blue, #FFF 25%) }
+      &:nth-of-type(52) { --bg: color-mix(in oklab, blue, #FFF 15%) }
+      &:nth-of-type(53) { --bg: color-mix(in oklab, blue, #FFF 5%) }
+      &:nth-of-type(54) { --bg: color-mix(in oklab, blue, #FFF 0%) }
+      &:nth-of-type(55) { --bg: color-mix(in oklab, blue, #000 10%) }
+      &:nth-of-type(56) { --bg: color-mix(in oklab, blue, #000 20%) }
+      &:nth-of-type(57) { --bg: color-mix(in oklab, blue, #000 30%) }
+      &:nth-of-type(58) { --bg: color-mix(in oklab, blue, #000 40%) }
+      &:nth-of-type(59) { --bg: color-mix(in oklab, blue, #000 60%) }
+      &:nth-of-type(60) { --bg: color-mix(in oklab, blue, #000 75%) }
+      &:nth-of-type(61) { --bg: color-mix(in oklab, indigo, #FFF 25%) }
+      &:nth-of-type(62) { --bg: color-mix(in oklab, indigo, #FFF 15%) }
+      &:nth-of-type(63) { --bg: color-mix(in oklab, indigo, #FFF 5%) }
+      &:nth-of-type(64) { --bg: color-mix(in oklab, indigo, #FFF 0%) }
+      &:nth-of-type(65) { --bg: color-mix(in oklab, indigo, #000 10%) }
+      &:nth-of-type(66) { --bg: color-mix(in oklab, indigo, #000 20%) }
+      &:nth-of-type(67) { --bg: color-mix(in oklab, indigo, #000 30%) }
+      &:nth-of-type(68) { --bg: color-mix(in oklab, indigo, #000 40%) }
+      &:nth-of-type(69) { --bg: color-mix(in oklab, indigo, #000 60%) }
+      &:nth-of-type(70) { --bg: color-mix(in oklab, indigo, #000 75%) }
+      &:nth-of-type(71) { --bg: color-mix(in oklab, violet, #FFF 25%) }
+      &:nth-of-type(72) { --bg: color-mix(in oklab, violet, #FFF 15%) }
+      &:nth-of-type(73) { --bg: color-mix(in oklab, violet, #FFF 5%) }
+      &:nth-of-type(74) { --bg: color-mix(in oklab, violet, #FFF 0%) }
+      &:nth-of-type(75) { --bg: color-mix(in oklab, violet, #000 10%) }
+      &:nth-of-type(76) { --bg: color-mix(in oklab, violet, #000 20%) }
+      &:nth-of-type(77) { --bg: color-mix(in oklab, violet, #000 30%) }
+      &:nth-of-type(78) { --bg: color-mix(in oklab, violet, #000 40%) }
+      &:nth-of-type(79) { --bg: color-mix(in oklab, violet, #000 60%) }
+      &:nth-of-type(80) { --bg: color-mix(in oklab, violet, #000 75%) }
+      &:nth-of-type(10n + 1),
+      &:nth-of-type(10n + 2),
+      &:nth-of-type(10n + 3),
+      &:nth-of-type(10n + 4),
+      &:nth-of-type(10n + 5) {
+        --fg: color-mix(in oklab, var(--bg), #000 75%);
+      }
     }
 
     :global(li:focus-within:has(details)) {
