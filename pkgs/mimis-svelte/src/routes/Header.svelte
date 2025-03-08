@@ -1,13 +1,21 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import logo from '$lib/images/svelte-logo.svg';
-	import github from '$lib/images/github.svg';
+	import { page } from '$app/state'
+	import logo from '$lib/images/svelte-logo.svg'
+  import GitHub from '$lib/images/github.svg?raw'
 </script>
 
 <header>
-	<div class="corner">
+	<div class="left corner">
 		<a href="https://svelte.dev/docs/kit">
 			<img src={logo} alt="SvelteKit" />
+		</a>
+		<a
+			href="https://github.com/dysbulic/mimis/"
+			style:color="cornflower"
+			style:--hover-stroke-1="color-mix(in oklab, yellow, transparent)"
+			style:--hover-stroke-2="color-mix(in oklab, white 80%, transparent 25%)"
+		>
+			{@html GitHub}
 		</a>
 	</div>
 
@@ -49,12 +57,6 @@
 			<path d="M0,0 L0,3 C0.5,3 0.5,3 1,2 L2,0 Z" />
 		</svg>
 	</nav>
-
-	<div class="corner">
-		<a href="https://github.com/dysbulic/mimis/">
-			<img src={github} alt="GitHub" />
-		</a>
-	</div>
 </header>
 
 <style>
@@ -63,27 +65,36 @@
 		justify-content: space-between;
 	}
 
-	.corner {
+	.left.corner {
 		width: 3em;
 		height: 3em;
-	}
-
-	.corner a {
 		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 100%;
-		height: 100%;
-	}
 
-	.corner img {
-		width: 2em;
-		height: 2em;
-		object-fit: contain;
+		& a {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 100%;
+			height: 100%;
+			transition: scale 0.25s ease-in-out;
+		}
+
+	  & :is(img, :global(svg)) {
+			width: 4em;
+			height: 4em;
+			object-fit: contain;
+			transition: translate 0.25s ease-in-out, color 0.1s linear;
+
+			&:hover {
+				color: green;
+				translate: 0.5rem 0.5rem;
+			}
+		}
 	}
 
 	nav {
 		display: flex;
+		flex-grow: 1;
 		justify-content: center;
 		--background: light-dark(#FFFA, #000A);
 
@@ -100,16 +111,16 @@
 			opacity: 1;
 			transition: opacity 0.5s ease-in-out;
 		}
-	}
 
-	svg {
-		width: 2em;
-		height: 3em;
-		display: block;
-	}
+		& svg {
+			width: 2em;
+			height: 3em;
+			display: block;
 
-	path {
-		fill: var(--background);
+			& path {
+				fill: var(--background);
+			}
+		}
 	}
 
 	ul {
@@ -157,11 +168,11 @@
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
 		text-decoration: none;
-		transition: color 0.2s linear, font-size 0.1s ease-in-out;
+		transition: color 0.2s linear, scale 0.1s ease-in-out;
 	}
 
 	a:hover {
 		color: var(--color-theme-1);
-		font-size: 1.75rem;
+		scale: 2;
 	}
 </style>

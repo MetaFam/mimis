@@ -11,7 +11,6 @@
   const { debug } = context
 
   type Adjustment = { factor?: number, scale?: number }
-  type Media = HTMLMediaElement
 
   function zoom({ factor = 1, scale = 0 }: Adjustment) {
     if(!content) throw new Error('`content` is null.')
@@ -51,11 +50,12 @@
   const toggles = (() => {
     const controls = ['play|pause', '(un)?mute', 'fullscreen'] as const
     const out = Object.fromEntries(controls.map((key) => [key, () => {}]))
-    if(!content) throw new Error('`content` is null.')
-    if(!(content instanceof HTMLMediaElement)) {
+    if(!content) {
+      if(debug) console.warn('`content` is null.')
+    } else if(!(content instanceof HTMLMediaElement)) {
       if(debug) console.warn('`content` is not a media element.')
     } else {
-      const media = content as Media
+      const media = content as HTMLMediaElement
       Object.assign(out, {
         'play|pause': toggle({
           condition: () => media.paused,

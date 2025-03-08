@@ -28,14 +28,12 @@
       <button
         id="cancel"
         type="button"
-        accesskey="c"
         commandfor="close"
         onclick={() => handle?.close()}
       ><u>C</u>ancel</button>
       <button
         id="delete"
         bind:this={remove}
-        accesskey="r"
         onclick={() => {
           const evt = new CustomEvent(
             'datum-delete',
