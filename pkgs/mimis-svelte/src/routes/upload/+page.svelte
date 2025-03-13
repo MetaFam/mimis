@@ -5,7 +5,6 @@
   import { car2Tree } from '$lib/car2Tree';
   import { wunder2Neo4j } from '$lib/wunder2Neo4j';
   import Toastify from 'toastify-js'
-  import 'bootstrap-icons/font/bootstrap-icons.css'
   import 'wunderbaum/dist/wunderbaum.css'
   import 'toastify-js/src/toastify.css'
 

@@ -7,7 +7,6 @@
 	import { wunderFiles } from '$lib/wunderFiles'
 	import { selectAll } from '$lib/selectAll'
 	import 'wunderbaum/dist/wunderbaum.css'
-	import 'bootstrap-icons/font/bootstrap-icons.css'
 
 	let name = $state<string>()
 	let content = $state<File>()
