@@ -12,6 +12,7 @@
   import { create as createIPFS } from 'kubo-rpc-client'
   import type { Version } from 'multiformats'
   import { tick } from 'svelte'
+  import JSON5 from 'json5'
   import { settings } from '$lib/settings.svelte'
   import row from './Line.svelte'
   import preview from './Preview.svelte'
@@ -31,8 +32,28 @@
   let progress = $state(0)
   let total = $state(0)
   let count = $state(0)
-  let files = $state<HTMLInputElement | null>(null)
+  let addFiles = $state<HTMLInputElement | null>(null)
+  let loadFiles = $state<HTMLInputElement | null>(null)
   let shortcuts = $state<HTMLDialogElement | null>(null)
+
+  const alert = (msg: string, opts = {}) => {
+    Toastify({
+      text: msg,
+      duration: 16_000,
+      close: true,
+      gravity: 'bottom', // `top` or `bottom`
+      position: 'center', // `left`, `center` or `right`
+      stopOnFocus: true, // prevents dismissing while hovered
+      style: {
+        background: "linear-gradient(to right, #1E396A, #F32587)",
+      },
+      ...opts,
+    }).showToast()
+  }
+
+  const identify = (objArray: Array<Record<string, unknown>>) => (
+    objArray.map((obj, idx) => ({ id: ++count, ...obj }))
+  )
 
   async function addEntries(
     files: File | Array<File>
@@ -65,6 +86,7 @@
         })
         idx++
       }
+      identify(infos)
       if(debug) console.debug({ Added: infos })
       const existing = entries.map(({ cid }) => cid)
       const unique = infos.filter(({ cid }) => (
@@ -82,7 +104,16 @@
     }
   }
 
-  async function handleFiles(evt: Event) {
+  async function loadConfigs(files: File[]) {
+    const configs = await Promise.all(
+      files.map(async (file) => ( JSON5.parse(await file.text()) ))
+    )
+    entries = identify(configs.flat()) as Array<Entry>
+  }
+
+  async function handleFiles(
+    evt: Event, func: (files: File[]) => void,
+  ) {
     try {
       evt.preventDefault()
       loading = true
@@ -91,19 +122,9 @@
         ?.files
       )
       if(!files) return
-      await addEntries(Array.from(files))
+      await func.call(func, Array.from(files))
     } catch(err) {
-      Toastify({
-        text: (err as Error).message,
-        duration: 16_000,
-        close: true,
-        gravity: 'bottom', // `top` or `bottom`
-        position: 'center', // `left`, `center` or `right`
-        stopOnFocus: true, // Prevents dismissing of toast on hover
-        style: {
-          background: "linear-gradient(to right, #1E396A, #F32587)",
-        },
-      }).showToast()
+      alert((err as Error).message)
     } finally {
       loading = false
     }
@@ -120,13 +141,17 @@
 
   function undo() {
     if(history.length === 0) return
-    document.startViewTransition(async () => {
+    const transition = async () => {
       const prev = history.pop()!
       entries = prev
       changes = history.length > 0
-
       await tick()
-    })
+    }
+    if('startViewTransition' in document) {
+      document.startViewTransition(transition)
+    } else {
+      transition()
+    }
   }
   context.register(undo)
 
@@ -153,9 +178,29 @@
   context.register(hideAll)
 
   function add() {
-    files?.click()
+    addFiles?.click()
   }
   context.register(add)
+
+  function download() {
+    const idLess = entries.map(({ id, ...rest }) => rest)
+    const out = JSON5.stringify(idLess, null, 2)
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(
+      new Blob([out], { type: 'application/json' })
+    )
+    a.download = `mïmis config.${new Date().toISOString()}.json5`
+    if(debug) console.debug({ Downloading: entries, href: a.href, name: a.download })
+    a.style.display = 'none'
+    document.body.appendChild(a)
+    a.click()
+
+    setTimeout(() => {
+      document.body.removeChild(a)
+      URL.revokeObjectURL(a.href)
+    }, 100)
+  }
+  context.register(download)
 </script>
 
 <svelte:head>
@@ -177,7 +222,7 @@
   }}
   onkeypress={(evt) => {
     if(evt.key === 'a') {
-      files?.click()
+      addFiles?.click()
     } else if(evt.key === '?') {
       keyboard()
     } else if(evt.key === 's') {
@@ -188,9 +233,13 @@
       showAll()
     } else if(evt.key === 'h') {
       hideAll()
+    } else if(evt.key === 'd') {
+      download()
+    } else if(evt.key === 'l') {
+      loadFiles?.click()
     } else if(evt.key === 'z') {
       context.retrieve('zoom', { useActive: true })()
-    } else if(evt.key === 'd') {
+    } else if(evt.key === 'delete') {
       context.retrieve('remove', { useActive: true })()
     }
   }}
@@ -206,7 +255,7 @@
       <button
         id="add-file"
         type="button"
-        onclick={(evt) => files?.click()}
+        onclick={(evt) => addFiles?.click()}
         disabled={loading}
       >
         {#if loading}
@@ -221,11 +270,11 @@
         {/if}
       </button>
       <input
-        bind:this={files}
+        bind:this={addFiles}
         type="file"
         accept="image/*,video/*,audio/*"
         multiple
-        onchange={handleFiles}
+        onchange={(evt) => handleFiles(evt, addEntries)}
       />
     </label>
   </form>
@@ -239,6 +288,34 @@
         class:saving
       >🖫</button>
       <dialog open>Save</dialog>
+    </li>
+    <li>
+      <form>
+        <label>
+          <button
+            id="export"
+            type="button"
+            onclick={(evt) => loadFiles?.click()}
+            disabled={loading}
+          >⭱</button>
+          <input
+            bind:this={loadFiles}
+            type="file"
+            accept="*json5,*.json"
+            multiple
+            onchange={(evt) => handleFiles(evt, loadConfigs)}
+          />
+        </label>
+      </form>
+      <dialog open>Import</dialog>
+    </li>
+    <li>
+      <button
+        id="export"
+        type="button"
+        onclick={download}
+      >⭳</button>
+      <dialog open>Export</dialog>
     </li>
     <li>
       <button

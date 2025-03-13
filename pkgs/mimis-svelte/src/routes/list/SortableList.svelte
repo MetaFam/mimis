@@ -74,7 +74,7 @@
           idx: number
         }
 
-        document.startViewTransition(async () => {
+        const transition = async () => {
           history.push([...data])
           const from: ColorPair = { idx: indexOfSource }
           const to: ColorPair = { idx: indexOfTarget }
@@ -83,9 +83,7 @@
               set.elem = list?.querySelector(
                 `li:nth-of-type(${set.idx + 1})`
               ) as HTMLElement
-              set.color = new Map(
-                set.elem.computedStyleMap()
-              ).get('border-color')?.toString()
+              set.color = getComputedStyle(set.elem).borderColor
             }
             if(from.elem && from.color && to.elem && to.color) {
               from.elem.style.borderColor = from.color
@@ -107,7 +105,13 @@
             from.elem.style.borderColor = to.color
             to.elem.style.borderColor = from.color
           }
-        })
+        }
+
+        if('startViewTransition' in document) {
+          document.startViewTransition(transition)
+        } else {
+          transition()
+        }
 
         const element = document.querySelector(
           `[data-element-id="${sourceData.id}"]`
