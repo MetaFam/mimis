@@ -10,7 +10,7 @@
   let content = $state<HTMLElement | null>(null)
   const { debug } = context
 
-  type Adjustment = { factor?: number, scale?: number }
+  type Adjustment = { factor?: number, scale?: number, to?: null | number }
 
   function zoom({ factor = 1, scale = 0 }: Adjustment) {
     if(!content) throw new Error('`content` is null.')
@@ -35,19 +35,26 @@
     }
   }
 
-  function seek({ factor = 1, scale = 0 }: Adjustment) {
+  function seek({ factor = 1, scale = 0, to = null }: Adjustment) {
     if(!content) throw new Error('`content` is null.')
     if(!(content instanceof HTMLMediaElement)) {
       if(debug) console.warn('`content` is not a media element.')
     } else {
-      const current = content.currentTime
+      let current = content.currentTime
+      if(to != null) {
+        if(to < 1) {
+          current = to * content.duration
+        } else {
+          current = to
+        }
+      }
       let next = (current * factor) + scale
-      if(debug) console.debug({ time: current, factor, scale, next })
+      if(debug) console.debug({ time: current, to, factor, scale, next })
       content.currentTime = next
     }
   }
 
-  const toggles = (() => {
+  const toggles = $derived.by(() => {
     const controls = ['play|pause', '(un)?mute', 'fullscreen'] as const
     const out = Object.fromEntries(controls.map((key) => [key, () => {}]))
     if(!content) {
@@ -77,7 +84,7 @@
       } as const)
     }
     return out
-  })()
+  })
 
   function shift(Δ: number) {
     let next = handle
@@ -131,13 +138,27 @@
   bind:this={handle}
   onclick={() => {}}
   onkeydown={(evt) => {
+    if(debug) console.debug({ 'zoom:onkeydown': {
+      '🔑': evt.key,
+      isMedia: content instanceof HTMLMediaElement,
+    } })
     evt.stopImmediatePropagation()
     if(['z', 'Escape'].includes(evt.key)) {
       handle.close()
-    } else if(['Enter', 'ArrowRight'].includes(evt.key)) {
+    } else if(['Enter', 'ArrowDown'].includes(evt.key)) {
+      if(content instanceof HTMLMediaElement) {
+        content.pause()
+      }
       shift(1)
-    } else if(['ArrowLeft'].includes(evt.key)) {
+    } else if(['ArrowUp'].includes(evt.key)) {
+      if(content instanceof HTMLMediaElement) {
+        content.pause()
+      }
       shift(-1)
+    } else if(['ArrowLeft'].includes(evt.key) && content instanceof HTMLMediaElement) {
+      seek({ scale: -30 })
+    } else if(['ArrowRight'].includes(evt.key) && content instanceof HTMLMediaElement) {
+      seek({ scale: 30 })
     } else if([' '].includes(evt.key) && content instanceof HTMLMediaElement) {
       toggles['play|pause']()
     } else if(['m'].includes(evt.key) && content instanceof HTMLMediaElement) {
@@ -148,6 +169,8 @@
       zoom({ factor: 0.8 })
     } else if(['f'].includes(evt.key) && content instanceof HTMLMediaElement) {
       toggles['fullscreen']()
+    } else if(/^\d$/.test(evt.key)) {
+      seek({ to: Number(evt.key) / 9 - 0.00001 })
     } else {
       console.debug({ 'dialog:onkeypress': { '🔑': evt.key } })
     }

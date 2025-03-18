@@ -36,13 +36,12 @@
         <kbd>z</kbd>: Zoom in on the highlighted entry:
         <ul>
           <li><kbd>z</kbd> / <kbd>escape</kbd>: Zoom out.</li>
-          <li><kbd>ctrl</kbd> ➕ <kbd>→</kbd> / <kbd>→</kbd> ⨯ 2 / <kbd>enter</kbd> / <em>swipe</em> <kbd>→</kbd>: View the next entry.</li>
-          <li><kbd>ctrl</kbd> ➕ <kbd>←</kbd> / <kbd>←</kbd> ⨯ 2 / <em>swipe</em> <kbd>←</kbd>: View the previous entry.</li>
-          <li>(<em>pan</em>)? <kbd>→</kbd> | (<em>pan</em>)? <kbd>←</kbd>: Seek (forward|back) by 2 seconds.</li>
-          <li><kbd>→</kbd> ⨯ 2, <kbd>→</kbd>+ | <kbd>←</kbd> ⨯ 2, <kbd>→</kbd>+: Seek (forward|back) by 1 minute.</li>
+          <li><kbd>↑</kbd> / <em>swipe</em> <kbd>↑</kbd>: View the previous entry.</li>
+          <li><kbd>↓</kbd> / <em>swipe</em> <kbd>↓</kbd>: View the next entry.</li>
+          <li><em>pan</em> <kbd>→</kbd> | <em>pan</em> <kbd>←</kbd>: Seek (forward|back) by 2 seconds.</li>
+          <li><kbd>→</kbd> | <kbd>←</kbd>: Seek (forward|back) by ½ minute.</li>
           <li>(<kbd>→</kbd> | <kbd>←</kbd>) ≥ 2sec: Seek (forward|back) by 7½% for each additional 1½ second held.</li>
-          <li><kbd>0</kbd>–<kbd>9</kbd>: Seek to 0–90% of the way through the media.</li>
-          <li><kbd>↑</kbd> | <kbd>↓</kbd>: (In|De)crease the volume by ⅕.</li>
+          <li><kbd>0</kbd>–<kbd>9</kbd>: Seek to 0–100% of the way through the media.</li>
           <li><kbd>ctrl</kbd> ➕ (<kbd>↑</kbd> | <kbd>↓</kbd>) / (<em>pan</em>)? (<kbd>↑</kbd> | <kbd>↓</kbd>): (In|De)crease the volume by 75%.</li>
           <li><kbd>space</kbd>: (Play|Pause) media.</li>
           <li><kbd>m</kbd>: (Un)?Mute media.</li>

@@ -100,33 +100,27 @@
   }
   context.register(remove, { itemId })
 
-  let openProp = $derived(open ? ({ open }) : ({}))
+  function focus() {
+    summary?.focus()
+  }
+  context.register(focus, { itemId })
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <details
-  {...openProp}
   bind:this={details}
+  bind:open
   name="file{single ? '' : `-${index + 1}`}"
   id="deets-{index + 1}"
   onclick={(evt) => {
+    if(debug) console.debug({ 'details:onclick': {
+      open: details?.open,
+      target: evt.target,
+      currentTarget: evt.currentTarget,
+    } })
+
     if(evt.ctrlKey && open) {
       zoom()
-    }
-  }}
-  onkeypress={(evt) => {
-    const details = evt.currentTarget
-    if(debug) console.debug({ 'details:onkeypress': {
-      '🔑': evt.key,
-      open: details.open,
-    } })
-    if(evt.key === 'Escape') {
-      toggleOpen({ open: false })
-    } else if(details.open) {
-      if(evt.key === 'Enter') {
-        evt.preventDefault()
-        toggleOpen({ open: false })
-      }
     }
   }}
   onkeydown={(evt) => {
@@ -140,7 +134,17 @@
         ) as HTMLLIElement
       )
       if(!sib) return
-      sib.querySelector('summary')?.focus()
+      const sibSum = sib.querySelector('summary')
+      const event = new KeyboardEvent('keydown', {
+        bubbles: true,
+        cancelable: true,
+        key: 'Enter',
+        code: 'Enter',
+        keyCode: 13,
+      })
+      console.debug({ sibSum, event })
+      sibSum?.focus()
+      context.retrieve('toggleOpen', { useActive: true })({ open: true })
       evt.preventDefault()
     }
   }}
@@ -151,30 +155,12 @@
     bind:this={summary}
     onclick={(evt) => {
       evt.preventDefault()
-      console.debug({ 'summary:onclick': {
-        open: details?.open,
-        content,
-        evt,
+      if(debug) console.debug({ 'summary:onclick': {
+        'details.open': details?.open, content, evt, 'var:open': open,
       }})
     }}
-    onkeypress={(evt) => {
-      const details = (
-        evt.currentTarget.closest('details')
-      )
-      if(!details) return
-      if(debug) console.debug({ 'summary:onclick': {
-        '🔑': evt.key,
-        open: details?.open,
-        content,
-        evt,
-      } })
-      if(details.open && evt.key === ' ') {
-        evt.preventDefault()
-        evt.stopImmediatePropagation()
-        // togglePlayOrOpen()
-      }
-    }}
-  >{title}</summary>
+    onkeydown={(evt) => { evt.preventDefault() }}
+  >{title} {type?.startsWith('video/') ? '🎬' : ''}</summary>
   <Display {datum} bind:content/>
 </details>
 

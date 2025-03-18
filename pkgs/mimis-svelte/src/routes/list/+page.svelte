@@ -76,6 +76,7 @@
       let infos = []
       let idx = 0
       for await (const { cid } of ipfs.addAll(files, options)) {
+        if(debug) console.debug({ Added: { cid, file: files[idx].name } })
         infos.push({
           id: ++count,
           cid: cid.toString(),
@@ -88,12 +89,20 @@
       }
       identify(infos)
       if(debug) console.debug({ Added: infos })
+      const firstId = infos[0].id
       const existing = entries.map(({ cid }) => cid)
       const unique = infos.filter(({ cid }) => (
         !existing.includes(cid)
       ))
       if(debug) console.debug({ infos, 'Unique Entries': unique })
       entries = entries.concat(unique)
+
+      await tick()
+
+      const first = document.querySelector(
+        `[data-element-id="${firstId}"] summary`
+      )
+      ;(first as HTMLElement)?.focus()
     } catch(err) {
       console.error({ 'IPFS Add Error': err })
       if((err as { response?: { status: number } }).response?.status === 0) {
@@ -220,7 +229,11 @@
     history.push([...entries])
     entries = entries.filter((entry) => entry.id !== id)
   }}
-  onkeypress={(evt) => {
+  onkeydown={(evt) => {
+    if(debug) console.debug({ 'document:onkeypress': {
+      '🗝️': evt.key,
+      isOpen: context.retrieve('isOpen', { useActive: true })?.(),
+    } })
     if(evt.key === 'a') {
       addFiles?.click()
     } else if(evt.key === '?') {
@@ -239,8 +252,23 @@
       loadFiles?.click()
     } else if(evt.key === 'z') {
       context.retrieve('zoom', { useActive: true })()
-    } else if(evt.key === 'delete') {
+    } else if(evt.key === 'Delete') {
       context.retrieve('remove', { useActive: true })()
+    } else if(evt.key === 'Escape') {
+      context.retrieve('toggleOpen', { useActive: true })({ open: false })
+    } else if(evt.key === 'Enter') {
+      context.retrieve('toggleOpen', { useActive: true })()
+    } else if(evt.key === ' ') {
+      evt.preventDefault()
+      if(context.retrieve('isOpen', { useActive: true })()) {
+        try {
+          context.retrieve('togglePlay', { useActive: true })()
+        } catch(err) {
+          context.retrieve('toggleOpen', { useActive: true })()
+        }
+      } else {
+        context.retrieve('toggleOpen', { useActive: true })()
+      }
     }
   }}
 />
@@ -561,7 +589,7 @@
       }
     }
 
-    :global(li:focus-within:has(details)) {
+    & :global(li:focus-within), & :global(li:focus) {
       --bg: green;
     }
 

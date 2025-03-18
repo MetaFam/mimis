@@ -66,7 +66,7 @@ class Context {
       if(this.debug) console.debug({ retrieving: { name } })
       return this.#functions.get(name)
     }
-    return this.#items.get(id)[name]
+    return this.#items.get(id)?.[name]
   }
 
   retrieveAll(name: string) {
