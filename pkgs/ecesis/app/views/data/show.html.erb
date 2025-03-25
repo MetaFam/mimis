@@ -1,0 +1,44 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Size:</strong>
+  <%= @datum.size %>
+</p>
+
+<p>
+  <strong title='Interplanetary Filesystem'>IPFS:</strong>
+  <% if @datum.ipfs_id %>
+    <%= link_to '✔️', @datum.url %>
+  <% else %>
+    <span>❌</span>
+  <% end %>
+</p>
+
+<p>
+  <strong title='Project Gutenberg'>Gutenberg:</strong>
+  <% if @datum.gutenberg_id %>
+    <%= link_to '✔️', @datum.guten_url %>
+  <% else %>
+    <span>❌</span>
+  <% end %>
+</p>
+
+<ul>
+  <% @datum.books.each do |book| %>
+    <li><%= link_to book, book %></li>
+  <% end %>
+</ul>
+
+<ul>
+  <% @datum.shares.each do |share| %>
+    <li><%= link_to(
+      "#{share.server.name}/#{share.filename.name}",
+      share
+    ) %></li>
+  <% end %>
+</ul>
+
+<%= link_to '✏', edit_datum_path(@datum) %> |
+<%= link_to '⏫', data_path %>|
+<%= link_to '🗑', @datum, method: :delete, data: { confirm: 'Are you sure?' } %>
+

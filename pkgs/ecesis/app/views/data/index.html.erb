@@ -1,0 +1,30 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Data</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Mimetype</th>
+      <th>Data ID</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @data.each do |datum| %>
+      <tr>
+        <td><%= link_to datum.mimetype, datum %></td>
+        <td><%= link_to datum, datum.url %></td>
+        <td><%= link_to datum.books.count, books_path %></td>
+        <td><%= link_to '👁', datum %></td>
+        <td><%= link_to '✏', edit_datum_path(datum) %></td>
+        <td><%= link_to '🗑', datum, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Datum', new_datum_path %>

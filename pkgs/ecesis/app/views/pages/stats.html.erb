@@ -1,0 +1,99 @@
+<ul class='metrics'>
+<li>
+  <span class='metric'>Count</span>
+  <ul class='data'>
+    <li>
+      <span class='name'>Servers</span>
+      <span class='value'>
+        <%= link_to(
+          number_with_delimiter(
+            Server.count,
+            delimiter: ','
+          ),
+          servers_path
+        ) %>
+      </span>
+    </li>
+    <li>
+      <span class='name'>Directories</span>
+      <span class='value'>
+        <%= link_to(
+          number_with_delimiter(
+            Directory.all.distinct.count,
+            delimiter: ','
+          ),
+          directories_path
+        ) %>
+      </span>
+    </li>
+    <li>
+      <span class='name'>Filenames</span>
+      <span class='value'>
+        <%= link_to(
+          number_with_delimiter(
+            Filename.all.distinct.count,
+            delimiter: ','
+          ),
+          filenames_path
+        ) %>
+      </span>
+    </li>
+    <li>
+      <span class='name'>Data</em>
+        <%= link_to(
+          number_with_delimiter(Datum.count, delimiter: ','),
+          data_path
+        ) %>
+      </span>
+    </li>
+    <li>
+      <span class='name'>Shares</em>
+      </span>
+      <span class='value'>
+        <%= link_to(
+          number_with_delimiter(Share.count, delimiter: ','),
+          shares_path
+        ) %>
+      </span>
+    </li>
+    <li>
+      <span class='name'>Books</em>
+      </span>
+      <span class='value'>
+        <%= link_to(
+          number_with_delimiter(Book.count, delimiter: ','),
+          books_path
+        ) %>
+      </span>
+    </li>
+    <li>
+      <span class='name'>Authors</em>
+      </span>
+      <span class='value'>
+        <%= link_to(
+          number_with_delimiter(Author.count, delimiter: ','),
+          authors_path
+        ) %>
+      </span>
+    </li>
+    <li>
+      <span class='name'>Links</span>
+      <span class='value'>
+        <%= link_to(
+          number_with_delimiter(Link.count, delimiter: ','),
+          links_path
+        ) %>
+      </span>
+    </li>
+    <li>
+      <span class='name'>Awards</span>
+      <span class='value'>
+        <%= link_to(
+          number_with_delimiter(Award.count, delimiter: ','),
+          awards_path
+        ) %>
+      </span>
+    </li>
+  </ul>
+</li>
+</ul>

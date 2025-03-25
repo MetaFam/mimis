@@ -1,0 +1,27 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Name:</strong>
+  <%= @title.name %>
+</p>
+
+<p>
+  <strong>Books:</strong>
+  <ul>
+    <% @title.books.each do |book| %>
+      <li><%= link_to book, book %></li>
+    <% end %>
+  </ul>
+</p>
+
+<p>
+  <strong>Possible Files:</strong>
+  <ul>
+    <% @filenames.each do |file| %>
+      <li><%= link_to file, file %></li>
+    <% end %>
+  </ul>
+</p>
+
+<%= link_to '✏', edit_title_path(@title) %> |
+<%= link_to '⏫', titles_path %>

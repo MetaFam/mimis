@@ -1,0 +1,2 @@
+class SourceString < ApplicationRecord
+end

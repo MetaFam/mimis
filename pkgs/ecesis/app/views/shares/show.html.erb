@@ -1,0 +1,24 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>IRC Link:</strong>
+  <%= @share.irc_link %>
+</p>
+
+<p>
+  <strong>Server:</strong>
+  <%= link_to @share.server.name, @share.server %>
+</p>
+
+<p>
+  <strong>Directory:</strong>
+  <%= link_to @share.directory.name, @share.directory %>
+</p>
+
+<p>
+  <strong>Filename:</strong>
+  <%= link_to @share.filename.name, @share.filename %>
+</p>
+
+<%= link_to '✏', edit_share_path(@share), title: :Edit %> |
+<%= link_to '⏫', shares_path, title: :Up %>

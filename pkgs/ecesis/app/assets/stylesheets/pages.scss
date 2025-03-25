@@ -1,0 +1,71 @@
+[data-react-class = "PathComplete"] {
+  text-align: center;
+
+  .ant-select input.ant-input {
+    height: 3ex;
+  }
+
+  .ant-select-selection__placeholder {
+    height: auto;
+    line-height: inherit;
+    margin-top: .1ex;
+  }
+}
+
+// For react-autocomplete
+
+.react-autosuggest__input {
+  width: 75%;
+  padding: 10px;
+  font-size: 150%;
+  border: 1px solid rgba(0, 126, 255, 0.24);
+  border-radius: 4px;
+  color: #000;
+  background-color: #fff;
+}
+
+.react-autosuggest__input::placeholder {
+  color: #777;
+  opacity: 1;
+}
+
+.react-autosuggest__input--focused {
+  outline: none;
+}
+
+.react-autosuggest__input--open {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.react-autosuggest__suggestions-list {
+  margin: auto;
+  background-color: #fff;
+  list-style-type: none;
+  width: 75%;
+  border: 1px solid #eee;
+}
+
+.react-autosuggest__suggestion {
+  cursor: pointer;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  white-space: nowrap;
+}
+
+.react-autosuggest__suggestion--highlighted {
+  background-color: #ddd;
+}
+
+.result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 80%;
+}
+
+.highlight {
+  background-color: yellow; 
+  padding: 4px;
+  border-radius: 2px;
+}

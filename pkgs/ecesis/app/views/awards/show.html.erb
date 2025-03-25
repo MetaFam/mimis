@@ -1,0 +1,20 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Name:</strong>
+  <%= @award.name %>
+</p>
+
+<p>
+  <strong>Description:</strong>
+  <%= @award.description %>
+</p>
+
+<ul>
+  <li><%= link_to 'By Category', categories_path(award: @award) %>
+  <li><%= link_to 'By Year', years_path(award: @award) %>
+</ul>
+
+<%= link_to 'Years', years_path %> |
+<%= link_to 'Edit', edit_award_path(@award) %> |
+<%= link_to 'Back', awards_path %>

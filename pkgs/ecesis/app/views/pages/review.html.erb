@@ -1,0 +1,33 @@
+<% if @books.empty? %>
+  <h1>Nothing to Review</h1>
+<% end %>
+
+<table>
+  <tr>
+    <th>Book</th>
+    <th>Filenames</th>
+  </tr>
+  <% @books.each do |book| %>
+    <tr>
+      <td><%= link_to book, book %></td>
+      <td><ul class='actionlist'>
+        <% book.possible_filenames.each do |f| %>
+          <li>
+            <% link = (
+              Link.find_by(
+                book: book, filename: f
+              )
+            ) %>
+            <%= react_component(
+              'Link',
+              filename: f.to_s,
+              filenameId: f.id,
+              bookId: book.id,
+              linkId: link&.id
+            ) %>
+          </li>
+        <% end %>
+      </ul></td>
+    </tr>
+  <% end %>
+</ul>

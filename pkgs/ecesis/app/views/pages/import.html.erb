@@ -1,0 +1,14 @@
+<%= form_with url: import_path do |form| %>
+  <%= form.label :file, 'JSON Awards:' %>
+  <%= form.file_field :file %>
+  <%= form.submit :Upload %>
+<% end %>
+
+<hr />
+<%= react_component('Import') %>
+<hr />
+<%= react_component('Sync') %>
+<hr />
+<%= react_component('CreateTreeDDoc') %>
+<hr />
+<%= react_component('CreatePathsDDoc') %>

@@ -1,0 +1,2 @@
+module BooksCategoriesHelper
+end

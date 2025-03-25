@@ -1,0 +1,3 @@
+[submodule "public/book"]
+	path = public/book
+	url = wjholcomb@dhappy.org:/home/wjholcomb/repo/.../book/git

@@ -1,0 +1,29 @@
+{
+  "name": "Awards",
+  "private": true,
+  "dependencies": {
+    "@babel/preset-react": "^7.7.4",
+    "@rails/actioncable": "^6.0.0",
+    "@rails/activestorage": "^6.0.0",
+    "@rails/ujs": "^6.0.0",
+    "@rails/webpacker": "^4.2.2",
+    "antd": "^3.26.5",
+    "axios": "^0.19.0",
+    "babel-plugin-transform-react-remove-prop-types": "^0.4.24",
+    "pouchdb": "^7.1.1",
+    "pouchdb-browser": "^7.1.1",
+    "pouchdb-quick-search": "^1.3.0",
+    "prop-types": "^15.7.2",
+    "react": "^16.12.0",
+    "react-autosuggest": "^9.4.3",
+    "react-dom": "^16.12.0",
+    "react-pouchdb": "^2.0.0",
+    "react_ujs": "^2.6.0",
+    "throttle-debounce": "^2.1.0",
+    "turbolinks": "^5.2.0"
+  },
+  "version": "0.1.0",
+  "devDependencies": {
+    "webpack-dev-server": "^3.9.0"
+  }
+}

@@ -1,0 +1,27 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Name:</strong>
+  <%= @author.name %>
+</p>
+
+<p>
+  <strong>Books:</strong>
+  <ul>
+    <% @author.books.each do |b| %>
+      <li><%= link_to b, b %></li>
+    <% end %>
+  </ul>
+</p>
+
+<p>
+  <strong>Possible Files:</strong>
+  <ul>
+    <% @filenames.each do |file| %>
+      <li><%= link_to file, file %></li>
+    <% end %>
+  </ul>
+</p>
+
+<%= link_to '✏', edit_author_path(@author), title: :Edit %> |
+<%= link_to '⏫', authors_path, title: :Up %>

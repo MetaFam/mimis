@@ -1,0 +1,69 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Author:</strong>
+  <%= link_to @book.author.name, @book.author %>
+</p>
+
+<p>
+  <strong>Title:</strong>
+  <%= link_to @book.title, @book.title %>
+</p>
+
+<p>
+  <strong>Data:</strong>
+  <% if @book.data.empty? %>
+    <span>None</span>
+  <% else %>
+    <ul>
+      <% @book.data.each do |d| %>
+        <li>
+          <span><%= link_to d.mimetype, d %>:</span>
+          <% if d.present? %>
+            <%= link_to '✔', d.url %>
+          <% else %>
+            <%= link_to '❌', d %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</p>
+
+<p>
+  <strong>Filenames:</strong>
+  <% if @suggestions.nil? || @suggestions.empty? %>
+    <% if @book.links.empty? %>
+      <span>None</span>
+    <% else %>
+      <ul>
+        <% @book.links.each do |l| %>
+          <li><%= link_to l.filename, l.filename %></li>
+        <% end %>
+      </ul>
+    <% end %>
+  <% else %>
+    <ul class='actionlist'>
+      <% @suggestions.each do |s| %>
+        <li>
+          <% link = (
+            Link.find_by(
+              book: @book, filename: s
+            )
+          ) %>
+          <%= react_component(
+            'Link',
+            filename: s.to_s,
+            filenameId: s.id,
+            bookId: @book.id,
+            linkId: link&.id
+          ) %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</p>
+
+<%= link_to '✏', edit_book_path(@book) %> |
+<%= link_to '⏫', books_path %> |
+<%= link_to '🗑', @book, method: :delete, data: { confirm: 'Are you sure?' } %>

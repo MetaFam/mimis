@@ -1,0 +1,33 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Shares</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Server</th>
+      <th>Directory</th>
+      <th>Filename</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @shares.each do |share| %>
+      <tr>
+        <td><%= link_to share.server.name, share.server %></td>
+        <td><%= link_to share.directory.name, share.directory %></td>
+        <td><%= link_to share.filename.name, share.filename %></td>
+        <td><%= link_to '👁', share, title: :View %></td>
+        <td><%= link_to '✏', edit_share_path(share), title: :Edit %></td>
+        <td><%= link_to '🗑', share, method: :delete, data: { confirm: 'Are you sure?' }, title: :Delete %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<%= paginate @shares %>
+
+<br>
+
+<%= link_to 'New Share', new_share_path %>

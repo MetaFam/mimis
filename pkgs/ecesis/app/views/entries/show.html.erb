@@ -1,0 +1,39 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Award:</strong>
+  <%= link_to @entry.award.name, @entry.award %>
+</p>
+
+<p>
+  <strong>Category:</strong>
+  <%= link_to @entry.category.name, @entry.category %>
+</p>
+
+<p>
+  <strong>Year:</strong>
+  <%= link_to @entry.year.number, @entry.year %>
+</p>
+
+<p>
+  <strong>Won?</strong>
+  <%= @entry.won? %>
+</p>
+
+<p>
+  <strong>Nominee:</strong>
+  <%= link_to @entry.nominee, @entry.nominee %>
+</p>
+
+<p>
+  <strong>Found?</strong>
+  <%= @entry.nominee.found? %>
+</p>
+
+<p>
+  <strong>Source:</strong>
+  <%= @entry.source_string&.text %>
+</p>
+
+<%= link_to '✏', edit_entry_path(@entry) %> |
+<%= link_to '⏫', entries_path %>

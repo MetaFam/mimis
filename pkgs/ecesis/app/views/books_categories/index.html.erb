@@ -1,0 +1,29 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Books Categories</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Book</th>
+      <th>Category</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @books_categories.each do |books_category| %>
+      <tr>
+        <td><%= books_category.book_id %></td>
+        <td><%= books_category.category_id %></td>
+        <td><%= link_to 'Show', books_category %></td>
+        <td><%= link_to 'Edit', edit_books_category_path(books_category) %></td>
+        <td><%= link_to 'Destroy', books_category, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Books Category', new_books_category_path %>

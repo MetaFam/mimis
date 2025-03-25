@@ -1,0 +1,20 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Name:</strong>
+  <%= link_to @server.name, directories_path(server: @server) %>
+</p>
+
+<ul>
+  <% @shares.each do |share| %>
+    <li><%= link_to(
+      "#{share.server.name}/#{share.directory.name}/#{share.filename.name}",
+      share
+    ) %></li>
+  <% end %>
+</ul>
+<%= paginate @shares %>
+
+
+<%= link_to '✏', edit_server_path(@server), title: :Edit %> |
+<%= link_to '⏫', servers_path, title: :Up %>

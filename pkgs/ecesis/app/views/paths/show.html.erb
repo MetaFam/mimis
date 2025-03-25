@@ -1,0 +1,14 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Elements:</strong>
+  <%= @path.elements %>
+</p>
+
+<p>
+  <strong>Serialization:</strong>
+  <%= @path.serialization %>
+</p>
+
+<%= link_to 'Edit', edit_path_path(@path) %> |
+<%= link_to 'Back', paths_path %>

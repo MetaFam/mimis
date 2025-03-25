@@ -1,0 +1,29 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Directories</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @directories.each do |directory| %>
+      <tr>
+        <td><%= link_to directory.name, shares_path(dir: directory) %></td>
+        <td><%= link_to '👁', directory %></td>
+        <td><%= link_to '✏', edit_directory_path(directory) %></td>
+        <td><%= link_to '🗑', directory, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<%= paginate @directories %>
+
+<br>
+
+<%= link_to 'New Directory', new_directory_path %>

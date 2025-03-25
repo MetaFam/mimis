@@ -1,0 +1,29 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Paths</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Elements</th>
+      <th>Serialization</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @paths.each do |path| %>
+      <tr>
+        <td><%= path.elements %></td>
+        <td><%= path.serialization %></td>
+        <td><%= link_to 'Show', path %></td>
+        <td><%= link_to 'Edit', edit_path_path(path) %></td>
+        <td><%= link_to 'Destroy', path, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Path', new_path_path %>

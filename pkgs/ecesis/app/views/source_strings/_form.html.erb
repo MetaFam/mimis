@@ -1,0 +1,22 @@
+<%= form_with(model: source_string, local: true) do |form| %>
+  <% if source_string.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(source_string.errors.count, "error") %> prohibited this source_string from being saved:</h2>
+
+      <ul>
+        <% source_string.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :text %>
+    <%= form.text_area :text %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit %>
+  </div>
+<% end %>

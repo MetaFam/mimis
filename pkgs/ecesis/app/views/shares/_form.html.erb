@@ -1,0 +1,42 @@
+<%= form_with(model: share, local: true) do |form| %>
+  <% if share.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(share.errors.count, "error") %> prohibited this share from being saved:</h2>
+
+      <ul>
+        <% share.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :server_id %>
+    <%= form.text_field :server_id %>
+  </div>
+
+  <div class="field">
+    <%= form.label :directory_id %>
+    <%= form.text_field :directory_id %>
+  </div>
+
+  <div class="field">
+    <%= form.label :filename %>
+    <%= form.text_field :filename %>
+  </div>
+
+  <div class="field">
+    <%= form.label :references %>
+    <%= form.text_field :references %>
+  </div>
+
+  <div class="field">
+    <%= form.label :size %>
+    <%= form.text_field :size %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit %>
+  </div>
+<% end %>

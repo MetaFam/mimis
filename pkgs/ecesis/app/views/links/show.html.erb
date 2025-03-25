@@ -1,0 +1,15 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Book:</strong>
+  <%= link_to @link.book, @link.book %>
+</p>
+
+<p>
+  <strong>Filename:</strong>
+  <%= link_to @link.filename, @link.filename %>
+</p>
+
+<%= link_to '✏', edit_link_path(@link) %> |
+<%= link_to '⏫', links_path %> |
+<%= link_to '🗑', @link, method: :delete, data: { confirm: 'Are you sure?' } %>

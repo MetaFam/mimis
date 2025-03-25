@@ -1,0 +1,21 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Name:</strong>
+  <%= @category.name %>
+</p>
+
+<ul class='lines'>
+  <% @entries.each do |entry| %>
+    <li>
+      <%= link_to entry, entry %>
+      <span> </span>
+      <%= entry.nominee&.data.present? ? '✔️' : '❌' %>
+      <span> </span>
+      <%= entry.nominee&.found? ? '✔️' : '❌' %>
+    </li>
+  <% end %>
+</ul>
+
+<%= link_to 'Edit', edit_category_path(@category) %> |
+<%= link_to 'Back', categories_path %>

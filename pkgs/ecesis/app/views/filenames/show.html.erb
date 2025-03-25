@@ -1,0 +1,59 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Name:</strong>
+  <%= @filename.name %>
+</p>
+
+<p>
+  <strong>Shares:</strong>
+  <% if @filename.shares.empty? %>
+    <span>None</span>
+  <% else %>
+    <ul>
+      <% @filename.shares.each do |share| %>
+        <li><%= link_to(
+          "#{share.server.name}/#{share.directory.name}/#{share.filename.name}",
+          share
+        ) %></li>
+      <% end %>
+    </ul>
+  <% end %>
+</p>
+
+<p>
+  <strong>Links:</strong>
+  <% if @filename.links.empty? %>
+    <span>None</span>
+  <% else %>
+    <ul>
+      <% @filename.links.each do |link| %>
+        <li><%= link_to link, link %></li>
+      <% end %>
+    </ul>
+  <% end %>
+</p>
+
+<p>
+  <strong>Books:</strong>
+  <% if @filename.possible_books.empty? %>
+    <span>None</span>
+  <% else %>
+    <ul>
+      <% @filename.possible_books.each do |g| %>
+        <li>
+          <%= form_with url: books_path do |form| %>
+            <%= form.hidden_field :filename_id, value: @filename.id %>
+            <%= form.text_field :title, value: g[:title] %>
+            <span>by</span>
+            <%= form.text_field :author, value: g[:author] %>
+            <%= form.submit :Create %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</p>
+
+<%= link_to '✏', edit_filename_path(@filename) %> |
+<%= link_to '⏫', filenames_path %>

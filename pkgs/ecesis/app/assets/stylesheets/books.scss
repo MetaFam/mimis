@@ -1,0 +1,16 @@
+// Place all the styles related to the Books controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: https://sass-lang.com/
+
+.actionlist li, .actionlist label {
+  display: flex;
+
+  &:hover {
+    background-color: rgba(210, 210, 0, .75);
+  }
+
+  & > *:first-child {
+    padding: 0.1em;
+    flex-grow: 1;
+  }
+}
