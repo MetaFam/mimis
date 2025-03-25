@@ -23,6 +23,8 @@
   let details = $state<HTMLDetailsElement | null>(null)
   let deleteConfirm = $state<HTMLDialogElement | null>(null)
   let zoomed = $state<HTMLDialogElement | null>(null)
+  let editing = $state(false)
+  let newTitle = $state(title)
   const { single } = context
 
   $effect(() => {
@@ -70,14 +72,6 @@
   // @ts-expect-error
   context.register(toggleOpen, { itemId })
 
-  const togglePlayOrOpen = () => {
-    try {
-      togglePlay()
-    } catch(error) {
-      toggleOpen()
-    }
-  }
-
   function isOpen() {
     return open
   }
@@ -104,63 +98,64 @@
     summary?.focus()
   }
   context.register(focus, { itemId })
+
+  function setEditing(value: boolean) {
+    editing = value
+  }
+  // @ts-expect-error
+  context.register(setEditing, { itemId })
+
+  function isEditing() {
+    return editing
+  }
+  context.register(isEditing, { itemId })
+
+  function focusOnCreate(node: HTMLElement) {
+    node.focus()
+  }
 </script>
 
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <details
   bind:this={details}
   bind:open
   name="file{single ? '' : `-${index + 1}`}"
   id="deets-{index + 1}"
-  onclick={(evt) => {
-    if(debug) console.debug({ 'details:onclick': {
-      open: details?.open,
-      target: evt.target,
-      currentTarget: evt.currentTarget,
-    } })
-
-    if(evt.ctrlKey && open) {
-      zoom()
-    }
-  }}
-  onkeydown={(evt) => {
-    if(/^Arrow(Up|Down)$/.test(evt.key)) {
-      const item = evt.currentTarget.closest('li')
-      const sib = (
-        evt.key.endsWith('Up') ? (
-          item?.previousElementSibling
-        ) : (
-         item?.nextElementSibling
-        ) as HTMLLIElement
-      )
-      if(!sib) return
-      const sibSum = sib.querySelector('summary')
-      const event = new KeyboardEvent('keydown', {
-        bubbles: true,
-        cancelable: true,
-        key: 'Enter',
-        code: 'Enter',
-        keyCode: 13,
-      })
-      console.debug({ sibSum, event })
-      sibSum?.focus()
-      context.retrieve('toggleOpen', { useActive: true })({ open: true })
-      evt.preventDefault()
-    }
-  }}
 >
   <summary
     id="sum-{index + 1}"
     tabindex={0}
     bind:this={summary}
     onclick={(evt) => {
-      evt.preventDefault()
-      if(debug) console.debug({ 'summary:onclick': {
-        'details.open': details?.open, content, evt, 'var:open': open,
-      }})
+      if(!editing) {
+        evt.preventDefault()
+        if(debug) console.debug({ 'summary:onclick': {
+          'details.open': details?.open, content, evt, 'var:open': open,
+        }})
+      }
     }}
-    onkeydown={(evt) => { evt.preventDefault() }}
-  >{title} {type?.startsWith('video/') ? '🎬' : ''}</summary>
+    onkeydown={(evt) => {
+      if(!editing) evt.preventDefault()
+    }}
+  >
+  {#if editing}
+    <form onsubmit={(evt) => {
+      evt.preventDefault()
+      const { value } = (
+        (evt.target as HTMLFormElement)
+        .elements.namedItem('title') as HTMLInputElement
+      )
+      datum.title = value
+
+      console.debug({ value })
+      editing = false
+    }}>
+      <input name="title" defaultValue={title} use:focusOnCreate/>
+      <button>💾</button>
+    </form>
+  {:else}
+    {title} {type?.startsWith('video/') ? '🎬' : ''}
+  {/if}
+  </summary>
   <Display {datum} bind:content/>
 </details>
 
@@ -226,5 +221,9 @@
       background: color-mix(in oklab, var(--bg), #FFFA 75%);
       color: color-mix(in oklab, var(--bg), #0009 90%);
     }
+  }
+
+  form {
+    display: inline;
   }
 </style>

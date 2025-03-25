@@ -210,6 +210,21 @@
     }, 100)
   }
   context.register(download)
+
+  function focusSibling(element: HTMLElement, direction: 'up' | 'down') {
+    const item = element.closest('li')
+    const sib = (
+      direction === 'up' ? (
+        item?.previousElementSibling
+      ) : (
+        item?.nextElementSibling
+      ) as HTMLLIElement
+    )
+    if(!sib) return
+    const sibSum = sib.querySelector('summary')
+    sibSum?.focus()
+    context.retrieve('toggleOpen', { useActive: true })({ open: true })
+  }
 </script>
 
 <svelte:head>
@@ -230,10 +245,13 @@
     entries = entries.filter((entry) => entry.id !== id)
   }}
   onkeydown={(evt) => {
+    if(context.any('isEditing')) return
+
     if(debug) console.debug({ 'document:onkeypress': {
       '🗝️': evt.key,
       isOpen: context.retrieve('isOpen', { useActive: true })?.(),
     } })
+
     if(evt.key === 'a') {
       addFiles?.click()
     } else if(evt.key === '?') {
@@ -250,6 +268,8 @@
       download()
     } else if(evt.key === 'l') {
       loadFiles?.click()
+    } else if(evt.key === 'e') {
+      context.retrieve('setEditing', { useActive: true })(true)
     } else if(evt.key === 'z') {
       context.retrieve('zoom', { useActive: true })()
     } else if(evt.key === 'Delete') {
@@ -269,6 +289,11 @@
       } else {
         context.retrieve('toggleOpen', { useActive: true })()
       }
+    } else if(/^Arrow(Up|Down)$/.test(evt.key)) {
+      focusSibling(
+        evt.target as HTMLElement,
+        evt.key.replace(/^Arrow/, '').toLowerCase() as 'up' | 'down',
+      )
     }
   }}
 />

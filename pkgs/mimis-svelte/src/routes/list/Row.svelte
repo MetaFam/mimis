@@ -145,9 +145,11 @@
   onkeypress={() => {}}
   onclick={(evt) => {
     setId()
-    context.retrieve('focus', { useActive: true })()
-    if(!evt.ctrlKey || !open) {
-      context.retrieve('toggleOpen', { useActive: true })()
+    if(!context.any('isEditing')) {
+      context.retrieve('focus', { useActive: true })()
+      if(!evt.ctrlKey || !open) {
+        context.retrieve('toggleOpen', { useActive: true })()
+      }
     }
   }}
 >
