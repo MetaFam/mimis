@@ -37,3 +37,16 @@ So, instead of:
 Each path is separate:
 
 ![](Example%20Branch%20Decomposition.svg)
+
+One side effect of separating the branches is a Merkleization of the path is the same for all references to the same version, so it is easy to determine who added a particular resource at a particular location.
+
+Also, calculating popularity is a straightforward counting of occurrences of a branch.
+
+It complicates creating a Git endpoint however as that requires computation across all the entries in a directory.
+
+---
+
+In each resource directory, there is a `mimis/resource/json5` that describes the resource in JSON-LD. From this description additional directories can be generated.
+
+---
+

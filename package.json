@@ -6,7 +6,8 @@
     "dev": "DEBUG=t next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "ui:start": "yarn dev"
   },
   "dependencies": {
     "@chakra-ui/react": "^2.2.3",

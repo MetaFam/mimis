@@ -227,7 +227,8 @@ const mkLink = async (
 
     const children = work.in.map(
       (_segment, idx) => (
-        `MERGE (d${idx})-[c${idx + 1}:CHILD { name: $name${idx + 1} }]->(d${idx + 1}:Directory)`
+        `MERGE (d${idx})-[c${idx + 1}:CHILD { name: $name${idx + 1} }]`
+        + `->(d${idx + 1}:Directory)`
       )
     )
 

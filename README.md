@@ -8,7 +8,7 @@
 
 ### **Context Forest:**
 
-In a regular filesystem, each file exists at a single point in the tree. 
+In a regular filesystem, each file exists at a single point in the tree.
 
 In 𝔐𝔦̈𝔪𝔦𝔰 *every* reasonable path for a resource resolves.
 
@@ -18,17 +18,23 @@ When searching through resources, rather than a single path, the user can specif
 
 ### **Per-User Trees:**
 
-Every import is into a tree rooted using the user's ENS reverse record. The import trees are then optionally transformed and conglomerated into the user's search graph.
-
-Resolution of pathsets is done by traversing multiple users' graphs. There is a subgraph that describes how the different trees should be combined. Users can choose to traverse sequentially taking the first match, or to generate an ordered list of potential resolutions.
+Each user has their own tree which contains any files they've imported as well as links into other user's graphs.
 
 ### **Collaborative Filter:**
 
-
+Based on the number of users linking to a given resource with a particular path strengthens the probability that the path is the best choice.
 
 ### **Native Collections:**
 
 Folders may contain multiple resources with the same name.
+
+### **Versioning:**
+
+It is possible to take a snapshot of the state of a filesystem and track the progression of a system through time.
+
+### **Contexts:**
+
+For a given location in the context graph, there are multiple *contexts* that can be used to view it.
 
 ## Data Structures
 
