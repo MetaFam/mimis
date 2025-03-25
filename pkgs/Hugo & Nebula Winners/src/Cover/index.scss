@@ -1,0 +1,20 @@
+#book {
+  .files {
+    display: flex;
+    width: 100%;
+
+    .view {
+      flex-grow: 1;
+    }
+
+    .tree {
+      padding-right: 2em;
+    }
+  }
+
+  .carousel {
+    max-height: 100vh;
+
+    .slide img { max-height: 100%; width: auto }
+  }
+}

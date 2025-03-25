@@ -1,0 +1,29 @@
+html {
+  --bg: #222;
+  --fg: white;
+  --scrollbar: #333;
+  --thumb: #90A4AE;
+}
+
+body {
+  &, .ant-tabs, h1, h2, h3, h4, h5, .ant-radio-wrapper, p {
+    background-color: var(--bg) ! important;
+    color: var(--fg) ! important;
+  }
+}
+
+div::-webkit-scrollbar {
+  width: 11px;
+}
+div {
+  scrollbar-width: thin;
+  scrollbar-color: var(--thumb) var(--scrollbar);
+}
+div::-webkit-scrollbar-track {
+  background: var(--scrollbar);
+}
+div::-webkit-scrollbar-thumb {
+  background-color: var(--thumb) ;
+  border-radius: 6px;
+  border: 3px solid var(--scrollbar);
+}
