@@ -140,17 +140,10 @@
   {#if editing}
     <form onsubmit={(evt) => {
       evt.preventDefault()
-      const { value } = (
-        (evt.target as HTMLFormElement)
-        .elements.namedItem('title') as HTMLInputElement
-      )
-      datum.title = value
-
-      console.debug({ value })
       editing = false
     }}>
-      <input name="title" defaultValue={title} use:focusOnCreate/>
-      <button>💾</button>
+      <input name="title" bind:value={datum.title} use:focusOnCreate/>
+      <button type="submit">💾</button>
     </form>
   {:else}
     {title} {type?.startsWith('video/') ? '🎬' : ''}

@@ -13,6 +13,7 @@
   import type { Version } from 'multiformats'
   import { tick } from 'svelte'
   import JSON5 from 'json5'
+  import { create as createStoracha } from '@web3-storage/w3up-client'
   import { settings } from '$lib/settings.svelte'
   import row from './Line.svelte'
   import preview from './Preview.svelte'
@@ -52,42 +53,57 @@
   }
 
   const identify = (objArray: Array<Record<string, unknown>>) => (
-    objArray.map((obj, idx) => ({ id: ++count, ...obj }))
+    objArray.map((obj, idx) => ({ id: ++count, ...obj } as Entry))
   )
+
+  async function saveLocalIPFS(files: Array<File>) {
+    const options = {
+      chunker: 'rabin',
+      cidVersion: 1 as Version,
+      progress: (bytes: number) => {
+        progress += bytes
+      },
+      timeout: 60_000,
+    }
+    const total = (
+      files.reduce((acc, { size }) => acc + size, 0)
+    )
+    if(debug) console.debug({ Adding: files, 'Total Size': total, options })
+    let infos = []
+    let idx = 0
+    for await (const { cid } of ipfs.addAll(files, options)) {
+      if(debug) {
+        console.debug({ 'Added Local': { cid, file: files[idx].name } })
+      }
+      infos.push({
+        cid: cid.toString(),
+        title: (
+          files[idx].name.replace(/\.[^.]*$/, '')
+        ),
+        type: files[idx].type,
+      })
+      idx++
+    }
+    return identify(infos)
+  }
+
+  async function saveStoracha(files: Array<File>) {
+    const storacha = await createStoracha()
+    return [] as Array<Entry>
+  }
+
 
   async function addEntries(
     files: File | Array<File>
   ) {
     try {
       if(!Array.isArray(files)) files = [files]
-      total = (
-        files.reduce((acc, { size }) => acc + size, 0)
-      )
 
-      const options = {
-        chunker: 'rabin',
-        cidVersion: 1 as Version,
-        progress: (bytes: number) => {
-          progress += bytes
-        },
-        timeout: 60_000,
-      }
-      if(debug) console.debug({ Adding: files, 'Total Size': total, options })
-      let infos = []
-      let idx = 0
-      for await (const { cid } of ipfs.addAll(files, options)) {
-        if(debug) console.debug({ Added: { cid, file: files[idx].name } })
-        infos.push({
-          id: ++count,
-          cid: cid.toString(),
-          title: (
-            files[idx].name.replace(/\.[^.]*$/, '')
-          ),
-          type: files[idx].type,
-        })
-        idx++
-      }
-      identify(infos)
+      const infos = (settings.saveLocal ? (
+        await saveLocalIPFS(files)
+      ) : (
+        await saveStoracha(files)
+      ))
       if(debug) console.debug({ Added: infos })
       const firstId = infos[0].id
       const existing = entries.map(({ cid }) => cid)

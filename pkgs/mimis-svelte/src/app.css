@@ -18,6 +18,10 @@
 	--min-browser-width: 15rem;
 }
 
+@view-transition {
+	navigation: auto;
+}
+
 body {
 	min-height: 100vh;
 	margin: 0;

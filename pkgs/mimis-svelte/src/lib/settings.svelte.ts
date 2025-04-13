@@ -17,6 +17,8 @@ class Settings {
     neo4jPass: 'mimis-setting-neo4j-pass',
     limit: 'mimis-setting-limit',
     debugging: 'mimis-setting-debugging',
+    ipfsProvider: 'mimis-setting-ipfs-provider',
+    storachaLogin: 'mimis-setting-storacha-login',
   } as const
   static defaults = {
     [Settings.keys.ipfsPattern]: (
@@ -30,6 +32,8 @@ class Settings {
     [Settings.keys.neo4jPass]: pass || 'neo4j',
     [Settings.keys.limit]: limit ? Number(limit) : 125,
     [Settings.keys.debugging]: page.url.searchParams.has('debug'),
+    [Settings.keys.ipfsProvider]: 'local',
+    [Settings.keys.storachaLogin]: '',
   }
 
   valueOf(key: Omit<keyof typeof Settings.keys, 'limit'>): string
@@ -73,6 +77,8 @@ class Settings {
   neo4jPass = $state(this.valueOf('neo4jPass'))
   limit = $state(this.valueOf('limit'))
   debugging = $state(this.valueOf('debugging'))
+  ipfsProvider = $state(this.valueOf('ipfsProvider'))
+  storachaLogin = $state(this.valueOf('storachaLogin'))
 
   save(key?: keyof typeof Settings.keys) {
     if(key != null) {

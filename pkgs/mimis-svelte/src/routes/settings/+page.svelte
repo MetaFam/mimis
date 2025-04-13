@@ -5,6 +5,10 @@
   let pwVisible = $state(false)
 </script>
 
+<svelte:head>
+  <title>Mïmis Settings</title>
+</svelte:head>
+
 <main>
   <form>
     <fieldset>
@@ -28,6 +32,27 @@
       <fieldset>
         <legend>IPFS</legend>
         <ul id="ipfs">
+          <li><label class="line">
+            <input
+              type="radio"
+              name="provider"
+              value="local"
+              bind:group={settings.ipfsProvider}
+              onchange={() => settings.save()}
+            />
+            <span>Local IPFS Node</span>
+          </label></li>
+          <li><label class="line">
+            <input
+              type="radio"
+              name="provider"
+              value="storacha"
+              bind:group={settings.ipfsProvider}
+              onchange={() => settings.save()}
+            />
+            <span>Storacha IPFS</span>
+          </label></li>
+        <ul id="ipfs">
           <li><label>
             <fieldset>
               <legend>Gateway</legend>
@@ -39,11 +64,19 @@
           </label></li>
           <li><label>
             <fieldset>
-              <legend>API</legend>
-              <input
-                bind:value={settings.ipfsAPI}
-                onchange={() => settings.save()}
-              />
+              {#if settings.ipfsProvider === 'storacha'}
+                <legend>Storacha Email Login</legend>
+                <input
+                  bind:value={settings.storachaLogin}
+                  onchange={() => settings.save()}
+                />
+              {:else}
+                <legend>API</legend>
+                <input
+                  bind:value={settings.ipfsAPI}
+                  onchange={() => settings.save()}
+                />
+              {/if}
             </fieldset>
           </label></li>
         </ul>

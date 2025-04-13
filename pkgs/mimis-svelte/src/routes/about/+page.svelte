@@ -32,6 +32,7 @@
 	}
 
 	img {
+		display: block;
 		margin-block: 2rem;
 		max-height: 95svh;
 		margin-inline: auto;
