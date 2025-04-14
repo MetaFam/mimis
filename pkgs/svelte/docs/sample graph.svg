@@ -22,8 +22,8 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="4"
-     inkscape:cx="382.125"
-     inkscape:cy="96.875"
+     inkscape:cx="216"
+     inkscape:cy="99.125"
      inkscape:window-width="1854"
      inkscape:window-height="1131"
      inkscape:window-x="0"
@@ -1312,14 +1312,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;line-height:5.04804px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.16201px;word-spacing:0.0779845px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#301a00;fill-opacity:1;stroke:#aa5c00;stroke-width:0.312596;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.996078;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;line-height:5.04804px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.16201px;word-spacing:0.0779845px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#301a00;fill-opacity:1;stroke:#ffa232;stroke-width:0.80000001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.99607801;paint-order:stroke fill markers"
          x="115.37283"
          y="112.7062"
          id="text3-4-0-1"
          transform="rotate(-0.08832443)"><tspan
            sodipodi:role="line"
            id="tspan3-0-0-8"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#301a00;fill-opacity:1;stroke:#aa5c00;stroke-width:0.312596;stroke-opacity:0.996078"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#301a00;fill-opacity:1;stroke:#ffa232;stroke-width:0.80000001;stroke-opacity:0.99607801;stroke-dasharray:none"
            x="115.29183"
            y="112.7062">of</tspan></text>
     </g>
@@ -1511,14 +1511,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;line-height:5.04804px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.16201px;word-spacing:0.0779845px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#0f4a4c;stroke-width:0.312596;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;line-height:5.04804px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.16201px;word-spacing:0.0779845px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#32f8ff;stroke-width:0.69165355;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="24.698727"
          y="86.512405"
          id="text3"
          transform="rotate(-32.182173)"><tspan
            sodipodi:role="line"
            id="tspan3"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.312596"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.69165355;stroke:#32f8ff;stroke-opacity:1;stroke-dasharray:none"
            x="24.617722"
            y="86.512405">book</tspan></text>
     </g>
@@ -1531,14 +1531,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;line-height:5.04804px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.16201px;word-spacing:0.0779845px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#0f4a4c;stroke-width:0.312596;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;line-height:5.04804px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.16201px;word-spacing:0.0779845px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#32f8ff;stroke-width:0.69165355;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="114.65604"
          y="30.880117"
          id="text3-8"
          transform="rotate(38.542798)"><tspan
            sodipodi:role="line"
            id="tspan3-3"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.312596"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.69165355;stroke:#32f8ff;stroke-opacity:1;stroke-dasharray:none"
            x="114.57504"
            y="30.880117">image</tspan></text>
     </g>
@@ -1551,14 +1551,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;line-height:5.04804px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.16201px;word-spacing:0.0779845px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#0f4a4c;stroke-width:0.312596;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;line-height:5.04804px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.16201px;word-spacing:0.0779845px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#32f8ff;stroke-width:0.69165355;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="63.594471"
          y="78.667221"
          id="text3-4"
          transform="rotate(-2.4951933)"><tspan
            sodipodi:role="line"
            id="tspan3-0"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.312596"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.69165355;stroke:#32f8ff;stroke-opacity:1;stroke-dasharray:none"
            x="63.513466"
            y="78.667221">art</tspan></text>
     </g>
@@ -1571,14 +1571,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;line-height:5.04804px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.16201px;word-spacing:0.0779845px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#301a00;fill-opacity:1;stroke:#aa5c00;stroke-width:0.312596;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.996078;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;line-height:5.04804px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.16201px;word-spacing:0.0779845px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#301a00;fill-opacity:1;stroke:#ffa232;stroke-width:0.80000001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.99607801;paint-order:stroke fill markers"
          x="99.92144"
          y="92.231339"
          id="text3-4-0"
          transform="rotate(-11.340833)"><tspan
            sodipodi:role="line"
            id="tspan3-0-0"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#301a00;fill-opacity:1;stroke:#aa5c00;stroke-width:0.312596;stroke-opacity:0.996078"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#301a00;fill-opacity:1;stroke:#ffa232;stroke-width:0.80000001;stroke-opacity:0.99607801;stroke-dasharray:none"
            x="99.840439"
            y="92.231339">by</tspan></text>
     </g>
@@ -1591,14 +1591,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;line-height:5.04804px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.16201px;word-spacing:0.0779845px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#301a00;fill-opacity:1;stroke:#aa5c00;stroke-width:0.312596;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.996078;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;line-height:5.04804px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.16201px;word-spacing:0.0779845px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#301a00;fill-opacity:1;stroke:#ffa232;stroke-width:0.80000001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.99607801;paint-order:stroke fill markers"
          x="134.37347"
          y="48.61491"
          id="text3-4-0-6"
          transform="rotate(15.416496)"><tspan
            sodipodi:role="line"
            id="tspan3-0-0-2"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#301a00;fill-opacity:1;stroke:#aa5c00;stroke-width:0.312596;stroke-opacity:0.996078"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#301a00;fill-opacity:1;stroke:#ffa232;stroke-width:0.80000001;stroke-opacity:0.99607801;stroke-dasharray:none"
            x="134.29247"
            y="48.61491">about</tspan></text>
     </g>
@@ -1611,14 +1611,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.3158px;line-height:6.04728px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.194079px;word-spacing:0.0934211px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#301a00;fill-opacity:1;stroke:#aa5d00;stroke-width:0.374473;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.996078;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.3158px;line-height:6.04728px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.194079px;word-spacing:0.0934211px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#301a00;fill-opacity:1;stroke:#ffa232;stroke-width:0.80000001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.99607801;paint-order:stroke fill markers"
          x="104.06335"
          y="64.618416"
          id="text3-9"
          transform="rotate(-13.77367)"><tspan
            sodipodi:role="line"
            id="tspan3-8"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.3158px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#301a00;fill-opacity:1;stroke:#aa5d00;stroke-width:0.374473;stroke-opacity:0.996078"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.3158px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#301a00;fill-opacity:1;stroke:#ffa232;stroke-width:0.80000001;stroke-opacity:0.99607801;stroke-dasharray:none"
            x="103.96631"
            y="64.618416">by</tspan></text>
     </g>
@@ -1631,14 +1631,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#7500ba;fill-opacity:1;stroke:#8423b2;stroke-width:0.404183;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#7500ba;fill-opacity:1;stroke:#946dff;stroke-width:0.78236221;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="144.33893"
          y="141.8811"
          id="text3-9-0-7-6"
          transform="rotate(-53.179328)"><tspan
            sodipodi:role="line"
            id="tspan3-8-7-8-4"
-           style="font-style:italic;font-variant:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans,  weight=250 Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#7500ba;fill-opacity:1;stroke:#8423b2;stroke-width:0.404183;stroke-opacity:1"
+           style="font-style:italic;font-variant:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans,  weight=250 Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#7500ba;fill-opacity:1;stroke:#946dff;stroke-width:0.78236221;stroke-opacity:1;stroke-dasharray:none"
            x="144.23419"
            y="141.8811">year</tspan></text>
     </g>
@@ -1677,13 +1677,13 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.33312px;line-height:6.06386px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.194611px;word-spacing:0.0936773px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#301a00;fill-opacity:1;stroke:#aa5d00;stroke-width:0.375499;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.996078;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.33312px;line-height:6.06386px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.194611px;word-spacing:0.0936773px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#301a00;fill-opacity:1;stroke:#ffa232;stroke-width:0.80000001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.99607801;paint-order:stroke fill markers"
          x="76.126373"
          y="91.702118"
          id="text3-9-7-6"
          transform="rotate(-37.639143)"><tspan
            sodipodi:role="line"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.33312px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#301a00;fill-opacity:1;stroke:#aa5d00;stroke-width:0.375499;stroke-opacity:0.996078"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.33312px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#301a00;fill-opacity:1;stroke:#ffa232;stroke-width:0.80000001;stroke-opacity:0.99607801;stroke-dasharray:none"
            x="76.029068"
            y="91.702118"
            id="tspan7-3">genre</tspan></text>
@@ -1697,13 +1697,13 @@
          sodipodi:nodetypes="ccc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.33312px;line-height:6.06386px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.194611px;word-spacing:0.0936773px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#301a00;fill-opacity:1;stroke:#aa5d00;stroke-width:0.375499;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.996078;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.33312px;line-height:6.06386px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.194611px;word-spacing:0.0936773px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#301a00;fill-opacity:1;stroke:#ffa232;stroke-width:0.80000001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.99607801;paint-order:stroke fill markers"
          x="111.64893"
          y="28.399073"
          id="text3-9-7-6-7"
          transform="rotate(-17.739271)"><tspan
            sodipodi:role="line"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.33312px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#301a00;fill-opacity:1;stroke:#aa5d00;stroke-width:0.375499;stroke-opacity:0.996078"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.33312px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#301a00;fill-opacity:1;stroke:#ffa232;stroke-width:0.80000001;stroke-opacity:0.99607801;stroke-dasharray:none"
            x="111.55163"
            y="28.399073"
            id="tspan7-3-3">award</tspan></text>
@@ -1717,14 +1717,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#7500ba;fill-opacity:1;stroke:#8423b2;stroke-width:0.404183;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#7500ba;fill-opacity:1;stroke:#946dff;stroke-width:0.78236221;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="149.18536"
          y="66.304604"
          id="text3-9-0"
          transform="rotate(-13.77367)"><tspan
            sodipodi:role="line"
            id="tspan3-8-7"
-           style="font-style:italic;font-variant:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans,  weight=250 Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#7500ba;fill-opacity:1;stroke:#8423b2;stroke-width:0.404183;stroke-opacity:1"
+           style="font-style:italic;font-variant:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans,  weight=250 Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#7500ba;fill-opacity:1;stroke:#946dff;stroke-width:0.78236221;stroke-opacity:1;stroke-dasharray:none"
            x="149.08063"
            y="66.304604">author</tspan></text>
     </g>
@@ -1737,14 +1737,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#7500ba;fill-opacity:1;stroke:#8423b2;stroke-width:0.404183;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#7500ba;fill-opacity:1;stroke:#946dff;stroke-width:0.78236221;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="163.43248"
          y="-12.227037"
          id="text3-9-0-7"
          transform="rotate(-0.43113704)"><tspan
            sodipodi:role="line"
            id="tspan3-8-7-8"
-           style="font-style:italic;font-variant:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans,  weight=250 Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#7500ba;fill-opacity:1;stroke:#8423b2;stroke-width:0.404183;stroke-opacity:1"
+           style="font-style:italic;font-variant:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans,  weight=250 Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#7500ba;fill-opacity:1;stroke:#946dff;stroke-width:0.78236221;stroke-opacity:1;stroke-dasharray:none"
            x="163.32774"
            y="-12.227037">name</tspan></text>
     </g>
@@ -1762,7 +1762,7 @@
          inkscape:transform-center-y="8.1988264" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#7500ba;fill-opacity:1;stroke:#8423b2;stroke-width:0.404183;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#7500ba;fill-opacity:1;stroke:#946dff;stroke-width:0.78236221;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="240.35706"
          y="197.28079"
          id="text3-9-0-7-9"
@@ -1771,10 +1771,10 @@
          inkscape:transform-center-y="4.3140147"><tspan
            sodipodi:role="line"
            id="tspan3-8-7-8-2"
-           style="font-style:italic;font-variant:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans,  weight=250 Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#7500ba;fill-opacity:1;stroke:#8423b2;stroke-width:0.404183;stroke-opacity:1"
+           style="font-style:italic;font-variant:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans,  weight=250 Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#7500ba;fill-opacity:1;stroke:#946dff;stroke-width:0.78236221;stroke-opacity:1;stroke-dasharray:none"
            x="240.25232"
            y="197.28079">title<tspan
-   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, @wght=100';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;font-variation-settings:'wght' 100"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, @wght=100';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;font-variation-settings:'wght' 100;stroke:#946dff;stroke-opacity:1;stroke-width:0.78236221;stroke-dasharray:none"
    id="tspan14"> by </tspan>author</tspan></text>
     </g>
     <g
@@ -1786,14 +1786,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#0f4a4c;stroke-width:0.404183;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#946dff;stroke-width:0.78236221;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="195.66234"
          y="66.114304"
          id="text3-9-0-0"
          transform="rotate(-13.77367)"><tspan
            sodipodi:role="line"
            id="tspan3-8-7-9"
-           style="font-style:italic;font-variant:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans,  weight=250 Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#640fa8;fill-opacity:1;stroke:#56197d;stroke-width:0.404183;stroke-opacity:1"
+           style="font-style:italic;font-variant:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans,  weight=250 Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#640fa8;fill-opacity:1;stroke:#946dff;stroke-width:0.78236221;stroke-opacity:1;stroke-dasharray:none"
            x="195.5576"
            y="66.114304">title</tspan></text>
     </g>
@@ -1846,14 +1846,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#0f4a4c;stroke-width:0.404183;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#946dff;stroke-width:0.78236221;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="293.27826"
          y="-94.992104"
          id="text3-9-0-0-3"
          transform="rotate(14.306761)"><tspan
            sodipodi:role="line"
            id="tspan3-8-7-9-8"
-           style="font-style:italic;font-variant:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans,  weight=250 Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#640fa8;fill-opacity:1;stroke:#56197d;stroke-width:0.404183;stroke-opacity:1"
+           style="font-style:italic;font-variant:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans,  weight=250 Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#640fa8;fill-opacity:1;stroke:#946dff;stroke-width:0.78236221;stroke-opacity:1;stroke-dasharray:none"
            x="293.17352"
            y="-94.992104">section</tspan></text>
     </g>
@@ -1866,14 +1866,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#003312;fill-opacity:1;stroke:#00822e;stroke-width:0.404183;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#003312;fill-opacity:1;stroke:#3dfc81;stroke-width:0.78236221;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="298.48618"
          y="36.803383"
          id="text3-9-0-0-3-5-94"
          transform="rotate(-13.701747)"><tspan
            sodipodi:role="line"
            id="tspan3-8-7-9-8-4-8"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, @wght=100';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;font-variation-settings:'wght' 100;fill:#003312;fill-opacity:1;stroke:#00822e;stroke-width:0.404183;stroke-opacity:1"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, @wght=100';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;font-variation-settings:'wght' 100;fill:#003312;fill-opacity:1;stroke:#3dfc81;stroke-width:0.78236221;stroke-opacity:1;stroke-dasharray:none"
            x="298.38144"
            y="36.803383">epub</tspan></text>
     </g>
@@ -1913,14 +1913,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#003312;fill-opacity:1;stroke:#00822e;stroke-width:0.404183;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#003312;fill-opacity:1;stroke:#3dfc81;stroke-width:0.78236221;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="310.24905"
          y="154.2303"
          id="text3-9-0-0-3-5-94-2"
          transform="rotate(-13.701747)"><tspan
            sodipodi:role="line"
            id="tspan3-8-7-9-8-4-8-5"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, @wght=100';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;font-variation-settings:'wght' 100;fill:#003312;fill-opacity:1;stroke:#00822e;stroke-width:0.404183;stroke-opacity:1"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, @wght=100';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;font-variation-settings:'wght' 100;fill:#003312;fill-opacity:1;stroke:#3dfc81;stroke-width:0.78236221;stroke-opacity:1;stroke-dasharray:none"
            x="310.14432"
            y="154.2303">html</tspan></text>
     </g>
@@ -1959,14 +1959,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#0f4a4c;stroke-width:0.404183;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#946dff;stroke-width:0.78236221;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="130.44072"
          y="309.8898"
          id="text3-9-0-0-3-3"
          transform="rotate(-64.62385)"><tspan
            sodipodi:role="line"
            id="tspan3-8-7-9-8-1"
-           style="font-style:italic;font-variant:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans,  weight=250 Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#640fa8;fill-opacity:1;stroke:#56197d;stroke-width:0.404183;stroke-opacity:1"
+           style="font-style:italic;font-variant:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans,  weight=250 Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#640fa8;fill-opacity:1;stroke:#946dff;stroke-width:0.78236221;stroke-opacity:1;stroke-dasharray:none"
            x="130.33598"
            y="309.8898">chapter</tspan></text>
     </g>
@@ -1979,14 +1979,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#0f4a4c;stroke-width:0.404183;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#946dff;stroke-width:0.78236221;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="167.44232"
          y="-248.35503"
          id="text3-9-0-0-3-3-4"
          transform="rotate(56.166243)"><tspan
            sodipodi:role="line"
            id="tspan3-8-7-9-8-1-1"
-           style="font-style:italic;font-variant:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans,  weight=250 Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#640fa8;fill-opacity:1;stroke:#56197d;stroke-width:0.404183;stroke-opacity:1"
+           style="font-style:italic;font-variant:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans,  weight=250 Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#640fa8;fill-opacity:1;stroke:#946dff;stroke-width:0.78236221;stroke-opacity:1;stroke-dasharray:none"
            x="167.33759"
            y="-248.35503">chapter</tspan></text>
     </g>
@@ -2741,14 +2741,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;line-height:5.04804px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.16201px;word-spacing:0.0779845px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#0f4a4c;stroke-width:0.312596;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;line-height:5.04804px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.16201px;word-spacing:0.0779845px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#32f8ff;stroke-width:0.69165355;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="24.698727"
          y="86.512405"
          id="text3-0"
          transform="rotate(-32.182173)"><tspan
            sodipodi:role="line"
            id="tspan3-9"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.312596"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.69165355;stroke:#32f8ff;stroke-opacity:1;stroke-dasharray:none"
            x="24.617722"
            y="86.512405">exploded</tspan></text>
     </g>
@@ -2811,14 +2811,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#003312;fill-opacity:1;stroke:#00822e;stroke-width:0.404183;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#003312;fill-opacity:1;stroke:#3dfc81;stroke-width:0.78236221;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="306.94562"
          y="36.82415"
          id="text3-9-0-0-3-5-94-3"
          transform="rotate(-13.701747)"><tspan
            sodipodi:role="line"
            id="tspan3-8-7-9-8-4-8-7"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, @wght=100';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;font-variation-settings:'wght' 100;fill:#003312;fill-opacity:1;stroke:#00822e;stroke-width:0.404183;stroke-opacity:1"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, @wght=100';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;font-variation-settings:'wght' 100;fill:#003312;fill-opacity:1;stroke:#3dfc81;stroke-width:0.78236221;stroke-opacity:1;stroke-dasharray:none"
            x="306.84088"
            y="36.82415">index.html</tspan></text>
     </g>
@@ -2827,14 +2827,14 @@
        transform="rotate(44.507405,323.37771,99.942855)">
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#003312;fill-opacity:1;stroke:#00822e;stroke-width:0.404183;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#003312;fill-opacity:1;stroke:#3dfc81;stroke-width:0.78236221;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="302.68591"
          y="37.500961"
          id="text3-9-0-0-3-5-94-7"
          transform="rotate(-13.701747)"><tspan
            sodipodi:role="line"
            id="tspan3-8-7-9-8-4-8-3"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, @wght=100';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;font-variation-settings:'wght' 100;fill:#003312;fill-opacity:1;stroke:#00822e;stroke-width:0.404183;stroke-opacity:1"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, @wght=100';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;font-variation-settings:'wght' 100;fill:#003312;fill-opacity:1;stroke:#3dfc81;stroke-width:0.78236221;stroke-opacity:1;stroke-dasharray:none"
            x="302.58118"
            y="37.500961">book.opf</tspan></text>
       <path
@@ -2853,13 +2853,13 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#003312;fill-opacity:1;stroke:#00822e;stroke-width:0.404183;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#003312;fill-opacity:1;stroke:#3dfc81;stroke-width:0.78236221;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="298.48618"
          y="36.803383"
          id="text3-9-0-0-3-5-94-9"
          transform="rotate(-13.701747)"><tspan
            sodipodi:role="line"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, @wght=100';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;font-variation-settings:'wght' 100;fill:#003312;fill-opacity:1;stroke:#00822e;stroke-width:0.404183;stroke-opacity:1"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, @wght=100';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;font-variation-settings:'wght' 100;fill:#003312;fill-opacity:1;stroke:#3dfc81;stroke-width:0.78236221;stroke-opacity:1;stroke-dasharray:none"
            x="298.38144"
            y="36.803383"
            id="tspan15008">content.html</tspan></text>
@@ -2874,14 +2874,14 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;line-height:5.04804px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.16201px;word-spacing:0.0779845px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#0f4a4c;stroke-width:0.312596;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;line-height:5.04804px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.16201px;word-spacing:0.0779845px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#004352;fill-opacity:1;stroke:#32f8ff;stroke-width:0.69165355;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="19.298838"
          y="85.524796"
          id="text3-0-0"
          transform="rotate(-32.182173)"><tspan
            sodipodi:role="line"
            id="tspan3-9-3"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.312596"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.2722px;font-family:'Always Sans Font';-inkscape-font-specification:'Always Sans Font, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.69165355;stroke:#32f8ff;stroke-opacity:1;stroke-dasharray:none"
            x="19.217833"
            y="85.524796">META-INF</tspan></text>
     </g>
@@ -2908,13 +2908,13 @@
          sodipodi:nodetypes="cc" />
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#003312;fill-opacity:1;stroke:#00822e;stroke-width:0.404183;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;line-height:6.52706px;font-family:Alchemin;-inkscape-font-specification:'Alchemin, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:-0.209476px;word-spacing:0.100833px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:middle;fill:#003312;fill-opacity:1;stroke:#3dfc81;stroke-width:0.78236221;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
          x="299.6796"
          y="37.175255"
          id="text3-9-0-0-3-5-94-9-2"
          transform="rotate(-13.701747)"><tspan
            sodipodi:role="line"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, @wght=100';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;font-variation-settings:'wght' 100;fill:#003312;fill-opacity:1;stroke:#00822e;stroke-width:0.404183;stroke-opacity:1"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.81689px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, @wght=100';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;font-variation-settings:'wght' 100;fill:#003312;fill-opacity:1;stroke:#3dfc81;stroke-width:0.78236221;stroke-opacity:1;stroke-dasharray:none"
            x="299.57486"
            y="37.175255"
            id="tspan15008-0">container.xml</tspan></text>
