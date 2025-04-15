@@ -44,3 +44,13 @@ Additionally, the IPFS node should be protected from other hosts attempting to m
 The alternative is to implement interfacing with an external storage provider like [Storacha](https://Storacha.network), [Pinata](https://pinata.cloud), or [Filebase](https://filebase.com); and then either giving users access to shared storage or have them buy their own.
 
 I want to download random blocks that comprise files & that is done *(without API access)* via query parameters to [a "path-gateway"](https://specs.ipfs.tech/http-gateways/path-gateway/).
+
+## Structure
+
+### Database
+
+Potential database organizations are discussed [elsewhere](docs/graph-structucture.md).
+
+### Network
+
+Likewise, the network architecture has [its own page](docs/network-protocol.md).
