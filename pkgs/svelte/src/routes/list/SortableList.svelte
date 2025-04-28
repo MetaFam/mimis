@@ -19,17 +19,13 @@
     history = $bindable([]),
     isDatum: externalIsDatum,
     listClasses,
-    row,
     rowClasses,
-    preview,
   }: {
     data: Array<D>
     history?: Array<Array<D>>
     isDatum?: (datum: unknown) => datum is D
     listClasses?: string | Array<string>
-    row: Component
     rowClasses?: (type: DragStateType) => string | Array<string>
-    preview: Component
   } = $props()
 
   let list = $state<HTMLElement | null>(null)
@@ -130,8 +126,7 @@
 >
   {#each data as datum, index (datum.id)}
     <Row
-      {row} {rowClasses}
-      {preview}
+      {rowClasses}
       {isDatum} bind:datum={data[index]}
       {index}
     />

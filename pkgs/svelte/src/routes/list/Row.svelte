@@ -16,7 +16,6 @@
 </script>
 
 <script lang="ts" generics="R extends Record<string | symbol, unknown>">
-  import { page } from '$app/state';
   import {
     draggable,
     dropTargetForElements,
@@ -39,21 +38,20 @@
   import { mount, type Component, type MountOptions, type Snippet } from 'svelte'
   import DropIndicator from './DropIndicator.svelte'
   import context from './context.svelte'
+  import Line from './Line.svelte'
+  import Preview from './Preview.svelte'
 
   const { debug } = context
   const idle: DragState = { type: 'idle' }
 
   let {
     datum = $bindable(null), isDatum,
-    row: Row, rowClasses, index,
-    preview: Preview,
+    rowClasses, index,
   }: {
     datum: { id: number } & unknown | null
     isDatum: (datum: unknown) => datum is R
-    row: Component<R>
     rowClasses?: (type: DragStateType) => string | Array<string>
     index: number
-    preview: Component<R>
   } = $props()
 
   if(datum == null) throw new Error('`null` `datum`.')
@@ -153,7 +151,7 @@
     }
   }}
 >
-  <Row bind:datum bind:open {index}/>
+  <Line bind:datum bind:open {index}/>
   {#if status.type === 'is-dragging-over' && status.closestEdge}
     <DropIndicator edge={status.closestEdge} gap={'0.5rem'}/>
   {/if}

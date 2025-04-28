@@ -111,7 +111,7 @@
   context.register(isEditing, { itemId })
 
   function focusOnCreate(node: HTMLElement) {
-    node.focus()
+    if(editing) node.focus()
   }
 </script>
 
@@ -139,6 +139,9 @@
   >
   {#if editing}
     <form onsubmit={(evt) => {
+      datum.title = (
+        (evt.currentTarget.elements.namedItem('title') as HTMLInputElement)?.value
+      )
       evt.preventDefault()
       editing = false
     }}>
@@ -146,7 +149,7 @@
       <button type="submit">💾</button>
     </form>
   {:else}
-    {title} {type?.startsWith('video/') ? '🎬' : ''}
+    {datum.title} {type?.startsWith('video/') ? '🎬' : ''}
   {/if}
   </summary>
   <Display {datum} bind:content/>

@@ -1,12 +1,5 @@
-import { page } from "$app/state";
-import {
-  PUBLIC_IPFS_PATTERN as pattern,
-  PUBLIC_IPFS_API as api,
-  PUBLIC_NEO4J_URI as uri,
-  PUBLIC_NEO4J_USER as user,
-  PUBLIC_NEO4J_PASSWORD as pass,
-  PUBLIC_LIMIT as limit,
-} from '$env/static/public'
+import { page } from '$app/state'
+import { env } from '$env/dynamic/public'
 
 class Settings {
   static keys = {
@@ -22,15 +15,15 @@ class Settings {
   } as const
   static defaults = {
     [Settings.keys.ipfsPattern]: (
-      pattern || 'http://localhost:8080/ipfs/{cid}{path}'
+      env.PUBLIC_IPFS_API || 'http://localhost:8080/ipfs/{cid}{path}'
     ),
     [Settings.keys.ipfsAPI]: (
-      api || 'http://localhost:5001/api/v0'
+      env.PUBLIC_IPFS_API || 'http://localhost:5001/api/v0'
     ),
-    [Settings.keys.neo4jURL]: uri || 'bolt://localhost:7687',
-    [Settings.keys.neo4jUser]: user || 'neo4j',
-    [Settings.keys.neo4jPass]: pass || 'neo4j',
-    [Settings.keys.limit]: limit ? Number(limit) : 125,
+    [Settings.keys.neo4jURL]: env.PUBLIC_NEO4J_URI || 'bolt://localhost:7687',
+    [Settings.keys.neo4jUser]: env.PUBLIC_NEO4J_USER || 'neo4j',
+    [Settings.keys.neo4jPass]: env.PUBLIC_NEO4J_PASSWORD || 'neo4j',
+    [Settings.keys.limit]: env.PUBLIC_LIMIT ? Number(env.PUBLIC_LIMIT) : 125,
     [Settings.keys.debugging]: page.url.searchParams.has('debug'),
     [Settings.keys.ipfsProvider]: 'local',
     [Settings.keys.storachaLogin]: '',
@@ -79,6 +72,10 @@ class Settings {
   debugging = $state(this.valueOf('debugging'))
   ipfsProvider = $state(this.valueOf('ipfsProvider'))
   storachaLogin = $state(this.valueOf('storachaLogin'))
+
+  get saveLocal() {
+    return this.ipfsProvider === 'local'
+  }
 
   save(key?: keyof typeof Settings.keys) {
     if(key != null) {

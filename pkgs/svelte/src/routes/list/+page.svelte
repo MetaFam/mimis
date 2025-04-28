@@ -15,8 +15,6 @@
   import JSON5 from 'json5'
   import { create as createStoracha } from '@web3-storage/w3up-client'
   import { settings } from '$lib/settings.svelte'
-  import row from './Line.svelte'
-  import preview from './Preview.svelte'
   import SortableList from './SortableList.svelte'
   import Shortcuts from './Shortcuts.svelte'
   import context from './context.svelte'
@@ -316,6 +314,96 @@
 
 <header>
   <h1>Merge List</h1>
+
+  <nav>
+    <ul id="controls">
+      <li>
+        <button
+          id="save"
+          type="button"
+          onclick={save}
+          disabled={!changes || saving}
+          class:saving
+        >🖫</button>
+        <dialog open>Save</dialog>
+      </li>
+      <li>
+        <form>
+          <label>
+            <button
+              id="export"
+              type="button"
+              onclick={(evt) => loadFiles?.click()}
+              disabled={loading}
+            >⭱</button>
+            <input
+              bind:this={loadFiles}
+              type="file"
+              accept="*json5,*.json"
+              multiple
+              onchange={(evt) => handleFiles(evt, loadConfigs)}
+            />
+          </label>
+        </form>
+        <dialog open>Import</dialog>
+      </li>
+      <li>
+        <button
+          id="export"
+          type="button"
+          onclick={download}
+        >⭳</button>
+        <dialog open>Export</dialog>
+      </li>
+      <li>
+        <button
+          id="undo"
+          type="button"
+          onclick={undo}
+          disabled={history.length === 0 || saving}
+        >↺</button>
+        <dialog open>Undo</dialog>
+      </li>
+      <li>
+        <button
+          id="shortcuts"
+          type="button"
+          onclick={keyboard}
+          class="pulsing"
+        >⌨</button>
+        <dialog open>Shortcuts</dialog>
+      </li>
+      <li>
+        <button
+          id="show"
+          type="button"
+          onclick={showAll}
+          disabled={entries.length === 0 || context.any('isOpen')}
+        >⟱</button>
+        <dialog open>Show All</dialog>
+      </li>
+      <li>
+        <button
+          id="hide"
+          type="button"
+          onclick={hideAll}
+          disabled={entries.length === 0 || !context.any('isOpen')}
+        >⟰</button>
+        <dialog open>Hide All</dialog>
+      </li>
+      <li>
+        <label class="button" id="single">
+          <input
+            type="checkbox"
+            bind:checked={context.single}
+            style:display="none"
+          />
+          Ⅰ
+        </label>
+        <dialog open>Single<br/>Visible</dialog>
+      </li>
+    </ul>
+  </nav>
 </header>
 
 <main>
@@ -347,97 +435,11 @@
       />
     </label>
   </form>
-  <ul id="controls">
-    <li>
-      <button
-        id="save"
-        type="button"
-        onclick={save}
-        disabled={!changes || saving}
-        class:saving
-      >🖫</button>
-      <dialog open>Save</dialog>
-    </li>
-    <li>
-      <form>
-        <label>
-          <button
-            id="export"
-            type="button"
-            onclick={(evt) => loadFiles?.click()}
-            disabled={loading}
-          >⭱</button>
-          <input
-            bind:this={loadFiles}
-            type="file"
-            accept="*json5,*.json"
-            multiple
-            onchange={(evt) => handleFiles(evt, loadConfigs)}
-          />
-        </label>
-      </form>
-      <dialog open>Import</dialog>
-    </li>
-    <li>
-      <button
-        id="export"
-        type="button"
-        onclick={download}
-      >⭳</button>
-      <dialog open>Export</dialog>
-    </li>
-    <li>
-      <button
-        id="undo"
-        type="button"
-        onclick={undo}
-        disabled={history.length === 0 || saving}
-      >↺</button>
-      <dialog open>Undo</dialog>
-    </li>
-    <li>
-      <button
-        id="shortcuts"
-        type="button"
-        onclick={keyboard}
-      >⌨</button>
-      <dialog open>Shortcuts</dialog>
-    </li>
-    <li>
-      <button
-        id="show"
-        type="button"
-        onclick={showAll}
-        disabled={entries.length === 0 || context.any('isOpen')}
-      >⟱</button>
-      <dialog open>Show All</dialog>
-    </li>
-    <li>
-      <button
-        id="hide"
-        type="button"
-        onclick={hideAll}
-        disabled={entries.length === 0 || !context.any('isOpen')}
-      >⟰</button>
-      <dialog open>Hide All</dialog>
-    </li>
-    <li>
-      <label class="button" id="single">
-        <input
-          type="checkbox"
-          bind:checked={context.single}
-          style:display="none"
-        />
-        Ⅰ
-      </label>
-      <dialog open>Single<br/>Visible</dialog>
-    </li>
-  </ul>
 
   {#if entries.length === 0}
     <p>No entries yet.</p>
   {:else}
-    <SortableList id="entries" bind:data={entries} bind:history {row} {preview}/>
+    <SortableList id="entries" bind:data={entries} bind:history/>
   {/if}
 
   <Shortcuts bind:handle={shortcuts}/>
@@ -641,6 +643,17 @@
     & .drop-indicator {
       background-color: light-dark(blue, lime);
       border-color: light-dark(blue, lime);
+    }
+  }
+
+  .pulsing {
+    animation: pulse alternate 2.5s infinite linear;
+  }
+
+  @keyframes pulse {
+    to {
+      background-color: yellow;
+      color: black;
     }
   }
 </style>

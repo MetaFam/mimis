@@ -14,7 +14,7 @@
     <li><a href="/#/upload"><strong>Upload</strong></a>: Will take a CAR file and insert its contents into a Neo4j instance used to store the directory tree.</li>
     <li><a href="/#/browse"><strong>Browse</strong></a>: Will allow navigating the structure stored in Neo4j.</li>
     <li><a href="/#/list"><strong>List</strong></a>: Will allow creating ordered lists of content that will be combined with others' lists to create recommendations.</li>
-    <li><a href="/#/settings"><strong>Settings</strong></a>: Will allow viewing recommendations based on the lists created by others.</li>
+    <li><a href="/#/settings"><strong>Settings</strong></a>: Will allow configuring the services which drive the application.</li>
   </ul>
 </main>
 
