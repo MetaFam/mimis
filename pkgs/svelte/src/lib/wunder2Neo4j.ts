@@ -87,7 +87,7 @@ export async function wunder2Neo4j(
         continue
       }
 
-      if(!!child.children) {
+      if(child.children) {
         await ingest(child)
       } else {
         const type = (() => {
@@ -105,7 +105,7 @@ export async function wunder2Neo4j(
           size: child.data.size,
         })
       }
-      if(!!node.data.cid) {
+      if(node.data.cid) {
         await addDirEntry({
           dirCID: node.data.cid,
           entryCID: child.data.cid,

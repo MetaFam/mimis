@@ -1,12 +1,12 @@
 <script lang="ts">
   import { settings } from '$lib/settings.svelte'
-  import context from '../list/context.svelte';
+  import context from '../list/[...path]/context.svelte';
 
   let pwVisible = $state(false)
 </script>
 
 <svelte:head>
-  <title>Mïmis Settings</title>
+  <title>Mïmis: Settings</title>
 </svelte:head>
 
 <main>

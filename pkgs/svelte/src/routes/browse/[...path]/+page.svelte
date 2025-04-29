@@ -35,24 +35,17 @@
       }).showToast()
     }
   })
-  let fileCID = $state<string | null>(null)
   let basePath = $state('')
 
   onMount(() => {
     chips = (
-      page.params.path
-      .split('/')
-      .filter(Boolean)
+      page.params.path.split('/').filter(Boolean)
     )
     const path = (
-      page.url.hash
-      .split('/')
-      .filter(Boolean)
+      page.url.hash.split('/').filter(Boolean)
     )
     basePath = (
-      path
-      .slice(0, path.length - chips.length)
-      .join('/')
+      path.slice(0, path.length - chips.length).join('/')
     )
   })
 

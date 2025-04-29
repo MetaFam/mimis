@@ -19,6 +19,9 @@
   import Shortcuts from './Shortcuts.svelte'
   import context from './context.svelte'
   import 'toastify-js/src/toastify.css'
+  import { list2Neo4j } from '$lib/list2Neo4j'
+  import Path from './Path.svelte'
+  import { page } from '$app/state';
 
   const { debug } = context
 
@@ -34,6 +37,10 @@
   let addFiles = $state<HTMLInputElement | null>(null)
   let loadFiles = $state<HTMLInputElement | null>(null)
   let shortcuts = $state<HTMLDialogElement | null>(null)
+  let path = $state<Array<string>>(
+    page.params.path.split('/').filter(Boolean)
+  )
+  if(path.length === 0) path.push('')
 
   const alert = (msg: string, opts = {}) => {
     Toastify({
@@ -90,7 +97,6 @@
     return [] as Array<Entry>
   }
 
-
   async function addEntries(
     files: File | Array<File>
   ) {
@@ -141,11 +147,11 @@
       evt.preventDefault()
       loading = true
       const files = (
-        (evt.currentTarget as HTMLInputElement)
-        ?.files
+        (evt.currentTarget as HTMLInputElement)?.files
       )
       if(!files) return
       await func.call(func, Array.from(files))
+      changes = entries.length > 0
     } catch(err) {
       alert((err as Error).message)
     } finally {
@@ -156,6 +162,8 @@
   function save() {
     try {
       saving = true
+      console.debug({ entries, path })
+      list2Neo4j(entries, path)
     } finally {
       saving = false
     }
@@ -259,7 +267,12 @@
     entries = entries.filter((entry) => entry.id !== id)
   }}
   onkeydown={(evt) => {
-    if(context.any('isEditing')) return
+    if(
+      context.any('isEditing')
+      || document.activeElement instanceof HTMLInputElement
+    ) {
+      return
+    }
 
     if(debug) console.debug({ 'document:onkeypress': {
       '🗝️': evt.key,
@@ -283,6 +296,7 @@
     } else if(evt.key === 'l') {
       loadFiles?.click()
     } else if(evt.key === 'e') {
+      evt.stopPropagation()
       context.retrieve('setEditing', { useActive: true })(true)
     } else if(evt.key === 'z') {
       context.retrieve('zoom', { useActive: true })()
@@ -407,6 +421,8 @@
 </header>
 
 <main>
+  <Path bind:elements={path}/>
+
   <form>
     <label>
       <button
@@ -439,7 +455,7 @@
   {#if entries.length === 0}
     <p>No entries yet.</p>
   {:else}
-    <SortableList id="entries" bind:data={entries} bind:history/>
+    <SortableList bind:data={entries} bind:history/>
   {/if}
 
   <Shortcuts bind:handle={shortcuts}/>

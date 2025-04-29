@@ -139,9 +139,6 @@
   >
   {#if editing}
     <form onsubmit={(evt) => {
-      datum.title = (
-        (evt.currentTarget.elements.namedItem('title') as HTMLInputElement)?.value
-      )
       evt.preventDefault()
       editing = false
     }}>
