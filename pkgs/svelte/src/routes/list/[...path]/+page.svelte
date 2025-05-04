@@ -22,6 +22,7 @@
   import { list2Neo4j } from '$lib/list2Neo4j'
   import Path from './Path.svelte'
   import { page } from '$app/state';
+    import { neo4j2List } from '$lib/neo4j2List';
 
   const { debug } = context
 
@@ -41,6 +42,10 @@
     page.params.path.split('/').filter(Boolean)
   )
   if(path.length === 0) path.push('')
+
+  const hasPath = $derived(
+    path.filter((pos) => pos.trim() !== '').length > 0
+  )
 
   const alert = (msg: string, opts = {}) => {
     Toastify({
@@ -162,13 +167,24 @@
   function save() {
     try {
       saving = true
-      console.debug({ entries, path })
+      console.debug({ save: { entries, path } })
       list2Neo4j(entries, path)
     } finally {
       saving = false
     }
   }
   context.register(save)
+
+  function load() {
+    try {
+      saving = true
+      console.debug({ load: { entries, path } })
+      neo4j2List(path)
+    } finally {
+      saving = false
+    }
+  }
+  context.register(load)
 
   function undo() {
     if(history.length === 0) return
@@ -342,6 +358,15 @@
         <dialog open>Save</dialog>
       </li>
       <li>
+        <button
+          id="load"
+          type="button"
+          onclick={load}
+          disabled={!hasPath || saving}
+        >📥</button>
+        <dialog open>Load</dialog>
+      </li>
+      <li>
         <form>
           <label>
             <button
@@ -363,7 +388,7 @@
       </li>
       <li>
         <button
-          id="export"
+          id="import"
           type="button"
           onclick={download}
         >⭳</button>

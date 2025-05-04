@@ -18,3 +18,13 @@ export function toggle({
     }
   })
 }
+
+export function records2Object(records) {
+  return (
+    records.map((rec) => (
+      Object.fromEntries(rec.keys.map((key) => (
+        [key, rec.get(key)]
+      )))
+    ))
+  )
+}
