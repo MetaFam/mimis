@@ -40,7 +40,7 @@ export async function list2Neo4j(list: Array<Entry>, path: Array<string>) {
         RETURN f
       `
       await session.run(lineQuery, {
-        id: nöoId, cid, title, order: i + 1
+        id: nöoId, cid, title, order: Number(i) + 1
       })
     }
   } finally {

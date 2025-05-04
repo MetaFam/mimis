@@ -1,18 +1,50 @@
 <script lang="ts">
   import { settings } from '$lib/settings.svelte'
 
-  let { elements = $bindable([]) } = $props()
-  let last = $state<HTMLInputElement | null>(null)
+  let {
+    elements = $bindable([''])
+  }: {
+    elements: Array<string>
+  } = $props()
+  let history = $state<Array<Array<string>>>([])
+  let newIdx = $state<number | null>(null)
   let { debugging: debug } = settings
   let form = $state<HTMLFormElement | null>(null)
+  let previous = $state<string | null>(null)
 
-  function insertAt(idx: number) {
-    elements = (
-      [...elements.slice(0, idx + 1), '', ...elements.slice(idx + 1)]
-    )
+  function insertAt(idx: number, { clear = false } = {}) {
+    const pre = clear ? [] : elements.slice(0, idx)
+    const post = clear ? [] : elements.slice(idx)
+    const out = [...pre, '', ...post]
+    history.push([...elements])
+    if(debug) console.debug({
+      Replacing: history.at(-1), With: [...out],
+    })
+    elements = out
+    newIdx = idx
   }
 
-  $effect(() => last?.focus())
+  function undo() {
+    if(debug) console.debug({
+      'Replacing From': [...history]
+    })
+    if(history.length > 0) {
+      elements = history.pop() ?? ['']
+    }
+  }
+
+  $effect(() => {
+    if(newIdx != null) {
+      (
+        form
+        ?.querySelectorAll('input')
+        [newIdx] as HTMLElement
+      )
+      ?.focus()
+
+      newIdx = null
+    }
+  })
 </script>
 
 <form
@@ -25,29 +57,30 @@
     const [_, id] = Array.from(submitter.match(/^text-(\d+)$/) ?? [])
 
     if(id) {
-      const shifted = Number(id)
+      const shifted = Number(id) + 1
       if(debug) console.debug({ 'Inserting At': shifted })
       insertAt(shifted)
     } else if(['before', 'more'].includes(submitter)) {
-      const op = submitter === 'before' ? 'unshift' : 'push'
-      if(debug) console.debug({ op })
-      elements[op]('')
+      const idx = submitter === 'before' ? 0 : elements.length
+      if(debug) console.debug({ idx })
+      insertAt(idx)
     } else if(submitter === 'clear') {
-      elements = ['']
+      insertAt(0, { clear: true })
     } else {
       throw new Error(`Unrecognized Submitter Id: "${submitter}"`)
     }
   }}
 >
   <ol>
-    <li><button id="clear">∅</button></li>
+    {#if elements.length > 1 || elements[0] !== ''}
+      <li><button id="clear">∅</button></li>
+    {/if}
     <li><button id="before">+</button></li>
     {#each elements as _elem, idx}
       <li class:single={elements.length <= 1}>
         <input
           id="text-{idx}"
           bind:value={elements[idx]}
-          bind:this={last}
           onkeydown={function(evt) {
             // deal with the first button being the
             // event.submitter when pressing enter
@@ -62,20 +95,34 @@
               if(debug) console.debug({ Fired: event })
             }
           }}
+          onfocus={() => {
+            previous = elements[idx]
+          }}
+          onblur={() => {
+            if(previous && previous !== elements[idx]) {
+              if(debug) console.debug({
+                from: previous, to: elements[idx],
+              })
+              history.push([...elements])
+            }
+          }}
         />
         {#if elements.length > 1}
           <nav>
             <button
               type="button"
 							class="minus"
-              onclick={() => elements.splice(idx, 1)}
+              onclick={() => {
+                history.push([...elements])
+                elements.splice(idx, 1)
+              }}
               tabindex={-1}
             >−</button>
             {#if idx < elements.length - 1}
               <button
                 type="button"
 								class="slash"
-                onclick={() => insertAt(idx)}
+                onclick={() => insertAt(idx + 1)}
                 tabindex={-1}
               >/</button>
             {/if}
@@ -84,6 +131,12 @@
       </li>
     {/each}
     <li><button id="more">+</button></li>
+    {#if history.length > 0}
+      <li><button
+        type="button"
+        onclick={undo}
+      >↺</button></li>
+    {/if}
   </ol>
 </form>
 
