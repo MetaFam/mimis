@@ -1,3 +1,5 @@
+import type { Record as Neo4jRecord } from 'neo4j-driver'
+
 export type Op = {
   condition?: () => boolean
   branch?: {
@@ -19,12 +21,15 @@ export function toggle({
   })
 }
 
-export function records2Object(records) {
-  return (
-    records.map((rec) => (
-      Object.fromEntries(rec.keys.map((key) => (
-        [key, rec.get(key)]
-      )))
-    ))
-  )
-}
+export const records2Object = (records: Array<Neo4jRecord>) => (
+  records.map((rec) => (
+    Object.fromEntries(rec.keys.map((key) => (
+      [key, rec.get(key)]
+    )))
+  ))
+)
+
+let count = 0
+export const identify = (objArray: Array<Record<string, unknown>>) => (
+  objArray.map((obj, idx) => ({ id: ++count, ...obj } as Entry))
+)

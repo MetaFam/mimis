@@ -1,4 +1,4 @@
-import { records2Object } from '$lib'
+import { identify, records2Object } from '$lib'
 import { getNeo4j } from './neo4jDriver'
 
 export async function neo4j2List(path: Array<string>) {
@@ -18,19 +18,26 @@ export async function neo4j2List(path: Array<string>) {
 
   try {
     const list = `
-      MATCH (nöopoint)-[e:ENTRY]->(item)
-      WHERE id(nöopoint) = $id
-      ORDER BY e.order
+      MATCH (nöopoint)-[entry:ENTRY]->(item)
+      WHERE elementId(nöopoint) = $id
+      ORDER BY entry.order
       RETURN DISTINCT
-        e as entry,
+        entry,
         item
     `
 
     const { records } = await session.run(
       list, { id: nöopoint.elementId }
     )
+    const results = records2Object(records)
 
-    return records2Object(records)
+    console.debug({ found: results })
+
+    return identify(results.map((result) => ({
+      title: result.entry.properties.path,
+      type: result.item.properties.type,
+      cid: result.item.properties.cid,
+    })))
   } finally {
     session.close()
     neo4j.close()

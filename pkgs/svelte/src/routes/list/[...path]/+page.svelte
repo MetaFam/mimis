@@ -21,8 +21,9 @@
   import 'toastify-js/src/toastify.css'
   import { list2Neo4j } from '$lib/list2Neo4j'
   import Path from './Path.svelte'
-  import { page } from '$app/state';
-    import { neo4j2List } from '$lib/neo4j2List';
+  import { page } from '$app/state'
+  import { neo4j2List } from '$lib/neo4j2List'
+    import { identify } from '$lib';
 
   const { debug } = context
 
@@ -61,10 +62,6 @@
       ...opts,
     }).showToast()
   }
-
-  const identify = (objArray: Array<Record<string, unknown>>) => (
-    objArray.map((obj, idx) => ({ id: ++count, ...obj } as Entry))
-  )
 
   async function saveLocalIPFS(files: Array<File>) {
     const options = {
@@ -175,11 +172,10 @@
   }
   context.register(save)
 
-  function load() {
+  async function load() {
     try {
       saving = true
-      console.debug({ load: { entries, path } })
-      neo4j2List(path)
+      entries = await neo4j2List(path)
     } finally {
       saving = false
     }
@@ -352,7 +348,7 @@
           id="save"
           type="button"
           onclick={save}
-          disabled={!changes || saving}
+          disabled={!hasPath || !changes || saving}
           class:saving
         >🖫</button>
         <dialog open>Save</dialog>
