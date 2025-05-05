@@ -5,37 +5,41 @@
 		<link rel="icon" href="/favicon.png"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1"/>
 		
-		<link rel="modulepreload" href="/_app/immutable/entry/start.DyZ480kt.js">
-		<link rel="modulepreload" href="/_app/immutable/chunks/C8VLuulm.js">
-		<link rel="modulepreload" href="/_app/immutable/chunks/DfCKUgPZ.js">
-		<link rel="modulepreload" href="/_app/immutable/chunks/CEh56V48.js">
-		<link rel="modulepreload" href="/_app/immutable/entry/app.B1aCLAiE.js">
-		<link rel="modulepreload" href="/_app/immutable/chunks/53w90SBh.js">
-		<link rel="modulepreload" href="/_app/immutable/chunks/eAt8-E3t.js">
-		<link rel="modulepreload" href="/_app/immutable/chunks/DX8gHaFg.js">
-		<link rel="modulepreload" href="/_app/immutable/chunks/BURx3oLU.js">
-		<link rel="modulepreload" href="/_app/immutable/chunks/WKN9PFEa.js">
-		<link rel="modulepreload" href="/_app/immutable/chunks/CxvnlHYe.js">
-		<link rel="modulepreload" href="/_app/immutable/chunks/D4pspTNB.js">
-		<link rel="modulepreload" href="/_app/immutable/chunks/CFwRPk26.js">
-		<link rel="modulepreload" href="/_app/immutable/chunks/bxFJu7VY.js">
-		<link rel="modulepreload" href="/_app/immutable/chunks/FjfQkphU.js">
+		<link rel="modulepreload" href="/_app/immutable/entry/start.ByXbUM_7.js">
+		<link rel="modulepreload" href="/_app/immutable/chunks/BbP_vSEF.js">
+		<link rel="modulepreload" href="/_app/immutable/chunks/C2cU29iA.js">
+		<link rel="modulepreload" href="/_app/immutable/chunks/B5IFr7d-.js">
+		<link rel="modulepreload" href="/_app/immutable/entry/app.D_BNKsTt.js">
+		<link rel="modulepreload" href="/_app/immutable/chunks/D-AJUD6o.js">
+		<link rel="modulepreload" href="/_app/immutable/chunks/DvtKE-QB.js">
+		<link rel="modulepreload" href="/_app/immutable/chunks/DA6ZEFMR.js">
+		<link rel="modulepreload" href="/_app/immutable/chunks/j4HOt26g.js">
+		<link rel="modulepreload" href="/_app/immutable/chunks/D4b2_asw.js">
+		<link rel="modulepreload" href="/_app/immutable/chunks/LQSnVXXT.js">
+		<link rel="modulepreload" href="/_app/immutable/chunks/CZroP44a.js">
+		<link rel="modulepreload" href="/_app/immutable/chunks/DfeOSQJW.js">
+		<link rel="modulepreload" href="/_app/env.js">
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">
 			<script>
 				{
-					__sveltekit_e2b3bw = {
-						base: new URL('.', location).pathname.slice(0, -1)
+					__sveltekit_1w9nk2i = {
+						base: new URL('.', location).pathname.slice(0, -1),
+						env: null
 					};
 
 					const element = document.currentScript.parentElement;
 
-					Promise.all([
-						import("/_app/immutable/entry/start.DyZ480kt.js"),
-						import("/_app/immutable/entry/app.B1aCLAiE.js")
-					]).then(([kit, app]) => {
-						kit.start(app, element);
+					import("/_app/env.js").then(({ env }) => {
+						__sveltekit_1w9nk2i.env = env;
+
+						Promise.all([
+							import("/_app/immutable/entry/start.ByXbUM_7.js"),
+							import("/_app/immutable/entry/app.D_BNKsTt.js")
+						]).then(([kit, app]) => {
+							kit.start(app, element);
+						});
 					});
 
 					if ('serviceWorker' in navigator) {
