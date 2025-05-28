@@ -14,16 +14,16 @@
   import { tick } from 'svelte'
   import JSON5 from 'json5'
   import { create as createStoracha } from '@web3-storage/w3up-client'
+  import { page } from '$app/state'
   import { settings } from '$lib/settings.svelte'
+  import { list2Neo4j } from '$lib/list2Neo4j'
+  import { neo4j2List } from '$lib/neo4j2List'
+  import { identify } from '$lib';
   import SortableList from './SortableList.svelte'
   import Shortcuts from './Shortcuts.svelte'
   import context from './context.svelte'
-  import 'toastify-js/src/toastify.css'
-  import { list2Neo4j } from '$lib/list2Neo4j'
   import Path from './Path.svelte'
-  import { page } from '$app/state'
-  import { neo4j2List } from '$lib/neo4j2List'
-    import { identify } from '$lib';
+  import 'toastify-js/src/toastify.css'
 
   const { debug } = context
 
