@@ -44,6 +44,14 @@
 				<a href="/#/list">𝍤</a>
 				<dialog open>List</dialog>
 			</li>
+			<li aria-current={page.url.hash.startsWith('#/post') ? 'page' : undefined}>
+				<a href="/#/post">📫️</a>
+				<dialog open>Post</dialog>
+			</li>
+			<li aria-current={page.url.hash.startsWith('#/flow') ? 'page' : undefined}>
+				<a href="/#/flow">🌊</a>
+				<dialog open>Flow</dialog>
+			</li>
 			<li aria-current={page.url.hash === '#/about' ? 'page' : undefined}>
 				<a href="/#/about">🛈</a>
 				<dialog open>About</dialog>
@@ -51,10 +59,6 @@
 			<li aria-current={page.url.hash.startsWith('#/settings') ? 'page' : undefined}>
 				<a href="/#/settings">⚙</a>
 				<dialog open>Settings</dialog>
-			</li>
-			<li aria-current={page.url.hash.startsWith('#/post') ? 'page' : undefined}>
-				<a href="/#/post">📫️</a>
-				<dialog open>Post</dialog>
 			</li>
 		</ul>
 		<svg viewBox="0 0 2 3" aria-hidden="true">
