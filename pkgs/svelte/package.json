@@ -48,16 +48,16 @@
 		"@atlaskit/pragmatic-drag-and-drop-flourish": "^1.2.2",
 		"@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
 		"@web3-storage/w3up-client": "^17.2.0",
+		"bootstrap-icons": "^1.13.1",
 		"hammerjs": "^2.0.8",
 		"ignore": "^6.0.2",
 		"json5": "^2.2.3",
 		"kubo-rpc-client": "^5.0.2",
 		"neo4j-driver": "^5.26.0",
-		"react-accessible-treeview": "^2.10.0",
 		"sortablejs": "^1.15.6",
 		"svelte-pragmatic-sortable": "^0.3.12",
 		"tiny-invariant": "^1.3.3",
 		"toastify-js": "^1.12.0",
-		"wunderbaum": "^0.11.0"
+		"wunderbaum": "^0.13.0"
 	}
 }

@@ -1,0 +1,11 @@
+{
+  "tasks": {
+    "dev": "deno run --watch main.ts",
+    "sb": "supabase"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1",
+    "supabase": "npm:supabase@^2.24.3"
+  },
+  "nodeModulesDir": "auto"
+}

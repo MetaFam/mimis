@@ -14,8 +14,8 @@
     <li><a href="/#/upload"><strong>Upload</strong></a>: Will take a CAR file and insert its contents into a Neo4j instance used to store the directory tree.</li>
     <li><a href="/#/browse"><strong>Browse</strong></a>: Will allow navigating the structure stored in Neo4j.</li>
     <li><a href="/#/list"><strong>List</strong></a>: Will allow creating ordered lists of content that will be combined with others' lists to create recommendations.</li>
-    <li><a href="/#/settings"><strong>Settings</strong></a>: Will allow configuring the services which drive the application.</li>
     <li><a href="/#/post"><strong>Post</strong></a>: Emulate the features available in <a href="https://Instagram.com" title="Instagram" target="_blank"><img class="inline icon" src="Instagram.svg" alt="Instagram"/></a>.</li>
+    <li><a href="/#/settings"><strong>Settings</strong></a>: Will allow configuring the services which drive the application.</li>
   </ul>
 </main>
 

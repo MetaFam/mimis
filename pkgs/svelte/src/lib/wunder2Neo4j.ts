@@ -2,13 +2,16 @@ import type { WunderbaumNode } from 'wb_node'
 import { getNeo4j } from '$lib/neo4jDriver'
 
 export async function wunder2Neo4j(
-  root: WunderbaumNode, mountPath: Array<string> = [],
+  root: WunderbaumNode,
+  path: Array<string> = [],
+  onAdd?: (msg: string) => void,
 ) {
   const driver = getNeo4j()
 
   try {
-    const rootCID = await ingest(root, structuredClone(mountPath))
-    console.info(`Mounted ${rootCID} at /${mountPath.join('/')}/.`)
+    const pathStr = `/${path.join('/')}${path.length > 0 ? '/' : ''}`
+    const rootCID = await ingest(root)
+    onAdd?.(`Mounted ${rootCID} at ${pathStr}.`)
     return rootCID
   } finally {
     await driver.close()
@@ -26,6 +29,9 @@ export async function wunder2Neo4j(
       SET c.path = $name
     `
     await session.run(query, { dirCID, entryCID, name })
+
+    onAdd?.(`Added ${name} → ${entryCID}`)
+
     await session.close()
   }
 
@@ -40,12 +46,13 @@ export async function wunder2Neo4j(
       SET e.size = $size
     `
     await session.run(query, { cid, type, size })
+
+    onAdd?.(`Added /${cid} (${type})`)
+
     await session.close()
   }
 
-  async function mount(
-    { path, cid }: { path: Array<string>, cid: string }
-  ) {
+  async function mount() {
     const session = driver.session()
 
     const rootQ = `
@@ -55,6 +62,8 @@ export async function wunder2Neo4j(
     const { records } = await session.run(rootQ)
     let next = records[0].get('id')
 
+    onAdd?.(`Added Root: ${next}`)
+
     while(path.length > 0) {
       const pathQ = `
         MATCH (p:Mount)
@@ -62,23 +71,32 @@ export async function wunder2Neo4j(
         MERGE (p)-[:CONTAINS {path: $elem}]->(n:Mount)
         RETURN elementId(n) as id
       `
+      const elem = path.shift()
       const { records } = await session.run(
-        pathQ, { next, elem: path.shift() }
+        pathQ, { next, elem }
       )
       next = records[0].get('id')
+    }
+
+    if(!root.children) {
+      throw new Error('Root has no children.')
     }
 
     const mountQ = `
       MATCH (m:Mount)
       WHERE elementId(m) = $next
       MATCH (i:IPFS { cid: $cid })
-      MERGE (m)-[:CONNECTS {order: 1}]->(i)
+      MERGE (m)-[:CONNECTS {order: 1, path: $name}]->(i)
     `
-    await session.run(mountQ, { next, cid })
+    for(const child of root.children) {
+      const { title: name, data: { cid } } = child
+      onAdd?.(`Mounting: ${cid} @ ${name}`)
+      await session.run(mountQ, { next, cid, name })
+    }
     await session.close()
   }
 
-  async function ingest(node: WunderbaumNode, path: Array<string> = []) {
+  async function ingest(node: WunderbaumNode) {
     if(!node.children) {
       throw new Error(`Not A Directory: ${node.title}`)
     }
@@ -112,7 +130,7 @@ export async function wunder2Neo4j(
           name: child.title,
         })
       } else {
-        await mount({ path, cid: child.data.cid })
+        await mount()
         return child.data.cid
       }
     }

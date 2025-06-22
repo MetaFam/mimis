@@ -8,7 +8,7 @@ The graph structure of Mïmis is stored in Neo4j which holds a “property graph
 
 ![Graph Structure](sample%20graph.svg)
 
-Content trees grow from a `Root` node for which there is one for each user as identified by their Ethereum public key used to sign updates.
+Content trees grow from a `Root` node. Each user has their own tree which is identified by the Ethereum key pair used to sign updates.
 
 The first layer of abstraction is a context tree. It is a series of `Collection` nodes connected by `Contains` edges. The edges are where the name of each node is stored, so it is possible to have a collection node with different names based on the path used to reach it.
 

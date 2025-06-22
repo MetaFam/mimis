@@ -125,22 +125,19 @@
       {:else}
         <ul id="result">
           {#each result as res}
+            {@const chip = res.get('container')}
             <li>
               {#if res.get('child').labels.includes('File')}
-                <h2>/{res.get('path')?.join('/')}/{res.get('container')}</h2>
+                {@const { cid } = res.get('child').properties}
+                <h2>/{res.get('path')?.join('/')}/{chip}</h2>
                 <object
-                  data={toHTTP({ cid: res.get('child').properties.cid })}
-                  title={`ipfs://${res.get('child').properties.cid}`}
+                  data={toHTTP({ cid })}
+                  title={`ipfs://${cid}`}
                 >
                   <p>
                     Could not display
-                    <a
-                      target="_blank"
-                      href={
-                        `https://w3s.link/ipfs/${res.get('child').properties.cid}`
-                      }
-                    >
-                      ipfs://{res.get('child').properties.cid}
+                    <a target="_blank" href={toHTTP({ cid })}>
+                      ipfs://{cid}
                     </a>.
                   </p>
                 </object>
@@ -148,11 +145,17 @@
                 <a
                   class="button"
                   href={
-                    `${basePath}/${chips.join('/')}${chips.length > 0 ? '/' : ''}${res.get('container')}`
+                    `${
+                      basePath
+                    }/${
+                      chips.join('/')
+                    }${
+                      chips.length > 0 ? '/' : ''
+                    }`
                   }
-                  onclick={() => { console.debug('H!'); addChip(res.get('container')) }}
+                  onclick={() => { addChip(chip) }}
                 >
-                  {res.get('container')}
+                  {chip}
                 </a>
               {/if}
             </li>
@@ -169,6 +172,9 @@
     place-items: center;
     margin-block-start: 3rem;
     gap: 1rem;
+  }
+  ul {
+    list-style: none;
   }
   #path {
     display: flex;
@@ -191,11 +197,18 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+
+    .button {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
   }
   object {
+    display: block;
     min-height: 80dvh;
-    max-width: 100dvh;
+    max-width: 100dvw;
     margin-block: 1rem;
+    margin-inline: auto;
   }
   h2 {
     text-align: center;

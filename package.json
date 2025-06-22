@@ -1,7 +1,7 @@
 {
   "name": "mimis",
   "version": "4.0.0",
-  "license": "MIT",
+  "license": "CC0-1.0",
   "author": "dysbulic <dys@dhappy.org>",
   "homepage": "https://dysbulic.github.io/mimis/",
   "type": "module",
@@ -14,11 +14,11 @@
     ]
   },
   "scripts": {
-    "start": "pnpm --filter=mimis-svelte run dev",
-    "build": "pnpm --filter=mimis-svelte run build",
-    "gh:publish": "pnpm --filter=mimis-svelte run gh:publish",
-    "w3": "pnpm --package=@web3-storage/w3cli dlx w3",
-    "car": "pnpm dlx ipfs-car"
+    "start": "deno task --filter=svelte dev",
+    "build": "deno task --filter=svelte build",
+    "gh:publish": "deno task --filter=svelte gh:publish",
+    "w3": "deno --package=@web3-storage/w3cli run w3",
+    "car": "deno run ipfs-car"
   },
   "dependencies": {
     "@ipld/car": "^5.3.3",
@@ -29,6 +29,7 @@
     "kubo-rpc-client": "^5.0.2",
     "multiformats": "^13.3.1",
     "multihashes": "^4.0.3",
+    "supabase": "^2.24.3",
     "toastify-js": "^1.12.0"
   },
   "devDependencies": {
@@ -43,6 +44,5 @@
     "rules": {
       "import/no-anonymous-default-export": "off"
     }
-  },
-  "packageManager": "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee"
+  }
 }

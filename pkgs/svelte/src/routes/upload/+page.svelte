@@ -5,6 +5,7 @@
   import { car2Tree } from '$lib/car2Tree';
   import { wunder2Neo4j } from '$lib/wunder2Neo4j';
   import Toastify from 'toastify-js'
+	import 'bootstrap-icons/font/bootstrap-icons.min.css'
   import 'wunderbaum/dist/wunderbaum.css'
   import 'toastify-js/src/toastify.css'
 
@@ -14,6 +15,7 @@
     generating = $state<boolean>(false)
   }
 
+  let count = $state<number>(0)
   let tree = $state<Wunderbaum>()
   let car = new CAR()
   let path = $state('')
@@ -41,7 +43,14 @@
       car.generating = true
       const mount = path.split('/').filter(Boolean)
       if(!tree) throw new Error('No tree to mount.')
-      const cid: string = await wunder2Neo4j(tree.root, mount)
+      const onAdd = (msg: string) => {
+        console.debug(msg)
+        count++
+      }
+      console.debug({ root: tree.root })
+      const cid: string = await wunder2Neo4j(
+        tree.root, mount, onAdd,
+      )
       Toastify({
         text: `Loaded: ipfs://${cid.slice(0, 5)}…${cid.slice(-5)}`,
         duration: 8_000,
@@ -80,7 +89,12 @@
   {#if !!tree}
     <form onsubmit={submitMount}>
       <input placeholder="/system/mount/point/" bind:value={path}/>
-      <button disabled={car.generating}>Neo4j Import</button>
+      <button disabled={car.generating}>
+        Neo4j Import
+        {#if car.generating}
+          {count.toLocaleString()}
+        {/if}
+      </button>
     </form>
   {/if}
 
@@ -98,5 +112,6 @@
   #fs-tree {
     margin-inline: auto;
     resize: both;
+    display: inline-block;
   }
 </style>

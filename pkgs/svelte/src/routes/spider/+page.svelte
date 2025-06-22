@@ -6,6 +6,7 @@
 	import { wunder2CAR } from '$lib/wunder2CAR'
 	import { wunderFiles } from '$lib/wunderFiles'
 	import { selectAll } from '$lib/selectAll'
+	import 'bootstrap-icons/font/bootstrap-icons.min.css'
 	import 'wunderbaum/dist/wunderbaum.css'
 
 	let name = $state<string>()
@@ -38,6 +39,7 @@
 						}
 					},
 				})
+				console.debug({ tree })
 			})
 			.finally(() => { statuses = [] })
 		}
@@ -98,14 +100,14 @@
 
 	<section id="display">
 		<div id="fs-tree" class:accompanied={!!content}></div>
-		{#if content}
-			<div id="content">
+		<div id="content">
+			{#if content}
 				{#if name}
 					<h2>{name}</h2>
 				{/if}
 				<Content {content}/>
-			</div>
-		{/if}
+			{/if}
+		</div>
 	</section>
 </main>
 
@@ -124,16 +126,13 @@
 			display: flex;
 			align-items: flex-start;
 			justify-content: center;
+			width: 100%;
 		}
 
 		#fs-tree {
 			min-width: var(--min-browser-width);
 			max-height: 90vh;
 			max-width: 150ch;
-		}
-
-		#display, .accompanied {
-			width: 100%;
 		}
 
 		#fs-tree {

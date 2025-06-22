@@ -1,5 +1,6 @@
 <script lang="ts">
   import { settings } from '$lib/settings.svelte'
+  import { type HTMLAttributes } from 'svelte/elements'
 
   let {
     elements = $bindable([''])
@@ -90,7 +91,11 @@
               const event = new Event('submit', {
                 bubbles: true, cancelable: true,
               })
-              event.submitter = this
+              ;(
+                event as
+                unknown as
+                { submitter: HTMLAttributes<HTMLInputElement> }
+              ).submitter = this
               form?.dispatchEvent(event)
               if(debug) console.debug({ Fired: event })
             }
