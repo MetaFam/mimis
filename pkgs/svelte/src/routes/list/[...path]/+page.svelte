@@ -28,7 +28,7 @@
   const { debug } = context
 
   let entries = $state<Array<Entry>>([])
-  let ipfs = createIPFS(settings.ipfsAPI)
+  let ipfs = createIPFS(settings.ipfsAPI.replace(/\/+$/, ''))
   let loading = $state(false)
   let saving = $state(false)
   let changes = $state(false)

@@ -15,7 +15,7 @@ class Settings {
   } as const
   static defaults = {
     [Settings.keys.ipfsPattern]: (
-      env.PUBLIC_IPFS_API || 'http://localhost:8080/ipfs/{cid}{path}'
+      env.PUBLIC_IPFS_PATTERN || 'http://localhost:8080/ipfs/{cid}{path}'
     ),
     [Settings.keys.ipfsAPI]: (
       env.PUBLIC_IPFS_API || 'http://localhost:5001/api/v0'
@@ -29,7 +29,7 @@ class Settings {
     [Settings.keys.storachaLogin]: '',
   }
 
-  valueOf(key: Omit<keyof typeof Settings.keys, 'limit'>): string
+  valueOf(key: Omit<keyof typeof Settings.keys, 'limit' | 'debugging'>): string
   valueOf(key: 'limit'): number
   valueOf(key: 'debugging'): boolean
   valueOf(key: keyof typeof Settings.keys) {

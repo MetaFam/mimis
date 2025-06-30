@@ -10,8 +10,8 @@ export const toHTTP = ({
   }
   let path: Array<string> = []
   if(url != null) {
-    [,, cid, ...path] = Array.from(
-      /^(ipfs:\/\/)?([^/]+)(\/.*)?$/.exec(url) ?? []
+    [,cid, ...path] = Array.from(
+      /^(?:ipfs:\/\/)?([^/]+)(\/.*)?$/.exec(url) ?? []
     )
   } else if(cid != null) {
     [cid, ...path] = cid.split('/')

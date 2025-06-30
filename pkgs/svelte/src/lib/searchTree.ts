@@ -22,13 +22,14 @@ export const searchTree = async (
     ) : (
       `
         WITH $elems as pathElems
-        MATCH path = (start:Root)-[:CONTAINS|CONNECTS*]->(end)
-        MATCH (end)-[children:CONTAINS|CONNECTS]->(child)
-        WITH pathElems, path, children, child, [
-          rel in relationships(path)
-          WHERE NOT isEmpty(rel.path)
-          | rel.path
-        ] as elements
+        MATCH path = (start:Root)-[:CONTAINS|CONNECTS|EMBODIED_AS*]->(end)
+        MATCH (end)-[children:CONTAINS|CONNECTS|ENTRY]->(child)
+        WITH pathElems, path, children, child,
+          [
+            rel in relationships(path)
+            WHERE NOT isEmpty(rel.path)
+            | rel.path
+          ] as elements
         WHERE size(elements) = size(pathElems)
         AND ALL(
           i IN range(0, size(pathElems) - 1)

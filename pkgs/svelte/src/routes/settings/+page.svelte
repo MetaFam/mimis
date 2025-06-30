@@ -20,10 +20,7 @@
             <input
               type="checkbox"
               bind:checked={settings.debugging}
-              onchange={({ target: { checked } }: { target: { checked: boolean } }) => {
-                context.debug = checked
-                settings.save()
-              }}
+              onchange={() => { settings.save() }}
             />
             <span>:Debug Messages</span>
           </label></li>

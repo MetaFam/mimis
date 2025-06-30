@@ -127,8 +127,8 @@
           {#each result as res}
             {@const chip = res.get('container')}
             <li>
-              {#if res.get('child').labels.includes('File')}
-                {@const { cid } = res.get('child').properties}
+              {#if res.get('child')?.labels.includes('File')}
+                {@const { cid } = res.get('child')?.properties}
                 <h2>/{res.get('path')?.join('/')}/{chip}</h2>
                 <object
                   data={toHTTP({ cid })}
