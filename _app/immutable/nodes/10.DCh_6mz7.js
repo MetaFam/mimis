@@ -1,0 +1,1 @@
+import{t as a,a as r}from"../chunks/5bP9txlF.js";import"../chunks/BqEtMO0D.js";import{w as e}from"../chunks/ClGKkdhE.js";var m=a('<h1>¿Post⁉</h1> <h2>¡<acronym title="We Are Going to Make It">WAGMI</acronym>‼</h2>',1);function s(t){var o=m();e(2),r(t,o)}export{s as component};
