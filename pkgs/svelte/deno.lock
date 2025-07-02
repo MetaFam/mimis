@@ -39,6 +39,7 @@
     "npm:toastify-js@^1.12.0": "1.12.0",
     "npm:typescript-eslint@8": "8.34.0_eslint@9.26.0_typescript@5.8.3_@typescript-eslint+parser@8.34.0__eslint@9.26.0__typescript@5.8.3",
     "npm:typescript@^5.8.3": "5.8.3",
+    "npm:uuid@^11.1.0": "11.1.0",
     "npm:vite@^5.0.3": "5.4.19",
     "npm:wunderbaum@0.13": "0.13.0"
   },
@@ -3779,6 +3780,10 @@
     "util-deprecate@1.0.2": {
       "integrity": "sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw=="
     },
+    "uuid@11.1.0": {
+      "integrity": "sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==",
+      "bin": true
+    },
     "varint@6.0.0": {
       "integrity": "sha512-cXEIW6cfr15lFv563k4GuVuW/fiwjknytD37jIOLSdSWuOI6WnO/oKwmP2FQTU2l01LP8/M5TSAJpzUaGe3uWg=="
     },
@@ -3928,6 +3933,7 @@
         "npm:toastify-js@^1.12.0",
         "npm:typescript-eslint@8",
         "npm:typescript@^5.8.3",
+        "npm:uuid@^11.1.0",
         "npm:vite@^5.0.3",
         "npm:wunderbaum@0.13"
       ]

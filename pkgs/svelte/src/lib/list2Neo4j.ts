@@ -1,5 +1,6 @@
 import type { Entry } from '../routes/list/+page.svelte'
 import { getNeo4j } from './neo4jDriver'
+import { v7 as uuid } from 'uuid'
 
 export async function list2Neo4j(list: Array<Entry>, path: Array<string>) {
   const neo4j = getNeo4j()
@@ -11,40 +12,51 @@ export async function list2Neo4j(list: Array<Entry>, path: Array<string>) {
     )
     let currentId = root.get('id')
 
+    const stepQuery = `
+      MATCH (elem) WHERE elementId(elem) = $currentId
+      MERGE (elem)-[:CONTAINS {path: $element}]->(next:Collection)
+      ON CREATE SET elem.mimis_id = $uuid
+      RETURN elementId(next) as id
+    `
     for(const element of path) {
-      const stepQuery = `
-        MATCH (elem) WHERE elementId(elem) = $currentId
-        MERGE (elem)-[:CONTAINS {path: $element}]->(next:Collection)
-        RETURN elementId(next) as id
-      `
       const { records: [step] } = await session.run(stepQuery, {
-        currentId, element,
+        currentId, element, uuid: uuid(),
       })
       currentId = step.get('id')
     }
 
     const nöoQuery = `
       MATCH (path) WHERE elementId(path) = $currentId
-      CREATE (path)-[:EMBODIED_AS]->(point:Nöopoint)
-      SET point.createdAt = timestamp()
+      OPTIONAL MATCH (path)-[:EMBODIED_AS]->(sib:Nöopoint)
+      WITH path, sib
+      ORDER BY sib.createdAt DESC
+      WITH path, collect(sib)[0] as previous
+      CREATE (path)-[:EMBODIED_AS]->(point:Nöopoint { mimis_id: $uuid, createdAt: timestamp() })
+      WITH point, previous
+      FOREACH (_ IN CASE WHEN previous IS NOT NULL THEN [1] ELSE [] END |
+        MERGE (point)-[:PREVIOUS]->(previous)
+      )
       RETURN elementId(point) as id
     `
-    const { records: [point] } = await session.run(nöoQuery, { currentId })
+    const { records: [point] } = await session.run(nöoQuery, {
+      currentId, uuid: uuid(),
+    })
     currentId = point.get('id')
 
+    const lineQuery = `
+      MATCH (point) WHERE elementId(point) = $currentId
+      MERGE (file:IPFS:File {cid: $cid})
+      ON CREATE SET file.createdAt = timestamp()
+      ON CREATE SET file.mimis_id = $uuid
+      SET file.type =
+        CASE WHEN file.type IS NULL THEN $type ELSE file.type END
+      CREATE (point)-[:ENTRY {path: $title, order: $order}]->(file)
+      RETURN file
+    `
     for(const i in list) {
       const { cid, title, type } = list[i]
-      const lineQuery = `
-        MATCH (point) WHERE elementId(point) = $currentId
-        MERGE (file:File {cid: $cid})
-        ON CREATE SET file.createdAt = timestamp()
-        SET file.type =
-          CASE WHEN file.type IS NULL THEN $type ELSE file.type END
-        CREATE (point)-[:ENTRY {path: $title, order: $order}]->(file)
-        RETURN file
-      `
       await session.run(lineQuery, {
-        currentId, cid, title, type, order: Number(i) + 1
+        currentId, cid, title, type, order: Number(i) + 1, uuid: uuid(),
       })
     }
   } finally {

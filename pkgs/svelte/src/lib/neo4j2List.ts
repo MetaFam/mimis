@@ -2,7 +2,7 @@ import { identify, records2Object } from '$lib'
 import { getNeo4j } from './neo4jDriver'
 
 export async function neo4j2List(path: Array<string>) {
-  const results = await getNöopoints(path)
+  const results = await getNöopoints(path, { onlyCurrent: true })
 
   if(results.length === 0) {
     throw new Error('No results for path.')
@@ -11,19 +11,18 @@ export async function neo4j2List(path: Array<string>) {
   }
 
   const [{ nöopoint }] = results
-  console.debug({ 'loading from': nöopoint })
-
   const neo4j = getNeo4j()
   const session = neo4j.session()
 
+  console.debug({ nöopoint })
+
   try {
     const list = `
-      MATCH (nöopoint)-[entry:ENTRY]->(item)
-      WHERE elementId(nöopoint) = $id
+      MATCH (point)-[entry:ENTRY]->(item)
+      WHERE elementId(point) = $id
+      AND NOT ()-[:PREVIOUS]->(point)
       ORDER BY entry.order
-      RETURN DISTINCT
-        entry,
-        item
+      RETURN DISTINCT entry, item
     `
 
     const { records } = await session.run(
@@ -45,7 +44,7 @@ export async function neo4j2List(path: Array<string>) {
 }
 
 export async function getNöopoints(
-  path: Array<string>, { offset = 0, limit = null } = {}
+  path: Array<string>, { offset = 0, limit = null, onlyCurrent = false } = {}
 ) {
   const neo4j = getNeo4j()
   const session = neo4j.session()
@@ -60,6 +59,7 @@ export async function getNöopoints(
       WITH $elems as pathElems
       MATCH path = (start:Root)-[:CONTAINS*]->(terminal)
       MATCH (terminal)-[EMBODIED_AS]->(point)
+      ${onlyCurrent ? 'WHERE NOT ()-[:PREVIOUS]->(point)' : ''}
       WITH pathElems, path, terminal, point, [
         rel in relationships(path)
         WHERE NOT isEmpty(rel.path)

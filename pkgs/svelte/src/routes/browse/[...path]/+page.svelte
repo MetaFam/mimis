@@ -90,6 +90,7 @@
 
 <svelte:head>
   <title>Mïmis: Search</title>
+  <link rel="icon" href="infinity%20eyes.svg"/>
 </svelte:head>
 
 <main>

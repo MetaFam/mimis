@@ -58,6 +58,7 @@
 		"tiny-invariant": "^1.3.3",
 		"toastify-js": "^1.12.0",
 		"typescript": "^5.8.3",
+		"uuid": "^11.1.0",
 		"wunderbaum": "^0.13.0"
 	}
 }

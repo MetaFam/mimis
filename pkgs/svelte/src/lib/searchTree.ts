@@ -38,6 +38,7 @@ export const searchTree = async (
             OR elements[i] = pathElems[i]
           )
         )
+        ORDER BY children.order
         LIMIT ${offset + limit}
         SKIP ${offset}
         RETURN DISTINCT

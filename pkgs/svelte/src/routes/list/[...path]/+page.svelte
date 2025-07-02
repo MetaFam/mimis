@@ -12,6 +12,7 @@
   import { create as createIPFS } from 'kubo-rpc-client'
   import type { Version } from 'multiformats'
   import { tick } from 'svelte'
+  import { assets } from '$app/paths'
   import JSON5 from 'json5'
   import { create as createStoracha } from '@web3-storage/w3up-client'
   import { page } from '$app/state'
@@ -263,6 +264,7 @@
 
 <svelte:head>
   <title>Mïmis: Merge List</title>
+  <link rel="icon" href={`${assets}/merge%20left.svg`}/>
   <meta
     name="description"
     content={

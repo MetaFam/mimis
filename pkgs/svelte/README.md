@@ -22,7 +22,7 @@ ipfs config --json $KEY $(
 This uses `jq` to insert the address of the development server into the CORS configuration of IPFS. Once this is done, *(and the IPFS daemon is restarted)*, it should be possible to run the development server using:
 
 ```bash
-pnpm install && pnpm run dev
+deno install && deno task dev
 ```
 
 ### [`mimis.dhappy.org`](https://mimis.dhappy.org)
