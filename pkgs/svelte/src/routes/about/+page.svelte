@@ -4,6 +4,7 @@
 		name="description"
 		content="Mïmis: Collaborative Filesystem"
 	/>
+	<link rel="icon" href="scroll.svg"/>
 </svelte:head>
 
 <section>

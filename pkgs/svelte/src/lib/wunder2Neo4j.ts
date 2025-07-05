@@ -1,5 +1,6 @@
 import type { WunderbaumNode } from 'wb_node'
 import { getNeo4j } from '$lib/neo4jDriver'
+import { Nöopoint } from '$lib'
 
 export async function wunder2Neo4j(
   root: WunderbaumNode,
@@ -10,29 +11,54 @@ export async function wunder2Neo4j(
 
   try {
     const pathStr = `/${path.join('/')}${path.length > 0 ? '/' : ''}`
-    const rootCID = await ingest(root)
-    onAdd?.(`Mounted ${rootCID} at ${pathStr}.`)
-    return rootCID
+    const rootId = await ingest(root)
+    await mount({ rootId })
+    onAdd?.(`Mounted ${rootId} at ${pathStr}.`)
+    return rootId
   } finally {
     await driver.close()
   }
 
+  async function createIPFSDir() {
+    const session = driver.session()
+    try {
+      const query = `
+        CREATE (dir:IPFS:Directory)
+        RETURN elementId(dir) AS id
+      `
+      const { records } = await session.run(query)
+      onAdd?.('Created Directory')
+      return records[0].get('id')
+    } finally {
+      await session.close()
+    }
+  }
+
   async function addDirEntry(
-    { dirCID, entryCID, name }:
-    { dirCID: string, entryCID: string, name: string }
+    { dirId, itemId, name, type = ':IPFS:Directory', rship = ':CONTAINS' }:
+    { dirId?: string, itemId: string, name?: string, type?: string, rship?: string }
   ) {
     const session = driver.session()
-    const query = `
-      MATCH (e:IPFS { cid: $entryCID })
-      MERGE (d:IPFS:Directory { cid: $dirCID })
-      MERGE (d)-[c:CONTAINS]->(e)
-      SET c.path = $name
-    `
-    await session.run(query, { dirCID, entryCID, name })
-
-    onAdd?.(`Added ${name} → ${entryCID}`)
-
-    await session.close()
+    try {
+      const query = `
+        MATCH (entry) WHERE elementId(entry) = $itemId
+        ${dirId == null ? (
+          `CREATE (dir${type})`
+        ) : (
+          'MATCH (dir) WHERE elementId(dir) = $dirId'
+        )}
+        MERGE (dir)-[c${rship} ${name != null ? '{ path: $name }' : ''}]->(entry)
+        RETURN elementId(dir) AS id
+      `
+      const { records } = await session.run(
+        query, { itemId, name, dirId }
+      )
+      const retId = records[0].get('id')
+      onAdd?.(`Added ${name} → ${itemId} (${dirId} → ${retId})`)
+      return retId
+    } finally {
+      await session.close()
+    }
   }
 
   async function addFile(
@@ -40,42 +66,50 @@ export async function wunder2Neo4j(
     { cid: string, type: string | null, size: number }
   ) {
     const session = driver.session()
-    const query = `
-      MERGE (e:IPFS:File { cid: $cid })
-      SET e.mimetype = CASE WHEN $type IS NOT NULL THEN $type END
-      SET e.size = $size
-    `
-    await session.run(query, { cid, type, size })
-
-    onAdd?.(`Added /${cid} (${type})`)
-
-    await session.close()
+    try {
+      const query = `
+        MERGE (file:IPFS:File { cid: $cid })
+        MERGE (item:Nöopoint)-[:EMBODIED_AS]->(file)
+        SET file.mimetype = CASE WHEN $type IS NOT NULL THEN $type END
+        SET file.size = $size
+        RETURN elementId(item) AS id
+      `
+      const { records } = await session.run(
+        query, { cid, type, size }
+      )
+      onAdd?.(`Added /${cid} (${type})`)
+      return records[0].get('id')
+    } finally {
+      await session.close()
+    }
   }
 
-  async function mount() {
+  async function mount({ rootId }: { rootId: string }) {
     const session = driver.session()
 
     const rootQ = `
-      MERGE (r:Mount:Root)
-      RETURN elementId(r) as id
+      MERGE (r:Root)
+      SET r:Mount:Directory
+      RETURN elementId(r) AS id
     `
     const { records } = await session.run(rootQ)
-    let next = records[0].get('id')
+    let current = records[0].get('id')
 
-    onAdd?.(`Added Root: ${next}`)
+    onAdd?.(`Added Root: ${current}`)
 
-    while(path.length > 0) {
+    while(path.length > 1) {
       const pathQ = `
-        MATCH (p:Mount)
-        WHERE elementId(p) = $next
-        MERGE (p)-[:CONTAINS {path: $elem}]->(n:Mount)
-        RETURN elementId(n) as id
+        MATCH (dir)
+        WHERE elementId(dir) = $current
+        MERGE (dir)-[:CONTAINS {path: $elem}]->(item)
+        SET item:Mount:Directory
+        RETURN elementId(item) as id
       `
       const elem = path.shift()
       const { records } = await session.run(
-        pathQ, { next, elem }
+        pathQ, { current, elem }
       )
-      next = records[0].get('id')
+      current = records[0].get('id')
     }
 
     if(!root.children) {
@@ -83,57 +117,70 @@ export async function wunder2Neo4j(
     }
 
     const mountQ = `
-      MATCH (m:Mount)
-      WHERE elementId(m) = $next
-      MATCH (i:IPFS { cid: $cid })
-      MERGE (m)-[:CONNECTS {order: 1, path: $name}]->(i)
+      MATCH (mount)
+      MATCH (base)
+      WHERE elementId(mount) = $current
+      AND elementId(base) = $rootId
+      MERGE (mount)-[:CONNECTS { path: $name }]->(base)
     `
-    for(const child of root.children) {
-      const { title: name, data: { cid } } = child
-      onAdd?.(`Mounting: ${cid} @ ${name}`)
-      await session.run(mountQ, { next, cid, name })
-    }
+    await session.run(mountQ, { current, rootId, name: path[0] })
+
     await session.close()
   }
 
+  type Node = {
+    id: string
+    title: string
+  }
+
   async function ingest(node: WunderbaumNode) {
-    if(!node.children) {
-      throw new Error(`Not A Directory: ${node.title}`)
-    }
-    for(const child of node.children) {
-      if(!child.selected && child.getSelectedNodes().length === 0) {
-        continue
-      }
+    if(!node.children) throw new Error(`Not a directory: ${node.title}.`)
+    if(node.children.length === 0) throw new Error(`Empty directory: ${node.title}.`)
 
-      if(child.children) {
-        await ingest(child)
-      } else {
-        const type = (() => {
-          switch(child.title.split('.').at(-1)?.toLowerCase()) {
-            case 'svg': return 'image/svg+xml'
-            case 'png': return 'image/png'
-            case 'jpg': case 'jpeg': return 'image/jpeg'
-            default: return null
+    const baseId = await createIPFSDir()
+    await Promise.all(
+      node.children.map(async (child) => {
+        if(!child.selected && child.getSelectedNodes().length === 0) {
+          return null
+        }
+
+        if(child.children) {
+          await addDirEntry({
+            itemId: await ingest(child),
+            dirId: baseId,
+            name: child.title,
+          })
+        } else {
+          const ext = child.title.split('.').at(-1) as string
+          const name = child.title.slice(0, -(ext.length + 1))
+          const type = (() => {
+            switch(ext) {
+              case 'svg': return 'image/svg+xml'
+              case 'png': return 'image/png'
+              case 'jpg': case 'jpeg': return 'image/jpeg'
+              default: return null
+            }
+          })()
+          let itemId = await addFile({
+            cid: child.data.cid,
+            type,
+            size: child.data.size,
+          })
+          itemId = await addDirEntry({
+            itemId,
+            dirId: (name === ext ? baseId : undefined),
+            rship: ':REPRESENTED_BY',
+          })
+          if(name !== ext) {
+            await addDirEntry({
+              itemId,
+              name,
+              dirId: baseId,
+            })
           }
-        })()
-
-        await addFile({
-          cid: child.data.cid,
-          type,
-          size: child.data.size,
-        })
-      }
-      if(node.data.cid) {
-        await addDirEntry({
-          dirCID: node.data.cid,
-          entryCID: child.data.cid,
-          name: child.title,
-        })
-      } else {
-        await mount()
-        return child.data.cid
-      }
-    }
-    return node.data.cid
+        }
+      })
+    )
+    return baseId
   }
 }

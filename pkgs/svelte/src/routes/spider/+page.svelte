@@ -65,6 +65,7 @@
 		name="description"
 		content="Collaborative Filesystem"
 	/>
+	<link rel="icon" href="car.svg"/>
 </svelte:head>
 
 <header>

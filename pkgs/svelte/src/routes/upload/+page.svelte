@@ -72,6 +72,7 @@
 
 <svelte:head>
   <title>Upload a CAR</title>
+  <link rel="icon" href="upload.svg"/>
 </svelte:head>
 
 <header>

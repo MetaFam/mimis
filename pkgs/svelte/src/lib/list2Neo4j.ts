@@ -27,16 +27,18 @@ export async function list2Neo4j(list: Array<Entry>, path: Array<string>) {
 
     const nöoQuery = `
       MATCH (path) WHERE elementId(path) = $currentId
-      OPTIONAL MATCH (path)-[:EMBODIED_AS]->(sib:Nöopoint)
+      OPTIONAL MATCH (path)-[:REPRESENTED_BY]->(sib:Nöopoint)
       WITH path, sib
       ORDER BY sib.createdAt DESC
       WITH path, collect(sib)[0] as previous
-      CREATE (path)-[:EMBODIED_AS]->(point:Nöopoint { mimis_id: $uuid, createdAt: timestamp() })
-      WITH point, previous
+      CREATE (path)-[:REPRESENTED_BY]->(list:List:Nöopoint {
+        mimis_id: $uuid, createdAt: timestamp()
+      })
+      WITH list, previous
       FOREACH (_ IN CASE WHEN previous IS NOT NULL THEN [1] ELSE [] END |
-        MERGE (point)-[:PREVIOUS]->(previous)
+        MERGE (list)-[:PREVIOUS]->(previous)
       )
-      RETURN elementId(point) as id
+      RETURN elementId(list) as id
     `
     const { records: [point] } = await session.run(nöoQuery, {
       currentId, uuid: uuid(),
@@ -44,13 +46,15 @@ export async function list2Neo4j(list: Array<Entry>, path: Array<string>) {
     currentId = point.get('id')
 
     const lineQuery = `
-      MATCH (point) WHERE elementId(point) = $currentId
+      MATCH (list) WHERE elementId(list) = $currentId
       MERGE (file:IPFS:File {cid: $cid})
+      MERGE (item:Nöopoint)-[:EMBODIED_AS]->(file)
       ON CREATE SET file.createdAt = timestamp()
       ON CREATE SET file.mimis_id = $uuid
-      SET file.type =
+      SET file.type = (
         CASE WHEN file.type IS NULL THEN $type ELSE file.type END
-      CREATE (point)-[:ENTRY {path: $title, order: $order}]->(file)
+      )
+      CREATE (list)-[:ENTRY {path: $title, order: $order}]->(item)
       RETURN file
     `
     for(const i in list) {
