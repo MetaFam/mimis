@@ -1,8 +1,8 @@
-import { identify, records2Object } from '$lib'
+import { identify, records2Object, Nöopoint } from '$lib'
 import { getNeo4j } from './neo4jDriver'
 
 export async function neo4j2List(path: Array<string>) {
-  const results = await getNöopoints(path, { onlyCurrent: true })
+  const results = await Nöopoint.get.children(path, { onlyCurrent: true })
 
   if(results.length === 0) {
     throw new Error('No results for path.')

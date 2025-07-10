@@ -1,12 +1,25 @@
-import neo4j from 'neo4j-driver'
+import neo4jFactory from 'neo4j-driver'
+import { create as ipfsFactory } from 'ipfs'
 import { settings } from '$lib/settings.svelte';
 
-export const getNeo4j = () => (
-  neo4j.driver(
-    settings.neo4jURL,
-    neo4j.auth.basic(
-      settings.neo4jUser,
-      settings.neo4jPass,
+let neo4j: Neo4j | null = null
+export const getNeo4j = () => {
+  if(!neo4j) {
+    neo4j = neo4jFactory.driver(
+      settings.neo4jURL,
+      neo4jFactory.auth.basic(
+        settings.neo4jUser,
+        settings.neo4jPass,
+      )
     )
-  )
-)
+  }
+  return neo4j
+}
+
+let ipfs: ReturnType<typeof ipfsFactory> = null
+export const getIPFS = () => {
+  if(!ipfs) {
+    ipfs = ipfsFactory()
+  }
+  return ipfs
+}

@@ -1,6 +1,6 @@
 import type { WunderbaumNode } from 'wb_node'
 import { getNeo4j } from '$lib/neo4jDriver'
-import { Nöopoint } from '$lib'
+import { v7 as uuid } from 'uuid'
 
 export async function wunder2Neo4j(
   root: WunderbaumNode,
@@ -23,10 +23,10 @@ export async function wunder2Neo4j(
     const session = driver.session()
     try {
       const query = `
-        CREATE (dir:IPFS:Directory)
+        CREATE (dir:Spot { mimisId: $uuid })
         RETURN elementId(dir) AS id
       `
-      const { records } = await session.run(query)
+      const { records } = await session.run(query, { uuid: uuid() })
       onAdd?.('Created Directory')
       return records[0].get('id')
     } finally {
@@ -35,7 +35,7 @@ export async function wunder2Neo4j(
   }
 
   async function addDirEntry(
-    { dirId, itemId, name, type = ':IPFS:Directory', rship = ':CONTAINS' }:
+    { dirId, itemId, name, type = ':Spot', rship = ':CONTAINS' }:
     { dirId?: string, itemId: string, name?: string, type?: string, rship?: string }
   ) {
     const session = driver.session()
@@ -99,10 +99,9 @@ export async function wunder2Neo4j(
 
     while(path.length > 1) {
       const pathQ = `
-        MATCH (dir)
-        WHERE elementId(dir) = $current
+        MATCH (dir) WHERE elementId(dir) = $current
         MERGE (dir)-[:CONTAINS {path: $elem}]->(item)
-        SET item:Mount:Directory
+        SET item:Spot
         RETURN elementId(item) as id
       `
       const elem = path.shift()
@@ -117,10 +116,8 @@ export async function wunder2Neo4j(
     }
 
     const mountQ = `
-      MATCH (mount)
-      MATCH (base)
-      WHERE elementId(mount) = $current
-      AND elementId(base) = $rootId
+      MATCH (mount) WHERE elementId(mount) = $current
+      MATCH (base) WHERE elementId(base) = $rootId
       MERGE (mount)-[:CONNECTS { path: $name }]->(base)
     `
     await session.run(mountQ, { current, rootId, name: path[0] })
