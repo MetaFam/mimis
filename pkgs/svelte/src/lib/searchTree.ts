@@ -1,4 +1,4 @@
-import { getNeo4j } from '$lib/neo4jDriver'
+import { getNeo4j } from './drivers.ts'
 
 export const searchTree = async (
   { path, limit = 200, offset = 0 }:

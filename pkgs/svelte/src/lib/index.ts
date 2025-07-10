@@ -1,5 +1,5 @@
 import type { Record as Neo4jRecord } from 'neo4j-driver'
-import { getNeo4j } from './neo4jDriver.ts'
+import { getNeo4j } from './drivers.ts'
 
 type Primitive = string | number | boolean | ((...args: Array<any>) => any) | null | undefined
 interface NöopointConflictType extends Record<

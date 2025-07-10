@@ -1,5 +1,5 @@
 import type { WunderbaumNode } from 'wb_node'
-import { getNeo4j } from '$lib/neo4jDriver'
+import { getNeo4j } from './drivers.ts'
 import { v7 as uuid } from 'uuid'
 
 export async function wunder2Neo4j(
@@ -23,7 +23,7 @@ export async function wunder2Neo4j(
     const session = driver.session()
     try {
       const query = `
-        CREATE (dir:Spot { mimisId: $uuid })
+        CREATE (dir:Spot { mimis_id: $uuid })
         RETURN elementId(dir) AS id
       `
       const { records } = await session.run(query, { uuid: uuid() })
@@ -43,7 +43,7 @@ export async function wunder2Neo4j(
       const query = `
         MATCH (entry) WHERE elementId(entry) = $itemId
         ${dirId == null ? (
-          `CREATE (dir${type})`
+          `CREATE (dir${type} { mimis_id: $uuid })`
         ) : (
           'MATCH (dir) WHERE elementId(dir) = $dirId'
         )}
@@ -51,7 +51,7 @@ export async function wunder2Neo4j(
         RETURN elementId(dir) AS id
       `
       const { records } = await session.run(
-        query, { itemId, name, dirId }
+        query, { itemId, name, dirId, uuid: uuid() }
       )
       const retId = records[0].get('id')
       onAdd?.(`Added ${name} → ${itemId} (${dirId} → ${retId})`)

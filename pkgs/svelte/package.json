@@ -46,6 +46,7 @@
 		"@atlaskit/pragmatic-drag-and-drop": "^1.5.0",
 		"@atlaskit/pragmatic-drag-and-drop-flourish": "^1.2.2",
 		"@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
+		"@ipld/dag-json": "^10.2.5",
 		"@web3-storage/w3up-client": "^17.2.0",
 		"bootstrap-icons": "^1.13.1",
 		"hammerjs": "^2.0.8",

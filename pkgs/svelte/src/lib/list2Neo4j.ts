@@ -1,5 +1,5 @@
 import type { Entry } from '../routes/list/+page.svelte'
-import { getNeo4j } from './neo4jDriver'
+import { getNeo4j } from './drivers.ts'
 import { v7 as uuid } from 'uuid'
 
 export async function list2Neo4j(list: Array<Entry>, path: Array<string>) {

@@ -1,5 +1,5 @@
 import neo4jFactory from 'neo4j-driver'
-import { create as ipfsFactory } from 'ipfs'
+import { create as ipfsFactory } from 'kubo-rpc-client'
 import { settings } from '$lib/settings.svelte';
 
 let neo4j: Neo4j | null = null
@@ -16,10 +16,10 @@ export const getNeo4j = () => {
   return neo4j
 }
 
-let ipfs: ReturnType<typeof ipfsFactory> = null
+let ipfs: ReturnType<typeof ipfsFactory> | null = null
 export const getIPFS = () => {
   if(!ipfs) {
-    ipfs = ipfsFactory()
+    ipfs = ipfsFactory(settings.ipfsAPI.replace(/\/+$/, ''))
   }
   return ipfs
 }

@@ -1,5 +1,5 @@
 import { identify, records2Object, Nöopoint } from '$lib'
-import { getNeo4j } from './neo4jDriver'
+import { getNeo4j } from './drivers.ts'
 
 export async function neo4j2List(path: Array<string>) {
   const results = await Nöopoint.get.children(path, { onlyCurrent: true })

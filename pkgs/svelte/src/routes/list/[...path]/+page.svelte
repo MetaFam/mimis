@@ -9,7 +9,6 @@
 
 <script lang="ts" >
   import Toastify from 'toastify-js'
-  import { create as createIPFS } from 'kubo-rpc-client'
   import type { Version } from 'multiformats'
   import { tick } from 'svelte'
   import { assets } from '$app/paths'
@@ -19,6 +18,7 @@
   import { settings } from '$lib/settings.svelte'
   import { list2Neo4j } from '$lib/list2Neo4j'
   import { neo4j2List } from '$lib/neo4j2List'
+  import { getIPFS } from '$lib/drivers'
   import { identify } from '$lib';
   import SortableList from './SortableList.svelte'
   import Shortcuts from './Shortcuts.svelte'
@@ -29,7 +29,7 @@
   const { debug } = context
 
   let entries = $state<Array<Entry>>([])
-  let ipfs = createIPFS(settings.ipfsAPI.replace(/\/+$/, ''))
+  let ipfs = getIPFS()
   let loading = $state(false)
   let saving = $state(false)
   let changes = $state(false)
