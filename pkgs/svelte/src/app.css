@@ -121,11 +121,11 @@ button, .button {
 
   &:hover {
 		border-style: inset;
-		translate: 2px 2px;
 		--bg: blueviolet;
 	}
 
 	&:active {
+		translate: 2px 2px;
 		--bg: orangered;
 	}
 
