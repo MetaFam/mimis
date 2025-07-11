@@ -1,6 +1,5 @@
 <script lang="ts">
   import { settings } from '$lib/settings.svelte'
-  import { type HTMLAttributes } from 'svelte/elements'
 
   let {
     elements = $bindable([''])

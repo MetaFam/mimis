@@ -86,8 +86,6 @@ export const serialize = {
         ORDER BY elementId(r)
       `
 
-      console.warn({ nodes })
-
       const result = await session.run(query, { rootId })
 
       return Array.from(result.records).map((record: any) => {
@@ -130,12 +128,14 @@ export const serialize = {
     const roots = allIds.difference(childIds).values().map(
       (cid: string) => CID.parse(cid)
     )
-    return toIPFS({ nodes, relations, roots })
+    return toIPFS({ nodes: Object.values(nodes), relations, roots })
   }
 }
 
 export async function toIPFS(data: any) {
-  return await getIPFS().block.put(encodeDAGJSON(data))
+  return await getIPFS().block.put(
+    encodeDAGJSON(data), { format: 'dag-json' },
+  )
 }
 
 export async function neo4j2IPFS(

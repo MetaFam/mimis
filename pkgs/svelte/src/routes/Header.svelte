@@ -25,23 +25,23 @@
 		</svg>
 		<ul>
 			<li aria-current={['', '#/'].includes(page.url.hash) ? 'page' : undefined}>
-				<a href="/" id="home">🏡︎</a>
+				<a href="/" id="home">🏡</a>
 				<dialog open>Home</dialog>
 			</li>
 			<li aria-current={page.url.hash.startsWith('#/spider') ? 'page' : undefined}>
-				<a href="/#/spider">🕷</a>
+				<a href="/#/spider">🕷️</a>
 				<dialog open>Spider</dialog>
 			</li>
 			<li aria-current={page.url.hash.startsWith('#/upload') ? 'page' : undefined}>
-				<a href="/#/upload">⇭</a>
+				<a href="/#/upload">⏫</a>
 				<dialog open>Upload</dialog>
 			</li>
 			<li aria-current={page.url.hash.startsWith('#/search') ? 'page' : undefined}>
-				<a href="/#/browse">📖&#xFE0E;</a>
+				<a href="/#/browse">📖️</a>
 				<dialog open>Browse</dialog>
 			</li>
 			<li aria-current={page.url.hash.startsWith('#/list') ? 'page' : undefined}>
-				<a href="/#/list">𝍤</a>
+				<a href="/#/list">📋</a>
 				<dialog open>List</dialog>
 			</li>
 			<li aria-current={page.url.hash.startsWith('#/post') ? 'page' : undefined}>
@@ -52,12 +52,16 @@
 				<a href="/#/flow">🌊</a>
 				<dialog open>Flow</dialog>
 			</li>
+			<li aria-current={page.url.hash.startsWith('#/publish') ? 'page' : undefined}>
+				<a href="/#/publish">☢️</a>
+				<dialog open>Publish</dialog>
+			</li>
 			<li aria-current={page.url.hash === '#/about' ? 'page' : undefined}>
-				<a href="/#/about">🛈</a>
+				<a href="/#/about">ℹ️</a>
 				<dialog open>About</dialog>
 			</li>
 			<li aria-current={page.url.hash.startsWith('#/settings') ? 'page' : undefined}>
-				<a href="/#/settings">⚙</a>
+				<a href="/#/settings">⚙️</a>
 				<dialog open>Settings</dialog>
 			</li>
 		</ul>
