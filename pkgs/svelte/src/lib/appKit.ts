@@ -1,6 +1,7 @@
 import { createAppKit } from '@reown/appkit'
 import { mainnet } from '@reown/appkit/networks'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
+import { getAccount, watchAccount } from '@wagmi/core'
 import { PUBLIC_APPKIT_PROJECT_ID } from '$env/static/public'
 
 export const networks = [mainnet]
@@ -32,3 +33,26 @@ export const appKit = createAppKit({
   },
 })
 
+export function connect() {
+  return new Promise((resolve, reject) => {
+    const { isConnected, address } = (
+      getAccount(wagmiConfig)
+    )
+
+    if(isConnected) {
+      resolve({ address })
+    } else {
+      const unwatch = watchAccount(wagmiConfig, {
+        onChange: ({ isConnected, address }) => {
+          unwatch()
+          if(isConnected) {
+            resolve({ address })
+          } else {
+            reject(new Error('¿Signature Rejected?'))
+          }
+        }
+      })
+      appKit.open()
+    }
+  })
+}

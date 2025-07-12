@@ -2,13 +2,14 @@
   import { CID } from 'multiformats'
   import { neo4j2IPFS, toIPFS } from '$lib/neo4j2DAGJSON'
   import { toHTTP } from '$lib/toHTTP';
-  import { appKit, wagmiConfig } from '$lib/appKit'
+  import { appKit, connect, wagmiConfig } from '$lib/appKit'
   import { signMessage } from '@wagmi/core'
 
   let cid: CID | null = null
 
   const onClick = async (evt: MouseEvent) => {
     const index = await neo4j2IPFS({ status: console.debug })
+    await connect()
     const signature = await signMessage(
       wagmiConfig, { message: index.toString() },
     )
@@ -25,7 +26,7 @@
 <main>
   <button onclick={onClick}>Publish</button>
 
-  <button onclick={() => appKit.open()}>Wallet</button>
+  <appkit-button />
 
   {#if cid}
     <hr/>
