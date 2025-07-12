@@ -101,7 +101,7 @@ export const serialize = {
           source,
           target,
           properties: record.get('properties'),
-        })
+        } as Relationship)
       })
     } finally {
       await session.close()

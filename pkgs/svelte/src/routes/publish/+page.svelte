@@ -1,39 +1,21 @@
 <script lang="ts">
   import { CID } from 'multiformats'
-  import { createAppKit } from '@reown/appkit'
-  import { mainnet, arbitrum } from '@reown/appkit/networks'
-  import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-  import { PUBLIC_APPKIT_PROJECT_ID } from '$env/static/public'
-  import { neo4j2IPFS } from '$lib/neo4j2DAGJSON'
+  import { neo4j2IPFS, toIPFS } from '$lib/neo4j2DAGJSON'
   import { toHTTP } from '$lib/toHTTP';
+  import { getAppKitModal, getWAGMIConfig } from '$lib/appKit'
+  import { signMessage } from '@wagmi/core'
 
+  const appKit = getAppKitModal()
   let cid: CID | null = null
 
   const onClick = async (evt: MouseEvent) => {
-    cid = await neo4j2IPFS({ status: console.debug })
+    const index = await neo4j2IPFS({ status: console.debug })
+    const signature = await signMessage(
+      getWAGMIConfig(), { message: index.toString() },
+    )
+    cid = await toIPFS({ index, signature })
   }
 
-
-	let { children } = $props();
-
-  export const networks = [mainnet]
-  const wagmiAdapter = new WagmiAdapter({
-    projectId: PUBLIC_APPKIT_PROJECT_ID,
-    networks
-  })
-  const metadata = {
-    name: 'Mïmis',
-    description: 'Collaborative filesystem',
-    url: 'https://mimis.dhappy.org',
-    icons: ['https://avatars.githubusercontent.com/u/179229932']
-  }
-  const modal = createAppKit({
-    adapters: [wagmiAdapter],
-    networks: [mainnet],
-    metadata,
-    projectId: PUBLIC_APPKIT_PROJECT_ID,
-    features: { analytics: true },
-  })
 </script>
 
 <svelte:head>
@@ -44,7 +26,7 @@
 <main>
   <button onclick={onClick}>Publish</button>
 
-  <button onclick={() => modal.open()}>Wallet</button>
+  <button onclick={() => appKit.open()}>Wallet</button>
 
   {#if cid}
     <hr/>
