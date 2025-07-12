@@ -2,16 +2,15 @@
   import { CID } from 'multiformats'
   import { neo4j2IPFS, toIPFS } from '$lib/neo4j2DAGJSON'
   import { toHTTP } from '$lib/toHTTP';
-  import { getAppKitModal, getWAGMIConfig } from '$lib/appKit'
+  import { appKit, wagmiConfig } from '$lib/appKit'
   import { signMessage } from '@wagmi/core'
 
-  const appKit = getAppKitModal()
   let cid: CID | null = null
 
   const onClick = async (evt: MouseEvent) => {
     const index = await neo4j2IPFS({ status: console.debug })
     const signature = await signMessage(
-      getWAGMIConfig(), { message: index.toString() },
+      wagmiConfig, { message: index.toString() },
     )
     cid = await toIPFS({ index, signature })
   }
