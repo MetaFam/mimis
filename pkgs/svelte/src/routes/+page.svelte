@@ -17,6 +17,10 @@
     <li><a href="/#/post"><strong>Post</strong></a>: Emulate the features available in <a href="https://Instagram.com" title="Instagram" target="_blank"><img class="inline icon" src="Instagram.svg" alt="Instagram"/></a>.</li>
     <li><a href="/#/settings"><strong>Settings</strong></a>: Will allow configuring the services which drive the application.</li>
   </ul>
+  <hr/>
+  <ul>
+    <li><a href="/#/sign-test"><strong>Reown Signature Test</strong></a></li>
+  </ul>
 </main>
 
 <style>

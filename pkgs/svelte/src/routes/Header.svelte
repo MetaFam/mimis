@@ -1,7 +1,35 @@
 <script lang="ts">
 	import { page } from '$app/state'
 	import logo from '$lib/images/svelte-logo.svg'
+	import { afterNavigate } from '$app/navigation'
   import GitHub from '$lib/images/github.svg?raw'
+
+	type Page = {
+		url: string
+		icon: string
+		title: string
+	}
+
+	const pages = [
+		{ url: '#/', icon: '🏡', title: 'Home' },
+		{ url: '#/spider', icon: '🕷️', title: 'Spider' },
+		{ url: '#/upload', icon: '⏫', title: 'Upload' },
+		{ url: '#/search', icon: '📖️', title: 'Browse' },
+		{ url: '#/list', icon: '📋', title: 'List' },
+		{ url: '#/post', icon: '📫️', title: 'Post' },
+		{ url: '#/flow', icon: '🌊', title: 'Flow' },
+		{ url: '#/publish', icon: '☢️', title: 'Publish' },
+		{ url: '#/about', icon: 'ℹ️', title: 'About' },
+		{ url: '#/settings', icon: '⚙️', title: 'Settings' },
+	]
+	let currentPage: Page | null = $state(null)
+	function localize() {
+		currentPage = (
+			pages.findLast((pg) => page.url.hash.startsWith(pg.url))
+			?? pages[0]
+		)
+	}
+	afterNavigate(localize)
 </script>
 
 <header>
@@ -24,46 +52,12 @@
 			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z" />
 		</svg>
 		<ul>
-			<li aria-current={['', '#/'].includes(page.url.hash) ? 'page' : undefined}>
-				<a href="/" id="home">🏡</a>
-				<dialog open>Home</dialog>
-			</li>
-			<li aria-current={page.url.hash.startsWith('#/spider') ? 'page' : undefined}>
-				<a href="/#/spider">🕷️</a>
-				<dialog open>Spider</dialog>
-			</li>
-			<li aria-current={page.url.hash.startsWith('#/upload') ? 'page' : undefined}>
-				<a href="/#/upload">⏫</a>
-				<dialog open>Upload</dialog>
-			</li>
-			<li aria-current={page.url.hash.startsWith('#/search') ? 'page' : undefined}>
-				<a href="/#/browse">📖️</a>
-				<dialog open>Browse</dialog>
-			</li>
-			<li aria-current={page.url.hash.startsWith('#/list') ? 'page' : undefined}>
-				<a href="/#/list">📋</a>
-				<dialog open>List</dialog>
-			</li>
-			<li aria-current={page.url.hash.startsWith('#/post') ? 'page' : undefined}>
-				<a href="/#/post">📫️</a>
-				<dialog open>Post</dialog>
-			</li>
-			<li aria-current={page.url.hash.startsWith('#/flow') ? 'page' : undefined}>
-				<a href="/#/flow">🌊</a>
-				<dialog open>Flow</dialog>
-			</li>
-			<li aria-current={page.url.hash.startsWith('#/publish') ? 'page' : undefined}>
-				<a href="/#/publish">☢️</a>
-				<dialog open>Publish</dialog>
-			</li>
-			<li aria-current={page.url.hash === '#/about' ? 'page' : undefined}>
-				<a href="/#/about">ℹ️</a>
-				<dialog open>About</dialog>
-			</li>
-			<li aria-current={page.url.hash.startsWith('#/settings') ? 'page' : undefined}>
-				<a href="/#/settings">⚙️</a>
-				<dialog open>Settings</dialog>
-			</li>
+			{#each pages as page}
+				<li aria-current={currentPage?.title === page.title && 'page'}>
+					<a href={page.url}>{page.icon}</a>
+					<dialog open>{page.title}</dialog>
+				</li>
+			{/each}
 		</ul>
 		<svg viewBox="0 0 2 3" aria-hidden="true">
 			<path d="M0,0 L0,3 C0.5,3 0.5,3 1,2 L2,0 Z" />

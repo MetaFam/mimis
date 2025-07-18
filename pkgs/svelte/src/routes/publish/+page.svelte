@@ -1,21 +1,20 @@
 <script lang="ts">
   import { CID } from 'multiformats'
   import { neo4j2IPFS, toIPFS } from '$lib/neo4j2DAGJSON'
-  import { toHTTP } from '$lib/toHTTP';
-  import { appKit, connect, wagmiConfig } from '$lib/appKit'
-  import { signMessage } from '@wagmi/core'
+  import { toHTTP } from '$lib/toHTTP'
+  import type { Provider } from '@reown/appkit'
+  import { getAccount } from '@wagmi/core'
+  import { Web3 } from '$lib/web3'
 
   let cid: CID | null = null
 
   const onClick = async (evt: MouseEvent) => {
     const index = await neo4j2IPFS({ status: console.debug })
-    await connect()
-    const signature = await signMessage(
-      wagmiConfig, { message: index.toString() },
-    )
+    console.debug({ acct: await getAccount(Web3.adapter.wagmiConfig) })
+    const signature = await Web3.signMessage(index.toString(), { log: console.debug })
+    console.debug({ signature })
     cid = await toIPFS({ index, signature })
   }
-
 </script>
 
 <svelte:head>
@@ -30,7 +29,7 @@
 
   {#if cid}
     <hr/>
-    <a class="button" href={toHTTP({ cid: cid.toString() })}>
+    <a class="button" href={toHTTP({ cid: cid.toString() })} target="_blank">
       <span>Browse <code>ipfs://{cid.toString()}</code></span>
     </a>
   {/if}

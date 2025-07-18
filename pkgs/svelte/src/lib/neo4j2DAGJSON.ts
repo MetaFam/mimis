@@ -40,7 +40,7 @@ export const serialize = {
           $rootId IS NULL OR
           (start IS NOT NULL AND ((start)-[*]->(node)))
         RETURN
-          elementId(node) as id,
+          DISTINCT elementId(node) as id,
           labels(node) as labels,
           properties(node) as properties
         ORDER BY elementId(node)
@@ -57,7 +57,16 @@ export const serialize = {
             await toIPFS({
               type: 'node',
               labels: record.get('labels') as Array<string>,
-              properties: record.get('properties') as Array<string>,
+              properties: (
+                Object.fromEntries(Object.entries(
+                  record.get('properties') as Record<string, string | CID>
+                ).map(([prop, val]) => {
+                  if(prop === 'cid' && typeof val === 'string') {
+                    val = CID.parse(val)
+                  }
+                  return [prop, val]
+                }))
+              ),
             })
           ]))
         )
@@ -95,14 +104,16 @@ export const serialize = {
         if(!source) throw new Error(`No node for ${record.get('sourceId')}`)
         if(!target) throw new Error(`No node for ${record.get('targetId')}`)
 
-        return ({
-          type: 'relation',
-          relationship: record.get('type'),
-          source,
-          target,
-          properties: record.get('properties'),
-        } as Relationship)
-      })
+        if(!source.equals(target)) {
+          return ({
+            type: 'relation',
+            relationship: record.get('type'),
+            source,
+            target,
+            properties: record.get('properties'),
+          } as Relationship)
+        }
+      }).filter(Boolean)
     } finally {
       await session.close()
     }
@@ -125,10 +136,13 @@ export const serialize = {
     const allIds = new Set(Object.values(nodes).map(
       (val: CID) => val.toString())
     )
-    const roots = allIds.difference(childIds).values().map(
-      (cid: string) => CID.parse(cid)
-    )
-    return toIPFS({ nodes: Object.values(nodes), relations, roots })
+    const roots = allIds.difference(childIds)
+    console.debug({ allIds: allIds.values().map((id) => CID.parse(id)), roots })
+    return toIPFS({
+      nodes: Array.from(allIds.values()).map((id) => CID.parse(id)),
+      relations,
+      roots: Array.from(roots.values()).map((id) => CID.parse(id)),
+    })
   }
 }
 
