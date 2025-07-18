@@ -1,10 +1,11 @@
 <script lang="ts">
   import JSON5 from 'json5'
-  import { createAppKit, type Provider, type UseAppKitAccountReturn } from '@reown/appkit'
+  import { createAppKit, type Provider } from '@reown/appkit'
   import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
   import { mainnet } from '@wagmi/core/chains'
   import type { AppKitNetwork, ChainNamespace } from '@reown/appkit-common'
   import { PUBLIC_APPKIT_PROJECT_ID } from '$env/static/public'
+  import { signMessage } from '@wagmi/core'
 
   const logs: Array<string | {}> = $state([])
   function log(msg: string | {}) {
@@ -71,7 +72,7 @@
     )
   }
 
-  const providerSign = async (evt: MouseEvent) => {
+  const providerSign = async () => {
     try {
       const message= 'This is a test.'
       const provider: Provider = await getProvider()
@@ -105,15 +106,52 @@
       log(`Error: ${(error as Error).message}`)
     }
   }
+
+  const wagmiSign = async () => {
+    try {
+      const message= 'This is a test.'
+      const provider: Provider = await getProvider()
+      // provider = appKit.getUniversalProvider()
+      // provider = appKit.getWalletProvider() as Provider
+      let { address } = (
+        appKit.getAccount() as { address?: string }
+      )
+      if(!address) {
+        address = await new Promise(
+          (resolve: ((arg: string) => void)) => {
+            appKit.subscribeAccount(({ address }) => {
+              if(address) {
+                resolve(address)
+              }
+            })
+            appKit.open()
+          }
+        )
+      }
+
+      log({ message, config: adapter.wagmiConfig, address })
+      if(!address) throw new Error('Could not find address from provider.')
+
+      log({ connectors: appKit.getConnectors() })
+      const signature = await signMessage(
+        adapter.wagmiConfig,
+        { message },
+      )
+      log({ signature })
+    } catch(error) {
+      log(`Error: ${(error as Error).message}`)
+    }
+  }
 </script>
 
 <svelte:head>
-  <title>Mïmis: Serialize</title>
+  <title>Mïmis: Signing Test</title>
   <link rel="icon" href="radioactive%20barrel.svg"/>
 </svelte:head>
 
 <main>
   <button onclick={providerSign}>Provider <code>sign_message</code></button>
+  <button onclick={wagmiSign}>WAGMI <code>signMessage</code></button>
 
   <appkit-button />
 

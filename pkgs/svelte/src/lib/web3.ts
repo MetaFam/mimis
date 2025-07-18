@@ -4,9 +4,10 @@ import type { Provider } from '@reown/appkit-controllers'
 import { mainnet } from '@reown/appkit/networks'
 import type { AppKitNetwork, ChainNamespace } from '@reown/appkit-common'
 import { dev } from '$app/environment'
-import { PUBLIC_APPKIT_PROJECT_ID } from '$env/static/public'
 
-type Logger = (msg: string | {}) => void
+export type Logger = (msg: string | {}) => void
+
+import { PUBLIC_APPKIT_PROJECT_ID } from '$env/static/public'
 
 class WebThreeUtils {
   networks = [mainnet] as [AppKitNetwork]
@@ -41,14 +42,18 @@ class WebThreeUtils {
     return this.#appKit
   }
 
-  async getProvider(network: ChainNamespace = 'eip155') {
+  async getProvider(
+    network: ChainNamespace = 'eip155',
+    { log }: { log?: Logger } = {},
+  ) {
     await this.appKit.ready()
-    return new Promise(
+    const provider = new Promise(
       (resolve: ((prov: Provider) => void), reject) => {
         const provider: Provider | undefined = (
           this.appKit.getProvider(network)
         )
         if(provider) {
+          log?.({ 'AppKit Provider': provider })
           return resolve(provider)
         }
         this.appKit.subscribeProviders(
@@ -64,14 +69,16 @@ class WebThreeUtils {
         this.appKit.open()
       }
     )
+    log?.({ 'Promised Provider': provider })
+    return provider
   }
 
   async signMessage(
     message: string, { log }: { log?: Logger } = {}
   ) {
-    const provider: Provider = await this.getProvider()
-    // provider = appKit.getUniversalProvider()
-    // provider = appKit.getWalletProvider() as Provider
+    const provider: Provider = (
+      await this.getProvider(undefined, { log })
+    )
     let { address } = (
       this.appKit.getAccount() as { address?: string }
     )
@@ -89,7 +96,9 @@ class WebThreeUtils {
     }
 
     log?.({ message, provider, address })
-    if(!address) throw new Error('Could not find address from provider.')
+    if(!address) throw new Error(
+      'Could not find address from provider.'
+    )
 
     return await provider.request({
       method: 'personal_sign',

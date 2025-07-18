@@ -3,7 +3,7 @@ import { encode as encodeDAGJSON } from '@ipld/dag-json'
 import { getIPFS, getNeo4j } from './drivers.ts'
 
 type Options = {
-  status?: ((msg: string) => void) | null
+  log?: ((msg: string | {}) => void) | null
   batchSize?: number
   rootId?: string | null
 }
@@ -28,7 +28,7 @@ export type Nodes = Record<string, Node>
 export type CIDs = Record<string, CID>
 
 export const serialize = {
-  async nodes({ batchSize, status, rootId }: Options) {
+  async nodes({ batchSize, log, rootId }: Options) {
     const neo4j = getNeo4j()
     const session = neo4j.session()
 
@@ -48,7 +48,7 @@ export const serialize = {
 
       const result = await session.run(query, { rootId })
 
-      status?.(`Found ${result.records.length} node${result.records.length === 1 ? '' : 's'}`)
+      log?.(`Found ${result.records.length} node${result.records.length === 1 ? '' : 's'}`)
 
       return Object.fromEntries(
         await Promise.all(
@@ -76,7 +76,7 @@ export const serialize = {
     }
   },
 
-  async relationships(nodes: Results, { batchSize, status, rootId }: Options) {
+  async relationships(nodes: Results, { batchSize, log, rootId }: Options) {
     const neo4j = getNeo4j()
     const session = neo4j.session()
 
@@ -113,7 +113,7 @@ export const serialize = {
             properties: record.get('properties'),
           } as Relationship)
         }
-      }).filter(Boolean)
+      }).filter(Boolean) as Array<Relationship>
     } finally {
       await session.close()
     }
@@ -122,7 +122,7 @@ export const serialize = {
   async index(
     nodes: Results,
     relations: Array<Relationship>,
-    { status, rootId }: Options
+    { log, rootId }: Options
   ) {
     const childIds = new Set(
       relations.map((rel: Relationship) => (
@@ -137,11 +137,10 @@ export const serialize = {
       (val: CID) => val.toString())
     )
     const roots = allIds.difference(childIds)
-    console.debug({ allIds: allIds.values().map((id) => CID.parse(id)), roots })
     return toIPFS({
+      roots: Array.from(roots.values()).map((id) => CID.parse(id)),
       nodes: Array.from(allIds.values()).map((id) => CID.parse(id)),
       relations,
-      roots: Array.from(roots.values()).map((id) => CID.parse(id)),
     })
   }
 }
@@ -153,26 +152,24 @@ export async function toIPFS(data: any) {
 }
 
 export async function neo4j2IPFS(
-  { status = null, batchSize = 1000, rootId = null }: Options
+  { log = null, batchSize = 1000, rootId = null }: Options
 ) {
-  const options = { status, batchSize, rootId }
+  const options = { log, batchSize, rootId }
   try {
-    status?.('Exporting nodes…')
+    log?.('Exporting nodes…')
     const nodes = await serialize.nodes(options)
+    log?.({ nodes })
 
-    console.debug({ nodes })
-
-    status?.('Adding relationships…')
+    log?.('Adding relationships…')
     const rels = await serialize.relationships(nodes, options)
 
+    log?.('Writing to IPFS…')
+    const indexCID = await serialize.index(nodes, rels, options)
 
-    status?.('Writing to IPFS…')
-    const rootCID = await serialize.index(nodes, rels, options)
-
-    status?.(`Graph serialized to IPFS.\n  Root CID: \ ${rootCID}\ `)
-    return rootCID
+    log?.(`Graph serialized to IPFS.\n  Index CID: "${indexCID}"`)
+    return indexCID
   } catch(error) {
-    console.error('Error serializing graph:', error)
+    console.error({ 'Graph Serializing Error': error })
     throw error
   }
 }
