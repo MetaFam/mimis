@@ -1,13 +1,13 @@
-import neo4jFactory from 'neo4j-driver'
+import { driver as createNeo4j, auth, Driver } from 'neo4j-driver'
 import { create as ipfsFactory } from 'kubo-rpc-client'
 import { settings } from '$lib/settings.svelte';
 
-let neo4j: Neo4j | null = null
+let neo4j: Driver | null = null
 export const getNeo4j = () => {
   if(!neo4j) {
-    neo4j = neo4jFactory.driver(
+    neo4j = createNeo4j(
       settings.neo4jURL,
-      neo4jFactory.auth.basic(
+      auth.basic(
         settings.neo4jUser,
         settings.neo4jPass,
       )

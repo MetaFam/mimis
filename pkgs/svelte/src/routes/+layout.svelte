@@ -5,14 +5,13 @@
 	let { children } = $props();
 </script>
 
-<div class="app">
+<section class="app">
 	<Header />
 
 	{@render children()}
 
-	<footer>
-	</footer>
-</div>
+	<footer></footer>
+</section>
 
 <style>
 	.app {

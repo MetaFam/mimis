@@ -1,21 +1,38 @@
 <script lang="ts">
   import { CID } from 'multiformats'
+  import { getAccount } from '@wagmi/core'
+  import Toastify from 'toastify-js'
   import { neo4j2IPFS, toIPFS } from '$lib/neo4j2DAGJSON'
-  import { toHTTP } from '$lib/toHTTP';
-  import { appKit, connect, wagmiConfig } from '$lib/appKit'
-  import { signMessage } from '@wagmi/core'
+  import { toHTTP } from '$lib/toHTTP'
+  import { Web3 } from '$lib/web3'
+  import 'toastify-js/src/toastify.css'
 
   let cid: CID | null = null
 
   const onClick = async (evt: MouseEvent) => {
-    const index = await neo4j2IPFS({ status: console.debug })
-    await connect()
-    const signature = await signMessage(
-      wagmiConfig, { message: index.toString() },
-    )
-    cid = await toIPFS({ index, signature })
+    try {
+      const index = await neo4j2IPFS({ status: console.debug })
+      console.debug({ acct: await getAccount(Web3.adapter.wagmiConfig) })
+      const signature = await Web3.signMessage(
+        index.toString(), { log: console.debug }
+      )
+      console.debug({ signature })
+      cid = await toIPFS({ index, signature })
+    } catch(error) {
+      console.debug({ 'Signing Error': error })
+      Toastify({
+        text: (error as Error).message,
+        duration: 16_000,
+        close: true,
+        gravity: 'bottom', // `top` or `bottom`
+        position: 'center', // `left`, `center` or `right`
+        stopOnFocus: true, // Prevents dismissing of toast on hover
+        style: {
+          background: "linear-gradient(to right, #b09b00, #96003d)",
+        },
+      }).showToast()
+    }
   }
-
 </script>
 
 <svelte:head>
@@ -30,7 +47,7 @@
 
   {#if cid}
     <hr/>
-    <a class="button" href={toHTTP({ cid: cid.toString() })}>
+    <a class="button" href={toHTTP({ cid: cid.toString() })} target="_blank">
       <span>Browse <code>ipfs://{cid.toString()}</code></span>
     </a>
   {/if}
