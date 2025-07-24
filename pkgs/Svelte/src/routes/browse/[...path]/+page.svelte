@@ -13,14 +13,13 @@
     try {
       const limit = page.url.searchParams.get('limit')
       const offset = page.url.searchParams.get('offset')
-      const result = await searchTree({
+      return searchTree({
         path: chips,
         limit: (
           limit ? Number(limit) : settings.limit
         ),
         offset: Number(offset),
       })
-      return result
     } catch(error) {
       Toastify({
         text: (error as Error).message,
@@ -142,6 +141,7 @@
                   </p>
                 </object>
               {:else}
+                {@const { path: chip } = res.get('next').properties}
                 <a
                   class="button"
                   href={
@@ -155,7 +155,7 @@
                   }
                   onclick={() => { addChip(chip) }}
                 >
-                  {res.get('path')?.join('/')}
+                  {chip}
                 </a>
               {/if}
             </li>

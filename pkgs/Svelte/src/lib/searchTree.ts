@@ -16,16 +16,14 @@ export const searchTree = async (
     offset = parseInt(Number(offset).toFixed(0))
     const query = (path.length === 0 ? (
       `
-        MATCH (start:Root)-[children:CONTAINS|CONNECTS]->(child)
-        RETURN [] as path, children.path as container, child
+        MATCH (start:Root)-[next:CONTAINS|CONNECTS]->(child)
+        RETURN [] as path, next, child
       `
     ) : (
       `
         WITH $elems as pathElems
-        MATCH path = (start:Root)-[
-          :CONTAINS|CONNECTS|REPRESENTED_BY|EMBODIED_AS*
-        ]->(child)
-        WITH pathElems, path, child,
+        MATCH path = (start:Root)-[:CONTAINS*]->(end)
+        WITH pathElems, path, end,
           [
             rel in relationships(path)
             WHERE NOT isEmpty(rel.path)
@@ -39,11 +37,21 @@ export const searchTree = async (
             OR elements[i] = pathElems[i]
           )
         )
+        CALL {
+          WITH end
+            MATCH (end)-[next:CONTAINS]->(child)
+            RETURN next, child
+        UNION
+          WITH end
+            MATCH (end)-[:REPRESENTED_BY]->(intermediate)-[next:EMBODIED_AS]->(child)
+            RETURN next, child
+        }
         // ORDER BY rel.order
         LIMIT ${offset + limit}
         SKIP ${offset}
         RETURN DISTINCT
           elements as path,
+          next,
           child
       `
     ))
