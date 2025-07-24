@@ -37,11 +37,13 @@ export const wunder2CAR = async (
     writable: unixfsWritable,
     settings: {
       chunker: await Rabin.create(),
-    //   fileLayout: Trickle.configure({ maxDirectLeaves: 100 }),
-    //   fileChunkEncoder: UnixFSLeaf,
-    //   smallFileEncoder: UnixFSLeaf,
-    //   fileEncoder: UnixFS,
-    //   hasher: sha256,
+      // fileLayout: Trickle.configure({ maxDirectLeaves: 100 }),
+      // fileChunkEncoder: UnixFSLeaf,
+      // smallFileEncoder: UnixFSLeaf,
+      fileChunkEncoder: RawLeaf,
+      smallFileEncoder: RawLeaf,
+      // fileEncoder: UnixFS,
+      // hasher: sha256,
     } as UnixFS.EncoderSettings,
   }) as Writer
 

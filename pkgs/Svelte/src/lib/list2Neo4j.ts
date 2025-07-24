@@ -14,7 +14,7 @@ export async function list2Neo4j(list: Array<Entry>, path: Array<string>) {
 
     const stepQuery = `
       MATCH (elem) WHERE elementId(elem) = $currentId
-      MERGE (elem)-[:CONTAINS {path: $element}]->(next:Collection)
+      MERGE (elem)-[:CONTAINS {path: $element}]->(next:Spot)
       ON CREATE SET elem.mimis_id = $uuid
       RETURN elementId(next) as id
     `
@@ -48,13 +48,15 @@ export async function list2Neo4j(list: Array<Entry>, path: Array<string>) {
     const lineQuery = `
       MATCH (list) WHERE elementId(list) = $currentId
       MERGE (file:IPFS:File {cid: $cid})
-      MERGE (item:Nöopoint)-[:EMBODIED_AS]->(file)
+      MERGE (point:Nöopoint)-[:EMBODIED_AS]->(file)
+      MERGE (spot:Spot)-[:REPRESENTED_BY]->(point)
+      MERGE (item:Spot)-[:CONTAINS {path: $title}]->(spot)
       ON CREATE SET file.createdAt = timestamp()
       ON CREATE SET file.mimis_id = $uuid
       SET file.type = (
         CASE WHEN file.type IS NULL THEN $type ELSE file.type END
       )
-      CREATE (list)-[:ENTRY {path: $title, order: $order}]->(item)
+      CREATE (list)-[:ENTRY {order: $order}]->(item)
       RETURN file
     `
     for(const i in list) {
@@ -65,6 +67,6 @@ export async function list2Neo4j(list: Array<Entry>, path: Array<string>) {
     }
   } finally {
     await session.close()
-    await neo4j.close()
+    // await neo4j.close()
   }
 }

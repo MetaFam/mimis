@@ -126,11 +126,10 @@
       {:else}
         <ul id="result">
           {#each result as res}
-            {@const chip = res.get('container')}
             <li>
               {#if res.get('child')?.labels.includes('File')}
                 {@const { cid } = res.get('child')?.properties}
-                <h2>/{res.get('path')?.join('/')}/{chip}</h2>
+                <h2>/{res.get('path')?.join('/')}</h2>
                 <object
                   data={toHTTP({ cid })}
                   title={`ipfs://${cid}`}
@@ -156,7 +155,7 @@
                   }
                   onclick={() => { addChip(chip) }}
                 >
-                  {chip}
+                  {res.get('path')?.join('/')}
                 </a>
               {/if}
             </li>

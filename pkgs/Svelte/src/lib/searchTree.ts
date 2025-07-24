@@ -22,9 +22,10 @@ export const searchTree = async (
     ) : (
       `
         WITH $elems as pathElems
-        MATCH path = (start:Root)-[:CONTAINS|CONNECTS|EMBODIED_AS*]->(end)
-        MATCH (end)-[children:CONTAINS|CONNECTS|ENTRY]->(child)
-        WITH pathElems, path, children, child,
+        MATCH path = (start:Root)-[
+          :CONTAINS|CONNECTS|REPRESENTED_BY|EMBODIED_AS*
+        ]->(child)
+        WITH pathElems, path, child,
           [
             rel in relationships(path)
             WHERE NOT isEmpty(rel.path)
@@ -38,12 +39,11 @@ export const searchTree = async (
             OR elements[i] = pathElems[i]
           )
         )
-        ORDER BY children.order
+        // ORDER BY rel.order
         LIMIT ${offset + limit}
         SKIP ${offset}
         RETURN DISTINCT
           elements as path,
-          children.path as container,
           child
       `
     ))
@@ -57,6 +57,6 @@ export const searchTree = async (
     await session.close()
     return result.records
   } finally {
-    driver.close()
+    // driver.close()
   }
 }
