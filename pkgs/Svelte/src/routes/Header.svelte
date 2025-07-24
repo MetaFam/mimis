@@ -14,7 +14,7 @@
 		{ url: '#/', icon: '🏡', title: 'Home' },
 		{ url: '#/spider', icon: '🕷️', title: 'Spider' },
 		{ url: '#/upload', icon: '⏫', title: 'Upload' },
-		{ url: '#/search', icon: '📖️', title: 'Browse' },
+		{ url: '#/browse', icon: '📖️', title: 'Browse' },
 		{ url: '#/list', icon: '📋', title: 'List' },
 		{ url: '#/post', icon: '📫️', title: 'Post' },
 		{ url: '#/flow', icon: '🌊', title: 'Flow' },

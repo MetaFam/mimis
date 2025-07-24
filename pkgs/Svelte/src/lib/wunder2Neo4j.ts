@@ -5,18 +5,18 @@ import { v7 as uuid } from 'uuid'
 export async function wunder2Neo4j(
   root: WunderbaumNode,
   path: Array<string> = [],
-  onAdd?: (msg: string) => void,
+  onAdd?: (msg: string | {}) => void,
 ) {
   const driver = getNeo4j()
 
   try {
-    const pathStr = `/${path.join('/')}${path.length > 0 ? '/' : ''}`
     const rootId = await ingest(root)
     await mount({ rootId })
+    const pathStr = `/${path.join('/')}${path.length > 0 ? '/' : ''}`
     onAdd?.(`Mounted ${rootId} at ${pathStr}.`)
     return rootId
   } finally {
-    await driver.close()
+    // await driver.close()
   }
 
   async function createIPFSDir() {
@@ -26,8 +26,9 @@ export async function wunder2Neo4j(
         CREATE (dir:Spot { mimis_id: $uuid })
         RETURN elementId(dir) AS id
       `
-      const { records } = await session.run(query, { uuid: uuid() })
-      onAdd?.('Created Directory')
+      const guid = uuid()
+      const { records } = await session.run(query, { uuid: guid })
+      onAdd?.({ 'Created Spot': uuid })
       return records[0].get('id')
     } finally {
       await session.close()
@@ -77,7 +78,7 @@ export async function wunder2Neo4j(
       const { records } = await session.run(
         query, { cid, type, size }
       )
-      onAdd?.(`Added /${cid} (${type})`)
+      onAdd?.({ Added: `/${cid} (${type})` })
       return records[0].get('id')
     } finally {
       await session.close()
@@ -87,42 +88,54 @@ export async function wunder2Neo4j(
   async function mount({ rootId }: { rootId: string }) {
     const session = driver.session()
 
-    const rootQ = `
-      MERGE (r:Root)
-      SET r:Mount:Directory
-      RETURN elementId(r) AS id
-    `
-    const { records } = await session.run(rootQ)
-    let current = records[0].get('id')
-
-    onAdd?.(`Added Root: ${current}`)
-
-    while(path.length > 1) {
-      const pathQ = `
-        MATCH (dir) WHERE elementId(dir) = $current
-        MERGE (dir)-[:CONTAINS {path: $elem}]->(item)
-        SET item:Spot
-        RETURN elementId(item) as id
+    try {
+      const atRoot = path.length === 0
+      if(atRoot) {
+        onAdd?.({ 'Rooting To': rootId })
+      }
+      const rootQ = `
+        ${atRoot ? 'MATCH (r:Spot)' : 'MERGE (r:Root)'}
+        ${!atRoot ? '' : 'WHERE elementId(r) = $rootId'}
+        SET r:Root:Mount:Spot
+        RETURN elementId(r) AS id
       `
-      const elem = path.shift()
-      const { records } = await session.run(
-        pathQ, { current, elem }
-      )
-      current = records[0].get('id')
+      console.debug({ rootQ })
+      const { records } = await session.run(rootQ, { rootId })
+      let current = records[0].get('id')
+
+      onAdd?.(`Added Root: ${current}`)
+
+      while(path.length > 1) {
+        const pathQ = `
+          MATCH (dir) WHERE elementId(dir) = $current
+          MERGE (dir)-[:CONTAINS {path: $elem}]->(item)
+          SET item:Spot
+          RETURN elementId(item) as id
+        `
+        const elem = path.shift()
+        const { records } = await session.run(
+          pathQ, { current, elem }
+        )
+        current = records[0].get('id')
+      }
+
+      if(!root.children) {
+        throw new Error('Root has no children.')
+      }
+
+      if(!atRoot) {
+        const mountQ = `
+          MATCH (mount) WHERE elementId(mount) = $current
+          MATCH (base) WHERE elementId(base) = $rootId
+          MERGE (mount)-[:CONNECTS { path: $name }]->(base)
+        `
+        await session.run(mountQ, {
+          current, rootId, name: path[0],
+        })
+      }
+    } finally {
+      await session.close()
     }
-
-    if(!root.children) {
-      throw new Error('Root has no children.')
-    }
-
-    const mountQ = `
-      MATCH (mount) WHERE elementId(mount) = $current
-      MATCH (base) WHERE elementId(base) = $rootId
-      MERGE (mount)-[:CONNECTS { path: $name }]->(base)
-    `
-    await session.run(mountQ, { current, rootId, name: path[0] })
-
-    await session.close()
   }
 
   type Node = {

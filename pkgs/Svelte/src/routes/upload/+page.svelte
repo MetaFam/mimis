@@ -43,7 +43,7 @@
       car.generating = true
       const mount = path.split('/').filter(Boolean)
       if(!tree) throw new Error('No tree to mount.')
-      const onAdd = (msg: string) => {
+      const onAdd = (msg: string | {}) => {
         console.debug(msg)
         count++
       }
@@ -52,10 +52,8 @@
         tree.root, mount, onAdd,
       )
       Toastify({
-        text: `Loaded: ipfs://${cid.slice(0, 5)}…${cid.slice(-5)}`,
+        text: `Loaded: id://${cid.slice(0, 5)}…${cid.slice(-5)}`,
         duration: 8_000,
-        destination: `https://w3s.link/ipfs/${cid}`,
-        newWindow: true,
         close: true,
         gravity: 'bottom', // `top` or `bottom`
         position: 'center', // `left`, `center` or `right`

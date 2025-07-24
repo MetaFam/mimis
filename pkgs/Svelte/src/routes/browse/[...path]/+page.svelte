@@ -13,14 +13,13 @@
     try {
       const limit = page.url.searchParams.get('limit')
       const offset = page.url.searchParams.get('offset')
-      const result = await searchTree({
+      return searchTree({
         path: chips,
         limit: (
           limit ? Number(limit) : settings.limit
         ),
         offset: Number(offset),
       })
-      return result
     } catch(error) {
       Toastify({
         text: (error as Error).message,
@@ -126,11 +125,10 @@
       {:else}
         <ul id="result">
           {#each result as res}
-            {@const chip = res.get('container')}
             <li>
               {#if res.get('child')?.labels.includes('File')}
                 {@const { cid } = res.get('child')?.properties}
-                <h2>/{res.get('path')?.join('/')}/{chip}</h2>
+                <h2>/{res.get('path')?.join('/')}</h2>
                 <object
                   data={toHTTP({ cid })}
                   title={`ipfs://${cid}`}
@@ -143,6 +141,7 @@
                   </p>
                 </object>
               {:else}
+                {@const { path: chip } = res.get('next').properties}
                 <a
                   class="button"
                   href={
