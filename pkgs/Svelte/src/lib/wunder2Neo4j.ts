@@ -1,6 +1,7 @@
 import type { WunderbaumNode } from 'wb_node'
 import { getNeo4j } from './drivers.ts'
 import { v7 as uuid } from 'uuid'
+import { contentType } from '@std/media-types'
 
 export async function wunder2Neo4j(
   root: WunderbaumNode,
@@ -11,7 +12,7 @@ export async function wunder2Neo4j(
 
   try {
     const rootId = await ingest(root)
-    await mount({ rootId })
+   await mount({ rootId })
     const pathStr = `/${path.join('/')}${path.length > 0 ? '/' : ''}`
     onAdd?.(`Mounted ${rootId} at ${pathStr}.`)
     return rootId
@@ -44,15 +45,20 @@ export async function wunder2Neo4j(
       const query = `
         MATCH (entry) WHERE elementId(entry) = $itemId
         ${dirId == null ? (
-          `CREATE (dir${type} { mimis_id: $uuid })`
+          `CREATE (dir${type} { mimis_id: $dirUUID })`
         ) : (
           'MATCH (dir) WHERE elementId(dir) = $dirId'
-        )}
-        MERGE (dir)-[c${rship} ${name != null ? '{ path: $name }' : ''}]->(entry)
+        )}  
+        MERGE (dir)-[c${rship} ${
+          name != null ? '{ path: $name }' : ''
+        }]->(entry)
+        'ON CREATE SET c.mimis_id = $relUUID
         RETURN elementId(dir) AS id
       `
       const { records } = await session.run(
-        query, { itemId, name, dirId, uuid: uuid() }
+        query, {
+          itemId, name, dirId, dirUUID: uuid(), relUUID: uuid(),
+        }
       )
       const retId = records[0].get('id')
       onAdd?.(`Added ${name} → ${itemId} (${dirId} → ${retId})`)
@@ -163,14 +169,7 @@ export async function wunder2Neo4j(
         } else {
           const ext = child.title.split('.').at(-1) as string
           const name = child.title.slice(0, -(ext.length + 1))
-          const type = (() => {
-            switch(ext) {
-              case 'svg': return 'image/svg+xml'
-              case 'png': return 'image/png'
-              case 'jpg': case 'jpeg': return 'image/jpeg'
-              default: return null
-            }
-          })()
+          const type = contentType(`.${ext}`)
           let itemId = await addFile({
             cid: child.data.cid,
             type,

@@ -19,6 +19,7 @@
 		{ url: '#/post', icon: '📫️', title: 'Post' },
 		{ url: '#/flow', icon: '🌊', title: 'Flow' },
 		{ url: '#/publish', icon: '☢️', title: 'Publish' },
+		{ url: '#/accel', icon: '📈', title: 'Accelerometer' },
 		{ url: '#/about', icon: 'ℹ️', title: 'About' },
 		{ url: '#/settings', icon: '⚙️', title: 'Settings' },
 	]
@@ -38,7 +39,7 @@
 			<img src={logo} alt="SvelteKit" />
 		</a>
 		<a
-			href="https://github.com/dysbulic/mimis/"
+			href="https://github.com/MetaFam/mimis/"
 			style:color="cornflower"
 			style:--hover-stroke-1="color-mix(in oklab, yellow, transparent)"
 			style:--hover-stroke-2="color-mix(in oklab, white 80%, transparent 25%)"

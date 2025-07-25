@@ -72,6 +72,7 @@
 		"toastify-js": "^1.12.0",
 		"typescript": "^5.8.3",
 		"uuid": "^11.1.0",
+		"vite-plugin-mkcert": "^1.17.8",
 		"wunderbaum": "^0.13.0"
 	}
 }
