@@ -3,12 +3,12 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Commands
-- Dev server: `pnpm run dev`
-- Build: `pnpm run build`
-- Preview: `pnpm run preview`
-- Type check: `pnpm run check` or `pnpm run check:watch`
-- Lint: `pnpm run lint`
-- Deploy: `pnpm run gh:publish`
+- Dev server: `deno task dev`
+- Build: `deno task build`
+- Preview: `deno task preview`
+- Type check: `deno task check` or `deno task check:watch`
+- Lint: `deno task lint`
+- Deploy: `deno task gh:publish`
 
 ## Code Style Guidelines
 - **TypeScript**: Use strict mode with explicit typing

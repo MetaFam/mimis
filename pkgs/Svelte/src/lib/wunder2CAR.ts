@@ -5,9 +5,9 @@ import * as Trickle from '@ipld/unixfs/file/layout/trickle'
 import { CAREncoderStream } from 'ipfs-car'
 import * as RawLeaf from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
-import type { Node } from '../types'
 import type { CID } from 'multiformats'
 import type { WunderbaumNode } from 'wb_node'
+import type { Node } from '../types'
 
 // export const UnixFSLeaf = {
 //   code: UnixFS.code,

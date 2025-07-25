@@ -1,7 +1,7 @@
 import type { WunderbaumNode } from 'wb_node'
-import { getNeo4j } from './drivers.ts'
 import { v7 as uuid } from 'uuid'
-import { contentType } from '@std/media-types'
+import mime from 'mime'
+import { getNeo4j } from './drivers.ts'
 
 export async function wunder2Neo4j(
   root: WunderbaumNode,
@@ -48,7 +48,7 @@ export async function wunder2Neo4j(
           `CREATE (dir${type} { mimis_id: $dirUUID })`
         ) : (
           'MATCH (dir) WHERE elementId(dir) = $dirId'
-        )}  
+        )}
         MERGE (dir)-[c${rship} ${
           name != null ? '{ path: $name }' : ''
         }]->(entry)
@@ -169,7 +169,8 @@ export async function wunder2Neo4j(
         } else {
           const ext = child.title.split('.').at(-1) as string
           const name = child.title.slice(0, -(ext.length + 1))
-          const type = contentType(`.${ext}`)
+          const typeFile = (name === '' || name === ext)
+          const type = mime.getType(ext)
           let itemId = await addFile({
             cid: child.data.cid,
             type,
@@ -177,10 +178,10 @@ export async function wunder2Neo4j(
           })
           itemId = await addDirEntry({
             itemId,
-            dirId: (name === ext ? baseId : undefined),
+            dirId: (typeFile ? baseId : undefined),
             rship: ':REPRESENTED_BY',
           })
-          if(name !== ext) {
+          if(!typeFile) {
             await addDirEntry({
               itemId,
               name,

@@ -13,11 +13,6 @@
 		"car": "deno run npm:ipfs-car",
 		"gh:publish": "gh-pages -d build/ --nojekyll"
 	},
-	"workspaces": {
-		"nohoist": [
-			"**/tailwindcss"
-		]
-	},
 	"devDependencies": {
 		"@fontsource/fira-mono": "^5.0.0",
 		"@neoconfetti/svelte": "^2.0.0",
@@ -41,7 +36,8 @@
 		"svelte-check": "^4.0.6",
 		"tailwindcss": "^3.4.14",
 		"typescript-eslint": "^8.0.0",
-		"vite": "^5.0.3"
+		"vite": "^5.0.3",
+		"vite-plugin-mkcert": "^1.17.8"
 	},
 	"dependencies": {
 		"@atlaskit/pragmatic-drag-and-drop": "^1.5.0",
@@ -63,6 +59,7 @@
 		"ipfs-car": "^3.0.0",
 		"json5": "^2.2.3",
 		"kubo-rpc-client": "^5.0.2",
+		"mime": "^4.0.7",
 		"multiformats": "^13.3.7",
 		"neo4j-driver": "^5.26.0",
 		"sortablejs": "^1.15.6",
@@ -72,7 +69,6 @@
 		"toastify-js": "^1.12.0",
 		"typescript": "^5.8.3",
 		"uuid": "^11.1.0",
-		"vite-plugin-mkcert": "^1.17.8",
 		"wunderbaum": "^0.13.0"
 	}
 }

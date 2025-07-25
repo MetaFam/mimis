@@ -1,7 +1,6 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@std/media-types@^1.1.0": "1.1.0",
     "npm:@atlaskit/pragmatic-drag-and-drop-flourish@^1.2.2": "1.2.2_react@18.3.1",
     "npm:@atlaskit/pragmatic-drag-and-drop-hitbox@^1.0.3": "1.1.0",
     "npm:@atlaskit/pragmatic-drag-and-drop@^1.5.0": "1.7.4",
@@ -40,6 +39,7 @@
     "npm:ipfs-car@3": "3.0.0",
     "npm:json5@^2.2.3": "2.2.3",
     "npm:kubo-rpc-client@^5.0.2": "5.2.0",
+    "npm:mime@^4.0.7": "4.0.7",
     "npm:multiformats@^13.3.7": "13.3.7",
     "npm:neo4j-driver@^5.26.0": "5.28.1",
     "npm:sortablejs@^1.15.6": "1.15.6",
@@ -55,11 +55,6 @@
     "npm:vite-plugin-mkcert@^1.17.8": "1.17.8_vite@5.4.19",
     "npm:vite@^5.0.3": "5.4.19",
     "npm:wunderbaum@0.13": "0.13.0"
-  },
-  "jsr": {
-    "@std/media-types@1.1.0": {
-      "integrity": "c9d093f0c05c3512932b330e3cc1fe1d627b301db33a4c2c2185c02471d6eaa4"
-    }
   },
   "npm": {
     "@adraffy/ens-normalize@1.11.0": {
@@ -4238,6 +4233,10 @@
         "mime-db"
       ]
     },
+    "mime@4.0.7": {
+      "integrity": "sha512-2OfDPL+e03E0LrXaGYOtTFIYhiuzep94NSsuhrNULq+stylcJedcHdzHtz0atMUuGwJfFYs0YL5xeC/Ca2x0eQ==",
+      "bin": true
+    },
     "mimic-fn@4.0.0": {
       "integrity": "sha512-vqiC06CuhBTUdZH+RYl8sFrL096vA45Ok5ISO6sE/Mr1jRbGH4Csnhi8f3wKVl7x8mO4Au7Ir9D3Oyv1VYMFJw=="
     },
@@ -5828,9 +5827,6 @@
     }
   },
   "workspace": {
-    "dependencies": [
-      "jsr:@std/media-types@^1.1.0"
-    ],
     "packageJson": {
       "dependencies": [
         "npm:@atlaskit/pragmatic-drag-and-drop-flourish@^1.2.2",
@@ -5871,6 +5867,7 @@
         "npm:ipfs-car@3",
         "npm:json5@^2.2.3",
         "npm:kubo-rpc-client@^5.0.2",
+        "npm:mime@^4.0.7",
         "npm:multiformats@^13.3.7",
         "npm:neo4j-driver@^5.26.0",
         "npm:sortablejs@^1.15.6",
