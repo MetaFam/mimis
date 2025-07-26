@@ -15,6 +15,13 @@ relationship {
   text-color-internal: #FFFFFF;
   caption: "<type>";
 }
+node.Root {
+  color: #D9C8AE;
+  border-color: #c0a378;
+  text-color-internal: #2A2C34;
+  defaultCaption: "<id>";
+  caption: "{mimis_id}";
+}
 node.Spot {
   color: #569480;
   border-color: #447666;
@@ -46,13 +53,6 @@ node.Mount {
   border-color: #eb2728;
   text-color-internal: #FFFFFF;
   defaultCaption: "<id>";
-}
-node.Root {
-  color: #D9C8AE;
-  border-color: #c0a378;
-  text-color-internal: #2A2C34;
-  defaultCaption: "<id>";
-  caption: "{mimis_id}";
 }
 node.Collection {
   color: #8DCC93;
