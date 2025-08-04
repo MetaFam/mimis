@@ -52,7 +52,7 @@ export async function wunder2Neo4j(
         MERGE (dir)-[c${rship} ${
           name != null ? '{ path: $name }' : ''
         }]->(entry)
-        'ON CREATE SET c.mimis_id = $relUUID
+        ON CREATE SET c.mimis_id = $relUUID
         RETURN elementId(dir) AS id
       `
       const { records } = await session.run(
