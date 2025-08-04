@@ -5,8 +5,12 @@
 	let { children } = $props();
 </script>
 
+<svelte:head>
+	<link rel="icon" href="well.svg"/>
+</svelte:head>
+
 <section class="app">
-	<Header />
+	<Header/>
 
 	{@render children()}
 

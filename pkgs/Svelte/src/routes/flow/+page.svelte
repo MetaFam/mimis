@@ -1,3 +1,7 @@
+<svelte:head>
+    <link rel="icon" href="river.svg"/>
+</svelte:head>
+
 <header>
   <h1>ℱ𝓁ℴ𝓌</h1>
   <h1>𝓕𝓵𝓸𝔀</h1>

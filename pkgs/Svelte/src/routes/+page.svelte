@@ -3,7 +3,7 @@
 </svelte:head>
 
 <header>
-  <h1>Mïmis: A Collaborative Filesystem</h1>
+  <h1>Mïmis: A Collaborative File System</h1>
 </header>
 
 <main>
@@ -20,6 +20,7 @@
   <hr/>
   <ul>
     <li><a href="/#/sign-test"><strong>Reown Signature Test</strong></a></li>
+    <li><a href="/#/accel"><strong>Accelerometer Test</strong></a></li>
   </ul>
 </main>
 

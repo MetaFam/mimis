@@ -2,7 +2,7 @@
   import { Wunderbaum } from 'wunderbaum'
   import { wunderFiles } from '$lib/wunderFiles'
   import { selectAll } from '$lib/selectAll'
-  import { car2Tree } from '$lib/car2Tree';
+  import { car2Tree } from '$lib/car2Wunder';
   import { wunder2Neo4j } from '$lib/wunder2Neo4j';
   import Toastify from 'toastify-js'
 	import 'bootstrap-icons/font/bootstrap-icons.min.css'
@@ -35,6 +35,7 @@
       source,
       mount: 'fs-tree',
     })
+    tree.expandAll()
   }
 
   const submitMount = async (evt: SubmitEvent) => {
