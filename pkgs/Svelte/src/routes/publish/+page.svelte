@@ -1,4 +1,4 @@
-<script lang="ts">
+    <script lang="ts">
   import { CID } from 'multiformats'
   import { getAccount } from '@wagmi/core'
   import Toastify from 'toastify-js'
@@ -11,13 +11,13 @@
 
   const onClick = async (evt: MouseEvent) => {
     try {
-      const index = await neo4j2IPFS({ status: console.debug })
+      const root = await neo4j2IPFS({})
       console.debug({ acct: await getAccount(Web3.adapter.wagmiConfig) })
       const signature = await Web3.signMessage(
-        index.toString(), { log: console.debug }
+        root.toString(), { log: console.debug }
       )
       console.debug({ signature })
-      cid = await toIPFS({ index, signature })
+      cid = await toIPFS({ root, signature })
     } catch(error) {
       console.debug({ 'Signing Error': error })
       Toastify({

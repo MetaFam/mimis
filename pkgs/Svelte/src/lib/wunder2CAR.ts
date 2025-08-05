@@ -1,13 +1,12 @@
-import { CarWriter } from '@ipld/car'
+// import { CarWriter } from '@ipld/car'
 import * as UnixFS from '@ipld/unixfs'
 import * as Rabin from '@ipld/unixfs/file/chunker/rabin'
-import * as Trickle from '@ipld/unixfs/file/layout/trickle'
 import { CAREncoderStream } from 'ipfs-car'
 import * as RawLeaf from 'multiformats/codecs/raw'
-import { sha256 } from 'multiformats/hashes/sha2'
+// import * as Trickle from '@ipld/unixfs/file/layout/trickle'
+// import { sha256 } from 'multiformats/hashes/sha2'
 import type { CID } from 'multiformats'
 import type { WunderbaumNode } from 'wb_node'
-import type { Node } from '../types'
 
 // export const UnixFSLeaf = {
 //   code: UnixFS.code,

@@ -76,13 +76,19 @@ export async function wunder2Neo4j(
     try {
       const query = `
         MERGE (file:IPFS:File { cid: $cid })
-        MERGE (item:Nöopoint)-[:EMBODIED_AS]->(file)
+        MERGE (item:Nöopoint)-[rel:EMBODIED_AS]->(file)
+        ON CREATE SET item.mimis_id = $itemUUID
+        ON CREATE SET file.mimis_id = $fileUUID
+        ON CREATE SET rel.mimis_id = $relUUID
         SET file.mimetype = CASE WHEN $type IS NOT NULL THEN $type END
         SET file.size = $size
         RETURN elementId(item) AS id
       `
       const { records } = await session.run(
-        query, { cid, type, size }
+        query, {
+          cid, type, size,
+          itemUUID: uuid(), fileUUID: uuid(), relUUID: uuid()
+        }
       )
       onAdd?.({ Added: `/${cid} (${type})` })
       return records[0].get('id')
@@ -100,13 +106,16 @@ export async function wunder2Neo4j(
         onAdd?.({ 'Rooting To': rootId })
       }
       const rootQ = `
-        ${atRoot ? 'MATCH (r:Spot)' : 'MERGE (r:Root)'}
+        ${atRoot ? 'MERGE (r:Spot)' : 'MERGE (r:Root)'}
         ${!atRoot ? '' : 'WHERE elementId(r) = $rootId'}
-        SET r:Root:Mount:Spot
+        ON CREATE SET r.mimis_id = $uuid
+        SET r:Root:Spot
         RETURN elementId(r) AS id
       `
       console.debug({ rootQ })
-      const { records } = await session.run(rootQ, { rootId })
+      const { records } = await session.run(rootQ, {
+        rootId, uuid: uuid(),
+      })
       let current = records[0].get('id')
 
       onAdd?.(`Added Root: ${current}`)
@@ -114,13 +123,15 @@ export async function wunder2Neo4j(
       while(path.length > 1) {
         const pathQ = `
           MATCH (dir) WHERE elementId(dir) = $current
-          MERGE (dir)-[:CONTAINS {path: $elem}]->(item)
+          MERGE (dir)-[rel:CONTAINS {path: $elem}]->(item)
+          ON CREATE SET rel.mimis_id = $relUUID
+          ON CREATE SET item.mimis_id = $itemUUID
           SET item:Spot
           RETURN elementId(item) as id
         `
         const elem = path.shift()
         const { records } = await session.run(
-          pathQ, { current, elem }
+          pathQ, { current, elem, itemUUID: uuid(), relUUID: uuid() }
         )
         current = records[0].get('id')
       }
@@ -160,7 +171,7 @@ export async function wunder2Neo4j(
           return null
         }
 
-        if(child.children) {
+        if(child.isExpandable()) {
           await addDirEntry({
             itemId: await ingest(child),
             dirId: baseId,
@@ -170,7 +181,7 @@ export async function wunder2Neo4j(
           const ext = child.title.split('.').at(-1) as string
           const name = child.title.slice(0, -(ext.length + 1))
           const typeFile = (name === '' || name === ext)
-          const type = mime.getType(ext)
+          const type = mime.getType(ext) ?? `unknown/${ext}`
           let itemId = await addFile({
             cid: child.data.cid,
             type,
