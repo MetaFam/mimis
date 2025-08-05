@@ -135,7 +135,7 @@ export class Nöopoint {
 
         if(records.length != 1) throw new Error(`${records.length} records returned.`)
 
-        return record2Object(records)
+        return record2Object(records[0])
       } finally {
         session.close()
         neo4j.close()
@@ -226,3 +226,7 @@ export class Nöopoint {
     },
   }
 }
+
+export const timestamp = (date = new Date()) => (
+  date.toISOString().slice(0, 19).replace('T', '@').replace(/-/g, '⁄')
+)

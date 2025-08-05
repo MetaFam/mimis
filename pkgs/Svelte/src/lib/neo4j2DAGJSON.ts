@@ -1,5 +1,7 @@
 import { CID } from 'multiformats/cid'
-import { encode as encodeDAGJSON } from '@ipld/dag-json'
+import * as json from '@ipld/dag-json'
+import { sha256 } from 'multiformats/hashes/sha2'
+import { CAREncoderStream } from 'ipfs-car'
 import { settings } from './settings.svelte.ts'
 import { getIPFS, getNeo4j } from './drivers.ts'
 
@@ -11,32 +13,39 @@ type Options = {
   rootId?: string | null
 }
 
-export type Relationship = {
-  type: 'relation'
-  relationship: string
-  source: CID
-  target: CID
-  properties: Array<string>
-}
-
 export type Node = {
   type: 'node'
   labels: Array<string>
   properties: Array<string>
 }
 
-export type Results = Record<string, CID>
-
-export type Checklist = Record<string, number>
-
 export type Nodes = Record<string, Node>
 export type CIDs = Record<string, CID>
+
+type Block = {
+  cid: CID
+  bytes: Uint8Array
+}
+
+const emptyCID = CID.parse(
+  'bafybeiczsscdsbs7ffqz55ahobb37kkvllc4hikvjbgmsecgnuyzy4b4ga'
+)
+
+export async function emptyJSONDAGCID() {
+  const bytes = json.encode({})
+  const hash = await sha256.digest(bytes)
+  return CID.create(1, json.code, hash)
+}
 
 export class Serializer {
   private neo4j = getNeo4j()
   path: Array<string> = []
   log?: Logger = null
   batchSize = 1_500
+  carReadable: ReadableStream | null = null
+  carWritable: WritableStream | null = null
+  carWriter: ReturnType<WritableStream["getWriter"]> | null = null
+  blocks: Array<Block> = []
 
   constructor(
     { log = null, batchSize = 1000 }:
@@ -47,10 +56,21 @@ export class Serializer {
     } else if(settings.debugging) {
       this.log = console.debug
     }
+
     this.batchSize = batchSize
+
+    const { readable, writable } = new TransformStream()
+    this.carReadable = readable
+    this.carWritable = writable
+    this.carWriter = writable.getWriter()
+
+    const blocks = this.blocks
+    this.carReadable.pipeTo(new WritableStream({
+      write(block) { blocks.push(block) },
+    }))
   }
 
-  async node(rootId?: string): Promise<CID> {
+  async node(rootId?: string | null): Promise<CID> {
     const session = this.neo4j.session()
 
     if(rootId == null) {
@@ -97,9 +117,9 @@ export class Serializer {
         records.length === 1 ? '' : 's'
       } at ${rootId.split(':').at(-1)}`)
 
-      console.debug({ records })
-
-      if(records.length !== 1) throw new Error(`Returned ${records.length} records.`)
+      if(records.length !== 1) {
+        throw new Error(`Returned ${records.length} records.`)
+      }
 
       const [record] = records
       const relationships = []
@@ -110,7 +130,7 @@ export class Serializer {
           target: await this.node(rel.targetId)
         })
       }
-      const cid = await toIPFS({
+      const cid = await this.addToCAR({
         labels: record.get('labels') as Array<string>,
         properties: (
           Object.fromEntries(Object.entries(
@@ -125,17 +145,62 @@ export class Serializer {
         relationships,
       })
       this.path.pop()
-      this.log?.({ cid })
+      this.log?.({ cid: cid.toString() })
       return cid
     } finally {
       await session.close()
     }
   }
+
+  async addToCAR(data: any) {
+    const bytes = json.encode(data)
+    const hash = await sha256.digest(bytes)
+    const cid = CID.create(1, json.code, hash)
+    if(this.carWriter == null) throw new Error('No `carWriter`.')
+    await this.carWriter.write({ cid, bytes })
+    return cid
+  }
+
+  async carURL() {
+    this.log?.('Generating CAR URL…')
+
+    const blocks = this.blocks
+    const blockStream = new ReadableStream({
+      pull(controller) {
+        if(blocks.length > 0) {
+          controller.enqueue(blocks.shift())
+        } else {
+          controller.close()
+        }
+      }
+    })
+
+    if(!blocks || blocks.length === 0) {
+      throw new Error('No blocks generated.')
+    }
+
+    const rootBlock = blocks.at(-1)
+    if(!rootBlock) {
+      throw new Error('No root block found.')
+    }
+
+    type Chunk = Uint8Array
+    const chunks: Array<Chunk> = []
+    await (
+      blockStream
+      .pipeThrough(new CAREncoderStream([rootBlock.cid]))
+      .pipeTo(new WritableStream({
+        write(chunk) { chunks.push(chunk) },
+      }))
+    )
+
+    return URL.createObjectURL(new Blob(chunks))
+  }
 }
 
 export async function toIPFS(data: any) {
   return await getIPFS().block.put(
-    encodeDAGJSON(data), { format: 'dag-json' },
+    json.encode(data), { format: 'dag-json' },
   )
 }
 
@@ -145,9 +210,9 @@ export async function neo4j2IPFS(
   try {
     const serializer = new Serializer({ log, batchSize })
     serializer.log?.('Exporting nodes…')
-    const rootCID = await serializer.node()
+    const rootCID = await serializer.node(rootId)
     serializer.log?.({ rootCID })
-    return rootCID
+    return { serializer, rootCID }
   } catch(error) {
     console.error({ 'Graph Serializing Error': error })
     throw error
