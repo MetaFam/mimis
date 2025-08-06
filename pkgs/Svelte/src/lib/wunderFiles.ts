@@ -1,6 +1,6 @@
 import type { WunderbaumOptions } from 'wb_options'
 import { Wunderbaum } from 'wunderbaum'
-import { formatBytes } from './formatBytes'
+import { formatBytes } from './formatBytes.ts'
 import type { Node } from '../types'
 
 export const wunderFiles = (

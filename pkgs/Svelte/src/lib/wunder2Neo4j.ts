@@ -12,7 +12,7 @@ export async function wunder2Neo4j(
 
   try {
     const rootId = await ingest(root)
-   await mount({ rootId })
+    await mount({ rootId })
     const pathStr = `/${path.join('/')}${path.length > 0 ? '/' : ''}`
     onAdd?.(`Mounted ${rootId} at ${pathStr}.`)
     return rootId

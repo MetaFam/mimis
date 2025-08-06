@@ -112,32 +112,54 @@ button:focus:not(:focus-visible) {
 }
 
 button, .button {
-	border: 2px outset;
-	padding: 0.5rem 0.75rem;
+	align-items: center;
+	background-image: linear-gradient(144deg, #af40ff, #5b42f3 50%, #00ddeb);
+	border: 0;
 	border-radius: 0.5rem;
-	--bg: blue;
-	background-color: var(--bg);
-	color: white;
+	box-shadow: rgba(151, 65, 252, 0.2) 0 15px 30px -5px;
+	box-sizing: border-box;
+	color: #fff;
+	display: flex;
+	font-size: 1.25rem;
+	justify-content: center;
+	line-height: 1em;
+	max-width: 100%;
+	min-width: 8rem;
+	padding: 0.25rem;
+	text-decoration: none;
+	user-select: none;
+	-webkit-user-select: none;
+	touch-action: manipulation;
+	white-space: nowrap;
+	cursor: pointer;
+	transition: all 0.3s;
+	flex-grow: 0;
+	flex-shrink: 1;
 
-  &:hover {
-		border-style: inset;
-		--bg: blueviolet;
+	&:active, &:hover {
+		outline: 0;
+	}
+
+	& span {
+		background-color: rgb(5, 6, 45);
+		padding: 0.25rem 0.5rem;
+		border-radius: 6px;
+		width: 100%;
+		height: 100%;
+		transition: 300ms;
+	}
+
+	&:hover span {
+		background: none;
 	}
 
 	&:active {
-		translate: 2px 2px;
-		--bg: orangered;
+		transform: scale(0.9);
 	}
 
 	&:disabled {
-		opacity: 0.5;
-		--bg: grey;
-		color: lightgrey;
-
-		&:hover {
-			translate: 0 0;
-			border-style: outset;
-		}
+		filter: grayscale(0);
+		opacity: 0.75;
 	}
 }
 

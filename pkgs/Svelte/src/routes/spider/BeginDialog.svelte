@@ -48,7 +48,7 @@
           <button type="button" onclick={async () => {
             dir = await window.showDirectoryPicker()
           }}>
-            Pick Directory
+            <span>Pick Directory</span>
           </button>
           {#if dir}
             <span>{dir.name}</span>
@@ -65,9 +65,11 @@
           <input id="gitignore" type="checkbox" checked />
           <span>Respect <code>.gitignore</code>s</span>
         </label>
-        <button>Review Import</button>
+        <button><span>Review Import</span></button>
       {:else}
-        <button onclick={() => (open = false)}>😿 Sorry 😿</button>
+        <button onclick={() => (open = false)}><span>
+          😿 Sorry 😿
+        </span></button>
       {/if}
     </form>
   </dialog>

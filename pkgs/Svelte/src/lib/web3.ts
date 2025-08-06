@@ -5,9 +5,8 @@ import { mainnet } from '@reown/appkit/networks'
 import type { AppKitNetwork, ChainNamespace } from '@reown/appkit-common'
 import { dev } from '$app/environment'
 
-export type Logger = (msg: string | {}) => void
-
 import { PUBLIC_APPKIT_PROJECT_ID } from '$env/static/public'
+import type { Logger } from '../types'
 
 class WebThreeUtils {
   networks = [mainnet] as [AppKitNetwork]

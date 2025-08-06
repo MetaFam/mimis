@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { Wunderbaum } from 'wunderbaum'
 	import Content from '../Content.svelte'
-	import BeginDialog from '../BeginDialog.svelte'
-  import { spiderTree } from '$lib/spiderTree'
+	import BeginDialog from './BeginDialog.svelte'
+	import { timestamp } from '$lib'
+  import { spiderTree } from '$lib/fsDirHandle2Tree'
 	import { wunder2CAR } from '$lib/wunder2CAR'
 	import { wunderFiles } from '$lib/wunderFiles'
 	import { selectAll } from '$lib/selectAll'
@@ -14,10 +15,10 @@
 	let car = $state<string>()
 	let tree = $state<Wunderbaum>()
 	let filename = $derived(
-		`${tree?.root.children?.[0].title ?? 'spider'}.${new Date().toISOString()}.car`
+		`${tree?.root.children?.[0].title ?? 'spider'}.${timestamp()}.car`
 	)
 	let statuses = $state<Array<string>>([])
-	let showBegin = $state<boolean>(false)
+	let showBegin = $state(false)
 
 	const load = (dirs: Array<FileSystemDirectoryHandle>) => {
 		if(dirs.length > 0) {
@@ -82,16 +83,16 @@
 	{:else}
 		<nav>
 			<button onclick={() => { showBegin = true }} class="btn btn-primary bg-green">
-				Begin A Spider
+				<span>Begin A Spider</span>
 			</button>
 			{#if tree}
 				<button onclick={ingest} class="btn btn-primary bg-green">
-					Generate CAR Archive
+					<span>Generate CAR Archive</span>
 				</button>
 			{/if}
 			{#if car}
 				<a href={car} class="button" download={filename}>
-					Download <code>{filename}</code>
+					<span>Download <code>{filename}</code></span>
 				</a>
 			{/if}
 		</nav>

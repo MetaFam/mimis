@@ -4,8 +4,7 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import { CAREncoderStream } from 'ipfs-car'
 import { settings } from './settings.svelte.ts'
 import { getIPFS, getNeo4j } from './drivers.ts'
-
-type Logger = ((msg: string | {}) => void) | null
+import type { Logger } from '../types'
 
 type Options = {
   log?: Logger

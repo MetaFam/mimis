@@ -352,7 +352,7 @@
           onclick={save}
           disabled={!hasPath || !changes || saving}
           class:saving
-        >🖫</button>
+        ><span>🖫</span></button>
         <dialog open>Save</dialog>
       </li>
       <li>
@@ -361,7 +361,7 @@
           type="button"
           onclick={load}
           disabled={!hasPath || saving}
-        >📥</button>
+        ><span>📥</span></button>
         <dialog open>Load</dialog>
       </li>
       <li>
@@ -372,7 +372,7 @@
               type="button"
               onclick={(evt) => loadFiles?.click()}
               disabled={loading}
-            >⭱</button>
+            ><span>⭱</span></button>
             <input
               bind:this={loadFiles}
               type="file"
@@ -389,7 +389,7 @@
           id="import"
           type="button"
           onclick={download}
-        >⭳</button>
+        ><span>⭳</span></button>
         <dialog open>Export</dialog>
       </li>
       <li>
@@ -398,7 +398,7 @@
           type="button"
           onclick={undo}
           disabled={history.length === 0 || saving}
-        >↺</button>
+        ><span>↺</span></button>
         <dialog open>Undo</dialog>
       </li>
       <li>
@@ -407,7 +407,7 @@
           type="button"
           onclick={keyboard}
           class="pulsing"
-        >⌨</button>
+        ><span>⌨</span></button>
         <dialog open>Shortcuts</dialog>
       </li>
       <li>
@@ -416,7 +416,7 @@
           type="button"
           onclick={showAll}
           disabled={entries.length === 0 || context.any('isOpen')}
-        >⟱</button>
+        ><span>⟱</span></button>
         <dialog open>Show All</dialog>
       </li>
       <li>
@@ -425,7 +425,7 @@
           type="button"
           onclick={hideAll}
           disabled={entries.length === 0 || !context.any('isOpen')}
-        >⟰</button>
+        ><span>⟰</span></button>
         <dialog open>Hide All</dialog>
       </li>
       <li>
@@ -435,7 +435,7 @@
             bind:checked={context.single}
             style:display="none"
           />
-          Ⅰ
+          <span>Ⅰ</span>
         </label>
         <dialog open>Single<br/>Visible</dialog>
       </li>
@@ -462,7 +462,7 @@
             </progress>
           </section>
         {:else}
-          Add Files
+          <span>Add Files</span>
         {/if}
       </button>
       <input
@@ -498,9 +498,14 @@
     justify-content: center;
     align-items: center;
     flex-grow: 1;
+
+    button {
+      display: none;
+    }
   }
-  button {
+  button, label {
     z-index: 10;
+    min-width: min-content;
   }
   button#add-file {
     position: sticky;

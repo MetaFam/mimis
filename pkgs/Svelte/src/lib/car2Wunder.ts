@@ -1,13 +1,15 @@
 import { CarBlockIterator } from '@ipld/car'
-import type { Node, DirNode } from '../types'
-import { stream2AsyncIterator } from './stream2AsyncIterator.ts'
 import { decode } from '@ipld/dag-pb'
+import type { Node, DirNode, Logger } from '../types'
+import { stream2AsyncIterator } from './stream2AsyncIterator.ts'
 
 /**
  * Convert a CAR file to a structure appropriate for
  * generating a Wunderbaum tree.
  */
-export async function car2Tree(file: File) {
+export async function car2Tree(
+  file: File, { log }: { log?: Logger } = {}
+) {
   const reader = await CarBlockIterator.fromIterable(
     stream2AsyncIterator(file.stream())
   )
@@ -16,9 +18,11 @@ export async function car2Tree(file: File) {
   const files: Array<string> = []
   const nodes: Record<string, Array<Node>> = {}
   let current: string | null = null
+  let count = 0
 
   for await (const { cid, bytes } of reader) {
     current = cid.toString()
+    log?.({ 'Current CID': current, count: ++count })
     try {
       const decoded = await decode(bytes)
       const { Links: raw } = decoded

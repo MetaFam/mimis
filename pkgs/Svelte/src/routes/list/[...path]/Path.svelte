@@ -1,5 +1,6 @@
 <script lang="ts">
   import { settings } from '$lib/settings.svelte'
+  import { type HTMLAttributes } from 'svelte/elements'
 
   let {
     elements = $bindable([''])
@@ -73,9 +74,9 @@
 >
   <ol>
     {#if elements.length > 1 || elements[0] !== ''}
-      <li><button id="clear">∅</button></li>
+      <li><button id="clear"><span>∅</span></button></li>
     {/if}
-    <li><button id="before">+</button></li>
+    <li><button id="before"><span>+</span></button></li>
     {#each elements as _elem, idx}
       <li class:single={elements.length <= 1}>
         <input
@@ -121,25 +122,25 @@
                 elements.splice(idx, 1)
               }}
               tabindex={-1}
-            >−</button>
+            ><span>−</span></button>
             {#if idx < elements.length - 1}
               <button
                 type="button"
 								class="slash"
                 onclick={() => insertAt(idx + 1)}
                 tabindex={-1}
-              >/</button>
+              ><span>/</span></button>
             {/if}
           </nav>
         {/if}
       </li>
     {/each}
-    <li><button id="more">+</button></li>
+    <li><button id="more"><span>+</span></button></li>
     {#if history.length > 0}
       <li><button
         type="button"
         onclick={undo}
-      >↺</button></li>
+      ><span>↺</span></button></li>
     {/if}
   </ol>
 </form>
@@ -172,15 +173,10 @@
     display: flex;
     gap: 0.25rem;
     align-content: flex-start;
-
-    & button {
-      padding: 0rem 0.5rem;
-    }
   }
   #more, #before {
     right: 0ch;
     top: -0.5rem;
-    padding: 0.5rem 0.75rem;
   }
   #before {
     right: auto;
@@ -208,7 +204,6 @@
 		}
   }
   button {
-		border-radius: 0.5rem;
 		transition: background-color 250ms;
   }
 </style>

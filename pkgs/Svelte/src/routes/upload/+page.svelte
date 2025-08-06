@@ -11,11 +11,11 @@
 
   class CAR {
     form = $state<HTMLFormElement>()
-    disabled = $state<boolean>(!this.form?.checkValidity())
-    generating = $state<boolean>(false)
+    disabled = $derived(!this.form?.checkValidity())
+    generating = $state(false)
   }
 
-  let count = $state<number>(0)
+  let count = $state(0)
   let tree = $state<Wunderbaum>()
   let car = new CAR()
   let path = $state('')
@@ -29,13 +29,15 @@
     if(!file) {
       throw new Error('No file selected.')
     }
-    const source = await car2Tree(file)
+    const source = await car2Tree(file, { log: console.debug })
     selectAll(source)
     tree = wunderFiles({
       source,
       mount: 'fs-tree',
     })
-    tree.expandAll()
+    if(source.flat(3).length < 25) {
+      tree.expandAll()
+    }
   }
 
   const submitMount = async (evt: SubmitEvent) => {
@@ -75,7 +77,7 @@
 </svelte:head>
 
 <header>
-  <h1>Upload a CAR File to Mïmis
+  <h1>Upload a CAR File to Mïmis</h1>
 </header>
 
 <main>
@@ -84,7 +86,7 @@
       type="file" required accept=".car"
       onchange={() => car.disabled = !car.form?.checkValidity()}
     />
-    <button disabled={car.disabled}>Read CAR</button>
+    <button disabled={car.disabled}><span>Read CAR</span></button>
   </form>
   {#if !!tree}
     <form onsubmit={submitMount}>

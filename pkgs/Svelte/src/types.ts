@@ -24,6 +24,8 @@ export type FileNode = {
 }
 
 export type GitIgnore = {
-	ig: ReturnType<typeof ignore>
+	ig: ReturnType<typeof ignore.default>
 	path: string
 }
+
+export type Logger = ((msg: string | {}) => void) | null

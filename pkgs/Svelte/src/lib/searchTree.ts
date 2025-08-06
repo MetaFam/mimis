@@ -9,8 +9,9 @@ export const searchTree = async (
   }
 ) => {
   const driver = getNeo4j()
+  const session = driver.session()
+
   try {
-    const session = driver.session()
     path = path.filter((elem) => elem.trim() !== '')
     limit = parseInt(Number(limit).toFixed(0))
     offset = parseInt(Number(offset).toFixed(0))
@@ -55,16 +56,15 @@ export const searchTree = async (
           child
       `
     ))
-    const result = await session.run(
+    const { records } = await session.run(
       query, {
         elems: path,
         limit: BigInt(limit),
         offset: BigInt(offset),
       }
     )
-    await session.close()
-    return result.records
+    return records
   } finally {
-    // driver.close()
+    await session.close()
   }
 }
