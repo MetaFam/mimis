@@ -46,13 +46,13 @@
       car.generating = true
       const mount = path.split('/').filter(Boolean)
       if(!tree) throw new Error('No tree to mount.')
-      const onAdd = (msg: string | {}) => {
+      const log = (msg: string | {}) => {
         console.debug(msg)
         count++
       }
       console.debug({ root: tree.root })
       const cid: string = await wunder2Neo4j(
-        tree.root, mount, onAdd,
+        tree.root, mount, log,
       )
       Toastify({
         text: `Loaded: id://${cid.slice(0, 5)}…${cid.slice(-5)}`,

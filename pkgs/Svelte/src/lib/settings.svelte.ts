@@ -11,7 +11,7 @@ class Settings {
     limit: 'mimis-setting-limit',
     debugging: 'mimis-setting-debugging',
     ipfsProvider: 'mimis-setting-ipfs-provider',
-    storachaLogin: 'mimis-setting-storacha-login',
+    storachaEmail: 'mimis-setting-storacha-email',
   } as const
   static defaults = {
     [Settings.keys.ipfsPattern]: (
@@ -26,7 +26,7 @@ class Settings {
     [Settings.keys.limit]: env.PUBLIC_LIMIT ? Number(env.PUBLIC_LIMIT) : 125,
     [Settings.keys.debugging]: page.url.searchParams.has('debug'),
     [Settings.keys.ipfsProvider]: 'local',
-    [Settings.keys.storachaLogin]: '',
+    [Settings.keys.storachaEmail]: '',
   }
 
   valueOf(key: Omit<keyof typeof Settings.keys, 'limit' | 'debugging'>): string
@@ -71,7 +71,7 @@ class Settings {
   limit = $state(this.valueOf('limit'))
   debugging = $state(this.valueOf('debugging'))
   ipfsProvider = $state(this.valueOf('ipfsProvider'))
-  storachaLogin = $state(this.valueOf('storachaLogin'))
+  storachaEmail = $state(this.valueOf('storachaEmail'))
 
   get saveLocal() {
     return this.ipfsProvider === 'local'

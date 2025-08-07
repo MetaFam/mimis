@@ -64,7 +64,7 @@
               {#if settings.ipfsProvider === 'storacha'}
                 <legend>Storacha Email Login</legend>
                 <input
-                  bind:value={settings.storachaLogin}
+                  bind:value={settings.storachaEmail}
                   onchange={() => settings.save()}
                 />
               {:else}

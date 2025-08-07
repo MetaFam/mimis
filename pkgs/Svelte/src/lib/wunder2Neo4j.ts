@@ -2,11 +2,12 @@ import type { WunderbaumNode } from 'wb_node'
 import { v7 as uuid } from 'uuid'
 import mime from 'mime'
 import { getNeo4j } from './drivers.ts'
+import type { Logger } from '../types'
 
 export async function wunder2Neo4j(
   root: WunderbaumNode,
   path: Array<string> = [],
-  onAdd?: (msg: string | {}) => void,
+  log?: Logger,
 ) {
   const driver = getNeo4j()
 
@@ -14,7 +15,7 @@ export async function wunder2Neo4j(
     const rootId = await ingest(root)
     await mount({ rootId })
     const pathStr = `/${path.join('/')}${path.length > 0 ? '/' : ''}`
-    onAdd?.(`Mounted ${rootId} at ${pathStr}.`)
+    log?.(`Mounted ${rootId} at ${pathStr}.`)
     return rootId
   } finally {
     // await driver.close()
@@ -29,7 +30,7 @@ export async function wunder2Neo4j(
       `
       const guid = uuid()
       const { records } = await session.run(query, { uuid: guid })
-      onAdd?.({ 'Created Spot': uuid })
+      log?.({ 'Created Spot': uuid })
       return records[0].get('id')
     } finally {
       await session.close()
@@ -61,7 +62,7 @@ export async function wunder2Neo4j(
         }
       )
       const retId = records[0].get('id')
-      onAdd?.(`Added ${name} → ${itemId} (${dirId} → ${retId})`)
+      log?.(`Added ${name} → ${itemId} (${dirId} → ${retId})`)
       return retId
     } finally {
       await session.close()
@@ -90,7 +91,7 @@ export async function wunder2Neo4j(
           itemUUID: uuid(), fileUUID: uuid(), relUUID: uuid()
         }
       )
-      onAdd?.({ Added: `/${cid} (${type})` })
+      log?.({ Added: `/${cid} (${type})` })
       return records[0].get('id')
     } finally {
       await session.close()
@@ -103,7 +104,7 @@ export async function wunder2Neo4j(
     try {
       const atRoot = path.length === 0
       if(atRoot) {
-        onAdd?.({ 'Rooting To': rootId })
+        log?.({ 'Rooting To': rootId })
       }
       const rootQ = `
         ${atRoot ? 'MERGE (r:Spot)' : 'MERGE (r:Root)'}
@@ -112,13 +113,12 @@ export async function wunder2Neo4j(
         SET r:Root:Spot
         RETURN elementId(r) AS id
       `
-      console.debug({ rootQ })
       const { records } = await session.run(rootQ, {
         rootId, uuid: uuid(),
       })
       let current = records[0].get('id')
 
-      onAdd?.(`Added Root: ${current}`)
+      log?.(`Added Root: ${current}`)
 
       while(path.length > 1) {
         const pathQ = `

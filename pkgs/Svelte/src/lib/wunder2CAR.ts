@@ -7,6 +7,7 @@ import * as RawLeaf from 'multiformats/codecs/raw'
 // import { sha256 } from 'multiformats/hashes/sha2'
 import type { CID } from 'multiformats'
 import type { WunderbaumNode } from 'wb_node'
+import type { Logger } from "../types";
 
 // export const UnixFSLeaf = {
 //   code: UnixFS.code,
@@ -21,10 +22,10 @@ import type { WunderbaumNode } from 'wb_node'
 // }
 
 export const wunder2CAR = async (
-  { root, onStatusUpdate }:
+  { root, log }:
   {
     root: WunderbaumNode
-    onStatusUpdate: (m: string) => void
+    log: Logger
   }
 ) => {
   const {
@@ -54,7 +55,7 @@ export const wunder2CAR = async (
   unixfsReadable.pipeTo(new WritableStream({
     write(block) { blocks.push(block) },
   }))
-  onStatusUpdate?.('Ingesting Tree…')
+  log?.('Ingesting Tree…')
   await ingest(root)
 
   const blockStream = new ReadableStream({
@@ -89,7 +90,7 @@ export const wunder2CAR = async (
   return URL.createObjectURL(new Blob(chunks))
 
   async function ingest(node: WunderbaumNode) {
-    onStatusUpdate?.(`Ingesting Directory: ${node.title}`)
+    log?.(`Ingesting Directory: ${node.title}`)
     if(!node.children) {
       throw new Error(`Not A Directory: ${node.title}`)
     }
@@ -110,7 +111,7 @@ export const wunder2CAR = async (
             `Invalid File Handle: ${child.title}`
           )
         }
-        onStatusUpdate?.(`Ingesting File: ${child.title}`)
+        log?.(`Ingesting File: ${child.title}`)
         await handle.stream().pipeTo(new WritableStream({
           async write(chunk) {
             await writer.ready

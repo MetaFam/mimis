@@ -14,6 +14,7 @@
     "npm:@reown/appkit-common@^1.7.13": "1.7.15_typescript@5.8.3",
     "npm:@reown/appkit-controllers@^1.7.13": "1.7.15_typescript@5.8.3",
     "npm:@reown/appkit@^1.7.13": "1.7.15_valtio@2.1.5_typescript@5.8.3",
+    "npm:@storacha/client@^1.7.6": "1.7.6",
     "npm:@sveltejs/adapter-auto@3": "3.3.1_@sveltejs+kit@2.25.0__@sveltejs+vite-plugin-svelte@4.0.4___svelte@5.36.7____acorn@8.15.0___vite@5.4.19__svelte@5.36.7___acorn@8.15.0__vite@5.4.19__acorn@8.15.0_@sveltejs+vite-plugin-svelte@4.0.4__svelte@5.36.7___acorn@8.15.0__vite@5.4.19_svelte@5.36.7__acorn@8.15.0_vite@5.4.19",
     "npm:@sveltejs/adapter-static@^3.0.6": "3.0.8_@sveltejs+kit@2.25.0__@sveltejs+vite-plugin-svelte@4.0.4___svelte@5.36.7____acorn@8.15.0___vite@5.4.19__svelte@5.36.7___acorn@8.15.0__vite@5.4.19__acorn@8.15.0_@sveltejs+vite-plugin-svelte@4.0.4__svelte@5.36.7___acorn@8.15.0__vite@5.4.19_svelte@5.36.7__acorn@8.15.0_vite@5.4.19",
     "npm:@sveltejs/kit@^2.12.0": "2.25.0_@sveltejs+vite-plugin-svelte@4.0.4__svelte@5.36.7___acorn@8.15.0__vite@5.4.19_svelte@5.36.7__acorn@8.15.0_vite@5.4.19_acorn@8.15.0",
@@ -27,7 +28,6 @@
     "npm:@types/sortablejs@^1.15.8": "1.15.8",
     "npm:@types/toastify-js@^1.12.3": "1.12.4",
     "npm:@wagmi/core@^2.17.3": "2.17.3_typescript@5.8.3_viem@2.32.0__typescript@5.8.3__ws@8.18.2",
-    "npm:@web3-storage/w3up-client@^17.2.0": "17.3.0",
     "npm:autoprefixer@^10.4.20": "10.4.21_postcss@8.5.6",
     "npm:bootstrap-icons@^1.13.1": "1.13.1",
     "npm:eslint-plugin-svelte@^2.36.0": "2.46.1_eslint@9.31.0_svelte@5.36.7__acorn@8.15.0_postcss@8.5.6",
@@ -1530,8 +1530,111 @@
         "@statsig/client-core"
       ]
     },
+    "@storacha/access@1.6.0": {
+      "integrity": "sha512-mNCUHdZXdn9bmQh/n3Wkh3DfpxwkHkJryMwsoJVlAAVnT43T8yImOhqYSKT8DFpIkmkPx8oopO2H2s/K3Cjmdw==",
+      "dependencies": [
+        "@ipld/car",
+        "@ipld/dag-ucan",
+        "@scure/bip39@1.6.0",
+        "@storacha/capabilities",
+        "@storacha/did-mailto",
+        "@storacha/one-webcrypto",
+        "@ucanto/client",
+        "@ucanto/core",
+        "@ucanto/interface",
+        "@ucanto/principal",
+        "@ucanto/transport",
+        "@ucanto/validator",
+        "bigint-mod-arith",
+        "conf",
+        "multiformats@13.3.7",
+        "p-defer@4.0.1",
+        "type-fest@4.41.0",
+        "uint8arrays@5.1.0"
+      ]
+    },
+    "@storacha/blob-index@1.2.0": {
+      "integrity": "sha512-73P4eHLDoVvSg9A16Lq2rspg/h0Rpq8EIJ7RrVwgNhbkIqGsPzHLOYZdOiOQEhHYo5O+c1r3+RJ5XKsjz2HKow==",
+      "dependencies": [
+        "@ipld/dag-cbor",
+        "@storacha/capabilities",
+        "@storacha/one-webcrypto",
+        "@ucanto/core",
+        "@ucanto/interface",
+        "carstream",
+        "multiformats@13.3.7",
+        "sade",
+        "uint8arrays@5.1.0"
+      ],
+      "bin": true
+    },
+    "@storacha/capabilities@1.8.0": {
+      "integrity": "sha512-39G/oFqmdmyRDG3GCG1TFkna0jWRPSvT0TPtAgQ0d7LVL0fVwo3Ryu7clnoa6PcdcC8VmsuHN/YC0IvhEdYKug==",
+      "dependencies": [
+        "@ucanto/core",
+        "@ucanto/interface",
+        "@ucanto/principal",
+        "@ucanto/transport",
+        "@ucanto/validator",
+        "@web3-storage/data-segment",
+        "multiformats@13.3.7"
+      ]
+    },
+    "@storacha/client@1.7.6": {
+      "integrity": "sha512-KK5Js2C6dwG/Jn7hD9dkoSUPKzXnhVbuiZRW8eaj1zbLBdqQlkGMa924ivcaPWi0fHHiV+jH4y+fmG14d2kwiw==",
+      "dependencies": [
+        "@ipld/dag-ucan",
+        "@storacha/access",
+        "@storacha/blob-index",
+        "@storacha/capabilities",
+        "@storacha/did-mailto",
+        "@storacha/filecoin-client",
+        "@storacha/upload-client",
+        "@ucanto/client",
+        "@ucanto/core",
+        "@ucanto/interface",
+        "@ucanto/principal",
+        "@ucanto/transport",
+        "environment"
+      ]
+    },
+    "@storacha/did-mailto@1.0.2": {
+      "integrity": "sha512-0ee1t15yG4xdyIYz2iL+wP06VnGQf8zJ/xpszjf4sdP2sTgAVzx92LfEgHcuIbFF4sabcJXzHFAcMi8l8u64Mg=="
+    },
+    "@storacha/filecoin-client@1.0.11": {
+      "integrity": "sha512-wrqRUlyVl8pcL9qgqHaNKS/m1QqpGvgCdl2m9JvciTDNLTVJpnG5yTaTJ0QjCD2bBxkTVKqdux/vLKpGa9DLSg==",
+      "dependencies": [
+        "@ipld/dag-ucan",
+        "@storacha/capabilities",
+        "@ucanto/client",
+        "@ucanto/core",
+        "@ucanto/interface",
+        "@ucanto/transport"
+      ]
+    },
     "@storacha/one-webcrypto@1.0.1": {
       "integrity": "sha512-bD+vWmcgsEBqU0Dz04BR43SA03bBoLTAY29vaKasY9Oe8cb6XIP0/vkm0OS2UwKC13c8uRgFW4rjJUgDCNLejQ=="
+    },
+    "@storacha/upload-client@1.3.2": {
+      "integrity": "sha512-VYtd/1khZGHQonUlGXVuxULMOZqCWY3YfqAv86qeB+Xh3MywfdjF+eCm1rfDtgvaTQE3ZI+2YKAcbP0xWHQyAw==",
+      "dependencies": [
+        "@ipld/car",
+        "@ipld/dag-cbor",
+        "@ipld/dag-ucan",
+        "@ipld/unixfs",
+        "@storacha/blob-index",
+        "@storacha/capabilities",
+        "@storacha/filecoin-client",
+        "@ucanto/client",
+        "@ucanto/core",
+        "@ucanto/interface",
+        "@ucanto/transport",
+        "@web3-storage/data-segment",
+        "ipfs-utils",
+        "multiformats@13.3.7",
+        "p-retry",
+        "varint"
+      ]
     },
     "@sveltejs/acorn-typescript@1.0.5_acorn@8.15.0": {
       "integrity": "sha512-IwQk4yfwLdibDlrXVE04jTZYlLnwsTT2PIOQQGNLWfjavGifnk1JD1LcZjZaBTRcxZu2FfPfNLOE04DSu9lqtQ==",
@@ -1686,8 +1789,8 @@
     "@types/parse-json@4.0.2": {
       "integrity": "sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw=="
     },
-    "@types/retry@0.12.2": {
-      "integrity": "sha512-XISRgDJ2Tc5q4TRqvgJtzsRkFYNJzZrhTdtMoGVBttwzzQJkPnS3WWTFc7kuDRoPtPakl+T+OfdEUjYJj7Jbow=="
+    "@types/retry@0.12.1": {
+      "integrity": "sha512-xoDlM2S4ortawSWORYqsdU+2rxdh4LRW9ytc3zmT37RIKQh6IHyKwwtKhKis9ah8ol07DCkZxPt8BBvPjC6v4g=="
     },
     "@types/sortablejs@1.15.8": {
       "integrity": "sha512-b79830lW+RZfwaztgs1aVPgbasJ8e7AXtZYHTELNXZPsERt4ymJdjV4OccDbHQAvHrCcFpbF78jkm0R6h/pZVg=="
@@ -2331,57 +2434,6 @@
         "tslib@1.14.1"
       ]
     },
-    "@web3-storage/access@20.3.0": {
-      "integrity": "sha512-5Gf8tTDp7CSZHN162RNGEOQLPXN5EpKr/aCnig8EvXip2VJ9AphjSNwjHKmcPiWXUjQvQdYFkpNs5oByCIehbA==",
-      "dependencies": [
-        "@ipld/car",
-        "@ipld/dag-ucan",
-        "@scure/bip39@1.6.0",
-        "@storacha/one-webcrypto",
-        "@ucanto/client",
-        "@ucanto/core",
-        "@ucanto/interface",
-        "@ucanto/principal",
-        "@ucanto/transport",
-        "@ucanto/validator",
-        "@web3-storage/capabilities",
-        "@web3-storage/did-mailto",
-        "bigint-mod-arith",
-        "conf",
-        "multiformats@13.3.7",
-        "p-defer@4.0.1",
-        "type-fest@4.41.0",
-        "uint8arrays@5.1.0"
-      ],
-      "deprecated": true
-    },
-    "@web3-storage/blob-index@1.0.5": {
-      "integrity": "sha512-mhzupWeRfxLljoULcagU++mOmQOriCBMKniUhsmrCXrtRV8voF7op/ymqix1f9uX1M5iB93YXcfxAVBwGWWKoA==",
-      "dependencies": [
-        "@ipld/dag-cbor",
-        "@storacha/one-webcrypto",
-        "@ucanto/core",
-        "@ucanto/interface",
-        "@web3-storage/capabilities",
-        "carstream",
-        "multiformats@13.3.7",
-        "uint8arrays@5.1.0"
-      ],
-      "deprecated": true
-    },
-    "@web3-storage/capabilities@18.1.0": {
-      "integrity": "sha512-jgZtymt2jJtER3SPsE0yoRSf1BzNo1hQIir6hfY3QlooxTwdETzPbF1rBs5El7BCCMHhQfB9hiLRniTIhnX4wA==",
-      "dependencies": [
-        "@ucanto/core",
-        "@ucanto/interface",
-        "@ucanto/principal",
-        "@ucanto/transport",
-        "@ucanto/validator",
-        "@web3-storage/data-segment",
-        "uint8arrays@5.1.0"
-      ],
-      "deprecated": true
-    },
     "@web3-storage/car-block-validator@1.2.2": {
       "integrity": "sha512-lR9l+ZszhTid5HfZE8ohnGf2RJp2kaBOnoejmsACs3iTNiy+3K09dnPm8MhgBE9RCIgPBKM0CCWXO9l+I6jrKA==",
       "dependencies": [
@@ -2399,62 +2451,6 @@
         "multiformats@13.3.7",
         "sync-multihash-sha2"
       ]
-    },
-    "@web3-storage/did-mailto@2.1.0": {
-      "integrity": "sha512-TRmfSXj1IhtX3ESurSNOylZSBKi0z/VJNoMLpof+AVRdovgZjjocpiePQTs2pfHKqHTHfJXc9AboWyK4IKTWMw==",
-      "deprecated": true
-    },
-    "@web3-storage/filecoin-client@3.3.5": {
-      "integrity": "sha512-3JFKnHFizlljRSJyyCdNN3Np4MN5riBvjAXweqNmu4s2sChMB8kopnCkAFoMeEom9r7ZAnBAkMO3Wacjs6Nlcw==",
-      "dependencies": [
-        "@ipld/dag-ucan",
-        "@ucanto/client",
-        "@ucanto/core",
-        "@ucanto/interface",
-        "@ucanto/transport",
-        "@web3-storage/capabilities"
-      ],
-      "deprecated": true
-    },
-    "@web3-storage/upload-client@17.1.4": {
-      "integrity": "sha512-jfVEcF7bVouxPy7kd1K5m6BaKeFzcH9zyyWC0CArByWLnKhuPhZ7+ykry3lwn82JIFXbEtmI563ewNuAAibieg==",
-      "dependencies": [
-        "@ipld/car",
-        "@ipld/dag-cbor",
-        "@ipld/dag-ucan",
-        "@ipld/unixfs",
-        "@ucanto/client",
-        "@ucanto/core",
-        "@ucanto/interface",
-        "@ucanto/transport",
-        "@web3-storage/blob-index",
-        "@web3-storage/capabilities",
-        "@web3-storage/data-segment",
-        "@web3-storage/filecoin-client",
-        "ipfs-utils",
-        "multiformats@13.3.7",
-        "p-retry",
-        "varint"
-      ],
-      "deprecated": true
-    },
-    "@web3-storage/w3up-client@17.3.0": {
-      "integrity": "sha512-2AaaZgFEk3Y+ARMGEtQr496IbMh2QJVaRxETAzSQUfxd1hQeP/X9Cf5PoIOLv/VhkaptO2r7CLQGijIE2jEvNw==",
-      "dependencies": [
-        "@ipld/dag-ucan",
-        "@ucanto/client",
-        "@ucanto/core",
-        "@ucanto/interface",
-        "@ucanto/principal",
-        "@ucanto/transport",
-        "@web3-storage/access",
-        "@web3-storage/blob-index",
-        "@web3-storage/capabilities",
-        "@web3-storage/did-mailto",
-        "@web3-storage/filecoin-client",
-        "@web3-storage/upload-client"
-      ],
-      "deprecated": true
     },
     "abitype@1.0.8_typescript@5.8.3_zod@3.22.4": {
       "integrity": "sha512-ZeiI6h3GnW06uYDLx0etQtX/p8E24UaHHBj57RSjK7YBFe7iuVn07EDpOeP451D06sF27VOz9JJPlIKJmXgkEg==",
@@ -3084,6 +3080,9 @@
     },
     "env-paths@3.0.0": {
       "integrity": "sha512-dtJUTepzMW3Lm/NPxRf3wP4642UWhjL2sQxc+ym2YMj1m/H2zDNQOlezafzkHwn6sMstjHTwG6iQQsctDW/b1A=="
+    },
+    "environment@1.1.0": {
+      "integrity": "sha512-xUtoPkMggbz0MPyPiIWr1Kp4aeWJjDZ6SMvURhimjdZgsRuDplF5/s9hcgGhyXMhs+6vpnuoiZ2kFiu3FMnS8Q=="
     },
     "err-code@3.0.1": {
       "integrity": "sha512-GiaH0KJUewYok+eeY05IIgjtAe4Yltygk9Wqp1V5yVWLdhf0hYZchRjNIT9bb0mSwRcIusT3cx7PJUf3zEIfUA=="
@@ -3828,9 +3827,6 @@
         "is-extglob"
       ]
     },
-    "is-network-error@1.1.0": {
-      "integrity": "sha512-tUdRRAnhT+OtCZR/LxZelH/C7QtjtFrTu5tXCA8pl55eTUElUHT+GPYV8MBMBvea/j+NxQqVt3LbWMRir7Gx9g=="
-    },
     "is-number@7.0.0": {
       "integrity": "sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng=="
     },
@@ -4542,11 +4538,10 @@
         "p-timeout"
       ]
     },
-    "p-retry@6.2.1": {
-      "integrity": "sha512-hEt02O4hUct5wtwg4H4KcWgDdm+l1bOaEy/hWzd8xtXB9BqxTWBBhb+2ImAtH4Cv4rPjV76xN3Zumqk3k3AhhQ==",
+    "p-retry@5.1.2": {
+      "integrity": "sha512-couX95waDu98NfNZV+i/iLt+fdVxmI7CbrrdC2uDWfPdUAApyxT4wmDlyOtR5KtTDmkDO0zDScDjDou9YHhd9g==",
       "dependencies": [
         "@types/retry",
-        "is-network-error",
         "retry"
       ]
     },
@@ -5842,6 +5837,7 @@
         "npm:@reown/appkit-common@^1.7.13",
         "npm:@reown/appkit-controllers@^1.7.13",
         "npm:@reown/appkit@^1.7.13",
+        "npm:@storacha/client@^1.7.6",
         "npm:@sveltejs/adapter-auto@3",
         "npm:@sveltejs/adapter-static@^3.0.6",
         "npm:@sveltejs/kit@^2.12.0",
@@ -5855,7 +5851,6 @@
         "npm:@types/sortablejs@^1.15.8",
         "npm:@types/toastify-js@^1.12.3",
         "npm:@wagmi/core@^2.17.3",
-        "npm:@web3-storage/w3up-client@^17.2.0",
         "npm:autoprefixer@^10.4.20",
         "npm:bootstrap-icons@^1.13.1",
         "npm:eslint-plugin-svelte@^2.36.0",

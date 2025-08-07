@@ -11,9 +11,10 @@
   import Toastify from 'toastify-js'
   import type { Version } from 'multiformats'
   import { tick } from 'svelte'
-  import { assets } from '$app/paths'
   import JSON5 from 'json5'
-  import { create as createStoracha } from '@web3-storage/w3up-client'
+  import { create as createStoracha } from '@storacha/client'
+  import type { EmailAddress } from '@storacha/client/types'
+  import { assets } from '$app/paths'
   import { page } from '$app/state'
   import { settings } from '$lib/settings.svelte'
   import { list2Neo4j } from '$lib/list2Neo4j'
@@ -36,7 +37,6 @@
   let history = $state<Array<Array<Entry>>>([])
   let progress = $state(0)
   let total = $state(0)
-  let count = $state(0)
   let addFiles = $state<HTMLInputElement | null>(null)
   let loadFiles = $state<HTMLInputElement | null>(null)
   let shortcuts = $state<HTMLDialogElement | null>(null)
@@ -97,6 +97,16 @@
 
   async function saveStoracha(files: Array<File>) {
     const storacha = await createStoracha()
+    console.debug({ email: settings.storachaEmail })
+    if(!settings.storachaEmail) {
+      throw new Error('No Storacha email specified in settings.')
+    }
+    const account = await storacha.login(
+      settings.storachaEmail as EmailAddress
+    )
+    console.debug({ spaces: storacha.spaces().map((s) => (
+      s.name
+    )) })
     return [] as Array<Entry>
   }
 
