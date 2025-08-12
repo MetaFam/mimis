@@ -124,7 +124,6 @@ button, .button {
 	justify-content: center;
 	line-height: 1em;
 	max-width: 100%;
-	min-width: 8rem;
 	padding: 0.25rem;
 	text-decoration: none;
 	user-select: none;
@@ -145,7 +144,6 @@ button, .button {
 		padding: 0.25rem 0.5rem;
 		border-radius: 6px;
 		width: 100%;
-		height: 100%;
 		transition: 300ms;
 	}
 

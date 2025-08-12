@@ -113,27 +113,27 @@
           }}
         />
         {#if elements.length > 1}
-          <nav>
-            <button
-              type="button"
-							class="minus"
-              onclick={() => {
-                history.push([...elements])
-                elements.splice(idx, 1)
-              }}
-              tabindex={-1}
-            ><span>−</span></button>
-            {#if idx < elements.length - 1}
-              <button
-                type="button"
-								class="slash"
-                onclick={() => insertAt(idx + 1)}
-                tabindex={-1}
-              ><span>/</span></button>
-            {/if}
-          </nav>
+          <button
+            type="button"
+            class="minus"
+            onclick={() => {
+              history.push([...elements])
+              elements.splice(idx, 1)
+            }}
+            tabindex={-1}
+          ><span>⨯</span></button>
         {/if}
       </li>
+      {#if idx < elements.length - 1}
+        <li>
+          <button
+            type="button"
+            class="slash"
+            onclick={() => insertAt(idx + 1)}
+            tabindex={-1}
+          ><span>/</span></button>
+        </li>
+      {/if}
     {/each}
     <li><button id="more"><span>+</span></button></li>
     {#if history.length > 0}
@@ -152,7 +152,7 @@
     flex-wrap: wrap;
     padding : 0;
     margin-inline-start: 2ch;
-    gap: 1.5rem;
+    gap: 0.5rem;
   }
   input {
     field-sizing: content;
@@ -166,21 +166,18 @@
     position: relative;
     display: flex;
   }
-  li nav {
+  .minus, .minus span {
+    border-radius: 50%;
+    padding: 0.25rem;
+  }
+  .minus {
     position: absolute;
-    right: -1.5rem;
-    top: 0.5rem;
-    display: flex;
-    gap: 0.25rem;
-    align-content: flex-start;
+    top: -1rem;
+    right: -0.5rem;
   }
-  #more, #before {
-    right: 0ch;
-    top: -0.5rem;
-  }
-  #before {
-    right: auto;
-    left: -3ch;
+  .minus span {
+    display: inline-block;
+    aspect-ratio: 1;
   }
 	:is(#more, #before, .slash) {
 		background-color: color-mix(in oklab, darkolivegreen 25%, #0008 60%);

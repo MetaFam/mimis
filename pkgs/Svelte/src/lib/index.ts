@@ -46,7 +46,7 @@ export const record2Object = (record: Neo4jRecord) => (
 )
 
 let count = 0
-export const identify = (objArray: Array<Record<string, unknown>>) => (
+export const identify = <T>(objArray: Array<T>) => (
   objArray.map((obj, idx) => ({ id: ++count, ...obj }))
 )
 

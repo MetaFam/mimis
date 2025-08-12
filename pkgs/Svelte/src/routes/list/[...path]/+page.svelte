@@ -1,9 +1,17 @@
 <script lang="ts" module>
   export type Entry = {
-    id: number
     cid: string
     title: string
     type?: string
+  }
+  export type IdedEntry = Entry & { id: number }
+
+  declare global {
+    namespace svelteHTML {
+      interface DocumentEventMap {
+        'datum-delete': CustomEvent<{ id: number }>
+      }
+    }
   }
 </script>
 
@@ -29,12 +37,12 @@
 
   const { debug } = context
 
-  let entries = $state<Array<Entry>>([])
+  let entries = $state<Array<IdedEntry>>([])
   let ipfs = getIPFS()
   let loading = $state(false)
   let saving = $state(false)
   let changes = $state(false)
-  let history = $state<Array<Array<Entry>>>([])
+  let history = $state<Array<Array<IdedEntry>>>([])
   let progress = $state(0)
   let total = $state(0)
   let addFiles = $state<HTMLInputElement | null>(null)
@@ -97,17 +105,34 @@
 
   async function saveStoracha(files: Array<File>) {
     const storacha = await createStoracha()
-    console.debug({ email: settings.storachaEmail })
     if(!settings.storachaEmail) {
       throw new Error('No Storacha email specified in settings.')
     }
     const account = await storacha.login(
       settings.storachaEmail as EmailAddress
     )
-    console.debug({ spaces: storacha.spaces().map((s) => (
-      s.name
-    )) })
-    return [] as Array<Entry>
+    let space: { did: () => `did:${string}:${string}` } | undefined = (
+      storacha.spaces().find((s) => s.name === "Mïmis")
+    )
+    if(!space) {
+      space = await storacha.createSpace("Mïmis", { account })
+    }
+    if(!space) {
+      throw new Error('Couldn’t find or create space: "Mïmis".')
+    }
+    await storacha.setCurrentSpace(space.did())
+    const entries = await Promise.all(files.map(async (file) => {
+      const cid = await storacha.uploadFile(file, { dedupe: true })
+      return {
+        cid: cid.toString(),
+        title: (
+          file.name.replace(/\.[^.]*$/, '')
+        ),
+        type: file.type,
+      }
+    }))
+
+    return identify<Entry>(entries)
   }
 
   async function addEntries(
@@ -150,7 +175,7 @@
     const configs = await Promise.all(
       files.map(async (file) => ( JSON5.parse(await file.text()) ))
     )
-    entries = identify(configs.flat()) as Array<Entry>
+    entries = identify<Entry>(configs.flat())
   }
 
   async function handleFiles(
@@ -285,7 +310,7 @@
 </svelte:head>
 
 <svelte:document
-  ondatum-delete={(evt: CustomEvent) => {
+  on:datum-delete={(evt: CustomEvent) => {
     const { id } = evt.detail
     history.push([...entries])
     entries = entries.filter((entry) => entry.id !== id)
@@ -465,12 +490,12 @@
         disabled={loading}
       >
         {#if loading}
-          <section>
+          <span><section>
             <p>Loading…</p>
             <progress max={total} value={progress}>
               {progress / total * 100}%
             </progress>
-          </section>
+          </section></span>
         {:else}
           <span>Add Files</span>
         {/if}
@@ -508,12 +533,8 @@
     justify-content: center;
     align-items: center;
     flex-grow: 1;
-
-    button {
-      display: none;
-    }
   }
-  button, label {
+  button, .button, label {
     z-index: 10;
     min-width: min-content;
   }

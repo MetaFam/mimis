@@ -10,9 +10,28 @@
 <section>
 	<h1>About Mïmis</h1>
 
-	<p>Mïmis is a collaborative filesystem. It functions by publishing <a href="https://ipld.io/docs/codecs/known/dag-pb">ProtoBuf-DAG</a> UnixFS file systems describing context trees to <a href="https://ipfs.io">IPFS</a> where they are picked up & cached in a <a href="https://neo4j.org">Neo4j</a> instance using content-addressing to deduplicate across versions in a manner reminiscent of <code>git</code>.</p>
+	<p>Mïmis is a collaborative filesystem. It leverages <a href="https://ipfs.io">IPFS</a> to store files & transfer state for a <a href="https://neo4j.org">Neo4j</a> graph describing the connections between files.</p>
 
 	<img src="architecture.svg" alt="Mïmis Architecture"/>
+
+	<p>The structure in Neo4j differs from a traditional file system in several ways:</p>
+
+	<ul>
+		<li>
+			<p>Files have no names. All the context information is contained in the path leading to the data.</p>
+			<p>Much of the structure of the system is in equivalencies between paths:</p>
+			<ul>
+				<li><p>Some are simple formatting, like <code>∅/book/by/Elizabeth Bear/Shoggoths in Bloom/</code> & <code>∅/book/Elizabeth Bear — Shoggoths in Bloom/</code>. Ideally, <em>any</em> reasonable path should resolve to the resource it represents.</p></li>
+				<li><p>Others, convey semantic information, like having <code>∅/Hugo/Novella/2009/winner/</code> or <code>∅/top/science-fiction/#23/</code> be an equivalency to the above paths.</p></li>
+			</ul>
+		</li>
+		<li>
+			<p>Each position in the context graph holds <em>(optionally)</em>:</p>
+			<ul>
+				<li>An ordered list </li>
+			</ul>
+		</li>
+	</ul>
 
 	<p>Each user has their own tree, and it is possible to browse and subscribe to sections of other users' trees. These subscriptions can be "union mounted" into a composite tree beginning with the user's tree, and merging mounted nodes into it.</p>
 

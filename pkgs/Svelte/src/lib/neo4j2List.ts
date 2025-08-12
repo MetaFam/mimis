@@ -1,4 +1,5 @@
 import { identify, records2Object, Nöopoint } from '$lib'
+import { type Entry } from '../routes/list/[...path]/+page.svelte'
 import { getNeo4j } from './drivers.ts'
 
 export async function neo4j2List(path: Array<string>) {
@@ -33,7 +34,7 @@ export async function neo4j2List(path: Array<string>) {
 
     console.debug({ found: results })
 
-    return identify(results.map((result) => ({
+    return identify<Entry>(results.map((result: any) => ({
       title: result.entry.properties.path,
       type: result.item.properties.type,
       cid: result.item.properties.cid,

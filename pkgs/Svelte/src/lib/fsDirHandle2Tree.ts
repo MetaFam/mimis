@@ -1,5 +1,9 @@
-import ignore from 'ignore'
-import type { DirNode, GitIgnore, Node } from '../types'
+import ignoreModule from 'ignore'
+import type {
+  Logger, DirNode, GitIgnore, Node,
+} from '../types'
+
+const ignore = ignoreModule.default
 
 let gitignores: Array<GitIgnore> = []
 
@@ -14,9 +18,9 @@ type Handles = (
  * Wunderbaum tree.
  */
 export const spiderTree = ({
-  onStatusUpdate, dirs, gitignores: ignores = true,
+  log, dirs, gitignores: ignores = true,
 }: {
-  onStatusUpdate: (msg: string) => void
+  log?: Logger
   dirs: Handles
   gitignores?: boolean
 }) => {
@@ -32,7 +36,7 @@ export const spiderTree = ({
     path: string = '',
   ) {
     const current = `${path}${dir.name}/`
-    onStatusUpdate?.(`Traversing: ${current}`)
+    log?.(`Traversing: ${current}`)
 
     if(ignores) {
       try {
@@ -70,7 +74,7 @@ export const spiderTree = ({
       | FileSystemFileHandle
     )
 
-    handles: for await (const handle of (
+    for await (const handle of (
       dir as unknown as { values: () => Array<Handle> }
     ).values()) {
       const next = `${current}${handle.name}`
@@ -90,7 +94,7 @@ export const spiderTree = ({
               && gi.ig.ignores(`${short}/`)
             )
            ) {
-            onStatusUpdate?.(`Ignoring: ${next}`)
+            log?.(`Ignoring: ${next}`)
             return true
           }
         }
@@ -104,7 +108,7 @@ export const spiderTree = ({
           )
           here.childCount += node.childCount
         } else {
-          onStatusUpdate?.(`Leaf: ${next}`)
+          log?.(`Leaf: ${next}`)
 
           const file = await handle.getFile()
           node = {

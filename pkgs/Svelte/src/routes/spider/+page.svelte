@@ -7,6 +7,7 @@
 	import { wunder2CAR } from '$lib/wunder2CAR'
 	import { wunderFiles } from '$lib/wunderFiles'
 	import { selectAll } from '$lib/selectAll'
+  import type { Logger } from '../../types'
 	import 'bootstrap-icons/font/bootstrap-icons.min.css'
 	import 'wunderbaum/dist/wunderbaum.css'
 
@@ -20,12 +21,15 @@
 	let statuses = $state<Array<string>>([])
 	let showBegin = $state(false)
 
+	const log: Logger = (s) => { statuses.push(
+		typeof s === 'string' ? s : (
+			JSON.stringify(s, null, 2)
+		)
+	) }
+
 	const load = (dirs: Array<FileSystemDirectoryHandle>) => {
 		if(dirs.length > 0) {
-			spiderTree({
-				dirs,
-				onStatusUpdate: (s) => { statuses.push(s) },
-			})
+			spiderTree({ dirs, log })
 			.then(selectAll)
 			.then((roots) => {
 				tree = wunderFiles({
@@ -50,10 +54,7 @@
 		if(!tree) throw new Error('No tree defined.')
 
 		try {
-			car = await wunder2CAR({
-				root: tree.root,
-				onStatusUpdate: (s) => { statuses.push(s) },
-			})
+			car = await wunder2CAR({ root: tree.root, log })
 		} finally {
 			statuses = []
 		}

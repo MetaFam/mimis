@@ -4,10 +4,12 @@ import * as Rabin from '@ipld/unixfs/file/chunker/rabin'
 import { CAREncoderStream } from 'ipfs-car'
 import * as RawLeaf from 'multiformats/codecs/raw'
 // import * as Trickle from '@ipld/unixfs/file/layout/trickle'
+import * as Balanced from '@ipld/unixfs/file/layout/balanced'
+import { defaults as unixFSDefaults } from '@ipld/unixfs/file'
 // import { sha256 } from 'multiformats/hashes/sha2'
-import type { CID } from 'multiformats'
+import type { CID } from 'multiformats/cid'
 import type { WunderbaumNode } from 'wb_node'
-import type { Logger } from "../types";
+import type { Logger } from '../types'
 
 // export const UnixFSLeaf = {
 //   code: UnixFS.code,
@@ -33,18 +35,15 @@ export const wunder2CAR = async (
     writable: unixfsWritable,
   } = new TransformStream()
   type Writer = UnixFS.View & { ready: Promise<void> }
+  const settings = unixFSDefaults()
+  settings.chunker = await Rabin.create()
+  settings.fileChunkEncoder = RawLeaf
+  settings.smallFileEncoder = RawLeaf
+  // fileLayout: Trickle.configure({ maxDirectLeaves: 100 }),
+  // fileLayout: Balanced.withWidth(Balanced.defaults.width),
   const writer = UnixFS.createWriter({
     writable: unixfsWritable,
-    settings: {
-      chunker: await Rabin.create(),
-      // fileLayout: Trickle.configure({ maxDirectLeaves: 100 }),
-      // fileChunkEncoder: UnixFSLeaf,
-      // smallFileEncoder: UnixFSLeaf,
-      fileChunkEncoder: RawLeaf,
-      smallFileEncoder: RawLeaf,
-      // fileEncoder: UnixFS,
-      // hasher: sha256,
-    } as UnixFS.EncoderSettings,
+    settings,
   }) as Writer
 
   type Block = {

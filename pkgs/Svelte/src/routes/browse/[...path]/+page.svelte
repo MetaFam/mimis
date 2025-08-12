@@ -96,7 +96,7 @@
   <form onsubmit={submitChip}>
     <!-- svelte-ignore a11y_autofocus -->
     <input id="chip" placeholder="Path Element" autofocus/>
-    <button>Add Path Element</button>
+    <button><span>Add Path Element</span></button>
   </form>
 
   {#if chips.length > 0}
@@ -110,7 +110,7 @@
               `${basePath}/${chips.toSpliced(index, 1).join('/')}`
             }
             onclick={() => removeChip(index)}
-          >⨯</a>
+          ><span>⨯</span></a>
         </li>
       {/each}
     </ul>
@@ -155,7 +155,7 @@
                   }
                   onclick={() => { addChip(chip) }}
                 >
-                  {chip}
+                  <span>{chip}</span>
                 </a>
               {/if}
             </li>
@@ -173,6 +173,11 @@
     margin-block-start: 3rem;
     gap: 1rem;
   }
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
   ul {
     list-style: none;
   }
@@ -185,23 +190,12 @@
       padding: 0.25em 0.5em;
       border: 2px solid #9999;
       border-radius: 10%;
-
-      .button {
-        border-radius: 50%;
-        padding: 0.25em;
-        width: 2em;
-      }
     }
   }
   #result {
     display: flex;
     flex-direction: column;
     align-items: center;
-
-    .button {
-      display: block;
-      margin-bottom: 0.25rem;
-    }
   }
   object {
     display: block;
