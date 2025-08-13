@@ -1,10 +1,12 @@
 <script lang="ts">
+  import Toastify from 'toastify-js'
   import { Wunderbaum } from 'wunderbaum'
   import { wunderFiles } from '$lib/wunderFiles'
   import { selectAll } from '$lib/selectAll'
   import { car2Tree } from '$lib/car2Wunder';
   import { wunder2Neo4j } from '$lib/wunder2Neo4j';
-  import Toastify from 'toastify-js'
+  import { createStoracha } from '$lib/ipfs'
+  import { logger } from '$lib'
 	import 'bootstrap-icons/font/bootstrap-icons.min.css'
   import 'wunderbaum/dist/wunderbaum.css'
   import 'toastify-js/src/toastify.css'
@@ -19,13 +21,17 @@
   let tree = $state<Wunderbaum>()
   let car = new CAR()
   let path = $state('')
+  let file = $state<File | null | undefined>(null)
+  const carLogs = $state(<Array<string>>([]))
+
+  const carLog = logger(carLogs)
 
   const submitCAR = async (evt: SubmitEvent) => {
     evt.preventDefault()
     const input: HTMLInputElement | null = (
       car.form?.querySelector('input[type="file"]') ?? null
     )
-    const file = input?.files?.[0]
+    file = input?.files?.[0]
     if(!file) {
       throw new Error('No file selected.')
     }
@@ -35,9 +41,10 @@
       source,
       mount: 'fs-tree',
     })
-    if(source.flat(3).length < 25) {
-      tree.expandAll()
-    }
+    // ToDo: Expand small trees. This code doesn't work.
+    // if(source.flat(3).length < 25) {
+    //   tree.expandAll()
+    // }
   }
 
   const submitMount = async (evt: SubmitEvent) => {
@@ -69,6 +76,16 @@
       car.generating = false
     }
   }
+
+  async function uploadCAR(evt: SubmitEvent) {
+    evt.preventDefault()
+    if(!file) {
+      throw new Error('CAR upload attempted with no file.')
+    }
+    const storacha = await createStoracha({ log: carLog })
+    carLog?.(`Uploading: ${file.name}.`)
+    await storacha.uploadCAR(file)
+  }
   </script>
 
 <svelte:head>
@@ -80,7 +97,7 @@
   <h1>Upload a CAR File to Mïmis</h1>
 </header>
 
-<main>
+  <main>
   <form bind:this={car.form} onsubmit={submitCAR}>
     <input
       type="file" required accept=".car"
@@ -91,16 +108,37 @@
   {#if !!tree}
     <form onsubmit={submitMount}>
       <input placeholder="/system/mount/point/" bind:value={path}/>
-      <button disabled={car.generating}>
+      <button disabled={car.generating}><span>
         Neo4j Import
         {#if car.generating}
           {count.toLocaleString()}
         {/if}
-      </button>
+      </span></button>
     </form>
   {/if}
-
   <div id="fs-tree"></div>
+  {#if !!file}
+    <form onsubmit={uploadCAR}>
+      <button disabled={!file}><span>
+        Upload Entire CAR
+      </span></button>
+      <ul>
+        <li><label>
+          <input type="checkbox" name="service" value="storacha" checked/>
+          to Storacha
+        </label></li>
+        <li><label>
+          <input type="checkbox" name="service" value="kubo"/>
+          to Kubo
+        </label></li>
+      </ul>
+    </form>
+    <ol reversed>
+      {#each carLogs as log}
+        <li>{log}</li>
+      {/each}
+    </ol>
+  {/if}
 </main>
 
 <style>

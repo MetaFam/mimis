@@ -181,21 +181,35 @@
   ul {
     list-style: none;
   }
+  input, li {
+    font-size: 15pt;
+  }
   #path {
     display: flex;
-    gap: 0.5rem;
+    gap: 1.5rem;
 
     li {
+      position: relative;
       display: inline-block;
       padding: 0.25em 0.5em;
       border: 2px solid #9999;
       border-radius: 10%;
+
+      .button {
+        position: absolute;
+        font-size: 1rem;
+        min-width: 2.25rem;
+        top: -1.5rem;
+        right: -1.5rem;
+      }
     }
   }
   #result {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 0.5rem;
+    padding: 0;
   }
   object {
     display: block;

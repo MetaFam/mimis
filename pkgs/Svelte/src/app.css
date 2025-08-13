@@ -156,8 +156,9 @@ button, .button {
 	}
 
 	&:disabled {
-		filter: grayscale(0);
-		opacity: 0.75;
+		filter: grayscale(1) blur(0.5px);
+		opacity: 0.5;
+		cursor: default;
 	}
 }
 

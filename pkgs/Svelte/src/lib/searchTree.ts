@@ -25,7 +25,7 @@ export const searchTree = async (
         WITH $elems as pathElems
         MATCH path = (start:Root)-[:CONTAINS*]->(end)
         WITH pathElems, path, end,
-          [
+            [
             rel in relationships(path)
             WHERE NOT isEmpty(rel.path)
             | rel.path
@@ -38,42 +38,21 @@ export const searchTree = async (
             OR elements[i] = pathElems[i]
           )
         )
-        OPTIONAL MATCH (end)-[next:CONTAINS]->(child)
-        WITH elements, end, next, child
-        WHERE next IS NOT NULL
+        CALL (end) {
+          MATCH (end)-[next:CONTAINS]->(child)
+            RETURN next, child
+          UNION DISTINCT
+          MATCH (end)-[:REPRESENTED_BY]->(mediate)-[next:EMBODIED_AS]->(child)
+            RETURN next, child
+        }
         RETURN DISTINCT
-          elements as path,
-          next,
-          child
-        UNION ALL
-        WITH $elems as pathElems
-        MATCH path = (start:Root)-[:CONTAINS*]->(end)
-        WITH pathElems, path, end,
-          [
-            rel in relationships(path)
-            WHERE NOT isEmpty(rel.path)
-            | rel.path
-          ] as elements
-        WHERE size(elements) = size(pathElems)
-        AND ALL(
-          i IN range(0, size(pathElems) - 1)
-          WHERE (
-            pathElems[i] = '*'
-            OR elements[i] = pathElems[i]
-          )
-        )
-        OPTIONAL MATCH (end)-[:REPRESENTED_BY]->(intermediate)-[next:EMBODIED_AS]->(child)
-        WITH elements, next, child
-        WHERE next IS NOT NULL
-        RETURN DISTINCT
-          elements as path,
+          elements AS path,
           next,
           child
         SKIP $offset
         LIMIT $limit
       `
     ))
-    console.debug({ query })
     const { records } = await session.run(
       query, {
         elems: path,
@@ -81,6 +60,7 @@ export const searchTree = async (
         offset: BigInt(offset),
       }
     )
+    console.debug({ query, records })
     return records
   } finally {
     await session.close()

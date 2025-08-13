@@ -12,6 +12,7 @@ class Settings {
     debugging: 'mimis-setting-debugging',
     ipfsProvider: 'mimis-setting-ipfs-provider',
     storachaEmail: 'mimis-setting-storacha-email',
+    storachaSpace: 'mimis-setting-storacha-space',
   } as const
   static defaults = {
     [Settings.keys.ipfsPattern]: (
@@ -27,6 +28,7 @@ class Settings {
     [Settings.keys.debugging]: page.url.searchParams.has('debug'),
     [Settings.keys.ipfsProvider]: 'local',
     [Settings.keys.storachaEmail]: '',
+    [Settings.keys.storachaSpace]: 'Mïmis',
   }
 
   valueOf(key: Omit<keyof typeof Settings.keys, 'limit' | 'debugging'>): string
@@ -72,6 +74,7 @@ class Settings {
   debugging = $state(this.valueOf('debugging'))
   ipfsProvider = $state(this.valueOf('ipfsProvider'))
   storachaEmail = $state(this.valueOf('storachaEmail'))
+  storachaSpace = $state(this.valueOf('storachaSpace'))
 
   get saveLocal() {
     return this.ipfsProvider === 'local'

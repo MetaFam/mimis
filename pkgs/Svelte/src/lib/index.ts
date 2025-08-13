@@ -1,4 +1,5 @@
 import type { Record as Neo4jRecord } from 'neo4j-driver'
+import JSON5 from 'json5'
 import { getNeo4j } from './drivers.ts'
 
 type Primitive = string | number | boolean | ((...args: Array<any>) => any) | null | undefined
@@ -230,3 +231,17 @@ export class Nöopoint {
 export const timestamp = (date = new Date()) => (
   date.toISOString().slice(0, 19).replace('T', '@').replace(/-/g, '⁄')
 )
+
+export function logger(logs: Array<string>) {
+  return function log(msg: string | {}) {
+    console.debug({ msg })
+    if(typeof msg !== 'string') {
+      try {
+        msg = JSON5.stringify(msg, null, 2)
+      } catch(error) {
+        msg = `Error: ${(error as Error).message}`
+      }
+    }
+    logs.unshift(msg as string)
+  }
+}

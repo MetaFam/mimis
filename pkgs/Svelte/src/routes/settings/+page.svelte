@@ -31,9 +31,9 @@
         <ul id="ipfs">
           <li><label class="line">
             <input
-              type="radio"
+              type="checkbox"
               name="provider"
-              value="local"
+              value="kubo"
               bind:group={settings.ipfsProvider}
               onchange={() => settings.save()}
             />
@@ -41,13 +41,13 @@
           </label></li>
           <li><label class="line">
             <input
-              type="radio"
+              type="checkbox"
               name="provider"
               value="storacha"
               bind:group={settings.ipfsProvider}
               onchange={() => settings.save()}
             />
-            <span>Storacha IPFS</span>
+            <span>Storacha Network</span>
           </label></li>
         <ul id="ipfs">
           <li><label>
@@ -61,19 +61,28 @@
           </label></li>
           <li><label>
             <fieldset>
-              {#if settings.ipfsProvider === 'storacha'}
-                <legend>Storacha Email Login</legend>
-                <input
-                  bind:value={settings.storachaEmail}
-                  onchange={() => settings.save()}
-                />
-              {:else}
-                <legend>API</legend>
-                <input
-                  bind:value={settings.ipfsAPI}
-                  onchange={() => settings.save()}
-                />
-              {/if}
+              <legend>Storacha Email Login</legend>
+              <input
+                bind:value={settings.storachaEmail}
+                onchange={() => settings.save()}
+              />
+              <!-- disabled={!settings.ipfsPattern.includes('storacha')} -->
+            </fieldset>
+            <fieldset>
+              <legend>Storacha Space Name</legend>
+              <input
+                bind:value={settings.storachaSpace}
+                onchange={() => settings.save()}
+              />
+              <!-- disabled={!settings.ipfsPattern.includes('storacha')} -->
+            </fieldset>
+            <fieldset>
+              <legend>Kubo API Endpoint</legend>
+              <input
+                bind:value={settings.ipfsAPI}
+                onchange={() => settings.save()}
+              />
+              <!-- disabled={!settings.ipfsPattern.includes('kubo')} -->
             </fieldset>
           </label></li>
         </ul>

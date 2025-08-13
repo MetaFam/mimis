@@ -144,7 +144,7 @@ export async function wunder2Neo4j(
         const mountQ = `
           MATCH (mount) WHERE elementId(mount) = $current
           MATCH (base) WHERE elementId(base) = $rootId
-          MERGE (mount)-[:CONNECTS { path: $name }]->(base)
+          MERGE (mount)-[:CONTAINS { path: $name }]->(base)
         `
         await session.run(mountQ, {
           current, rootId, name: path[0],
