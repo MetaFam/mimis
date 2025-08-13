@@ -1,1 +1,0 @@
-import{a8 as t,o as k,h as S,v as T,a9 as c}from"./OurnOBNA.js";function h(r,i){return r===i||(r==null?void 0:r[c])===i}function A(r={},i,a,q){return t(()=>{var f,s;return k(()=>{f=s,s=[],S(()=>{r!==a(...s)&&(i(r,...s),f&&h(a(...f),r)&&i(null,...f))})}),()=>{T(()=>{s&&h(a(...s),r)&&i(null,...s)})}}),r}export{A as b};
