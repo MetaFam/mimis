@@ -1,4 +1,5 @@
 import { getNeo4j } from './drivers.ts'
+import { settings } from './settings.svelte.ts'
 
 export const searchTree = async (
   { path, limit = 200, offset = 0 }:
@@ -23,7 +24,7 @@ export const searchTree = async (
     ) : (
       `
         WITH $elems as pathElems
-        MATCH path = (start:Root)-[:CONTAINS*]->(end)
+        MATCH path = (start:Root)-[:CONTAINS|EQUALS*]->(end)
         WITH pathElems, path, end,
             [
             rel in relationships(path)
@@ -47,6 +48,7 @@ export const searchTree = async (
         }
         RETURN DISTINCT
           elements AS path,
+          elementId(end) as id,
           next,
           child
         SKIP $offset
@@ -56,7 +58,7 @@ export const searchTree = async (
     const { records } = await session.run(
       query, {
         elems: path,
-        limit: BigInt(limit),
+        limit: BigInt(limit || settings.limit),
         offset: BigInt(offset),
       }
     )

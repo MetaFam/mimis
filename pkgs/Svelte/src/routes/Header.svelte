@@ -19,6 +19,7 @@
 		{ url: '#/post', icon: '📫️', title: 'Post' },
 		{ url: '#/flow', icon: '🌊', title: 'Flow' },
 		{ url: '#/publish', icon: '☢️', title: 'Publish' },
+		{ url: '#/equals', icon: '≡', title: 'Equal' },
 		{ url: '#/about', icon: 'ℹ️', title: 'About' },
 		{ url: '#/settings', icon: '⚙️', title: 'Settings' },
 	]

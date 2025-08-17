@@ -28,11 +28,11 @@ export async function createStoracha(
     storacha.spaces().find((s) => s.name === space)
   )
   if(meta) {
-    log?.(`Found existing Storacha space: "${space}".`)
+    log?.(`Found existing Storacha space: "${space}" (${meta.did()}).`)
   } else {
     meta = await storacha.createSpace(space, { account })
     if(meta) {
-      log?.(`Created Storacha space: "${space}".`)
+      log?.(`Created Storacha space: "${space}" (${meta.did()}).`)
     }
   }
   if(!meta) {

@@ -1,6 +1,7 @@
 <script lang="ts">
   import Toastify from 'toastify-js'
   import { Wunderbaum } from 'wunderbaum'
+  import type { WunderbaumNode } from 'wb_node';
   import { wunderFiles } from '$lib/wunderFiles'
   import { selectAll } from '$lib/selectAll'
   import { car2Tree } from '$lib/car2Wunder';
@@ -20,7 +21,7 @@
   let count = $state(0)
   let tree = $state<Wunderbaum>()
   let car = new CAR()
-  let path = $state('')
+  let path = $state([''])
   let file = $state<File | null | undefined>(null)
   const carLogs = $state(<Array<string>>([]))
 
@@ -47,22 +48,24 @@
     // }
   }
 
+  const on = { node: { enter: (_node: WunderbaumNode) => {
+    count++
+  } } }
+
   const submitMount = async (evt: SubmitEvent) => {
     evt.preventDefault()
     try {
       car.generating = true
-      const mount = path.split('/').filter(Boolean)
+      const mount = path.filter(Boolean)
       if(!tree) throw new Error('No tree to mount.')
       const log = (msg: string | {}) => {
         console.debug(msg)
-        count++
       }
-      console.debug({ root: tree.root })
-      const cid: string = await wunder2Neo4j(
-        tree.root, mount, log,
-      )
+      const { count } = await wunder2Neo4j({
+        root: tree.root, path: mount, log, on,
+      })
       Toastify({
-        text: `Loaded: id://${cid.slice(0, 5)}…${cid.slice(-5)}`,
+        text: `Loaded: ${count} Entr${count === 1 ? 'y' : 'ies'}`,
         duration: 8_000,
         close: true,
         gravity: 'bottom', // `top` or `bottom`

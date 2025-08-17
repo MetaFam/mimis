@@ -28,22 +28,26 @@
 		<li>
 			<p>Each position in the context graph holds <em>(optionally)</em>:</p>
 			<ul>
-				<li>An ordered list </li>
+				<li>
+					<p>A combination of:</p>
+					<ul>
+						<li>
+							<p>An ordered list of Nöopoints <em>(the Nöosphere is all ideas, a point within that space is a particular concept)</em>. Each Nöopoint represents a different concept that could be meant by the paths leading to this list.</p>
+							<p>For each Nöopoint, there are blobs whose contents are in IPFS, at most one per mimetype.</p>
+						</li>
+						<li>
+							<p>An ordered list of mounted contexts. Each user has their own tree differentiated by an Ethereum signing key. A user can mark positions in their tree as equivalent to positions in others' trees.</p>
+							<p>There are multiple access modes which combine the lists in different ways. For example, one algorithm might take the first requested resource encountered while another might present a list where each subsequent mount is deduplicated & concatenated to the previous ones.</p>
+						</li>
+					</ul>
+				</li>
 			</ul>
 		</li>
 	</ul>
 
-	<p>Each user has their own tree, and it is possible to browse and subscribe to sections of other users' trees. These subscriptions can be "union mounted" into a composite tree beginning with the user's tree, and merging mounted nodes into it.</p>
-
-	<p>When a context path is ambiguous, the system can be requested to return the highest-priority answer or an ordered list of possible candidate resources.</p>
-
 	<p>One function of that these ordered lists will enable is a content recommender. Users can create ordered lists at different context points, and they're combined & collated to generate a likely list of the consensus opinion.</p>
 
-	<p>Structurally, the context tree differs from a traditional filesystem in that files don't have names, per se. Their "name" is simply the file type. <em>(Oftentimes, this is duplicated, like <code inert>svg.svg</code> because a variety of softwares rely on there being an extension.)</em> Because there is no context information in the filename, it is possible to create multiple routes to a file without the fear that the filename relies on context in the leading path.</p>
-
-	<p>The goal is that the tree should contain a variety of paths describing a resource rather than a single fixed point.</p>
-
-	<p></p>
+	<p>Graphs are serialized to DAG-JSON for communication between instances. DAG-JSON cannot handle cycles in the graph. For this reason, all links are "forward" from the current location. There is a special path element, <code>∅</code>, that represents the search should drop back to root of the shared file system. When the system is serialized, if they create cycles, paths containing "<code>∅</code>" are unrolled and saved as though <code>∅</code> is just a normal directory.</p>
 </section>
 
 <style>
@@ -62,10 +66,21 @@
 		initial-letter: 2 2;
 		text-indent: 1em;
 		margin-block-start: 0.25lh;
-		margin-trim: block;
 		text-wrap: pretty;
-		max-width: 66ch;
-		margin-inline: auto;
 		text-align: justify;
 	}
+
+	ul {
+		list-style: disc;
+
+		& li {
+			padding-inline-start: 0;
+		}
+	}
+
+	ul, p {
+		max-width: 66ch;
+		margin-inline: auto;
+	}
+
 </style>

@@ -4,11 +4,16 @@ import mime from 'mime'
 import { getNeo4j } from './drivers.ts'
 import type { Logger } from '../types'
 
-export async function wunder2Neo4j(
+export async function wunder2Neo4j({
+  root, path = [], log, on,
+}: {
   root: WunderbaumNode,
-  path: Array<string> = [],
+  path: Array<string>,
   log?: Logger,
-) {
+  on: { node: { enter: (
+    (node: WunderbaumNode) => void
+  ) } }
+}) {
   const driver = getNeo4j()
 
   try {
@@ -39,7 +44,13 @@ export async function wunder2Neo4j(
 
   async function addDirEntry(
     { dirId, itemId, name, type = ':Spot', rship = ':CONTAINS' }:
-    { dirId?: string, itemId: string, name?: string, type?: string, rship?: string }
+    {
+      dirId?: string
+      itemId: string
+      name?: string
+      type?: string
+      rship?: string
+    }
   ) {
     const session = driver.session()
     try {
@@ -56,12 +67,12 @@ export async function wunder2Neo4j(
         ON CREATE SET c.mimis_id = $relUUID
         RETURN elementId(dir) AS id
       `
-      const { records } = await session.run(
+      const { records: [id] } = await session.run(
         query, {
           itemId, name, dirId, dirUUID: uuid(), relUUID: uuid(),
         }
       )
-      const retId = records[0].get('id')
+      const retId = id.get('id')
       log?.(`Added ${name} → ${itemId} (${dirId} → ${retId})`)
       return retId
     } finally {
@@ -167,6 +178,7 @@ export async function wunder2Neo4j(
     const baseId = await createIPFSDir()
     await Promise.all(
       node.children.map(async (child) => {
+        on.node.enter(child)
         if(!child.selected && child.getSelectedNodes().length === 0) {
           return null
         }
