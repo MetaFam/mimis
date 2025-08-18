@@ -124,18 +124,17 @@ export async function wunder2Neo4j({
         log?.({ 'Rooting To': rootId })
       }
       const rootQ = `
-        ${rootId ? 'MATCH' : 'MERGE'} (r${atRoot ? ':Root' : ':Spot'})
-        ${!rootId ? '' : 'WHERE elementId(r) = $rootId'}
-        ${rootId ? '' : 'ON CREATE SET r.mimis_id = $uuid'}
+        MERGE (r:Root)
+        ON CREATE SET r.mimis_id = $uuid
         SET r:Root:Spot
         RETURN elementId(r) AS id
       `
       const { records: [root] } = await session.run(rootQ, {
         rootId, uuid: uuid(),
       })
-      let current = root.get('id')
+      let current = root.get('id') as string
 
-      log?.(`Added Root: ${current}`)
+      log?.({ 'Got Root': current })
 
       while(path.length > 1) {
         const pathQ = `
@@ -150,11 +149,7 @@ export async function wunder2Neo4j({
         const { records } = await session.run(
           pathQ, { current, elem, itemUUID: uuid(), relUUID: uuid() }
         )
-        current = records[0].get('id')
-      }
-
-      if(!root.children) {
-        throw new Error('Root has no children.')
+        current = records[0].get('id') as string
       }
 
       if(!atRoot) {
@@ -167,7 +162,8 @@ export async function wunder2Neo4j({
         if(current === rootId) { // one element path
           query = `
             MATCH (base) WHERE elementId(base) = $rootId
-            MERGE (base)-[:CONTAINS { path: $name }]->(point:Spot)
+            MERGE (base)-[:CONTAINS { path: $name }]->(point)
+            SET point:Spot
             RETURN elementId(point) AS id
           `
         }
@@ -176,6 +172,7 @@ export async function wunder2Neo4j({
         )
         return point.get('id')
       }
+      return current
     } finally {
       await session.close()
     }
