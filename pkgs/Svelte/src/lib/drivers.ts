@@ -1,6 +1,6 @@
 import { driver as createNeo4j, auth, Driver } from 'neo4j-driver'
 import { create as ipfsFactory } from 'kubo-rpc-client'
-import { settings } from '$lib/settings.svelte';
+import { settings } from './settings.svelte.ts';
 
 let neo4j: Driver | null = null
 export const getNeo4j = () => {

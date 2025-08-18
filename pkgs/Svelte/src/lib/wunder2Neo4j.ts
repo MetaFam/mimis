@@ -139,7 +139,7 @@ export async function wunder2Neo4j({
       while(path.length > 1) {
         const pathQ = `
           MATCH (dir) WHERE elementId(dir) = $current
-          MERGE (dir)-[rel:CONTAINS {path: $elem}]->(item)
+          MERGE (dir)-[rel:CONTAINS { path: $elem }]->(item)
           ON CREATE SET rel.mimis_id = $relUUID
           ON CREATE SET item.mimis_id = $itemUUID
           SET item:Spot

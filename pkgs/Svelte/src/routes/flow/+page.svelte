@@ -18,6 +18,10 @@
   <h1>𝙁𝙡𝙤𝙬</h1>
 </header>
 
+<main>
+  <p>This page is supposed to mimic a chat interface, storing the information in Neo4j.</p>
+</main>
+
 <style>
   h1 {
     font-size: 5rem;
@@ -26,5 +30,10 @@
       darkblue,
       lightblue
     );
+  }
+
+  main {
+    max-width: 70ch;
+    margin-inline: auto;
   }
 </style>

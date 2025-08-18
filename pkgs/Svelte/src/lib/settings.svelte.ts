@@ -1,7 +1,7 @@
 import { page } from '$app/state'
 import { env } from '$env/dynamic/public'
 
-class Settings {
+export class Settings {
   static keys = {
     ipfsPattern: 'mimis-setting-ipfs-pattern',
     ipfsAPI: 'mimis-setting-ipfs-api',
@@ -107,3 +107,4 @@ class Settings {
 }
 
 export const settings = new Settings()
+export default settings

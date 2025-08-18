@@ -6,7 +6,9 @@
   import { neo4j2IPFS } from '$lib/neo4j2DAGJSON'
   import { toHTTP } from '$lib/toHTTP'
   import { Web3 } from '$lib/web3'
+  import { createStoracha } from '$lib/ipfs'
   import 'toastify-js/src/toastify.css'
+    import { getIPFS } from '$lib/drivers';
 
   let cid = $state<CID | null>(null)
   let carURL = $state<string | null>(null)
@@ -79,6 +81,34 @@
     <a class="button" href={carURL} download={filename}>
       <span>Download DAG-JSON CAR: {filename}</span>
     </a>
+    <hr/>
+    <button onclick={async () => {
+      if(!carURL) throw new Error('`carURL` isn’t set.')
+
+      const log = console.debug
+      const storacha = await createStoracha({ log })
+      const res = await fetch(carURL)
+      log?.(`Uploading: "${carURL}".`)
+      await storacha.uploadCAR(await res.blob())
+      log?.('Upload Complete.')
+    }}>
+      <span>Upload CAR To Storacha</span>
+    </button>
+    <hr/>
+    <button onclick={async () => {
+      if(!carURL) throw new Error('`carURL` isn’t set.')
+
+      const log = console.debug
+      const kubo = await getIPFS()
+      const res = await fetch(carURL)
+      const blob = await res.blob()
+      const buffer = await blob.arrayBuffer()
+      log?.(`Uploading: "${carURL}".`)
+      await kubo.dag.import([new Uint8Array(buffer)])
+      log?.('Upload Complete.')
+    }}>
+      <span>Upload CAR To Kubo</span>
+    </button>
   {/if}
   {#if cid}
     <hr/>
@@ -93,5 +123,11 @@
     margin-block-start: min(25vh, 15rem);
     display: grid;
     place-items: center;
+  }
+
+  hr {
+    height: 3px;
+    border-style: solid;
+    width: 50vw;
   }
 </style>

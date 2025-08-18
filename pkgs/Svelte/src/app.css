@@ -14,6 +14,7 @@
 	--fg: var(--color-theme-2);
 	--bg: var(--color-theme-1);
 	font-family: var(--font-body);
+	font-size: 14pt;
 	color: var(--color-text);
 	--min-browser-width: 15rem;
 }

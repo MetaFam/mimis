@@ -1,6 +1,6 @@
 import { create as generateStoracha } from '@storacha/client'
 import type { EmailAddress } from '@storacha/client/types'
-import { settings } from '$lib/settings.svelte'
+import { settings } from './settings.svelte.ts'
 import type { Logger } from '../types'
 
 export async function createStoracha(
