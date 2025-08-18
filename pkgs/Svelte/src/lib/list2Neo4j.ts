@@ -16,7 +16,7 @@ export async function list2Neo4j(list: Array<Entry>, path: Array<string>) {
       MATCH (elem) WHERE elementId(elem) = $currentId
       MERGE (elem)-[tain:CONTAINS {path: $element}]->(next:Spot)
       ON CREATE SET elem.mimis_id = $elemUUID
-      ON CREATE SEY tain.mimis_id = $tainUUID
+      ON CREATE SET tain.mimis_id = $tainUUID
       RETURN elementId(next) as id
     `
     for(const element of path) {

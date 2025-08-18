@@ -35,7 +35,7 @@ export async function wunder2Neo4j({
       `
       const guid = uuid()
       const { records } = await session.run(query, { uuid: guid })
-      log?.({ 'Created Spot': uuid })
+      log?.({ 'Created Spot': guid })
       return records[0].get('id')
     } finally {
       await session.close()
@@ -109,6 +109,12 @@ export async function wunder2Neo4j({
     }
   }
 
+  /**
+   * Attaches a graph representing a CAR file to a context tree.
+   *
+   * @param rootId: The root node of the recently imported CAR file.
+   * @returns
+   */
   async function mount({ rootId }: { rootId: string }) {
     const session = driver.session()
 
@@ -118,16 +124,16 @@ export async function wunder2Neo4j({
         log?.({ 'Rooting To': rootId })
       }
       const rootQ = `
-        ${atRoot ? 'MERGE (r:Spot)' : 'MERGE (r:Root)'}
-        ${!atRoot ? '' : 'WHERE elementId(r) = $rootId'}
-        ON CREATE SET r.mimis_id = $uuid
+        ${rootId ? 'MATCH' : 'MERGE'} (r${atRoot ? ':Root' : ':Spot'})
+        ${!rootId ? '' : 'WHERE elementId(r) = $rootId'}
+        ${rootId ? '' : 'ON CREATE SET r.mimis_id = $uuid'}
         SET r:Root:Spot
         RETURN elementId(r) AS id
       `
-      const { records } = await session.run(rootQ, {
+      const { records: [root] } = await session.run(rootQ, {
         rootId, uuid: uuid(),
       })
-      let current = records[0].get('id')
+      let current = root.get('id')
 
       log?.(`Added Root: ${current}`)
 
@@ -152,14 +158,23 @@ export async function wunder2Neo4j({
       }
 
       if(!atRoot) {
-        const mountQ = `
+        let query = `
           MATCH (mount) WHERE elementId(mount) = $current
           MATCH (base) WHERE elementId(base) = $rootId
           MERGE (mount)-[:CONTAINS { path: $name }]->(base)
+          RETURN $current AS id
         `
-        await session.run(mountQ, {
-          current, rootId, name: path[0],
-        })
+        if(current === rootId) { // one element path
+          query = `
+            MATCH (base) WHERE elementId(base) = $rootId
+            MERGE (base)-[:CONTAINS { path: $name }]->(point:Spot)
+            RETURN elementId(point) AS id
+          `
+        }
+        const { records: [point] } = await session.run(
+          query, { current, rootId, name: path[0] }
+        )
+        return point.get('id')
       }
     } finally {
       await session.close()
@@ -192,6 +207,9 @@ export async function wunder2Neo4j({
         } else {
           const ext = child.title.split('.').at(-1) as string
           const name = child.title.slice(0, -(ext.length + 1))
+          if(name === '') {
+            throw new Error(`Error Processing: "${child.title}": No Extension`)
+          }
           const typeFile = (name === '' || name === ext)
           const type = mime.getType(ext) ?? `unknown/${ext}`
           let itemId = await addFile({

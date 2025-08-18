@@ -11,6 +11,7 @@
 	import 'bootstrap-icons/font/bootstrap-icons.min.css'
   import 'wunderbaum/dist/wunderbaum.css'
   import 'toastify-js/src/toastify.css'
+    import Path from '../list/[...path]/Path.svelte';
 
   class CAR {
     form = $state<HTMLFormElement>()
@@ -56,12 +57,12 @@
     evt.preventDefault()
     try {
       car.generating = true
-      const mount = path.filter(Boolean)
+      const mount = [...path].filter(Boolean)
       if(!tree) throw new Error('No tree to mount.')
       const log = (msg: string | {}) => {
         console.debug(msg)
       }
-      const { count } = await wunder2Neo4j({
+      await wunder2Neo4j({
         root: tree.root, path: mount, log, on,
       })
       Toastify({
@@ -88,6 +89,7 @@
     const storacha = await createStoracha({ log: carLog })
     carLog?.(`Uploading: ${file.name}.`)
     await storacha.uploadCAR(file)
+    carLog?.(`Finished Uploading.`)
   }
   </script>
 
@@ -106,11 +108,15 @@
       type="file" required accept=".car"
       onchange={() => car.disabled = !car.form?.checkValidity()}
     />
-    <button disabled={car.disabled}><span>Read CAR</span></button>
+    {#if !car.disabled}
+      <button disabled={car.disabled}><span>
+        Read CAR
+      </span></button>
+    {/if}
   </form>
   {#if !!tree}
     <form onsubmit={submitMount}>
-      <input placeholder="/system/mount/point/" bind:value={path}/>
+      <Path bind:elements={path}/>
       <button disabled={car.generating}><span>
         Neo4j Import
         {#if car.generating}
@@ -150,6 +156,10 @@
     justify-content: center;
     gap: 1rem;
     margin-top: 15vh;
+
+    & input {
+      font-size: 15pt;
+    }
   }
 
   #fs-tree {
