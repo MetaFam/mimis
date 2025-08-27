@@ -21,6 +21,7 @@
   <ul>
     <li><a href="/#/sign-test"><strong>Reown Signature Test</strong></a></li>
     <li><a href="/#/accel"><strong>Accelerometer Test</strong></a></li>
+    <li><a href="/#/ui"><strong>Macrodata Refinement Test</strong></a></li>
   </ul>
 </main>
 

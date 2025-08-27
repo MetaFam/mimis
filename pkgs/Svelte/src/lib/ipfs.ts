@@ -18,7 +18,7 @@ export async function createStoracha(
   }
   const storacha = await generateStoracha()
 
-  log?.(`Awaiting confirmation on ${email}.`)
+  log?.(`Awaiting confirmation on ${email}. Check your messages.`)
   const account = await storacha.login(
     email as EmailAddress
   )

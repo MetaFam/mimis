@@ -7,6 +7,29 @@
   import { settings } from '$lib/settings.svelte'
   import 'toastify-js/src/toastify.css'
 
+  class DirSelection {
+    public selected: string
+    public choices: Array<string> | null
+
+    constructor({
+      selected,
+      choices = null,
+    }: {
+      selected?: string
+      choices?: Array<string> | null
+    } = {}) {
+      if(!Array.isArray(choices)) {
+        throw new Error('`choices` is not an array.')
+      }
+      if(!selected) throw new Error('`selected` is not defined.')
+      if(!choices.includes(selected)) {
+        throw new Error('`choices` doesn’t contain `selected`.`')
+      }
+      this.selected = selected
+      this.choices = choices
+    }
+  }
+
   let chips = $state<Array<string>>([])
   let resultPromise = $derived.by(async () => {
     $inspect({ chips, basePath })

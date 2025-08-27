@@ -17,8 +17,11 @@ export async function wunder2Neo4j({
   const driver = getNeo4j()
 
   try {
-    const rootId = await ingest(root)
-    await mount({ rootId })
+    const mountId = await createMount()
+    if(root.children?.length != 1) {
+      throw new Error(`Can't handle ${root.children?.length} root children.`)
+    }
+    const rootId = await ingest({ node: root.children[0], mountId })
     const pathStr = `/${path.join('/')}${path.length > 0 ? '/' : ''}`
     log?.(`Mounted ${rootId} at ${pathStr}.`)
     return rootId
@@ -26,17 +29,24 @@ export async function wunder2Neo4j({
     // await driver.close()
   }
 
-  async function createIPFSDir() {
+  async function getPoint({ dirId }: { dirId: string }) {
     const session = driver.session()
     try {
       const query = `
-        CREATE (dir:Spot { mimis_id: $uuid })
-        RETURN elementId(dir) AS id
+        MATCH (dir) WHERE elementId(dir) = $dirId
+        MERGE (dir)-[rel:REPRESENTED_BY]->(point:Nöopoint)
+        ON CREATE SET point.mimis_id = $pointUUID
+        ON CREATE SET rel.mimis_id = $relUUID
+        RETURN elementId(point) AS id
       `
-      const guid = uuid()
-      const { records } = await session.run(query, { uuid: guid })
-      log?.({ 'Created Spot': guid })
-      return records[0].get('id')
+      const { records } = await session.run(
+        query, {
+          dirId, pointUUID: uuid(), relUUID: uuid()
+        }
+      )
+      const pointId = records[0].get('id')
+      log?.({ 'Added Point': `${dirId} → ${pointId}` })
+      return pointId
     } finally {
       await session.close()
     }
@@ -46,7 +56,7 @@ export async function wunder2Neo4j({
     { dirId, itemId, name, type = ':Spot', rship = ':CONTAINS' }:
     {
       dirId?: string
-      itemId: string
+      itemId?: string
       name?: string
       type?: string
       rship?: string
@@ -55,7 +65,9 @@ export async function wunder2Neo4j({
     const session = driver.session()
     try {
       const query = `
-        MATCH (entry) WHERE elementId(entry) = $itemId
+        ${!itemId ? '' : (
+          'MATCH (entry) WHERE elementId(entry) = $itemId'
+        )}
         ${dirId == null ? (
           `CREATE (dir${type} { mimis_id: $dirUUID })`
         ) : (
@@ -65,14 +77,15 @@ export async function wunder2Neo4j({
           name != null ? '{ path: $name }' : ''
         }]->(entry)
         ON CREATE SET c.mimis_id = $relUUID
-        RETURN elementId(dir) AS id
+        SET dir:Spot
+        RETURN elementId(entry) AS id
       `
-      const { records: [id] } = await session.run(
+      const { records: [entry] } = await session.run(
         query, {
           itemId, name, dirId, dirUUID: uuid(), relUUID: uuid(),
         }
       )
-      const retId = id.get('id')
+      const retId = entry.get('id')
       log?.(`Added ${name} → ${itemId} (${dirId} → ${retId})`)
       return retId
     } finally {
@@ -81,28 +94,29 @@ export async function wunder2Neo4j({
   }
 
   async function addFile(
-    { cid, type, size }:
-    { cid: string, type: string | null, size: number }
+    { dirId, cid, type, size }:
+    { dirId: string, cid: string, type: string | null, size: number }
   ) {
     const session = driver.session()
     try {
+      const pointId = await getPoint({ dirId })
       const query = `
+        MATCH (point) WHERE elementId(point) = $pointId
         MERGE (file:IPFS:File { cid: $cid })
-        MERGE (item:Nöopoint)-[rel:EMBODIED_AS]->(file)
-        ON CREATE SET item.mimis_id = $itemUUID
+        MERGE (point)-[rel:EMBODIED_AS]->(file)
         ON CREATE SET file.mimis_id = $fileUUID
         ON CREATE SET rel.mimis_id = $relUUID
         SET file.mimetype = CASE WHEN $type IS NOT NULL THEN $type END
         SET file.size = $size
-        RETURN elementId(item) AS id
+        RETURN elementId(file) AS id
       `
       const { records } = await session.run(
         query, {
-          cid, type, size,
+          pointId, cid, type, size,
           itemUUID: uuid(), fileUUID: uuid(), relUUID: uuid()
         }
       )
-      log?.({ Added: `/${cid} (${type})` })
+      log?.({ 'Added At': `${pointId}: ${cid} (${type})` })
       return records[0].get('id')
     } finally {
       await session.close()
@@ -115,28 +129,24 @@ export async function wunder2Neo4j({
    * @param rootId: The root node of the recently imported CAR file.
    * @returns
    */
-  async function mount({ rootId }: { rootId: string }) {
+  async function createMount() {
     const session = driver.session()
 
     try {
-      const atRoot = path.length === 0
-      if(atRoot) {
-        log?.({ 'Rooting To': rootId })
-      }
       const rootQ = `
         MERGE (r:Root)
         ON CREATE SET r.mimis_id = $uuid
         SET r:Root:Spot
         RETURN elementId(r) AS id
       `
-      const { records: [root] } = await session.run(rootQ, {
-        rootId, uuid: uuid(),
-      })
+      const { records: [root] } = await session.run(
+        rootQ, { uuid: uuid() }
+      )
       let current = root.get('id') as string
 
       log?.({ 'Got Root': current })
 
-      while(path.length > 1) {
+      while(path.length > 0) {
         const pathQ = `
           MATCH (dir) WHERE elementId(dir) = $current
           MERGE (dir)-[rel:CONTAINS { path: $elem }]->(item)
@@ -147,30 +157,11 @@ export async function wunder2Neo4j({
         `
         const elem = path.shift()
         const { records } = await session.run(
-          pathQ, { current, elem, itemUUID: uuid(), relUUID: uuid() }
+          pathQ, {
+            current, elem, itemUUID: uuid(), relUUID: uuid()
+          },
         )
         current = records[0].get('id') as string
-      }
-
-      if(!atRoot) {
-        let query = `
-          MATCH (mount) WHERE elementId(mount) = $current
-          MATCH (base) WHERE elementId(base) = $rootId
-          MERGE (mount)-[:CONTAINS { path: $name }]->(base)
-          RETURN $current AS id
-        `
-        if(current === rootId) { // one element path
-          query = `
-            MATCH (base) WHERE elementId(base) = $rootId
-            MERGE (base)-[:CONTAINS { path: $name }]->(point)
-            SET point:Spot
-            RETURN elementId(point) AS id
-          `
-        }
-        const { records: [point] } = await session.run(
-          query, { current, rootId, name: path[0] }
-        )
-        return point.get('id')
       }
       return current
     } finally {
@@ -183,11 +174,17 @@ export async function wunder2Neo4j({
     title: string
   }
 
-  async function ingest(node: WunderbaumNode) {
+  async function ingest(
+    { node, mountId }: { node: WunderbaumNode, mountId: string }
+  ) {
     if(!node.children) throw new Error(`Not a directory: ${node.title}.`)
     if(node.children.length === 0) throw new Error(`Empty directory: ${node.title}.`)
 
-    const baseId = await createIPFSDir()
+    let dirId = await addDirEntry({
+      dirId: mountId,
+      name: node.title,
+    })
+
     await Promise.all(
       node.children.map(async (child) => {
         on.node.enter(child)
@@ -196,11 +193,7 @@ export async function wunder2Neo4j({
         }
 
         if(child.isExpandable()) {
-          await addDirEntry({
-            itemId: await ingest(child),
-            dirId: baseId,
-            name: child.title,
-          })
+          ingest({ node: child, mountId: dirId})
         } else {
           const ext = child.title.split('.').at(-1) as string
           const name = child.title.slice(0, -(ext.length + 1))
@@ -209,26 +202,21 @@ export async function wunder2Neo4j({
           }
           const typeFile = (name === '' || name === ext)
           const type = mime.getType(ext) ?? `unknown/${ext}`
-          let itemId = await addFile({
+          if(!typeFile) {
+            dirId = await addDirEntry({
+              name,
+              dirId,
+            })
+          }
+          await addFile({
+            dirId,
             cid: child.data.cid,
             type,
             size: child.data.size,
           })
-          itemId = await addDirEntry({
-            itemId,
-            dirId: (typeFile ? baseId : undefined),
-            rship: ':REPRESENTED_BY',
-          })
-          if(!typeFile) {
-            await addDirEntry({
-              itemId,
-              name,
-              dirId: baseId,
-            })
-          }
         }
       })
     )
-    return baseId
+    return dirId
   }
 }

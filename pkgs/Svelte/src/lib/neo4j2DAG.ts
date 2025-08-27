@@ -1,5 +1,6 @@
 import { CID } from 'multiformats/cid'
 import * as json from '@ipld/dag-json'
+import * as cbor from '@ipld/dag-cbor'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { CAREncoderStream } from 'ipfs-car'
 import { settings } from './settings.svelte.ts'
@@ -26,6 +27,12 @@ type Block = {
   bytes: Uint8Array
 }
 
+export type Encoder = {
+  encode: (val: string) => any
+  name: string
+  code: number
+}
+
 const emptyCID = CID.parse(
   'bafybeiczsscdsbs7ffqz55ahobb37kkvllc4hikvjbgmsecgnuyzy4b4ga'
 )
@@ -41,14 +48,15 @@ export class Serializer {
   path: Array<string> = []
   log?: Logger = null
   batchSize = 1_500
+  encoder: Encoder = json
   carReadable: ReadableStream | null = null
   carWritable: WritableStream | null = null
   carWriter: ReturnType<WritableStream["getWriter"]> | null = null
   blocks: Array<Block> = []
 
   constructor(
-    { log = null, batchSize = 1000 }:
-    { log: Logger, batchSize: number }
+    { log = null, batchSize = 1000, encoder = json }:
+    { log?: Logger, batchSize?: number, encoder?: Encoder }
   ) {
     if(log != null) {
       this.log = log
@@ -57,6 +65,7 @@ export class Serializer {
     }
 
     this.batchSize = batchSize
+    this.encoder = encoder
 
     const { readable, writable } = new TransformStream()
     this.carReadable = readable
@@ -76,14 +85,14 @@ export class Serializer {
       const query = `
         MATCH (r:Root) RETURN elementId(r) as id
       `
-      const result = await session.run(query)
-      const count = result.records.length
+      const { records } = await session.run(query)
+      const count = records.length
       if(count === 0) {
         throw new Error('Couldn’t find `rootId`.')
       } else if(count > 1) {
         throw new Error(`Found ${count} \`rootId\`s.`)
       }
-      rootId = result.records[0].get('id')
+      rootId = records[0].get('id')
     }
 
     if(rootId == null) throw new Error('Couldn’t get `rootId`.')
@@ -100,6 +109,7 @@ export class Serializer {
       const query = `
         MATCH (start) WHERE elementId(start) = $rootId
         OPTIONAL MATCH (start)-[rel]->(node)
+        ORDER BY rel.path
         RETURN
           labels(start) AS labels,
           properties(start) AS properties,
@@ -152,9 +162,9 @@ export class Serializer {
   }
 
   async addToCAR(data: any) {
-    const bytes = json.encode(data)
+    const bytes = this.encoder.encode(data)
     const hash = await sha256.digest(bytes)
-    const cid = CID.create(1, json.code, hash)
+    const cid = CID.create(1, this.encoder.code, hash)
     if(this.carWriter == null) throw new Error('No `carWriter`.')
     await this.carWriter.write({ cid, bytes })
     return cid
@@ -197,9 +207,11 @@ export class Serializer {
   }
 }
 
-export async function toIPFS(data: any) {
+export async function toIPFS(
+  data: any, { encoder = json }: { encoder: Encoder }
+) {
   return await getIPFS().block.put(
-    json.encode(data), { format: 'dag-json' },
+    encoder.encode(data), { format: encoder.name },
   )
 }
 
@@ -207,8 +219,11 @@ export async function neo4j2IPFS(
   { log = null, batchSize = 1000, rootId = null }: Options
 ) {
   try {
-    const serializer = new Serializer({ log, batchSize })
-    serializer.log?.('Exporting nodes…')
+    const encoder = cbor
+    const serializer = new Serializer({
+      log, batchSize, encoder,
+    })
+    serializer.log?.(`Exporting nodes to \`${encoder.name}\`…`)
     const rootCID = await serializer.node(rootId)
     serializer.log?.({ rootCID })
     return { serializer, rootCID }

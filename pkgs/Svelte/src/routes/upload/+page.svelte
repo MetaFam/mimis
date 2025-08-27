@@ -8,10 +8,10 @@
   import { wunder2Neo4j } from '$lib/wunder2Neo4j';
   import { createStoracha } from '$lib/ipfs'
   import { logger } from '$lib'
+  import Path from '../list/[...path]/Path.svelte'
 	import 'bootstrap-icons/font/bootstrap-icons.min.css'
   import 'wunderbaum/dist/wunderbaum.css'
   import 'toastify-js/src/toastify.css'
-    import Path from '../list/[...path]/Path.svelte';
 
   class CAR {
     form = $state<HTMLFormElement>()
