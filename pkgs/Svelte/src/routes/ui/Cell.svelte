@@ -15,7 +15,6 @@
 	let bounds = $derived.by(() => {
 		if(!text) return null
 		const bbox = text.getBoundingClientRect()
-		console.debug({ bbox })
 		return new Rectangle({
 			x: bbox.x,
 			y: bbox.y,
@@ -23,8 +22,8 @@
 			h: bbox.height,
 		})
 	})
-	$inspect({ bounds })
 	let mouse = $state(new Position())
+  let cell = $state(new Position())
 	let win = $state(new WinDims())
 
 	document.addEventListener('resize', (evt) => {
@@ -36,15 +35,15 @@
       if(!evt.target) {
         throw new Error('`evt.target` is not defined.')
       }
-      if(!(evt.target instanceof SVGElement)) {
-        throw new Error('`evt.target` is not a `SVGElement`.')
+      if(evt.target instanceof SVGElement) {
+        cell = new Position(
+          screen2SVGWithin(
+            evt.target as CTMable,
+            new Position({ x: evt.clientX, y: evt.clientY }),
+          )
+        )
       }
-			mouse = new Position(
-				screen2SVGWithin(
-					evt.target as CTMable,
-					new Position({ x: evt.clientX, y: evt.clientY }),
-				)
-			)
+			mouse = new Position({ x: evt.clientX, y: evt.clientY })
 		} catch(error) {
 			console.error({ 'Mouse Update': error })
 		}
@@ -53,7 +52,7 @@
 	const viewBox = {
 		x: -12,
 		y: 0,
-		h: 65,
+		h: 55,
 		get w() {
 			return 2 * Math.abs(this.x)
 		}
@@ -70,15 +69,18 @@
 		bind:this={text}
 		textLength="100%"
 		lengthAdjust="spacingAndGlyphs"
-		style="scale: 1 1.2"
 	>
 		<tspan dy="0.75lh">ℳ: «{row}, {col}»</tspan>
 		<tspan x="0" dy="0.75lh">
       🐭: «{mouse.x.toFixed(1)}, {mouse.y.toFixed(1)}»
     </tspan>
-		<!-- <tspan x="0" dy="0.5lh">⊛: «{bounds?.center?.x}, {bounds?.center?.y}»</tspan> -->
+		<!-- <tspan x="0" dy="0.75lh">⊛: «{bounds?.center?.x}, {bounds?.center?.y}»</tspan> -->
 		<tspan x="0" dy="0.75lh">
-      ⊛: «{bounds?.x?.toFixed(1)}, {bounds?.y?.toFixed(1)}»
+      ☐: «{bounds?.x?.toFixed(1)}, {bounds?.y?.toFixed(1)}»
+	  → «
+      {((bounds?.x ?? 0) + (bounds?.w ?? 0)).toFixed(1)},
+      {((bounds?.y ?? 0) + (bounds?.h ?? 0)).toFixed(1)}
+    »
     </tspan>
 	</text>
 	<rect

@@ -49,7 +49,14 @@ export function screen2SVGWithin(
 	if(!elem.closest) {
     throw new Error('`elem.closest()` is not defined.')
   }
-  const point = elem.closest('svg')?.createSVGPoint()
+  const svg = (
+    elem instanceof SVGSVGElement ? (
+      elem
+    ) : (
+      elem.closest('svg')
+    )
+  )
+  const point = svg?.createSVGPoint()
 	if(!point) {
     throw new Error(`No SVG parent of ${elem.nodeName}.`)
   }
