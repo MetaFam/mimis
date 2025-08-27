@@ -12,7 +12,14 @@
       '--cols', String(num.cols),
     )
   ))
+  document.documentElement.style.setProperty(
+    '--gap', '0.25rem',
+  )
 </script>
+
+<svelte:head>
+  <title>Macrodata Refinement</title>
+</svelte:head>
 
 <ol id="grid">
 	{#each { length: num.cols }, col}
@@ -35,7 +42,11 @@
 
 	#grid {
 		display: grid;
-		height: calc(100dvh - max(12vh, 4rem));
+    --_gap: var(--gap, 0.25rem);
+    gap: var(--_gap);
+		height: calc(
+      100dvh - (max(12vh, 4rem) + (var(--_gap) * var(--rows)))
+    );
 		grid-template-columns: repeat(var(--cols), 1fr);
 		grid-template-rows: repeat(var(--rows), calc(100% / var(--rows)));
 

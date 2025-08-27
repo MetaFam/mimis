@@ -53,7 +53,7 @@
 	const viewBox = {
 		x: -12,
 		y: 0,
-		h: 50,
+		h: 65,
 		get w() {
 			return 2 * Math.abs(this.x)
 		}
@@ -72,10 +72,14 @@
 		lengthAdjust="spacingAndGlyphs"
 		style="scale: 1 1.2"
 	>
-		<tspan dy="0.5lh">ℳ: «{row}, {col}»</tspan>
-		<tspan x="0" dy="0.5lh">🐭: «{mouse.x.toFixed(1)}, {mouse.y.toFixed(1)}»</tspan>
+		<tspan dy="0.75lh">ℳ: «{row}, {col}»</tspan>
+		<tspan x="0" dy="0.75lh">
+      🐭: «{mouse.x.toFixed(1)}, {mouse.y.toFixed(1)}»
+    </tspan>
 		<!-- <tspan x="0" dy="0.5lh">⊛: «{bounds?.center?.x}, {bounds?.center?.y}»</tspan> -->
-		<tspan x="0" dy="0.5lh">⊛: «{bounds?.x?.toFixed(1)}, {bounds?.y?.toFixed(1)}»</tspan>
+		<tspan x="0" dy="0.75lh">
+      ⊛: «{bounds?.x?.toFixed(1)}, {bounds?.y?.toFixed(1)}»
+    </tspan>
 	</text>
 	<rect
 		x={viewBox.x}
