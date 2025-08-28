@@ -1,59 +1,22 @@
 <script lang="ts">
 	import Cell from './Cell.svelte'
 
-  class Matrix {
-    public cols: number
-    public rows: number
-
-    constructor({
-      cols = 8,
-      rows = 8,
-    } = {}) {
-      this.cols = $state(cols)
-      this.rows = $state(rows)
-    }
-  }
+  let cols = $state(8)
+  let rows = $state(8)
 
   const { documentElement: html } = document
-  const num = new Matrix()
-
-  type LimitedRecord = (
-    Pick<MutationRecord, 'type' | 'attributeName' | 'target'>
-  )
-
-  const mutate = (mutations: Array<LimitedRecord>) => {
-    console.debug({ mutations })
-    mutations.forEach((mutation) => {
-      const { attributeName: attr, type, target } = mutation
-      if(target != document.documentElement) {
-        throw new Error(`Node "${target.nodeName}" is not the root.`)
-      }
-      if(!(target instanceof HTMLHtmlElement)) {
-        throw new Error('`target` is not a `<html>` element.')
-      }
-      if(type === 'attributes' && attr === 'style') {
-        num.rows = (
-          Number(getComputedStyle(target).getPropertyValue('--rows'))
-        )
-        num.cols = (
-          Number(getComputedStyle(target).getPropertyValue('--cols'))
-        )
-      }
-    })
-  }
-  const mutations = new MutationObserver(mutate)
-  mutations.observe(
-    document.documentElement,
-    {
-      attributes: true,
-      attributeFilter: ['--rows', '--cols'],
+  const resize = () => {
+    if(!(html instanceof HTMLHtmlElement)) {
+      throw new Error('`html` is not a `<html>` element.')
     }
-  )
-  $effect(() => mutate([{
-    type: 'attributes',
-    attributeName: 'style',
-    target: document.documentElement,
-  }]))
+    const style = getComputedStyle(html)
+    rows = Number(style.getPropertyValue('--rows'))
+    cols = Number(style.getPropertyValue('--cols'))
+    console.debug({ resize: { cols, rows } })
+  }
+  const resizes = new ResizeObserver(resize)
+  resizes.observe(html)
+  $effect(resize)
 </script>
 
 <svelte:head>
@@ -61,17 +24,17 @@
 </svelte:head>
 
 <ol id="grid">
-	{#each { length: num.cols }, col}
-		<li>
-			<ol>
-				{#each { length: num.rows }, row}
-					<li>
-						<Cell row={row + 1} col={col + 1}/>
-					</li>
-				{/each}
-			</ol>
-		</li>
-	{/each}
+  {#each { length: rows }, row}
+    <li>
+      <ol>
+        {#each { length: cols }, col}
+          <li>
+            <Cell row={row + 1} col={col + 1}/>
+          </li>
+        {/each}
+      </ol>
+    </li>
+  {/each}
 </ol>
 
 <style>
