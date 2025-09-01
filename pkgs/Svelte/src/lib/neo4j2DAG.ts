@@ -2,10 +2,11 @@ import { CID } from 'multiformats/cid'
 import * as json from '@ipld/dag-json'
 import * as cbor from '@ipld/dag-cbor'
 import { sha256 } from 'multiformats/hashes/sha2'
-import { CAREncoderStream } from 'ipfs-car'
+import { ByteView } from 'multiformats'
 import { settings } from './settings.svelte.ts'
 import { getIPFS, getNeo4j } from './drivers.ts'
 import type { Logger } from '../types'
+import { Recorder, genCAR } from './cypher.ts'
 
 type Options = {
   log?: Logger
@@ -28,7 +29,7 @@ type Block = {
 }
 
 export type Encoder = {
-  encode: (val: string) => any
+  encode: (val: unknown) => ByteView<unknown>
   name: string
   code: number
 }
@@ -53,6 +54,7 @@ export class Serializer {
   carWritable: WritableStream | null = null
   carWriter: ReturnType<WritableStream["getWriter"]> | null = null
   blocks: Array<Block> = []
+  recorder = new Recorder()
 
   constructor(
     { log = null, batchSize = 1000, encoder = json }:
@@ -82,10 +84,10 @@ export class Serializer {
     const session = this.neo4j.session()
 
     if(rootId == null) {
-      const query = `
+      const statement = `
         MATCH (r:Root) RETURN elementId(r) as id
       `
-      const { records } = await session.run(query)
+      const { records } = await this.recorder.exec({ statement }, {})
       const count = records.length
       if(count === 0) {
         throw new Error('Couldn’t find `rootId`.')
@@ -106,7 +108,7 @@ export class Serializer {
     this.path.push(rootId)
 
     try {
-      const query = `
+      const statement = `
         MATCH (start) WHERE elementId(start) = $rootId
         OPTIONAL MATCH (start)-[rel]->(node)
         ORDER BY rel.path
@@ -120,7 +122,9 @@ export class Serializer {
           }) WHERE r.type IS NOT NULL] AS relations
       `
 
-      const { records } = await session.run(query, { rootId })
+      const { records } = await this.recorder.exec(
+        { statement, params: { rootId } }, { session }
+      )
 
       this.log?.(`Found ${records.length} node${
         records.length === 1 ? '' : 's'
@@ -161,7 +165,7 @@ export class Serializer {
     }
   }
 
-  async addToCAR(data: any) {
+  async addToCAR(data: unknown) {
     const bytes = this.encoder.encode(data)
     const hash = await sha256.digest(bytes)
     const cid = CID.create(1, this.encoder.code, hash)
@@ -170,40 +174,8 @@ export class Serializer {
     return cid
   }
 
-  async carURL() {
-    this.log?.('Generating CAR URL…')
-
-    const blocks = this.blocks
-    const blockStream = new ReadableStream({
-      pull(controller) {
-        if(blocks.length > 0) {
-          controller.enqueue(blocks.shift())
-        } else {
-          controller.close()
-        }
-      }
-    })
-
-    if(!blocks || blocks.length === 0) {
-      throw new Error('No blocks generated.')
-    }
-
-    const rootBlock = blocks.at(-1)
-    if(!rootBlock) {
-      throw new Error('No root block found.')
-    }
-
-    type Chunk = Uint8Array
-    const chunks: Array<Chunk> = []
-    await (
-      blockStream
-      .pipeThrough(new CAREncoderStream([rootBlock.cid]))
-      .pipeTo(new WritableStream({
-        write(chunk) { chunks.push(chunk) },
-      }))
-    )
-
-    return URL.createObjectURL(new Blob(chunks))
+  async generateCAR() {
+    return genCAR(this.blocks)
   }
 }
 
@@ -223,10 +195,12 @@ export async function neo4j2IPFS(
     const serializer = new Serializer({
       log, batchSize, encoder,
     })
+    serializer.recorder.reset()
     serializer.log?.(`Exporting nodes to \`${encoder.name}\`…`)
     const rootCID = await serializer.node(rootId)
-    serializer.log?.({ rootCID })
-    return { serializer, rootCID }
+    const opsCID = (await serializer.recorder.generateCAR()).cid
+    serializer.log?.({ rootCID, opsCID })
+    return { serializer, rootCID, opsCID }
   } catch(error) {
     console.error({ 'Graph Serializing Error': error })
     throw error

@@ -245,3 +245,10 @@ export function logger(logs: Array<string>) {
     logs.unshift(msg as string)
   }
 }
+
+export function uint8Array2BigInt(arr: Uint8Array) {
+  return arr.reduce(
+    (acc, byte) => (acc << 8n) | BigInt(byte),
+    0n,
+  )
+}

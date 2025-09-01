@@ -1,13 +1,15 @@
 <script lang="ts">
   import Toastify from 'toastify-js'
   import { Wunderbaum } from 'wunderbaum'
-  import type { WunderbaumNode } from 'wb_node';
+  import type { WunderbaumNode } from 'wb_node'
   import { wunderFiles } from '$lib/wunderFiles'
   import { selectAll } from '$lib/selectAll'
-  import { car2Tree } from '$lib/car2Wunder';
-  import { wunder2Neo4j } from '$lib/wunder2Neo4j';
+  import { car2Tree } from '$lib/car2Wunder'
+  import { wunder2Neo4j } from '$lib/wunder2Neo4j'
+  import { toHTTP } from '$lib/toHTTP'
   import { createStoracha } from '$lib/ipfs'
-  import { logger } from '$lib'
+  import type { CARInfo } from '$lib/cypher'
+  import { logger, timestamp } from '$lib'
   import Path from '../list/[...path]/Path.svelte'
 	import 'bootstrap-icons/font/bootstrap-icons.min.css'
   import 'wunderbaum/dist/wunderbaum.css'
@@ -24,6 +26,7 @@
   let car = new CAR()
   let path = $state([''])
   let file = $state<File | null | undefined>(null)
+  let opsCAR = $state<CARInfo | null>(null)
   const carLogs = $state(<Array<string>>([]))
 
   const carLog = logger(carLogs)
@@ -62,9 +65,9 @@
       const log = (msg: string | {}) => {
         console.debug(msg)
       }
-      await wunder2Neo4j({
+      ;({ opsCAR } = await wunder2Neo4j({
         root: tree.root, path: mount, log, on,
-      })
+      }))
       Toastify({
         text: `Loaded: ${count} Entr${count === 1 ? 'y' : 'ies'}`,
         duration: 8_000,
@@ -102,7 +105,7 @@
   <h1>Upload a CAR File to Mïmis</h1>
 </header>
 
-  <main>
+<main>
   <form bind:this={car.form} onsubmit={submitCAR}>
     <input
       type="file" required accept=".car"
@@ -125,11 +128,28 @@
       </span></button>
     </form>
   {/if}
+  {#if !!opsCAR}
+    {@const carBrowseURL = toHTTP({ url: `ipfs://${opsCAR.cid}` })}
+    <a
+      class="button"
+      href={opsCAR.url}
+      download="operations.{timestamp()}.car"
+    ><span>
+      Download Operations
+    </span></a>
+    <a
+      class="button"
+      href={carBrowseURL}
+      target="_blank"
+    ><span>
+      Browse {carBrowseURL}
+    </span></a>
+  {/if}
   <div id="fs-tree"></div>
   {#if !!file}
     <form onsubmit={uploadCAR}>
       <button disabled={!file}><span>
-        Upload Entire CAR
+        Upload Entire Input CAR
       </span></button>
       <ul>
         <li><label>
@@ -151,6 +171,11 @@
 </main>
 
 <style>
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
   form {
     display: flex;
     justify-content: center;
@@ -166,5 +191,6 @@
     margin-inline: auto;
     resize: both;
     display: inline-block;
+    margin-block-start: 1rem;
   }
 </style>
