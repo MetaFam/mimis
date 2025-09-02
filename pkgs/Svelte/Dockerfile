@@ -2,6 +2,11 @@ FROM denoland/deno:latest AS builder
 
 ARG PUBLIC_APPKIT_PROJECT_ID
 ENV PUBLIC_APPKIT_PROJECT_ID=${PUBLIC_APPKIT_PROJECT_ID}
+ENV PUBLIC_NEO4J_USER=neo4j
+ENV PUBLIC_NEO4J_PASS="Password from within Docker."
+ENV PUBLIC_NEO4J_URI="neo4j://neo4j"
+ENV PUBLIC_IPFS_PATTERN="https://w3s.link/ipfs/{cid}{path}"
+ENV PUBLIC_IPFS_API="http://localhost:5001/api/v0/"
 
 WORKDIR /app
 COPY *.json *.ts *.js ./

@@ -9,9 +9,10 @@
     ),
   } = $props()
   let dialog = $state<HTMLDialogElement>()
+  let errored = $state(!!window.showDirectoryPicker)
 
   $effect(() => {
-    if(open) {
+    if(open || !errored) {
       dialog?.showModal()
     } else {
       dialog?.close()
@@ -40,7 +41,19 @@
 
 <section id="dialog">
   <dialog bind:this={dialog}>
-    <h1>Import A Directory Tree</h1>
+    <header>
+      <h1>
+        {#if errored}
+          Import A Directory Tree
+        {:else}
+          <ol id="header">
+            <li>🤪</li>
+            <li>Your Browser Isn’t Keeping Up</li>
+            <li>🔥🦊</li>
+          </ol>
+        {/if}
+      </h1>
+    </header>
 
     <form onsubmit={submit}>
       {#if !!window.showDirectoryPicker}
@@ -57,7 +70,8 @@
           {/if}
         </label>
       {:else}
-        <p>Warning: This program uses <code>showDirectoryPicker()</code> to retrieve a <code>FileSystemDirectoryHandle</code>. As of this writing, 26 November 2024, Chrome & Opera are the only browsers that make this function available.</p>
+        <p>Warning: This program uses <code>show&shy;Directory&shy;Picker()</code> to re&shy;trieve a <code>File&shy;System&shy;Directory&shy;Handle</code> which it can use to tra&shy;verse down into your local file system.</p>
+        <p>As of this writing, 26 November 2024, Chrome & Opera are the only browsers that make this function available.</p>
         <p>Specifically, <em>this</em> browser doesn't have support for <code>showDirectoryPicker</code>.</p>
       {/if}
       {#if !!window.showDirectoryPicker}
@@ -67,7 +81,10 @@
         </label>
         <button><span>Review Import</span></button>
       {:else}
-        <button onclick={() => (open = false)}><span>
+        <button onclick={() => {
+          open = false
+          errored = true
+        }}><span>
           😿 Sorry 😿
         </span></button>
       {/if}
@@ -82,11 +99,32 @@
     z-index: 100;
     max-width: max(40vw, 35ch);
     text-align: justify;
+
+    & p {
+      margin-block: 0rem;
+      text-indent: 1em;
+
+      &::first-letter {
+        color: cyan;
+        scale: 2;
+      }
+    }
   }
 
   form {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+  }
+  button {
+    min-width: 100%;
+    & span {
+      width: 100%;
+    }
+  }
+  header ol, li {
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 </style>
