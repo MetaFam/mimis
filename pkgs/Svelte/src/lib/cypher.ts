@@ -4,8 +4,12 @@ import { QueryResult, Session } from 'neo4j-driver'
 import { CID } from 'multiformats/cid'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { CAREncoderStream } from 'ipfs-car'
+import {
+  verifiedFetch as ipfsFetch,
+} from '@helia/verified-fetch'
 import { getNeo4j } from './drivers.ts'
 import type { Logger } from '../types'
+
 /**
  * Make every position in the list equal to the last position
  * in the list.
@@ -238,6 +242,29 @@ export class Recorder {
 
   generateCAR() {
     return genCAR(this.blocks)
+  }
+
+  static async fromCID(cid: string | CID) {
+    if(typeof cid === 'string') cid = CID.parse(cid)
+    const recorder = new Recorder()
+
+    let max = 500
+    let next: CID | null = cid
+    do {
+      const response = await (
+        ipfsFetch(`ipfs://${next.toString()}`)
+      )
+      const buffer = await response.arrayBuffer()
+      const op = cbor.decode(buffer) as Operation
+      console.debug({ max, cid: cid.toString(), op })
+      recorder.ops.set(cid.toString(), op)
+      if(recorder.last == null) { // first entry is the final one
+        recorder.last = cid
+      }
+      next = op.previous ?? null
+    } while(next != null && max-- > 0)
+
+    return recorder
   }
 }
 

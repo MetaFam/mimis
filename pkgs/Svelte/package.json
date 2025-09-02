@@ -43,7 +43,9 @@
 		"@atlaskit/pragmatic-drag-and-drop": "^1.5.0",
 		"@atlaskit/pragmatic-drag-and-drop-flourish": "^1.2.2",
 		"@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
+		"@helia/verified-fetch": "^3.2.0",
 		"@ipld/car": "^5.4.2",
+		"@ipld/dag-cbor": "^9.2.4",
 		"@ipld/dag-json": "^10.2.5",
 		"@ipld/dag-pb": "^4.1.5",
 		"@ipld/unixfs": "^3.0.0",
@@ -70,5 +72,6 @@
 		"typescript": "^5.8.3",
 		"uuid": "^11.1.0",
 		"wunderbaum": "^0.13.0"
-	}
+	},
+	"nodeModulesDir": "manual"
 }

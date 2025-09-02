@@ -11,6 +11,7 @@ const config = {
 				strict: true,
 		}),
 		router: { type: 'hash' },
-},}
+	},
+}
 
 export default config

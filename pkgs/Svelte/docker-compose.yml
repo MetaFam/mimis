@@ -1,0 +1,53 @@
+x-neo4j-credentials: &neo4j-credentials
+  NEO4J_USER: &neo4j-user neo4j
+  NEO4J_PASS: &neo4j-pass "Password from within Docker."
+  NEO4J_DATABASE: &neo4j-database neo4j
+
+services:
+  web:
+    build:
+      context: .
+      args:
+        - PUBLIC_APPKIT_PROJECT_ID=${PUBLIC_APPKIT_PROJECT_ID}
+    ports:
+      - "8888:80"
+    volumes:
+      - .:/app
+    depends_on:
+      - neo4j
+
+  neo4j:
+    image: neo4j:community
+    container_name: neo4j
+    restart: unless-stopped
+    ports:
+      - "7473:7473"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH="${NEO4J_USER:-*neo4j-user}/${NEO4J_PASS:-*neo4j-pass}"
+      - NEO4J_PLUGINS=["apoc-extended"]
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    networks:
+      - app-network
+    healthcheck:
+      test: [
+        "CMD",
+        "cypher-shell",
+        "-u", "${NEO4J_USER:-*neo4j-user}",
+        "-p", "${NEO4J_PASS:-*neo4j-pass}",
+        "RETURN 1"
+      ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  neo4j_data:
+  neo4j_logs:
+
+networks:
+  app-network:
+    driver: bridge
