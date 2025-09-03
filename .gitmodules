@@ -1,0 +1,3 @@
+[submodule "pkgs/Substream/contract/Mïmis/lib/forge-std"]
+	path = pkgs/Substream/contract/Mïmis/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
