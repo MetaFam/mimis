@@ -2,9 +2,9 @@
 pragma solidity ^0.8.13;
 
 import { Script } from "forge-std/Script.sol";
-import { Counter } from "../src/Mïmis.sol";
+import { Counter } from "../src/Mimis.sol";
 
-contract MïmisScript is Script {
+contract MimisScript is Script {
     Counter public counter;
 
     function setUp() public {}

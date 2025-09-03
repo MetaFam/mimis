@@ -2,9 +2,9 @@
 pragma solidity ^0.8.13;
 
 import { Test} from "forge-std/Test.sol";
-import { Counter } from "../src/Mïmis.sol";
+import { Counter } from "../src/Mimis.sol";
 
-contract MïmisTest is Test {
+contract MimisTest is Test {
     Counter public counter;
 
     function setUp() public {
