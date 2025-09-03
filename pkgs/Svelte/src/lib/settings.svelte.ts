@@ -23,7 +23,7 @@ export class Settings {
     ),
     [Settings.keys.neo4jURL]: env.PUBLIC_NEO4J_URI || 'bolt://localhost:7687',
     [Settings.keys.neo4jUser]: env.PUBLIC_NEO4J_USER || 'neo4j',
-    [Settings.keys.neo4jPass]: env.PUBLIC_NEO4J_PASSWORD || 'neo4j',
+    [Settings.keys.neo4jPass]: env.PUBLIC_NEO4J_PASS || 'neo4j',
     [Settings.keys.limit]: env.PUBLIC_LIMIT ? Number(env.PUBLIC_LIMIT) : 125,
     [Settings.keys.debugging]: page.url.searchParams.has('debug'),
     [Settings.keys.ipfsProvider]: 'local',

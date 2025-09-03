@@ -271,6 +271,7 @@ export class Recorder {
 export type CARInfo = {
   url: string
   cid: CID
+  filename?: string
 }
 
 export async function genCAR(
