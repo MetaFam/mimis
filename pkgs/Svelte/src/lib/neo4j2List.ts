@@ -21,14 +21,14 @@ export async function neo4j2List(path: Array<string>) {
     const list = `
       MERGE (itemPoint:Nöopoint)-[:EMBODIED_BY]->(item)
       MATCH (point)-[:REPRESENTED_BY]->(itemPoint)
-      WHERE elementId(point) = $id
+      WHERE point.mïmid = $id
       AND NOT ()-[:PREVIOUS]->(point)
       ORDER BY entry.order
       RETURN DISTINCT entry, item
     `
 
     const { records } = await session.run(
-      list, { id: nöopoint.elementId }
+      list, { id: nöopoint.mïmid }
     )
     const results = records2Object(records)
 

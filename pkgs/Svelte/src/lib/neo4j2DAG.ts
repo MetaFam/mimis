@@ -2,7 +2,8 @@ import { CID } from 'multiformats/cid'
 import * as json from '@ipld/dag-json'
 import * as cbor from '@ipld/dag-cbor'
 import { sha256 } from 'multiformats/hashes/sha2'
-import { ByteView } from 'multiformats'
+import { type ByteView } from 'multiformats'
+import { v7 as uuid } from 'uuid'
 import { settings } from './settings.svelte.ts'
 import { getIPFS, getNeo4j } from './drivers.ts'
 import type { Logger } from '../types'
@@ -85,9 +86,13 @@ export class Serializer {
 
     if(rootId == null) {
       const statement = `
-        MATCH (r:Root) RETURN elementId(r) as id
+        MERGE (r:Root)
+        ON CREATE SET r.mïmid = $uuid
+        RETURN r.mïmid as id
       `
-      const { records } = await this.recorder.exec({ statement }, {})
+      const { records } = await this.recorder.exec(
+        { statement, params: { uuid: uuid() } }, {},
+      )
       const count = records.length
       if(count === 0) {
         throw new Error('Couldn’t find `rootId`.')
@@ -109,7 +114,7 @@ export class Serializer {
 
     try {
       const statement = `
-        MATCH (start) WHERE elementId(start) = $rootId
+        MATCH (start) WHERE start.mïmid = $rootId
         OPTIONAL MATCH (start)-[rel]->(node)
         ORDER BY rel.path
         RETURN
@@ -118,7 +123,7 @@ export class Serializer {
           [r IN collect({
             type: type(rel),
             properties: properties(rel),
-            targetId: elementId(node)
+            targetId: node.mïmid
           }) WHERE r.type IS NOT NULL] AS relations
       `
 

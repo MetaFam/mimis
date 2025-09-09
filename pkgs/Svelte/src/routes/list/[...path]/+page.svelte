@@ -49,7 +49,7 @@
   let loadFiles = $state<HTMLInputElement | null>(null)
   let shortcuts = $state<HTMLDialogElement | null>(null)
   let path = $state<Array<string>>(
-    page.params.path.split('/').filter(Boolean)
+    (page.params.path?.split('/') ?? []).filter(Boolean)
   )
   if(path.length === 0) path.push('')
 

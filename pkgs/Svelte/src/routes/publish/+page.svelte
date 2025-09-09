@@ -7,7 +7,7 @@
   import { Web3 } from '$lib/web3'
   import { createStoracha } from '$lib/ipfs'
   import { getIPFS } from '$lib/drivers'
-  import { timestamp } from '$lib'
+  import { timestamp, logger } from '$lib'
   import 'toastify-js/src/toastify.css'
 
   let cid = $state<CID | null>(null)
@@ -15,22 +15,23 @@
   let working = $state(false)
   let signing = $state(false)
   let filename = $state('dl.car')
+  let logs = $state([])
 
   const onClick = async (evt: MouseEvent) => {
     working = true
     try {
-      const { rootCID: root, serializer } = await neo4j2IPFS({})
+      const log = logger(logs)
+      const { rootCID: root, serializer } = await neo4j2IPFS({ log })
       signing = true
-      console.debug({ acct: await getAccount(Web3.adapter.wagmiConfig) })
       const signature = await Web3.signMessage(
-        root.toString(), { log: console.debug }
+        root.toString(), { log }
       )
       signing = false
       cid = (
         await serializer.addToCAR({ root, signature })
       )
       console.debug({ final: cid.toString(), signature })
-      carURL = await serializer.carURL()
+      carURL = (await serializer.generateCAR()).url
       filename = `mïmis.full-tree.${timestamp()}.car`
     } catch(error) {
       console.error({ 'Generation Error': error })
@@ -69,6 +70,11 @@
   {:else}
     {#if !signing}
       <p>Generating CAR…</p>
+      <ol class="logs" reversed start={logs.length}>
+        {#each logs.slice(0, 10) as line}
+          <li>{line}</li>
+        {/each}
+      </ol>
     {:else}
       <p>Awaiting Ethereum Wallet Signature…</p>
     {/if}

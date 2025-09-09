@@ -34,11 +34,11 @@ export async function wunder2Neo4j({
 
   async function getPoint({ dirId }: { dirId: string }) {
     const statement = `
-      MATCH (dir) WHERE elementId(dir) = $dirId
+      MATCH (dir) WHERE dir.mïmid = $dirId
       MERGE (dir)-[rel:REPRESENTED_BY]->(point:Nöopoint)
-      ON CREATE SET point.mimis_id = $pointUUID
-      ON CREATE SET rel.mimis_id = $relUUID
-      RETURN elementId(point) AS id
+      ON CREATE SET point.mïmid = $pointUUID
+      ON CREATE SET rel.mïmid = $relUUID
+      RETURN point.mïmid AS id
     `
     const { records } = await recorder.exec({
       statement, params: {
@@ -62,24 +62,26 @@ export async function wunder2Neo4j({
   ) {
     const statement = `
       ${!itemId ? '' : (
-        'MATCH (entry) WHERE elementId(entry) = $itemId'
+        'MATCH (entry) WHERE entry.mïmid = $itemId'
       )}
       ${dirId == null ? (
-        `CREATE (dir${type} { mimis_id: $dirUUID })`
+        `CREATE (dir${type} { mïmid: $dirUUID })`
       ) : (
-        'MATCH (dir) WHERE elementId(dir) = $dirId'
+        'MATCH (dir) WHERE dir.mïmid = $dirId'
       )}
       MERGE (dir)-[c${rship} ${
         name != null ? '{ path: $name }' : ''
       }]->(entry)
-      ON CREATE SET c.mimis_id = $relUUID
+      ON CREATE SET c.mïmid = $relUUID
+      ON CREATE SET entry.mïmid = $entryUUID
       SET dir:Spot
-      RETURN elementId(entry) AS id
+      SET entry:Spot
+      RETURN entry.mïmid AS id
     `
     const { records: [entry] } = await recorder.exec({
       statement, params: {
         itemId: itemId ?? null, name, dirId,
-        dirUUID: uuid(), relUUID: uuid(),
+        dirUUID: uuid(), relUUID: uuid(), entryUUID: uuid(),
       }
     }, {})
     const retId = entry.get('id')
@@ -93,14 +95,14 @@ export async function wunder2Neo4j({
   ) {
     const pointId = await getPoint({ dirId })
     const statement = `
-      MATCH (point) WHERE elementId(point) = $pointId
+      MATCH (point) WHERE point.mïmid = $pointId
       MERGE (file:IPFS:File { cid: $cid })
       MERGE (point)-[rel:EMBODIED_AS]->(file)
-      ON CREATE SET file.mimis_id = $fileUUID
-      ON CREATE SET rel.mimis_id = $relUUID
+      ON CREATE SET file.mïmid = $fileUUID
+      ON CREATE SET rel.mïmid = $relUUID
       SET file.mimetype = CASE WHEN $type IS NOT NULL THEN $type END
       SET file.size = $size
-      RETURN elementId(file) AS id
+      RETURN file.mïmid AS id
     `
     const { records } = await recorder.exec({
       statement, params: {
@@ -124,9 +126,9 @@ export async function wunder2Neo4j({
     try {
       const statement = `
         MERGE (r:Root)
-        ON CREATE SET r.mimis_id = $uuid
+        ON CREATE SET r.mïmid = $uuid
         SET r:Root:Spot
-        RETURN elementId(r) AS id
+        RETURN r.mïmid AS id
       `
       const { records: [root] } = await recorder.exec({
         statement, params: { uuid: uuid() }
@@ -137,12 +139,12 @@ export async function wunder2Neo4j({
 
       while(path.length > 0) {
         const statement = `
-          MATCH (dir) WHERE elementId(dir) = $current
+          MATCH (dir) WHERE dir.mïmid = $current
           MERGE (dir)-[rel:CONTAINS { path: $elem }]->(item)
-          ON CREATE SET rel.mimis_id = $relUUID
-          ON CREATE SET item.mimis_id = $itemUUID
+          ON CREATE SET rel.mïmid = $relUUID
+          ON CREATE SET item.mïmid = $itemUUID
           SET item:Spot
-          RETURN elementId(item) as id
+          RETURN item.mïmid as id
         `
         const elem = path.shift()
         const { records } = await recorder.exec({

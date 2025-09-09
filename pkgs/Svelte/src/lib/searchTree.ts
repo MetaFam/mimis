@@ -48,7 +48,7 @@ export const searchTree = async (
         }
         RETURN DISTINCT
           elements AS path,
-          elementId(end) as id,
+          end.mïmid as id,
           next,
           child
         SKIP $offset

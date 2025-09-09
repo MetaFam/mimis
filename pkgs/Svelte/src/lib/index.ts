@@ -110,8 +110,8 @@ export class Nöopoint {
     for(const elem in path) {
       const pathQuery = `
         MERGE (current)-[:CONTAINS { path: $elem }]->(new:Nöopoint)
-        WHERE elementId(current) = $current
-        RETURN elementId(new)
+        WHERE current.mïmid = $current
+        RETURN new.mïmid
       `
       const { records } = await session.run(
         pathQuery, { current, elem },
@@ -130,7 +130,7 @@ export class Nöopoint {
       try {
         const rootQuery = `
           MERGE (root:Root)
-          RETURN elementId(root)
+          RETURN root.mïmid
         `
         const { records } = await session.run(rootQuery)
 
@@ -176,7 +176,7 @@ export class Nöopoint {
             const pathTraveral = `
               WITH $elems as pathElems
               MATCH path = (start)-[:CONTAINS*]->(terminal)
-              WHERE elementId(start) = $rootId
+              WHERE start.mïmid = $rootId
               MATCH (terminal)-[:REPRESENTED_BY]->(point)
               ${onlyCurrent ? 'WHERE NOT ()-[:PREVIOUS]->(point)' : ''}
               WITH pathElems, path, terminal, point, [

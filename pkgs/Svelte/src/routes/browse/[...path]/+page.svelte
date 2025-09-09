@@ -61,7 +61,7 @@
 
   onMount(() => {
     chips = (
-      page.params.path.split('/').filter(Boolean)
+      (page.params.path?.split('/') ?? []).filter(Boolean)
     )
     const path = (
       page.url.hash.split('/').filter(Boolean)
