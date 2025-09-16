@@ -1,4 +1,5 @@
-FROM denoland/deno:latest AS builder
+# FROM denoland/deno:latest AS builder
+FROM node:lts AS builder
 
 ARG PUBLIC_APPKIT_PROJECT_ID
 ENV PUBLIC_APPKIT_PROJECT_ID=${PUBLIC_APPKIT_PROJECT_ID}
@@ -9,21 +10,33 @@ ENV PUBLIC_IPFS_PATTERN="https://w3s.link/ipfs/{cid}{path}"
 ENV PUBLIC_IPFS_API="http://localhost:5001/api/v0/"
 
 WORKDIR /app
+
 COPY *.json *.ts *.js ./
 COPY src src
 COPY static static
 COPY config config
-RUN find
-RUN apt update
-RUN apt install -y python3 make g++
-RUN deno install --global npm:node-gyp
-RUN deno install --allow-scripts
-RUN deno task build
 
-FROM nginx:alpine
-COPY --from=builder /app/build/ /usr/share/nginx/html
-COPY --from=builder /app/config/nginx.conf /etc/nginx/nginx.conf
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt update
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt install -y python3 make g++
+# RUN deno install --global npm:node-gyp
+# RUN deno install --allow-scripts
+# RUN deno task build
+RUN npm install --global npm:node-gyp
+RUN --mount=type=cache,target=node_modules/,sharing=locked \
+    npm install
+RUN --mount=type=cache,target=node_modules/,sharing=locked \
+    npm run build
 
-EXPOSE 80
+FROM node:lts AS production
 
-CMD ["nginx", "-g", "daemon off;"]
+WORKDIR /app
+
+COPY --from=builder /app/build/ ./
+
+EXPOSE 3000
+
+CMD ["node", "--env-file=.env", "build"]

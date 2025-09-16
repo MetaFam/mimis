@@ -1,14 +1,13 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.13;
 
-contract Counter {
-    uint256 public number;
+contract Mimis {
+    event GraphUpdated (
+        string updateCID,
+        address graph
+    );
 
-    function setNumber(uint256 newNumber) public {
-        number = newNumber;
-    }
-
-    function increment() public {
-        number++;
+    function fireUpdate(string calldata updateCID) public {
+        emit GraphUpdated(updateCID, msg.sender);
     }
 }

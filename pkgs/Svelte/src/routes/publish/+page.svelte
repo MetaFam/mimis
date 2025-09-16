@@ -59,7 +59,7 @@
 </svelte:head>
 
 <heading>
-  <h1>Generate a JSON-DAG of the Graph Structure</h1>
+  <h1>Generate a <acronym title="Common Binary Object Representation">CBOR</acronym>-<acronym title="Directed Acyclic Graph">DAG</acronym> of the Graph Structure</h1>
 </heading>
 
 <main>

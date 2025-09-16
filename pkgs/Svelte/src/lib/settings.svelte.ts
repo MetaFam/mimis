@@ -1,4 +1,3 @@
-import { page } from '$app/state'
 import { env } from '$env/dynamic/public'
 
 export class Settings {
@@ -25,10 +24,24 @@ export class Settings {
     [Settings.keys.neo4jUser]: env.PUBLIC_NEO4J_USER || 'neo4j',
     [Settings.keys.neo4jPass]: env.PUBLIC_NEO4J_PASS || 'neo4j',
     [Settings.keys.limit]: env.PUBLIC_LIMIT ? Number(env.PUBLIC_LIMIT) : 125,
-    [Settings.keys.debugging]: page.url.searchParams.has('debug'),
+    [Settings.keys.debugging]: false,
     [Settings.keys.ipfsProvider]: 'local',
     [Settings.keys.storachaEmail]: '',
     [Settings.keys.storachaSpace]: 'Mïmis',
+  }
+
+  constructor(args?: Record<keyof typeof Settings.keys, unknown>) {
+    Object.entries(args ?? {}).forEach(([key, val]) => {
+      switch(key) {
+        case 'debugging': {
+          this.debugging = val as boolean
+          break
+        }
+        default: {
+          console.warn(`Unhanded constructor argument: "${key}".`)
+        }
+      }
+    })
   }
 
   valueOf(key: Omit<keyof typeof Settings.keys, 'limit' | 'debugging'>): string
@@ -107,4 +120,5 @@ export class Settings {
 }
 
 export const settings = new Settings()
+
 export default settings

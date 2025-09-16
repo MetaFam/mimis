@@ -5,7 +5,7 @@ services:
       args:
         - PUBLIC_APPKIT_PROJECT_ID=${PUBLIC_APPKIT_PROJECT_ID}
     ports:
-      - 8888:80
+      - 42069:3000
     env_file:
       - .env.docker
     volumes:

@@ -11,22 +11,22 @@
 	}
 
 	const pages = [
-		{ url: '#/', icon: '🏡', title: 'Home' },
-		{ url: '#/spider', icon: '🕷️', title: 'Spider' },
-		{ url: '#/upload', icon: '⏫', title: 'Upload' },
-		{ url: '#/browse', icon: '📖️', title: 'Browse' },
-		{ url: '#/list', icon: '📋', title: 'List' },
-		{ url: '#/post', icon: '📫️', title: 'Post' },
-		{ url: '#/flow', icon: '🌊', title: 'Flow' },
-		{ url: '#/publish', icon: '☢️', title: 'Publish' },
-		{ url: '#/equals', icon: '≡', title: 'Equal' },
-		{ url: '#/about', icon: 'ℹ️', title: 'About' },
-		{ url: '#/settings', icon: '⚙️', title: 'Settings' },
+		{ url: '/', icon: '🏡', title: 'Home' },
+		{ url: '/spider', icon: '🕷️', title: 'Spider' },
+		{ url: '/upload', icon: '⏫', title: 'Upload' },
+		{ url: '/browse', icon: '📖️', title: 'Browse' },
+		{ url: '/list', icon: '📋', title: 'List' },
+		{ url: '/post', icon: '📫️', title: 'Post' },
+		{ url: '/flow', icon: '🌊', title: 'Flow' },
+		{ url: '/publish', icon: '☢️', title: 'Publish' },
+		{ url: '/equals', icon: '≡', title: 'Equal' },
+		{ url: '/about', icon: 'ℹ️', title: 'About' },
+		{ url: '/settings', icon: '⚙️', title: 'Settings' },
 	]
 	let currentPage: Page | null = $state(null)
 	function localize() {
 		currentPage = (
-			pages.findLast((pg) => page.url.hash.startsWith(pg.url))
+			pages.findLast((pg) => page.url.pathname.startsWith(pg.url))
 			?? pages[0]
 		)
 	}

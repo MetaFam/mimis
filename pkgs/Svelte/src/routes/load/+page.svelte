@@ -9,7 +9,7 @@
   async function submitOps(evt: SubmitEvent) {
     evt.preventDefault()
     const ops = []
-    let { value: cid } = evt.currentTarget.opsCID
+    let { value: cid } = (evt.currentTarget as HTMLFormElement).opsCID
     while(cid != null) {
       // const response = await ipfsFetch(`ipfs://${cid}`)
       console.debug({ Retrieving: cid })

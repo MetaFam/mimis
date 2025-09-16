@@ -1,49 +1,114 @@
 <script lang="ts" >
   import Toastify from 'toastify-js'
   import { onMount } from 'svelte'
+  import { isRedirect, redirect } from '@sveltejs/kit'
+  import mime from 'mime'
   import { page } from '$app/state'
+  import { goto, onNavigate } from '$app/navigation'
   import { searchTree } from '$lib/searchTree'
   import { toHTTP } from '$lib/toHTTP'
   import { settings } from '$lib/settings.svelte'
   import 'toastify-js/src/toastify.css'
 
+  const limit = ((limit) => (
+    limit ? Number(limit) : settings.limit
+  ))(page.url.searchParams.get('limit'))
+  const offset = Number(page.url.searchParams.get('offset'))
+
   class DirSelection {
     public selected: string
-    public choices: Array<string> | null
+    public previous: DirSelection | null
+    #choices: Array<string> | null
 
     constructor({
       selected,
       choices = null,
+      previous = null,
     }: {
       selected?: string
       choices?: Array<string> | null
+      previous?: DirSelection | null
     } = {}) {
-      if(!Array.isArray(choices)) {
-        throw new Error('`choices` is not an array.')
-      }
       if(!selected) throw new Error('`selected` is not defined.')
-      if(!choices.includes(selected)) {
+      if(choices != null && !choices.includes(selected)) {
         throw new Error('`choices` doesn’t contain `selected`.`')
       }
-      this.selected = selected
-      this.choices = choices
+      this.selected = $state(selected)
+      this.previous = previous
+      this.#choices = $state(choices)
+    }
+
+    get path(): Array<string> {
+      return (
+        [...(this.previous?.path ?? []), this.selected]
+        .filter(Boolean)
+      )
+    }
+
+    async choices() {
+      if(this.#choices == null) {
+        const path = this.path.slice(0, -1)
+        const result = await searchTree({ path, limit, offset })
+        const options = result.map(
+          (rec) => rec.get('next').properties.path
+        ).filter(Boolean)
+        if(options.length > 1) options.unshift('*')
+        this.#choices = options
+      }
+      return this.#choices
     }
   }
 
-  let chips = $state<Array<string>>([])
+  function mkDirs(path: Array<string>) {
+    path = path.filter(Boolean)
+    let previous = null
+    const dirs = []
+    for(const elem of path) {
+      dirs.push(
+        new DirSelection({ selected: elem, previous })
+      )
+      previous = dirs.at(-1)
+    }
+    return dirs
+  }
+
+  let dirsList = $state<Array<DirSelection>>(
+    mkDirs(page.params.path?.split('/') ?? [])
+  )
+  let chips = $derived(dirsList.map((dir) => dir.selected))
+  let basePath = $state<Array<string>>([])
   let resultPromise = $derived.by(async () => {
-    $inspect({ chips, basePath })
     try {
-      const limit = page.url.searchParams.get('limit')
-      const offset = page.url.searchParams.get('offset')
-      return searchTree({
-        path: chips,
-        limit: (
-          limit ? Number(limit) : settings.limit
-        ),
-        offset: Number(offset),
+      const path = [...chips]
+      let type = null
+      if(chips.length > 0 && !page.params.path.endsWith('/')) {
+        ([, type] =  Array.from(
+          path.at(-1)?.match(/^(.+)\.\1$/) ?? []
+        ))
+        if(!!type) path.pop()
+      }
+      const result = await searchTree({
+        path,
+        type,
+        limit,
+        offset,
       })
+      if(!!type) {
+        const file = result.find((ret) => (
+          ret.get('child')?.labels.includes('File')
+        ))
+        const { cid } = file?.get('child')?.properties
+        if(!!cid) {
+          console.debug({ Redirecting: cid })
+          // ToDo: Redirect needs to happen on the server to
+          //       allow loading resources like HTML and JavaScript
+          // throw redirect(303, toHTTP({ cid })) // server only
+          window.location.href = toHTTP({ cid })
+        }
+      }
+      return result
     } catch(error) {
+      if(isRedirect(error)) throw redirect
       Toastify({
         text: (error as Error).message,
         duration: 16_000,
@@ -57,17 +122,19 @@
       }).showToast()
     }
   })
-  let basePath = $state('')
 
-  onMount(() => {
-    chips = (
-      (page.params.path?.split('/') ?? []).filter(Boolean)
-    )
+  onMount(async () => {
     const path = (
       page.url.hash.split('/').filter(Boolean)
     )
     basePath = (
-      path.slice(0, path.length - chips.length).join('/')
+      path.slice(1, path.length - dirsList.length)
+    )
+  })
+
+  onNavigate(async (nav) => {
+    dirsList = mkDirs(
+      nav.to?.params?.path?.split('/') ?? []
     )
   })
 
@@ -84,14 +151,11 @@
   const addChip = (chip: string) => {
     chip = chip.trim()
     if(!!chip) {
-      chips.push(chip)
+      dirsList.push(new DirSelection({ selected: chip }))
     }
   }
-  const removeChip = (index: number) => {
-    chips.splice(index, 1)
-  }
-  const removeLastChip = () => {
-    removeChip(-1)
+  const removeDirs = (index: number) => {
+    dirsList.splice(index, 1)
   }
 
   $effect(() => {
@@ -100,7 +164,7 @@
         evt.key === 'ArrowLeft'
         && evt.target === document.body
       ) {
-        removeLastChip()
+        removeDirs(-1)
       }
     }
     window.addEventListener('keydown', keydown)
@@ -116,24 +180,40 @@
 </svelte:head>
 
 <main>
-  <form onsubmit={submitChip}>
-    <!-- svelte-ignore a11y_autofocus -->
-    <input id="chip" placeholder="Path Element" autofocus/>
-    <button><span>Add Path Element</span></button>
-  </form>
-
-  {#if chips.length > 0}
+  {#if dirsList.length > 0}
     <ul id="path">
-      {#each chips as chip, index}
+      {#each dirsList as option, idx}
         <li>
-          {chip}
-          <a
-            class="button"
-            href={
-              `${basePath}/${chips.toSpliced(index, 1).join('/')}`
-            }
-            onclick={() => removeChip(index)}
-          ><span>⨯</span></a>
+          {#await option.choices()}
+            <span>Loading…</span>
+          {:then choices}
+            {#if choices.length > 1}
+              <select oninput={({ target: { value } }) => {
+                option.selected = value
+                dirsList = dirsList.slice(0, idx + 1)
+                goto(`/#/${
+                  [...basePath, ...chips]
+                  .map(encodeURIComponent)
+                  .join('/')
+                }`)
+              }}>
+                {#each choices as opt}
+                  <option selected={opt === option.selected}>{opt}</option>
+                {/each}
+              </select>
+            {:else}
+              <button onclick={(evt) => {
+                dirsList = dirsList.slice(0, idx + 1)
+                goto(`/#/${
+                  [...basePath, ...chips]
+                  .map(encodeURIComponent)
+                  .join('/')
+                }`)
+              }}>
+                <span>{option.selected}</span>
+              </button>
+            {/if}
+          {/await}
         </li>
       {/each}
     </ul>
@@ -148,10 +228,23 @@
       {:else}
         <ul id="result">
           {#each result as res}
+            {@const path = (
+              '#/'
+              + (
+                [...basePath, ...chips]
+                .map(encodeURIComponent)
+                .join('/')
+              )
+            )}
             <li>
               {#if res.get('child')?.labels.includes('File')}
-                {@const { cid } = res.get('child')?.properties}
-                <h2>/{res.get('path')?.join('/')}</h2>
+                {@const { cid, mimetype } = res.get('child')?.properties}
+                {@const ext = mime.getExtension(mimetype)}
+                <h2>
+                  <a href="{path}/{ext}.{ext}"><code>
+                    /{res.get('path')?.join('/')} <em>({mimetype})</em>
+                  </code></a>
+                </h2>
                 <object
                   data={toHTTP({ cid })}
                   title={`ipfs://${cid}`}
@@ -167,16 +260,7 @@
                 {@const { path: chip } = res.get('next').properties}
                 <a
                   class="button"
-                  href={
-                    `${
-                      basePath
-                    }/${
-                      chips.join('/')
-                    }${
-                      chips.length > 0 ? '/' : ''
-                    }`
-                  }
-                  onclick={() => { addChip(chip) }}
+                  href="{path}/{encodeURIComponent(chip)}"
                 >
                   <span>{chip}</span>
                 </a>
@@ -204,19 +288,16 @@
   ul {
     list-style: none;
   }
-  input, li {
+  input, li, select {
     font-size: 15pt;
   }
   #path {
     display: flex;
-    gap: 1.5rem;
+    gap: 0.5rem;
 
     li {
       position: relative;
       display: inline-block;
-      padding: 0.25em 0.5em;
-      border: 2px solid #9999;
-      border-radius: 10%;
 
       .button {
         position: absolute;

@@ -56,7 +56,6 @@
             />
             <span>Storacha Network</span>
           </label></li>
-        <ul id="ipfs">
           <li><label class:highlighted={lights.includes('ipfsPattern')}>
             <fieldset>
               <legend>Gateway</legend>
@@ -193,9 +192,6 @@
     grid-template-columns: 0fr 1fr;
     align-items: center;
     gap: 0.5em;
-    & > span {
-      justify-self: end;
-    }
     & li, & label {
       display: contents;
     }

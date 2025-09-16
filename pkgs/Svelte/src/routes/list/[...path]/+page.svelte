@@ -309,6 +309,7 @@
   />
 </svelte:head>
 
+<!-- @ts-ignore -->
 <svelte:document
   on:datum-delete={(evt: CustomEvent) => {
     const { id } = evt.detail

@@ -1,24 +1,23 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.13;
 
 import { Test} from "forge-std/Test.sol";
-import { Counter } from "../src/Mimis.sol";
+import { Mimis } from "../src/Mimis.sol";
 
 contract MimisTest is Test {
-    Counter public counter;
+    Mimis public mimis;
 
     function setUp() public {
-        counter = new Counter();
-        counter.setNumber(0);
+        mimis = new Mimis();
     }
 
     function test_Increment() public {
-        counter.increment();
-        assertEq(counter.number(), 1);
+        mimis.increment();
+        assertEq(mimis.number(), 1);
     }
 
     function testFuzz_SetNumber(uint256 x) public {
-        counter.setNumber(x);
-        assertEq(counter.number(), x);
+        mimis.setNumber(x);
+        assertEq(mimis.number(), x);
     }
 }

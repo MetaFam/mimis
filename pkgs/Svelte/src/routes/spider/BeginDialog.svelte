@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
+
   let {
     open = $bindable(false),
     onsubmit,
@@ -9,7 +11,12 @@
     ),
   } = $props()
   let dialog = $state<HTMLDialogElement>()
-  let errored = $state(!!window.showDirectoryPicker)
+  let errored = $state(false)
+  let picker = $state(true)
+
+  onMount(() => {
+    picker = errored = !!window.showDirectoryPicker
+  })
 
   $effect(() => {
     if(open || !errored) {
@@ -56,7 +63,7 @@
     </header>
 
     <form onsubmit={submit}>
-      {#if !!window.showDirectoryPicker}
+      {#if picker}
         <label>
           <button type="button" onclick={async () => {
             dir = await window.showDirectoryPicker()
@@ -74,7 +81,7 @@
         <p>As of this writing, 26 November 2024, Chrome & Opera are the only browsers that make this function available.</p>
         <p>Specifically, <em>this</em> browser doesn't have support for <code>showDirectoryPicker</code>.</p>
       {/if}
-      {#if !!window.showDirectoryPicker}
+      {#if picker}
         <label>
           <input id="gitignore" type="checkbox" checked />
           <span>Respect <code>.gitignore</code>s</span>
