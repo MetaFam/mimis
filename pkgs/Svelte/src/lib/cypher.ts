@@ -1,6 +1,6 @@
 import { v7 as uuid } from 'uuid'
 import * as cbor from '@ipld/dag-cbor'
-import { QueryResult, Session } from 'neo4j-driver'
+import type { QueryResult, Session } from 'neo4j-driver'
 import { CID } from 'multiformats/cid'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { CAREncoderStream } from 'ipfs-car'
@@ -168,7 +168,7 @@ export class Recorder {
     }
     if(params) op.params = params
     if(this.last) op.previous = this.last
-    console.debug({ Encoding: op })
+
     const bytes = await cbor.encode(op)
     const hashed = await hash.sha256(bytes)
     this.last = CID.create(1, cbor.code, hashed)
@@ -208,11 +208,9 @@ export class Recorder {
       if(record) {
         await this.record({ statement, params })
       }
-      console.debug({ Running: { statement, params } })
       return await session.run(statement, params)
     } finally {
       if(sessionCreated) {
-        console.debug({ Closing: session })
         session.close()
       }
     }
@@ -257,7 +255,6 @@ export class Recorder {
       )
       const buffer = await response.arrayBuffer()
       const op = cbor.decode(buffer) as Operation
-      console.debug({ max, cid: cid.toString(), op })
       recorder.ops.set(cid.toString(), op)
       if(recorder.last == null) { // first entry is the final one
         recorder.last = cid

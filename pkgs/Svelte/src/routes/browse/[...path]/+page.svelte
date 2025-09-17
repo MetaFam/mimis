@@ -136,7 +136,6 @@
     dirsList = mkDirs(
       nav.to?.params?.path?.split('/') ?? []
     )
-    console.debug({ p: nav.to?.params?.path, basePath })
   })
 
   type ChipForm = HTMLFormElement & {
@@ -189,8 +188,11 @@
             <span>Loading…</span>
           {:then choices}
             {#if choices.length > 1}
-              <select oninput={({ target: { value } }) => {
-                option.selected = value
+              <!-- @ts-ignore -->
+              <select oninput={({ target }) => {
+                option.selected = (
+                  (target as HTMLSelectElement).value
+                )
                 dirsList = dirsList.slice(0, idx + 1)
                 goto(`/${
                   [...basePath, ...chips]
@@ -199,7 +201,9 @@
                 }`)
               }}>
                 {#each choices as opt}
-                  <option selected={opt === option.selected}>{opt}</option>
+                  <option selected={opt === option.selected}>
+                    {opt}
+                  </option>
                 {/each}
               </select>
             {:else}
@@ -230,9 +234,11 @@
         <ul id="result">
           {#each result as res}
             {@const path = (
-              [...basePath, ...chips]
-              .map(encodeURIComponent)
-              .join('/')
+              '/' + (
+                [...basePath, ...chips]
+                .map(encodeURIComponent)
+                .join('/')
+              )
             )}
             <li>
               {#if res.get('child')?.labels.includes('File')}
