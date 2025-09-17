@@ -73,7 +73,6 @@ export const searchTree = async (
       offset: BigInt(offset),
     }
     const { records } = await session.run(query, params)
-    console.debug({ query, params, records })
     return records
   } finally {
     await session.close()

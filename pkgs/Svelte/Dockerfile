@@ -41,4 +41,4 @@ COPY --from=builder /app/build/ ./
 EXPOSE 3000
 
 # CMD ["node", "--env-file=.env", "build"]
-CMD ["deno", "--allow-env", "--allow-read", "--allow-net", "build/index.js"]
+CMD ["deno", "--allow-env", "--allow-read", "--allow-net", "index.js"]

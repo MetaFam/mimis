@@ -1,6 +1,7 @@
 import type { Record as Neo4jRecord } from 'neo4j-driver'
 import JSON5 from 'json5'
 import { getNeo4j } from './drivers.ts'
+import { page } from '$app/state'
 
 type Primitive = string | number | boolean | ((...args: Array<any>) => any) | null | undefined
 interface NöopointConflictType extends Record<
@@ -251,4 +252,25 @@ export function uint8Array2BigInt(arr: Uint8Array) {
     (acc, byte) => (acc << 8n) | BigInt(byte),
     0n,
   )
+}
+
+export let hashLink = false
+
+export class Link {
+  static for(path: string) {
+    if(hashLink) {
+      if(path.startsWith('/')) {
+        return `/#${path}`
+      }
+      return `#/${path}`
+    }
+    return path
+  }
+
+  static get path() {
+    if(hashLink) {
+      return page.url.hash
+    }
+    return page.url.pathname
+  }
 }

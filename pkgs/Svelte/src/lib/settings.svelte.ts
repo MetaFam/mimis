@@ -1,3 +1,4 @@
+// @ts-ignore
 import { env } from '$env/dynamic/public'
 
 export class Settings {

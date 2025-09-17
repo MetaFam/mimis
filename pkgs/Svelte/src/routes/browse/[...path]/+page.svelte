@@ -81,7 +81,7 @@
     try {
       const path = [...chips]
       let type = null
-      if(chips.length > 0 && !page.params.path.endsWith('/')) {
+      if(chips.length > 0 && !page.params.path?.endsWith('/')) {
         ([, type] =  Array.from(
           path.at(-1)?.match(/^(.+)\.\1$/) ?? []
         ))
@@ -123,19 +123,20 @@
     }
   })
 
+  let baseLength = 1
   onMount(async () => {
     const path = (
-      page.url.hash.split('/').filter(Boolean)
+      page.url.pathname.split('/').filter(Boolean)
     )
-    basePath = (
-      path.slice(1, path.length - dirsList.length)
-    )
+    baseLength = path.length - dirsList.length
+    basePath = path.slice(0, baseLength)
   })
 
   onNavigate(async (nav) => {
     dirsList = mkDirs(
       nav.to?.params?.path?.split('/') ?? []
     )
+    console.debug({ p: nav.to?.params?.path, basePath })
   })
 
   type ChipForm = HTMLFormElement & {

@@ -3,6 +3,8 @@
 	import logo from '$lib/images/svelte-logo.svg'
 	import { afterNavigate } from '$app/navigation'
   import GitHub from '$lib/images/github.svg?raw'
+    import { Link } from '$lib';
+    import settings from '$lib/settings.svelte';
 
 	type Page = {
 		url: string
@@ -10,23 +12,33 @@
 		title: string
 	}
 
+	function neo4jBrowser() {
+		const url = new URL(settings.neo4jURL)
+		const secure = url.protocol.includes('+s')
+		return (
+			`http${secure ? 's' : ''}://`
+			+ `${url.hostname}:747${secure ? '3' : '4'}`
+		)
+	}
+
 	const pages = [
-		{ url: '/', icon: '🏡', title: 'Home' },
-		{ url: '/spider', icon: '🕷️', title: 'Spider' },
-		{ url: '/upload', icon: '⏫', title: 'Upload' },
-		{ url: '/browse', icon: '📖️', title: 'Browse' },
-		{ url: '/list', icon: '📋', title: 'List' },
-		{ url: '/post', icon: '📫️', title: 'Post' },
-		{ url: '/flow', icon: '🌊', title: 'Flow' },
-		{ url: '/publish', icon: '☢️', title: 'Publish' },
-		{ url: '/equals', icon: '≡', title: 'Equal' },
-		{ url: '/about', icon: 'ℹ️', title: 'About' },
-		{ url: '/settings', icon: '⚙️', title: 'Settings' },
+		{ url: Link.for('/'), icon: '🏡', title: 'Home' },
+		{ url: Link.for('/spider'), icon: '🕷️', title: 'Spider' },
+		{ url: Link.for('/upload'), icon: '⏫', title: 'Upload' },
+		{ url: Link.for('/browse'), icon: '📖️', title: 'Browse' },
+		{ url: Link.for('/list'), icon: '📋', title: 'List' },
+		{ url: Link.for('/post'), icon: '📫️', title: 'Post' },
+		{ url: Link.for('/flow'), icon: '🌊', title: 'Flow' },
+		{ url: Link.for('/publish'), icon: '☢️', title: 'Publish' },
+		{ url: Link.for('/equals'), icon: '≡', title: 'Equal' },
+		{ url: Link.for('/about'), icon: 'ℹ️', title: 'About' },
+		{ url: Link.for('/settings'), icon: '⚙️', title: 'Settings' },
+		{ url: neo4jBrowser(), icon: '🖇️', title: 'Neo4j Browser' },
 	]
 	let currentPage: Page | null = $state(null)
 	function localize() {
 		currentPage = (
-			pages.findLast((pg) => page.url.pathname.startsWith(pg.url))
+			pages.findLast((pg) => Link.path.startsWith(pg.url))
 			?? pages[0]
 		)
 	}
@@ -55,7 +67,10 @@
 		<ul>
 			{#each pages as page}
 				<li aria-current={currentPage?.title === page.title && 'page'}>
-					<a href={page.url}>{page.icon}</a>
+					<a
+						href={page.url}
+						target={/^https?:\/\//.test(page.url) ? '_blank' : '_self'}
+					>{page.icon}</a>
 					<dialog open>{page.title}</dialog>
 				</li>
 			{/each}
