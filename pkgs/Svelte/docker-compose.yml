@@ -1,5 +1,6 @@
 services:
   web:
+    container_name: mimis
     build:
       context: .
       args:

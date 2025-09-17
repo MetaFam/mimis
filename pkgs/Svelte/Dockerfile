@@ -1,5 +1,5 @@
-# FROM denoland/deno:latest AS builder
-FROM node:lts AS builder
+FROM denoland/deno:latest AS builder
+# FROM node:lts AS builder
 
 ARG PUBLIC_APPKIT_PROJECT_ID
 ENV PUBLIC_APPKIT_PROJECT_ID=${PUBLIC_APPKIT_PROJECT_ID}
@@ -21,17 +21,18 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt update
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt install -y python3 make g++
-# RUN deno install --global npm:node-gyp
-# RUN deno install --allow-scripts
-# RUN deno task build
-RUN npm install --global npm:node-gyp
-RUN --mount=type=cache,target=node_modules/,sharing=locked \
-    npm install
-RUN --mount=type=cache,target=node_modules/,sharing=locked \
-    npm run build
+    apt install -y python3 make g++ npm
 
-FROM node:lts AS production
+# RUN npm install --global npm:node-gyp
+RUN --mount=type=cache,target=node_modules/,sharing=locked \
+    # npm install
+    deno install --allow-scripts
+RUN --mount=type=cache,target=node_modules/,sharing=locked \
+    # npm run build
+    deno task build
+
+FROM denoland/deno:latest AS production
+# FROM node:lts AS production
 
 WORKDIR /app
 
@@ -39,4 +40,5 @@ COPY --from=builder /app/build/ ./
 
 EXPOSE 3000
 
-CMD ["node", "--env-file=.env", "build"]
+# CMD ["node", "--env-file=.env", "build"]
+CMD ["deno", "--allow-env", "--allow-read", "--allow-net", "build/index.js"]

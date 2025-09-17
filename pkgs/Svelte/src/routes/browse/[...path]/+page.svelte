@@ -191,7 +191,7 @@
               <select oninput={({ target: { value } }) => {
                 option.selected = value
                 dirsList = dirsList.slice(0, idx + 1)
-                goto(`/#/${
+                goto(`/${
                   [...basePath, ...chips]
                   .map(encodeURIComponent)
                   .join('/')
@@ -204,7 +204,7 @@
             {:else}
               <button onclick={(evt) => {
                 dirsList = dirsList.slice(0, idx + 1)
-                goto(`/#/${
+                goto(`/${
                   [...basePath, ...chips]
                   .map(encodeURIComponent)
                   .join('/')
@@ -229,12 +229,9 @@
         <ul id="result">
           {#each result as res}
             {@const path = (
-              '#/'
-              + (
-                [...basePath, ...chips]
-                .map(encodeURIComponent)
-                .join('/')
-              )
+              [...basePath, ...chips]
+              .map(encodeURIComponent)
+              .join('/')
             )}
             <li>
               {#if res.get('child')?.labels.includes('File')}
