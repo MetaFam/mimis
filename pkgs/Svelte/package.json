@@ -60,6 +60,7 @@
 		"@reown/appkit-common": "^1.7.13",
 		"@reown/appkit-controllers": "^1.7.13",
 		"@storacha/client": "^1.7.6",
+		"@sveltejs/adapter-vercel": "^5.10.2",
 		"@wagmi/core": "^2.17.3",
 		"bootstrap-icons": "^1.13.1",
 		"dotenv": "^17.2.2",
