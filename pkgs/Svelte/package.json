@@ -11,7 +11,8 @@
 		"lint": "eslint .",
 		"clean": "rm -rfv node_modules/ build/",
 		"car": "deno run npm:ipfs-car",
-		"gh:publish": "gh-pages -d build/ --nojekyll"
+		"gh:publish": "gh-pages -d build/ --nojekyll",
+		"docker": "docker compose up --build"
 	},
 	"devDependencies": {
 		"@fontsource/fira-mono": "^5.0.0",
