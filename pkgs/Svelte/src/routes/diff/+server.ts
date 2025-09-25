@@ -1,9 +1,9 @@
 import { json } from '@sveltejs/kit'
 
-export async function POST({ request }: { request: Request}) {
-	const { nodes, relationships } = await request.json()
+export async function POST({ request }: { request: Request }) {
+	const tx = await request.json()
 
-  console.debug({ nodes, relationships })
+  console.debug({ tx })
 
 	return json({})
 }

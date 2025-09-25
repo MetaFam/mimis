@@ -22,16 +22,20 @@ services:
     env_file:
       - .env.docker
     environment:
-      - NEO4J_PLUGINS=["apoc-extended"]
+      - NEO4J_PLUGINS=["apoc", "apoc-extended"]
+      - EXTENSION_SCRIPT=/bin/neo4j_init.sh
     volumes:
       - neo4j_data:/data
       - neo4j_logs:/logs
+      - ./config/apoc.conf:/var/lib/neo4j/conf/apoc.conf
+      - ./config/neo4j_init.sh:/bin/neo4j_init.sh
+      - ./config/initialize.cypher:/bin/initialize.cypher
     healthcheck:
       test: [
         "CMD",
         "cypher-shell",
-        "-u", "${PUBLIC_NEO4J_USER:-neo4j}",
-        "-p", "${PUBLIC_NEO4J_PASS:-Password from within Docker.}",
+        "--username", "${PUBLIC_NEO4J_USER:-neo4j}",
+        "--password", "${PUBLIC_NEO4J_PASS:-Password from within Docker.}",
         "RETURN 1"
       ]
       interval: 10s
@@ -42,3 +46,4 @@ services:
 volumes:
   neo4j_data:
   neo4j_logs:
+  neo4j_conf:

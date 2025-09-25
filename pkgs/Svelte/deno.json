@@ -1,1 +1,5 @@
-{}
+{
+  "imports": {
+    "kubo-rpc-client": "npm:kubo-rpc-client"
+  }
+}

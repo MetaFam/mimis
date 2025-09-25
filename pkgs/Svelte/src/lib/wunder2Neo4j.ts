@@ -160,11 +160,6 @@ export async function wunder2Neo4j({
     }
   }
 
-  type Node = {
-    id: string
-    title: string
-  }
-
   async function ingest(
     { node, mountId }: { node: WunderbaumNode, mountId: string }
   ) {

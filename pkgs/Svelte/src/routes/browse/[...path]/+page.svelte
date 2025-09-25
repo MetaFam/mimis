@@ -72,6 +72,9 @@
     return dirs
   }
 
+  const { data } = $props()
+  if(settings.debugging) console.debug({ 'Page Data': data })
+
   let dirsList = $state<Array<DirSelection>>(
     mkDirs(page.params.path?.split('/') ?? [])
   )
