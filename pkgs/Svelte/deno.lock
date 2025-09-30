@@ -8940,6 +8940,9 @@
     }
   },
   "workspace": {
+    "dependencies": [
+      "npm:kubo-rpc-client@*"
+    ],
     "packageJson": {
       "dependencies": [
         "npm:@atlaskit/pragmatic-drag-and-drop-flourish@^1.2.2",

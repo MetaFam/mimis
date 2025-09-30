@@ -3,7 +3,6 @@ import { v7 as uuid } from 'uuid'
 import mime from 'mime'
 import { getNeo4j } from './drivers.ts'
 import type { Logger } from '../types'
-import { Recorder } from './cypher.ts'
 
 export async function wunder2Neo4j({
   root, path = [], log, on,
@@ -16,7 +15,8 @@ export async function wunder2Neo4j({
   ) } }
 }) {
   const driver = getNeo4j()
-  const recorder = new Recorder()
+  const session = driver.session()
+  const tx = session.beginTransaction()
 
   try {
     const mountId = await createMount()
@@ -24,12 +24,12 @@ export async function wunder2Neo4j({
       throw new Error(`Can't handle ${root.children?.length} root children.`)
     }
     const rootId = await ingest({ node: root.children[0], mountId })
-    const opsCAR = await recorder.generateCAR()
     const pathStr = `/${path.join('/')}${path.length > 0 ? '/' : ''}`
     log?.(`Mounted ${rootId} at ${pathStr}.`)
-    return { rootId, opsCAR }
+    return { rootId }
   } finally {
-    // await driver.close()
+    await tx.commit()
+    await session.close()
   }
 
   async function getPoint({ dirId }: { dirId: string }) {
@@ -40,11 +40,11 @@ export async function wunder2Neo4j({
       ON CREATE SET rel.mïmid = $relUUID
       RETURN point.mïmid AS id
     `
-    const { records } = await recorder.exec({
-      statement, params: {
+    const { records } = await tx.run(
+      statement, {
         dirId, pointUUID: uuid(), relUUID: uuid()
       }
-    }, {})
+    )
     const pointId = records[0].get('id')
     log?.({ 'Added Point': `${dirId} → ${pointId}` })
     return pointId
@@ -78,12 +78,12 @@ export async function wunder2Neo4j({
       SET entry:Spot
       RETURN entry.mïmid AS id
     `
-    const { records: [entry] } = await recorder.exec({
-      statement, params: {
+    const { records: [entry] } = await tx.run(
+      statement, {
         itemId: itemId ?? null, name, dirId,
         dirUUID: uuid(), relUUID: uuid(), entryUUID: uuid(),
       }
-    }, {})
+    )
     const retId = entry.get('id')
     log?.(`Added ${name} → ${itemId} (${dirId} → ${retId})`)
     return retId
@@ -104,12 +104,12 @@ export async function wunder2Neo4j({
       SET file.size = $size
       RETURN file.mïmid AS id
     `
-    const { records } = await recorder.exec({
-      statement, params: {
+    const { records } = await tx.run(
+      statement, {
         pointId, cid, type, size,
         itemUUID: uuid(), fileUUID: uuid(), relUUID: uuid()
       }
-    }, {})
+    )
     log?.({ 'Added At': `${pointId}: ${cid} (${type})` })
     return records[0].get('id')
   }
@@ -121,43 +121,37 @@ export async function wunder2Neo4j({
    * @returns
    */
   async function createMount() {
-    const session = driver.session()
+    const statement = `
+      MERGE (r:Root)
+      ON CREATE SET r.mïmid = $uuid
+      SET r:Root:Spot
+      RETURN r.mïmid AS id
+    `
+    const { records: [root] } = await tx.run(
+      statement, { uuid: uuid() }
+    )
+    let current = root.get('id') as string
 
-    try {
+    log?.({ 'Got Root': current })
+
+    while(path.length > 0) {
       const statement = `
-        MERGE (r:Root)
-        ON CREATE SET r.mïmid = $uuid
-        SET r:Root:Spot
-        RETURN r.mïmid AS id
+        MATCH (dir) WHERE dir.mïmid = $current
+        MERGE (dir)-[rel:CONTAINS { path: $elem }]->(item)
+        ON CREATE SET rel.mïmid = $relUUID
+        ON CREATE SET item.mïmid = $itemUUID
+        SET item:Spot
+        RETURN item.mïmid as id
       `
-      const { records: [root] } = await recorder.exec({
-        statement, params: { uuid: uuid() }
-      }, { session })
-      let current = root.get('id') as string
-
-      log?.({ 'Got Root': current })
-
-      while(path.length > 0) {
-        const statement = `
-          MATCH (dir) WHERE dir.mïmid = $current
-          MERGE (dir)-[rel:CONTAINS { path: $elem }]->(item)
-          ON CREATE SET rel.mïmid = $relUUID
-          ON CREATE SET item.mïmid = $itemUUID
-          SET item:Spot
-          RETURN item.mïmid as id
-        `
-        const elem = path.shift()
-        const { records } = await recorder.exec({
-          statement, params: {
-            current, elem, itemUUID: uuid(), relUUID: uuid()
-          },
-        }, { session })
-        current = records[0].get('id') as string
-      }
-      return current
-    } finally {
-      await session.close()
+      const elem = path.shift()
+      const { records } = await tx.run(
+        statement, {
+          current, elem, itemUUID: uuid(), relUUID: uuid()
+        },
+      )
+      current = records[0].get('id') as string
     }
+    return current
   }
 
   async function ingest(
@@ -179,7 +173,7 @@ export async function wunder2Neo4j({
         }
 
         if(child.isExpandable()) {
-          ingest({ node: child, mountId: dirId})
+          await ingest({ node: child, mountId: dirId})
         } else {
           const ext = child.title.split('.').at(-1) as string
           const name = child.title.slice(0, -(ext.length + 1))

@@ -23,7 +23,7 @@ services:
       - .env.docker
     environment:
       - NEO4J_PLUGINS=["apoc", "apoc-extended"]
-      - EXTENSION_SCRIPT=/bin/neo4j_init.sh
+      # - EXTENSION_SCRIPT=/bin/neo4j_init.sh
     volumes:
       - neo4j_data:/data
       - neo4j_logs:/logs
@@ -42,6 +42,29 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+
+  neo4j-init:
+    image: neo4j:latest
+    container_name: neo4j-init
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    env_file:
+      - .env.docker
+    volumes:
+      - ./config:/scripts
+    entrypoint: /bin/bash
+    command: >
+      -c "
+      echo 'Waiting for Neo4j to be ready…';
+      sleep 5;
+      echo 'Running initialization scripts…';
+      for script in /scripts/*.cypher; do
+        echo \"Executing $$script\";
+        cypher-shell -u $$PUBLIC_NEO4J_USER -p \"$$PUBLIC_NEO4J_PASS\" -a 'neo4j://neo4j:7687' -f \"$$script\" || exit 1;
+      done;
+      echo 'Initialization complete!';
+      "
 
 volumes:
   neo4j_data:

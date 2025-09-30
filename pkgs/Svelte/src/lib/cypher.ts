@@ -8,7 +8,6 @@ import {
   verifiedFetch as ipfsFetch,
 } from '@helia/verified-fetch'
 import { getNeo4j } from './drivers.ts'
-// @ts-ignore
 import type { Logger } from '../types'
 
 /**

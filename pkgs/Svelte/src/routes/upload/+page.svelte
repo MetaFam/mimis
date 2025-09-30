@@ -91,10 +91,9 @@
       const log = (msg: string | {}) => {
         console.debug(msg)
       }
-      ;({ opsCAR } = await wunder2Neo4j({
+      await wunder2Neo4j({
         root: tree.root, path: mount, log, on,
-      }))
-      opsCAR.filename = `operations.upload.${timestamp()}.car`
+      })
       Toastify({
         text: `Loaded: ${count} Entr${count === 1 ? 'y' : 'ies'}`,
         duration: 8_000,

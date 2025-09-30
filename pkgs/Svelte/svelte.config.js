@@ -10,6 +10,7 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		// router: { type: 'hash' },
+		csrf: { checkOrigin: false },
 	},
 }
 
