@@ -10,10 +10,12 @@ services:
     env_file:
       - .env.docker
     depends_on:
-      - neo4j
+      neo4j:
+        condition: service_healthy
 
   neo4j:
-    image: neo4j:community
+    # image: neo4j:community
+    image: neo4j:5.26.12-community-bullseye
     container_name: neo4j
     restart: unless-stopped
     ports:
@@ -23,13 +25,13 @@ services:
       - .env.docker
     environment:
       - NEO4J_PLUGINS=["apoc", "apoc-extended"]
+      # - NEO4J_db_query_default__language=CYPHER_25
+      # - NEO4J_dbms_mode=SINGLE
       # - EXTENSION_SCRIPT=/bin/neo4j_init.sh
     volumes:
       - neo4j_data:/data
       - neo4j_logs:/logs
       - ./config/apoc.conf:/var/lib/neo4j/conf/apoc.conf
-      - ./config/neo4j_init.sh:/bin/neo4j_init.sh
-      - ./config/initialize.cypher:/bin/initialize.cypher
     healthcheck:
       test: [
         "CMD",
@@ -43,28 +45,32 @@ services:
       retries: 5
       start_period: 30s
 
-  neo4j-init:
-    image: neo4j:latest
-    container_name: neo4j-init
-    depends_on:
-      neo4j:
-        condition: service_healthy
-    env_file:
-      - .env.docker
-    volumes:
-      - ./config:/scripts
-    entrypoint: /bin/bash
-    command: >
-      -c "
-      echo 'Waiting for Neo4j to be ready…';
-      sleep 5;
-      echo 'Running initialization scripts…';
-      for script in /scripts/*.cypher; do
-        echo \"Executing $$script\";
-        cypher-shell -u $$PUBLIC_NEO4J_USER -p \"$$PUBLIC_NEO4J_PASS\" -a 'neo4j://neo4j:7687' -f \"$$script\" || exit 1;
-      done;
-      echo 'Initialization complete!';
-      "
+  # neo4j-init:
+  #   # image: neo4j:community
+  #   image: neo4j:5.26.12-community-bullseye
+  #   container_name: neo4j-init
+  #   depends_on:
+  #     neo4j:
+  #       condition: service_healthy
+  #   env_file:
+  #     - .env.docker
+  #   volumes:
+  #     - ./config:/scripts
+  #   entrypoint: /bin/bash
+  #   command: >
+  #     -c "
+  #     echo 'Waiting for Neo4j to be ready…';
+  #     sleep 5;
+  #     echo 'Running initialization scripts…';
+  #     ADDR='neo4j://neo4j:7687';
+  #     cypher-shell -u $$PUBLIC_NEO4J_USER -p \"$$PUBLIC_NEO4J_PASS\" -a \"$$ADDR\" \'CALL apoc.trigger.list()\';
+  #     for script in /scripts/*.cypher; do
+  #       echo Executing $$script against $$ADDR;
+  #       cypher-shell -u $$PUBLIC_NEO4J_USER -p \"$$PUBLIC_NEO4J_PASS\" -a \"$$ADDR\" -f \"$$script\";
+  #     done;
+  #     echo 'Initialization complete!';
+  #     sleep 6000;
+  #     "
 
 volumes:
   neo4j_data:

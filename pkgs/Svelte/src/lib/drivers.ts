@@ -5,6 +5,7 @@ import { settings } from './settings.svelte.ts'
 let neo4j: Driver | null = null
 export const getNeo4j = () => {
   if(!neo4j) {
+    console.debug(`Connecting ${settings.neo4jUser}:${settings.neo4jPass} to ${settings.neo4jURL}.`)
     neo4j = createNeo4j(
       settings.neo4jURL,
       auth.basic(

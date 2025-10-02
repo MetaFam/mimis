@@ -20,13 +20,14 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt update \
     && apt install -y --no-install-recommends --no-install-suggests \
-      python3 make g++ npm
+    python3 make g++ curl dnsutils ca-certificates
 
 # RUN npm install --global npm:node-gyp
 # RUN --mount=type=cache,target=node_modules/,sharing=locked \
 RUN \
     # npm install
-    deno install --allow-scripts
+    # deno install --allow-scripts
+    deno install
 # RUN --mount=type=cache,target=node_modules/,sharing=locked \
 RUN \
     # npm run build

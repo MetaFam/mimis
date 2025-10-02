@@ -325,7 +325,7 @@
   object {
     display: block;
     min-height: 80dvh;
-    max-width: 100dvw;
+    max-width: max(75ch, 80dvw);
     margin-block: 1rem;
     margin-inline: auto;
   }

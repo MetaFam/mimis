@@ -16,7 +16,9 @@ export async function wunder2Neo4j({
 }) {
   const driver = getNeo4j()
   const session = driver.session()
-  const tx = session.beginTransaction()
+  const tx = session.beginTransaction({
+    metadata: { action: 'car import', path, file: root.data.filename }
+  })
 
   try {
     const mountId = await createMount()

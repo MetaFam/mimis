@@ -1,5 +1,5 @@
-ALTER DATABASE neo4j SET DEFAULT LANGUAGE CYPHER 25;
-ALTER DATABASE system SET DEFAULT LANGUAGE CYPHER 25;
+// ALTER DATABASE neo4j SET DEFAULT LANGUAGE CYPHER 25;
+// ALTER DATABASE system SET DEFAULT LANGUAGE CYPHER 25;
 
 
 // Not supported in the community edition
@@ -18,7 +18,8 @@ CALL apoc.trigger.install(
           createdNodes: $createdNodes,
           createdRelationships: $createdRelationships,
           deletedNodes: $deletedNodes,
-          deletedRelationships: $deletedRelationships
+          deletedRelationships: $deletedRelationships,
+          metadata: metaData
         }) AS json,
         "http://mimis:3000/diff" AS webhookURL
     CALL apoc.load.jsonParams(

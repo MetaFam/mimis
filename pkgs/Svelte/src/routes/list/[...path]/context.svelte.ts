@@ -1,4 +1,3 @@
-import { page } from '$app/state'
 import { settings } from '$lib/settings.svelte'
 
 class Context {
@@ -8,7 +7,7 @@ class Context {
   #items = $state(new Map())
   #activeId = $state<number | null>(null)
 
-  debug = $state(page.url.searchParams.has('debug') || settings.debugging)
+  debug = settings.debugging
 
   getSetting(key: symbol) {
     if(!this.#initialized) this.#initialize()

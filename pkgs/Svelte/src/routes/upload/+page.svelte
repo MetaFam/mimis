@@ -71,6 +71,7 @@
         }
       },
     })
+    tree.data.filename = file.name
     // ToDo: Expand small trees. This code doesn't work.
     // if(source.flat(3).length < 25) {
     //   tree.expandAll()
