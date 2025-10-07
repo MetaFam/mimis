@@ -46,6 +46,13 @@
 
   const carLog = logger(carLogs)
 
+  const reset = () => {
+    count = 0
+    tree?.clear()
+    tree = undefined
+    path = ['']
+  }
+
   const submitCAR = async (evt: SubmitEvent) => {
     evt.preventDefault()
     const input: HTMLInputElement | null = (
@@ -147,7 +154,10 @@
   <form id="read-car" bind:this={car.form} onsubmit={submitCAR}>
     <input
       type="file" required accept=".car"
-      onchange={() => car.disabled = !car.form?.checkValidity()}
+      onchange={() => {
+        reset()
+        car.disabled = !car.form?.checkValidity()
+      }}
     />
     {#if !car.disabled}
       <button disabled={car.disabled}><span>
@@ -207,7 +217,7 @@
       </span></a>
     </section>
   {/if}
-  <section id="display">
+  <section id="display" style:visibility={!!tree ? 'visible' : 'hidden'}>
 		<div id="fs-tree" class:accompanied={content.present}></div>
 		<div id="content">
 			{#if content.present}

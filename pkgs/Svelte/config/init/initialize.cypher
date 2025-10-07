@@ -19,7 +19,7 @@ CALL apoc.trigger.install(
           createdRelationships: $createdRelationships,
           deletedNodes: $deletedNodes,
           deletedRelationships: $deletedRelationships,
-          metadata: metaData
+          metadata: $metaData
         }) AS json,
         "http://mimis:3000/diff" AS webhookURL
     CALL apoc.load.jsonParams(
