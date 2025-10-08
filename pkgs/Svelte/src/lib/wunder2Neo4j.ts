@@ -28,18 +28,24 @@ export async function wunder2Neo4j({
     const rootId = await ingest({ node: root.children[0], mountId })
     const pathStr = `/${path.join('/')}${path.length > 0 ? '/' : ''}`
     log?.(`Mounted ${rootId} at ${pathStr}.`)
-    return { rootId }
-  } finally {
     await tx.commit()
+    return { rootId }
+  } catch(error) {
+    console.error({ Error: (error as Error).message })
+    await tx.rollback()
+  } finally {
     await session.close()
   }
 
   async function getPoint({ dirId }: { dirId: string }) {
+    log?.({ 'Adding Point': `${dirId}` })
     const statement = `
       MATCH (dir) WHERE dir.mïmid = $dirId
       MERGE (dir)-[rel:REPRESENTED_BY]->(point:Nöopoint)
       ON CREATE SET point.mïmid = $pointUUID
       ON CREATE SET rel.mïmid = $relUUID
+      ON CREATE SET point.created_at = toString(datetime())
+      ON CREATE SET rel.created_at = toString(datetime())
       RETURN point.mïmid AS id
     `
     const { records } = await tx.run(
@@ -48,7 +54,6 @@ export async function wunder2Neo4j({
       }
     )
     const pointId = records[0].get('id')
-    log?.({ 'Added Point': `${dirId} → ${pointId}` })
     return pointId
   }
 
@@ -62,6 +67,7 @@ export async function wunder2Neo4j({
       rship?: string
     }
   ) {
+    log?.(`Adding Dir Entry ${name} → ${itemId}`)
     const statement = `
       ${!itemId ? '' : (
         'MATCH (entry) WHERE entry.mïmid = $itemId'
@@ -76,6 +82,8 @@ export async function wunder2Neo4j({
       }]->(entry)
       ON CREATE SET c.mïmid = $relUUID
       ON CREATE SET entry.mïmid = $entryUUID
+      ON CREATE SET c.created_at = toString(datetime())
+      ON CREATE SET entry.created_at = toString(datetime())
       SET dir:Spot
       SET entry:Spot
       RETURN entry.mïmid AS id
@@ -87,7 +95,6 @@ export async function wunder2Neo4j({
       }
     )
     const retId = entry.get('id')
-    log?.(`Added ${name} → ${itemId} (${dirId} → ${retId})`)
     return retId
   }
 
@@ -96,12 +103,15 @@ export async function wunder2Neo4j({
     { dirId: string, cid: string, type: string | null, size: number }
   ) {
     const pointId = await getPoint({ dirId })
+    log?.({ 'Adding File At': `${pointId}: ${cid} (${type})` })
     const statement = `
       MATCH (point) WHERE point.mïmid = $pointId
       MERGE (file:IPFS:File { cid: $cid })
       MERGE (point)-[rel:EMBODIED_AS]->(file)
       ON CREATE SET file.mïmid = $fileUUID
       ON CREATE SET rel.mïmid = $relUUID
+      ON CREATE SET file.created_at = toString(datetime())
+      ON CREATE SET rel.created_at = toString(datetime())
       SET file.mimetype = CASE WHEN $type IS NOT NULL THEN $type END
       SET file.size = $size
       RETURN file.mïmid AS id
@@ -112,7 +122,6 @@ export async function wunder2Neo4j({
         itemUUID: uuid(), fileUUID: uuid(), relUUID: uuid()
       }
     )
-    log?.({ 'Added At': `${pointId}: ${cid} (${type})` })
     return records[0].get('id')
   }
 
@@ -126,6 +135,7 @@ export async function wunder2Neo4j({
     const statement = `
       MERGE (r:Root)
       ON CREATE SET r.mïmid = $uuid
+      ON CREATE SET r.created_at = toString(datetime())
       SET r:Root:Spot
       RETURN r.mïmid AS id
     `
@@ -142,6 +152,8 @@ export async function wunder2Neo4j({
         MERGE (dir)-[rel:CONTAINS { path: $elem }]->(item)
         ON CREATE SET rel.mïmid = $relUUID
         ON CREATE SET item.mïmid = $itemUUID
+        ON CREATE SET rel.created_at = toString(datetime())
+        ON CREATE SET item.created_at = toString(datetime())
         SET item:Spot
         RETURN item.mïmid as id
       `
@@ -178,9 +190,10 @@ export async function wunder2Neo4j({
           await ingest({ node: child, mountId: dirId})
         } else {
           const ext = child.title.split('.').at(-1) as string
-          const name = child.title.slice(0, -(ext.length + 1))
+          let name = child.title.slice(0, -(ext.length + 1))
           if(name === '') {
-            throw new Error(`Error Processing: "${child.title}": No Extension`)
+            console.warn(`Error Processing: "${child.title}": No Extension`)
+            name = ext
           }
           const typeFile = (name === '' || name === ext)
           const type = mime.getType(ext) ?? `unknown/${ext}`

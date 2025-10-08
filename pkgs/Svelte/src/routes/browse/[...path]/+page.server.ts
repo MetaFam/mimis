@@ -18,11 +18,7 @@ export async function load(
   }
   console.debug({ search, path, type })
   if(type) {
-    const result = await searchTree({
-      path,
-      type,
-    })
-    console.debug({ result: JSON.stringify(result) })
+    const result = await searchTree({ path, type })
     const file = result.find((ret: Record) => (
       ret.get('child')?.labels.includes('File')
     ))

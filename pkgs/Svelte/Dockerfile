@@ -6,7 +6,7 @@ ENV PUBLIC_APPKIT_PROJECT_ID=${PUBLIC_APPKIT_PROJECT_ID}
 ENV PUBLIC_NEO4J_USER=neo4j
 ENV PUBLIC_NEO4J_PASS="Password from within Docker."
 ENV PUBLIC_NEO4J_URI="neo4j://localhost"
-ENV PUBLIC_IPFS_PATTERN="https://{cid}.ipfs.w3s.link{path}"
+ENV PUBLIC_IPFS_PATTERN="https://{cid}.ipfs.w3s.link{path}?format=raw"
 ENV PUBLIC_IPFS_API="http://localhost:5001/api/v0/"
 
 WORKDIR /app
@@ -22,12 +22,16 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && apt install -y --no-install-recommends --no-install-suggests \
     python3 make g++ curl dnsutils ca-certificates
 
-# RUN npm install --global npm:node-gyp
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+RUN bash -c "source /root/.bashrc && nvm install node"
+
+RUN deno install --global npm:node-gyp
+
 # RUN --mount=type=cache,target=node_modules/,sharing=locked \
 RUN \
     # npm install
-    # deno install --allow-scripts
-    deno install
+    deno install --allow-scripts
+    # deno install
 # RUN --mount=type=cache,target=node_modules/,sharing=locked \
 RUN \
     # npm run build
@@ -43,12 +47,12 @@ WORKDIR /app
 EXPOSE 3000
 
 # CMD ["node", "--env-file=.env", "build"]
-# CMD ["deno", "--allow-env", "--allow-read", "--allow-net", "index.js"]
 CMD [ \
       "deno", \
       "--allow-env", \
       "--allow-read", \
       "--allow-net", \
       "--allow-sys", \
+      "--allow-run", \
       "build/index.js" \
     ]

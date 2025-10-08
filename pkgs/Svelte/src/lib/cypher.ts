@@ -29,6 +29,7 @@ export async function equalize(ids: Array<string>) {
         MATCH (t) WHERE t.mïmid = $targetId
         MERGE (e)-[eq:EQUALS]->(t)
         ON CREATE SET eq.mïmid = $uuid
+        ON CREATE SET eq.created_at = toString(datetime())
         RETURN $uuid
       `
       await session.run(
@@ -44,10 +45,15 @@ export async function create({ path }: { path: Array<string> }) {
   const session = getNeo4j().session()
 
   try {
-    const rootQuery = (
-      `MERGE (r:Root) RETURN r.mïmid AS id`
+    const rootQuery = (`
+      MERGE (r:Root)
+      ON CREATE SET r.mïmid = $uuid
+      ON CREATE SET created_at = toString(datetime())
+      RETURN r.mïmid AS id
+    `)
+    const { records: [root] } = await session.run(
+      rootQuery, { uuid: uuid() },
     )
-    const { records: [root] } = await session.run(rootQuery)
     let current = root.get('id') as string
 
     const elems = [...path]
@@ -58,6 +64,7 @@ export async function create({ path }: { path: Array<string> }) {
         MERGE (base)-[cont:CONTAINS { path: $elem }]->(node:Spot)
         ON CREATE SET cont.mïmid = $contUUID
         ON CREATE SET node.mïmid = $nodeUUID
+        ON CREATE SET created_at = toString(datetime())
         RETURN node.mïmid AS id
       `
       const { records: [node] } = await session.run(

@@ -168,6 +168,22 @@
         && evt.target === document.body
       ) {
         removeDirs(-1)
+      } else if(['+', '-'].includes(evt.key)) {
+        const current = (
+          getComputedStyle(document.documentElement)
+          .getPropertyValue('--max-height')
+        )
+        console.debug({ current })
+        let next = '80dvh'
+        if(!!current) {
+          const val = Number(current.replace(/\D/g, ''))
+          next = `${Math.round(
+            Math.max(val * (evt.key === '+' ? 1.2 : 0.8), 8)
+          )}dvh`
+        }
+        document.documentElement.style.setProperty('--max-height', next)
+      } else {
+        console.debug({ key: evt.key })
       }
     }
     window.addEventListener('keydown', keydown)
@@ -243,13 +259,13 @@
                 .join('/')
               )
             )}
-            <li>
+            <li class="content">
               {#if res.get('child')?.labels.includes('File')}
                 {@const { cid, mimetype } = res.get('child')?.properties}
                 {@const ext = mime.getExtension(mimetype)}
                 <h2>
-                  <a href="{path}/{ext}.{ext}"><code>
-                    /{res.get('path')?.join('/')} <em>({mimetype})</em>
+                  <a href="/browse/{res.get('path')?.join('/')}/{ext}.{ext}"><code>
+                    {res.get('path').at(-1)}
                   </code></a>
                 </h2>
                 <object
@@ -322,12 +338,19 @@
     gap: 0.5rem;
     padding: 0;
   }
-  object {
-    display: block;
-    min-height: 80dvh;
+  .content {
+    height: var(--max-height, 80dvh);
+    width: min-content;
     max-width: max(75ch, 80dvw);
     margin-block: 1rem;
     margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  object {
+    display: block;
+    margin-inline: auto;
+    object-fit: contain;
   }
   h2 {
     text-align: center;

@@ -1,10 +1,9 @@
 <script lang="ts">
-    import { toHTTP } from '$lib/toHTTP';
-  import {
-    verifiedFetch as ipfsFetch,
-  } from '@helia/verified-fetch'
+  import { toHTTP } from '$lib/toHTTP';
+  // import {
+  //   verifiedFetch as ipfsFetch,
+  // } from '@helia/verified-fetch'
   import * as cbor from '@ipld/dag-cbor'
-
 
   async function submitOps(evt: SubmitEvent) {
     evt.preventDefault()
@@ -13,7 +12,7 @@
     while(cid != null) {
       // const response = await ipfsFetch(`ipfs://${cid}`)
       console.debug({ Retrieving: cid })
-      const response = await fetch(`${toHTTP({ cid })}?format=raw`)
+      const response = await fetch(`${toHTTP({ cid })}`)
       const op = cbor.decode(await response.bytes())
       ops.unshift(op)
       cid = op.previous?.toString()

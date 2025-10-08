@@ -292,5 +292,11 @@
       height: 100%;
       max-width: 100%;
     }
+
+    & #content {
+      position: sticky;
+      top: 0;
+      overflow: auto;
+    }
   }
 </style>
