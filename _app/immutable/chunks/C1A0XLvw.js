@@ -1,0 +1,1 @@
+import{Y as h,v as t,h as b,x as k,Z as x}from"./C0lYg4N8.js";function u(r,i){return r===i||r?.[x]===i}function Y(r={},i,a,S){return h(()=>{var f,s;return t(()=>{f=s,s=[],b(()=>{r!==a(...s)&&(i(r,...s),f&&u(a(...f),r)&&i(null,...f))})}),()=>{k(()=>{s&&u(a(...s),r)&&i(null,...s)})}}),r}export{Y as b};

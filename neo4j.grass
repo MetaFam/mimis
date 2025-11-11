@@ -26,7 +26,7 @@ node.Root {
   border-color: #c0a378;
   text-color-internal: #2A2C34;
   defaultCaption: "<id>";
-  caption: "{mimis_id}";
+  caption: "{mïmid}";
 }
 node.IPFS {
   color: #C990C0;
@@ -59,7 +59,7 @@ node.Collection {
   border-color: #5db665;
   text-color-internal: #2A2C34;
   defaultCaption: "<id>";
-  caption: "{mimis_id}";
+  caption: "{mïmid}";
 }
 relationship.CONTAINS {
   caption: "{path}";

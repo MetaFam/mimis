@@ -1,0 +1,13 @@
+import{dc as u,cs as l}from"./DgjbO070.js";import{i as v,t as p,e as g}from"./BvzJc2UN.js";/**
+ * @license
+ * Copyright 2020 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */const{I:G}=u,m=t=>t.strings===void 0,_=()=>document.createComment(""),H=(t,s,e)=>{const i=t._$AA.parentNode,n=s===void 0?t._$AB:s._$AA;if(e===void 0){const o=i.insertBefore(_(),n),$=i.insertBefore(_(),n);e=new G(o,$,t,t.options)}else{const o=e._$AB.nextSibling,$=e._$AM,d=$!==t;if(d){let h;e._$AQ?.(t),e._$AM=t,e._$AP!==void 0&&(h=t._$AU)!==$._$AU&&e._$AP(h)}if(o!==n||d){let h=e._$AA;for(;h!==o;){const a=h.nextSibling;i.insertBefore(h,n),h=a}}}return e},I=(t,s,e=t)=>(t._$AI(s,e),t),C={},k=(t,s=C)=>t._$AH=s,T=t=>t._$AH,P=t=>{t._$AR(),t._$AA.remove()};/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */const r=(t,s)=>{const e=t._$AN;if(e===void 0)return!1;for(const i of e)i._$AO?.(s,!1),r(i,s);return!0},c=t=>{let s,e;do{if((s=t._$AM)===void 0)break;e=s._$AN,e.delete(t),t=s}while(e?.size===0)},f=t=>{for(let s;s=t._$AM;t=s){let e=s._$AN;if(e===void 0)s._$AN=e=new Set;else if(e.has(t))break;e.add(t),b(s)}};function M(t){this._$AN!==void 0?(c(this),this._$AM=t,f(this)):this._$AM=t}function N(t,s=!1,e=0){const i=this._$AH,n=this._$AN;if(n!==void 0&&n.size!==0)if(s)if(Array.isArray(i))for(let o=e;o<i.length;o++)r(i[o],!1),c(i[o]);else i!=null&&(r(i,!1),c(i));else r(this,t)}const b=t=>{t.type==p.CHILD&&(t._$AP??=N,t._$AQ??=M)};class w extends v{constructor(){super(...arguments),this._$AN=void 0}_$AT(s,e,i){super._$AT(s,e,i),f(this),this.isConnected=s._$AU}_$AO(s,e=!0){s!==this.isConnected&&(this.isConnected=s,s?this.reconnected?.():this.disconnected?.()),e&&(r(this,s),c(this))}setValue(s){if(m(this._$Ct))this._$Ct._$AI(s,this);else{const e=[...this._$Ct._$AH];e[this._$Ci]=s,this._$Ct._$AI(e,this,0)}}disconnected(){}reconnected(){}}/**
+ * @license
+ * Copyright 2020 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */const S=()=>new x;class x{}const A=new WeakMap,U=g(class extends w{render(t){return l}update(t,[s]){const e=s!==this.G;return e&&this.G!==void 0&&this.rt(void 0),(e||this.lt!==this.ct)&&(this.G=s,this.ht=t.options?.host,this.rt(this.ct=t.element)),l}rt(t){if(this.isConnected||(t=void 0),typeof this.G=="function"){const s=this.ht??globalThis;let e=A.get(s);e===void 0&&(e=new WeakMap,A.set(s,e)),e.get(this.G)!==void 0&&this.G.call(this.ht,void 0),e.set(this.G,t),t!==void 0&&this.G.call(this.ht,t)}else this.G.value=t}get lt(){return typeof this.G=="function"?A.get(this.ht??globalThis)?.get(this.G):this.G?.value}disconnected(){this.lt===this.ct&&this.rt(void 0)}reconnected(){this.rt(this.ct)}});export{P as M,S as e,k as m,U as n,T as p,H as s,I as v};
