@@ -1,8 +1,11 @@
 import { createAppKit } from '@reown/appkit'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import type { Provider } from '@reown/appkit-controllers'
-import { mainnet } from '@reown/appkit/networks'
+import { mainnet, root } from '@reown/appkit/networks'
 import type { AppKitNetwork, ChainNamespace } from '@reown/appkit-common'
+import { signTypedData } from '@wagmi/core'
+import { createConfig as createWAGMIConfig, http } from '@wagmi/core'
+import { mainnet as L1, sepolia } from '@wagmi/core/chains'
 import { dev } from '$app/environment'
 
 import { PUBLIC_APPKIT_PROJECT_ID } from '$env/static/public'
@@ -17,7 +20,7 @@ class WebThreeUtils {
   })
   metadata = {
     name: 'Mïmis',
-    description: 'Collaborative filesystem',
+    description: 'Collaborative Filesystem',
     url: !dev ? 'https://mimis.dhappy.org' : `http://localhost:5173`,
     icons: ['https://avatars.githubusercontent.com/u/179229932']
   }
@@ -103,6 +106,27 @@ class WebThreeUtils {
       method: 'personal_sign',
       params: [message,  address]
     })
+  }
+
+  async signCID(cid: string) {
+    const config = createWAGMIConfig({
+      chains: [L1, sepolia],
+      transports: {
+        [L1.id]: http(),
+        [sepolia.id]: http(),
+      },
+    })
+
+    const sig = await signTypedData(config, {
+      types: {
+        Root: [
+          { name: 'cid', type: 'string' },
+        ],
+      },
+      primaryType: 'Root',
+      message: { cid },
+    })
+    return sig
   }
 }
 

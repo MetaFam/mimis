@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Hammer from 'hammerjs'
   import Display from './Display.svelte'
   import context from './context.svelte'
   import { toggle } from '$lib';
@@ -9,6 +8,11 @@
   } = $props()
   let content = $state<HTMLElement | null>(null)
   const { debug } = context
+
+  let Hammer
+  $effect(() => {
+    Hammer  = import('hammerjs')
+  })
 
   type Adjustment = { factor?: number, scale?: number, to?: null | number }
 

@@ -1,5 +1,5 @@
-// import adapter from '@sveltejs/adapter-static'
-import adapter from '@sveltejs/adapter-node'
+import adapter from '@sveltejs/adapter-static'
+// import adapter from '@sveltejs/adapter-node'
 // import adapter from '@sveltejs/adapter-auto'
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 
@@ -8,7 +8,9 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
-		adapter: adapter(),
+		adapter: adapter({
+			strict: false,
+		}),
 		// router: { type: 'hash' },
 		csrf: { checkOrigin: false },
 	},

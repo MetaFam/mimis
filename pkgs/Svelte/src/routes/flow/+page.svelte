@@ -1,5 +1,6 @@
 <svelte:head>
-    <link rel="icon" href="river.svg"/>
+  <title>Mïmis: Flow</title>
+  <link rel="icon" href="river.svg"/>
 </svelte:head>
 
 <header>

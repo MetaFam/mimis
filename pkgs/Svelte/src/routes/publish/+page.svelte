@@ -80,7 +80,7 @@
     {/if}
   {/if}
 
-  <appkit-button />
+  <appkit-button></appkit-button>
 
   {#if carURL}
     <hr/>

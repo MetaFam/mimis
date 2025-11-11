@@ -1,6 +1,6 @@
 import { glob } from 'glob'
 import { readFile } from 'node:fs/promises'
-import { getNeo4j } from './lib/drivers.ts'
+import { getNeo4j } from '$lib/drivers.ts'
 
 console.info('Running initialization scripts…')
 

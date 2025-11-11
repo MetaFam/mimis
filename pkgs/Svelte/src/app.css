@@ -141,7 +141,6 @@ button, .button {
 	}
 
 	& span {
-		background-color: rgb(5, 6, 45);
 		padding: 0.25rem 0.5rem;
 		border-radius: 6px;
 		width: max-content;

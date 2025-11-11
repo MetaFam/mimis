@@ -10,10 +10,15 @@
   import { settings } from '$lib/settings.svelte'
   import 'toastify-js/src/toastify.css'
 
-  const limit = ((limit) => (
-    limit ? Number(limit) : settings.limit
-  ))(page.url.searchParams.get('limit'))
-  const offset = Number(page.url.searchParams.get('offset'))
+  let limit = null
+  let offset = null
+
+  $effect(() => {
+    limit = ((limit) => (
+      limit ? Number(limit) : settings.limit
+      ))(page.url.searchParams.get('limit'))
+    offset = Number(page.url.searchParams.get('offset'))
+  })
 
   class DirSelection {
     public selected: string
@@ -171,9 +176,8 @@
       } else if(['+', '-'].includes(evt.key)) {
         const current = (
           getComputedStyle(document.documentElement)
-          .getPropertyValue('--max-height')
+          .getPropertyValue('--h')
         )
-        console.debug({ current })
         let next = '80dvh'
         if(!!current) {
           const val = Number(current.replace(/\D/g, ''))
@@ -181,7 +185,8 @@
             Math.max(val * (evt.key === '+' ? 1.2 : 0.8), 8)
           )}dvh`
         }
-        document.documentElement.style.setProperty('--max-height', next)
+        console.debug({ current, next })
+        document.documentElement.style.setProperty('--h', next)
       } else {
         console.debug({ key: evt.key })
       }
@@ -331,30 +336,72 @@
       }
     }
   }
+
+  @property --rotation {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: true;
+  }
+
+  @keyframes spin {
+    to { --rotation: 1turn }
+  }
+
   #result {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0;
-  }
-  .content {
-    height: var(--max-height, 80dvh);
-    width: min-content;
-    max-width: max(75ch, 80dvw);
-    margin-block: 1rem;
-    margin-inline: auto;
-    display: flex;
-    flex-direction: column;
-  }
-  object {
-    display: block;
-    margin-inline: auto;
-    object-fit: contain;
-  }
-  h2 {
-    text-align: center;
-    font-weight: bolder;
-    margin-block-start: 2rem;
+    & ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      place-items: center;
+
+      & li {
+        height: var(--h, 80dvh);
+        width: min-content;
+        display: flex;
+        flex-direction: column;
+        place-items: center;
+        margin-block-end: 1em;
+
+        &:has(.button) {
+          height: max-content;
+        }
+
+        & a {
+          text-decoration: none;
+        }
+
+        & h2 {
+          text-align: center;
+          overflow-x: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          max-width: 100%;
+          min-height: 1lh;
+        }
+
+        & object {
+          height: 100%;
+        }
+
+        & .button {
+          color: darkblue;
+          font-weight: bold;
+          padding: 0.5em;
+          border: 5px solid transparent;
+          border-radius: 100vw;
+          background:
+            linear-gradient(darkgray) padding-box,
+            conic-gradient(from var(--rotation), orangered, purple, purple, orangered) border-box
+          ;
+          animation: spin 5s linear infinite;
+          animation-play-state: paused;
+
+          &:hover {
+            animation-play-state: running;
+            color: darkcyan;
+          }
+        }
+      }
+    }
   }
 </style>

@@ -6,8 +6,8 @@ import { toHTTP } from '$lib/toHTTP'
 
 export async function load(
   { url, params }:
-  { url: URL, params: Record<string, string> }
-): PageServerLoad {
+  { url: URL, params: Record<PropertyKey, string> }
+): Promise<PageServerLoad> {
   const { path: search } = params
   const path = search.split('/')
   let type = null
@@ -16,9 +16,8 @@ export async function load(
       search.match(/([^/]+)\.\1$/) ?? []
     ))
   }
-  console.debug({ search, path, type })
+  const result = await searchTree({ path, type })
   if(type) {
-    const result = await searchTree({ path, type })
     const file = result.find((ret: Record) => (
       ret.get('child')?.labels.includes('File')
     ))
@@ -29,7 +28,8 @@ export async function load(
     }
   }
   return {
-    url,
-    prop: 'test',
+    options: Object.values(result).map((record: Record) => (
+      record.get('next').properties.path
+    ))
   }
 }

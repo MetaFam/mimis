@@ -3,8 +3,8 @@
 	import logo from '$lib/images/svelte-logo.svg'
 	import { afterNavigate } from '$app/navigation'
   import GitHub from '$lib/images/github.svg?raw'
-    import { Link } from '$lib';
-    import settings from '$lib/settings.svelte';
+	import { Link } from '$lib'
+	import settings from '$lib/settings.svelte'
 
 	type Page = {
 		url: string
