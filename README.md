@@ -1,60 +1,17 @@
 # Mïmis
 
-Mïmis is an ambitious project to replace the client/server-based mechanism for distributing content that is HTTP with a P2P oriented solution that maintains a massive shared graph.
+I cut my computing teeth on a VMS mainframe back in the day. Those systems have a single shared storage medium & each user has a “home” folder of their own to hold their files.
 
-## Architecture
+Mïmis is an attempt to create a similar shared file system.
 
-Initially, Mïmis is focused on making available public resource, and relies on a couple existing projects to manage its state.
+Mïmis has existed as a goal for nearly a decade as of 2025. During that period, versions have existed in a variety of frameworks. There's:
 
-### IPFS
+* [Ecesis](pkgs/ecesis/): A Ruby-on-Rails app focused on curating collections of book award winners, beginning with the Hugo awards.
+* [Hugo & Nebula Winners](pkgs/Hugo & Nebula Winners): A similar app, attempting to leverage the covers from [The Internet Speculative Fiction Database](https://isfdb.org), but Firebase-backed, and written in React.
+* Forets: A more general purpose [Next.js-based adapter to Neo4j](pkgs/forets/) with a [force-graph frontend](pkgs/frontpage/) in React.
+* [Svelte](pkgs/Svelte/): The same Neo4j-backed concept as Forets written in Svelte, with a more generic graph-propagation concept.
+* [Gremlin](pkgs/Gremlin/): A restart in Svelte of the previous incarnation replacing Neo4j with a Tinkerpop-compatible database queried using Gremlin, with a Gnome Nautilus themed UI.
 
-The Interplanetary File System is a distributed hash table for peer-to-peer file sharing. It is used to store both the data in Mïmis & the update information for synchronizing participants' graphs.
+See [the Gremlin package](pkgs/Gremlin/) for more info on the latest version.
 
-### Neo4j
-
-Neo4j is a database which stores a property graph where both the nodes and edges can have associated key/value pairs. It is used to store the context information about the relationships between files.
-
-IPFS dealy specifically with directed **acyclic** graphs. Preventing cycles in the complex mass of interconnected paths that is Mïmis is essentially impossible, and so the data acyclic structures from IPFS are used to create more complex potentially cyclic ones in Neo4j.
-
-### Veilid
-
-[Veilid](https://veilid.com) is a protocol for anonymous communication with a plan in its roadmap for a [DHT](https://veilid.gitlab.io/developer-book/concepts/dht.html). Once that exists, the plan is to also use it for anonymous storage of file information.
-
-## Use Cases
-
-The data is Mïmis is custom structured to support a variety of different applications.
-
-### Collaborative File System
-
-One of the most fundamental is as a collaborative file system called Argus allowing users to:
-
-* maintain individual hierarchical collections of information
-* create links to incorporate parts of others' collections into their own
-* suggest updates to others' resources
-* represent resources which served as sources for a work
-
-#### Graph Structure
-
-The most basic idiom in Argus is a directory tree. Nodes in the tree represent conceptual points in the space of all ideas. *(In the system, these nodes are “nöopoints” where the sum of all concepts is Vernadsky's “nöosphere”.)* The edges between nodes contains the path elements which are associated with folders in a traditional file system.
-
-Unlike a regular file system where the bulk of the identifying description is in the name of the file, in Argus a nöopoint may have files of different types associated with it, but the file has no name so to speak. All the identifying information is in the path, & this allows a variety of paths to all resolve to the same resource making it so that, eventually, ideally, all reasonable paths would resolve correctly.
-
-Path trees, when published, are signed with an Ethereum keypair, and, within the larger system which is Mïmis, they are stored at the path `/argus/systems/<Ethereum address>`. Whenever a new path element or nöopoint is added, it contains the following identifiers:
-
-* the creation timestamp
-* multihashes of the path name relative to the local root
-* the address of the author
-
-Path trees, then, are anchored according to those characteristics. Each specifies a root that already exists in the tree.
-
-##### Tree Aggregation
-
-In addition to the nöopoints, the path trees also contain mount nodes which connect a path to an existing subtree elsewhere, be it in their own tree or someone else's. The mounts are "union mounts" where several subtrees can be mounted at the same place, and their contents add to each other.
-
-##### Consensus View
-
-One crucial view of the data is formed by analyzing the graphs as a whole filtered using an Sybil guard like [Human Passport](https://passport.human.tech). In this larger graph which resource is appropriate for a given path is determined by examining how many verified accounts link to it.
-
-##### Versioning
-
-As files are added in locations where there is already an entry, an edge is added from that entry to the previous one, so that the current entry is the one without such a link, but all previous versions can still be accessed.
+![Mïmis Header](pkgs/Gremlin/static/header.svg)
