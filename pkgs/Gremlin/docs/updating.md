@@ -20,12 +20,21 @@ Each user has their own graph, and portions of those are replicated by members o
 
 ![Base Graph](base%20graph.svg)
 
-Updates, then, are identified by a CBOR-DAG root, a previous update CID, and an Ethereum signature.
+Updates, then, are identified by:
+
+* a CBOR-DAG root
+* the previous update CID
+* an Ethereum block hash and height
+* an Ethereum signature over the previous fields
 
 If the included previous update cid doesn't match the current one, they that CID is resolved, and the previous update in that is checked. The process repeats for some limited number of iterations and fails thereafter.
 
-A `PREVIOUS` edge is added between the current update & the previous one. This creates a sort of linked list where resources can be resolved by beginning with the entry with no `PREVIOUS` entries, searching it for a resolution, and working their way back along the incoming `PREVIOUS` edges.
+  A `PREVIOUS` edge is added between the current update & the previous one. This creates a sort of linked list where resources can be resolved by beginning with the entry with no `PREVIOUS` entries, searching it for a resolution, and working their way back along the incoming `PREVIOUS` edges until a node has no `PREVIOUS` incoming.
 
 Updates may do three things. One is to add new paths. Consider the following graph:
 
 ![Add Edge Update](update.add%20edge.svg)
+
+The update information at the bottom integrates into the the resolution like so:
+
+![Simple View of Add Edge Update](update.add%20edge.simplified.svg)
