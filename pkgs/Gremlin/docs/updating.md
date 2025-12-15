@@ -16,6 +16,6 @@ This can be understood more easily if some extraneous names are removed:
 
 Each user has their own graph, and portions of those are replicated by members of the P2P network. The base structure looks like:
 
-![Base Graph](base%20graph.svg | width=350px)
+![Base Graph](base%20graph.svg | width=350 align=center)
 
 Updates, then, are identified by a CBOR-DAG with a root equivalent to the
