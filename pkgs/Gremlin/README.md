@@ -6,15 +6,17 @@ Mïmis is an ambitious project to replace the client/server-based mechanism for 
 
 Initially, Mïmis is focused on making available public resource, and relies on a couple existing projects to manage its state.
 
-### IPFS
+### Data Storage
 
 The Interplanetary File System is a distributed hash table for peer-to-peer file sharing. It is used to store both the data in Mïmis & the update information for synchronizing participants' graphs.
 
-### Neo4j
+### Structural Storage
 
-Neo4j is a database which stores a property graph where both the nodes and edges can have associated key/value pairs. It is used to store the context information about the relationships between files.
+### TinkerPop
 
-IPFS dealy specifically with directed **acyclic** graphs. Preventing cycles in the complex mass of interconnected paths that is Mïmis is essentially impossible, and so the data acyclic structures from IPFS are used to create more complex potentially cyclic ones in Neo4j.
+Data is stored in a [TinkerPop](https://tinkerpop.apache.org)-compatible database which is qureried using Gremlin.
+
+IPFS deals specifically with directed **acyclic** graphs. Preventing cycles in the complex mass of interconnected paths that is Mïmis is essentially impossible, and so the acyclic data structures from IPFS are used to create more complex potentially cyclic ones in the database.
 
 ### Veilid
 
@@ -39,9 +41,10 @@ The most basic idiom in Argus is a directory tree. Nodes in the tree represent c
 
 Unlike a regular file system where the bulk of the identifying description is in the name of the file, in Argus a nöopoint may have files of different types associated with it, but the file has no name so to speak. All the identifying information is in the path, & this allows a variety of paths to all resolve to the same resource making it so that, eventually, ideally, all reasonable paths would resolve correctly.
 
-Path trees, when published, are signed with an Ethereum keypair, and, within the larger system which is Mïmis, they are stored at the path `/argus/systems/<Ethereum address>`. Whenever a new path element or nöopoint is added, it contains the following identifiers:
+Path trees, when published, are signed with an Ethereum keypair, and, within the larger system which is Mïmis, they are stored off a `Root` node by `ACCOUNT` edges with a `signer` values. Whenever a new path element or nöopoint is added, it contains the following identifiers:
 
 * the creation timestamp
+* the update timestamp
 * multihashes of the path name relative to the local root
 * the address of the author
 

@@ -11,6 +11,12 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
+	"dependencies": {
+		"@sveltejs/adapter-node": "^5.4.0",
+		"@types/gremlin": "^3.6.7",
+		"gremlin": "^3.8.0",
+		"valibot": "^1.2.0"
+	},
 	"devDependencies": {
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.48.5",
