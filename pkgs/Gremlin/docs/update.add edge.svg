@@ -24,13 +24,14 @@
      inkscape:document-units="mm"
      inkscape:zoom="0.705"
      inkscape:cx="369.50355"
-     inkscape:cy="374.46809"
+     inkscape:cy="716.31206"
      inkscape:window-width="3440"
      inkscape:window-height="1361"
      inkscape:window-x="0"
      inkscape:window-y="282"
      inkscape:window-maximized="1"
-     inkscape:current-layer="g5-1" /><defs
+     inkscape:current-layer="g10"
+     showgrid="false" /><defs
      id="defs1"><marker
        style="overflow:visible"
        id="ArrowTriangleStylized-08"
@@ -1237,7 +1238,7 @@
                id="path1-7"
                sodipodi:nodetypes="ccc" /><g
                id="g9"
-               transform="translate(20,-6)"><rect
+               transform="rotate(49.296916,710.60785,136.79534)"><rect
                  style="opacity:1;fill:#74317f;fill-opacity:1;stroke:#ff46f0;stroke-width:2.13165;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
                  id="rect9-8"
                  width="240"
@@ -1269,7 +1270,7 @@
                    id="tspan4"
                    style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:49.1473px;font-family:'Baskervald ADF Std';-inkscape-font-specification:'Baskervald ADF Std, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#deff4f;fill-opacity:1;stroke:#efff46;stroke-width:0.954447;stroke-opacity:1" /></text></g><g
                id="g2"
-               transform="translate(-65.192523,111.1797)"><g
+               transform="rotate(49.296916,625.5182,-14.625296)"><g
                  id="g3"
                  transform="translate(7.347455,-0.62679636)"
                  style="stroke:#46ff4d;stroke-opacity:1"><rect
