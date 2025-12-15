@@ -43,6 +43,8 @@ This can be understood more easily if some extraneous names are removed:
 
 ## Updates
 
+### Adds
+
 Updates may do three things. One is to add new paths. Consider the following graph:
 
 ![Add Edge Update](update.add%20edge.svg)
@@ -50,6 +52,16 @@ Updates may do three things. One is to add new paths. Consider the following gra
 The update information at the bottom integrates into the the resolution like so:
 
 ![Simple View of Add Edge Update](update.add%20edge.simplified.svg)
+
+### Edits
+
+Like above, but replace an existing entry.
+
+### Deletes
+
+Edit an entry to point to a `Blackhole` node.
+
+## Caching
 
 The first step is to backwards traverse the `PREVIOUS` links to find the current update CID.
 
@@ -61,7 +73,7 @@ Work your way backward from the current CID adding all the resources in the upda
 
 Once this process is complete, the cache node holds the result for any traversal of the entire list.
 
-If a `Cache` node is present then perform the above process, but stop processing at the first node with a `Cache` node, incorporating its state.
+If a `Cache` node is present then perform the above process, but stop processing at the first node with a `Cache` node,       incorporating its state.
 
 ### Efficiency
 
@@ -81,7 +93,7 @@ I envision a system where a user has a wallet with the service & parameters such
 
 If a query is likely to exceed the spending limit, the user is informed and allowed to choose.
 
-I'm leaning toward [JanusGraph](https://janusgraph.org] as the database provider. It ticks the boxes & seems like a mature project. Supposedly one of the advantages of Gremlin is I can switch it relatively easily.
+I'm leaning toward [JanusGraph](https://janusgraph.org) as the database provider. It ticks the boxes & seems like a mature project. Supposedly one of the advantages of Gremlin is I can switch it relatively easily.
 
 I'm going to *(2025⁄12⁄15)* post to their Discord and ask if they have anything like Neo4j's query estimator. Really, it is a function of figuring out which caches have to built & that is only discovered one cache at a time since what the next token resolves to is a function of that cache.
 
