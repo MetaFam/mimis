@@ -5,17 +5,23 @@
 
   const path = page.params.path?.split('/') ?? []
   let files = null
-  let menued = false
+  let menued = $state(false)
 
   onMount(async () => {
-    files =   await searchFor({ path })
+    //  files = await searchFor({ path })
   })
 
-  let modals = {
-    addDirectory: $state<HTMLDialogElement>(),
+  class Modals {
+    addDirectory = $state<HTMLDialogElement>()
   }
+
+  let modals = new Modals()
   function addDirectory() {
-    const dir = modals.addDirectory?.showModal()
+    modals.addDirectory?.showModal()
+  }
+  function submitDirectory(evt: SubmitEvent) {
+    evt.preventDefault()
+    console.debug({ evt })
   }
 </script>
 
@@ -28,7 +34,6 @@
     <ul>
       <li><button
         onclick={addDirectory}
-        bind:this={modals.addDirectory}
       >Add Directory</button></li>
       <li>Import File</li>
       <li>Import Directory</li>
@@ -38,7 +43,9 @@
   </section>
   <section id="locations">
     <section class="general tools">
-      <a onclick={() => menued = !menued}>{menued ? '🢗☰🢗' : '🢔⦀🢔'}</a>
+      <button onclick={() => menued = !menued}>
+        {menued ? '🢗☰🢗' : '🢔⦀🢔'}
+      </button>
       <input type="search"/>
     </section>
     <nav class="system locations">
@@ -65,6 +72,21 @@
       </ul>
     </nav>
   </section>
+  <dialog bind:this={modals.addDirectory}>
+    <form onsubmit={submitDirectory}>
+      <formset>
+        <legend>New Directory</legend>
+        <input id="dir"
+          onkeydown={(evt) => {
+            if(evt.key === 'Enter') {
+              evt.currentTarget.closest('form')?.submit()
+            }
+          }}
+        />
+        <button>Add</button>
+      </formset>
+    </form>
+  </dialog>
 </main>
 
 <style>
