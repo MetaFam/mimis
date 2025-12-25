@@ -14,7 +14,7 @@
 	"dependencies": {
 		"@sveltejs/adapter-node": "^5.4.0",
 		"@types/gremlin": "^3.6.7",
-		"gremlin": "^3.8.0",
+		"gremlin": "3.7.3",
 		"valibot": "^1.2.0"
 	},
 	"devDependencies": {

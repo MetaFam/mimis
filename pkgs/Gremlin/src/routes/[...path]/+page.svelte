@@ -1,27 +1,19 @@
 <script lang="ts">
   import { page } from '$app/state'
   import { searchFor } from '$lib/searchFor.remote'
+  import { createSpot } from '$lib/createSpot.remote'
   import { onMount } from 'svelte'
 
   const path = page.params.path?.split('/') ?? []
   let files = null
   let menued = $state(false)
 
-  onMount(async () => {
-    //  files = await searchFor({ path })
-  })
+  files = await searchFor({ path })
 
-  class Modals {
-    addDirectory = $state<HTMLDialogElement>()
-  }
+  let addSpotModal = $state<HTMLDialogElement>()
 
-  let modals = new Modals()
-  function addDirectory() {
-    modals.addDirectory?.showModal()
-  }
-  function submitDirectory(evt: SubmitEvent) {
-    evt.preventDefault()
-    console.debug({ evt })
+  function addSpot() {
+    addSpotModal?.showModal()
   }
 </script>
 
@@ -32,9 +24,7 @@
 <main>
   <section id="actions" class:open={menued}>
     <ul>
-      <li><button
-        onclick={addDirectory}
-      >Add Directory</button></li>
+      <li><button onclick={addSpot}>Add Directory</button></li>
       <li>Import File</li>
       <li>Import Directory</li>
       <li>Export to CAR</li>
@@ -72,19 +62,23 @@
       </ul>
     </nav>
   </section>
-  <dialog bind:this={modals.addDirectory}>
-    <form onsubmit={submitDirectory}>
-      <formset>
+  <dialog bind:this={addSpotModal}>
+    <form {...createSpot.enhance(async ({ form, data, submit }) => {
+      try {
+        await submit()
+        form.reset()
+
+        if(!addSpotModal) throw new Error('¿How was this directory submitted?')
+        addSpotModal.requestClose()
+      } catch (error) {
+        console.error({ error })
+      }
+    })}>
+      <fieldset>
         <legend>New Directory</legend>
-        <input id="dir"
-          onkeydown={(evt) => {
-            if(evt.key === 'Enter') {
-              evt.currentTarget.closest('form')?.submit()
-            }
-          }}
-        />
+        <input {...createSpot.fields.path.as('text')}/>
         <button>Add</button>
-      </formset>
+      </fieldset>
     </form>
   </dialog>
 </main>
