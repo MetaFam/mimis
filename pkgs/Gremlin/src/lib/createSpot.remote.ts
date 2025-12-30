@@ -1,18 +1,19 @@
-import { process, structure, driver } from 'gremlin'
+import { process, driver } from 'gremlin'
 import * as v from 'valibot'
-import { form } from '$app/server'
+import { command } from '$app/server'
 
 const { t: T, merge: Merge } = process
 const { statics: __ } = process
 const { DriverRemoteConnection } = driver
 
 const NewSpotSchema = v.object({
-  path: v.pipe(v.string(), v.nonEmpty()),
+  current: v.optional(v.string()),
+  path: v.array(v.pipe(v.string(), v.nonEmpty())),
 })
 
-export const createSpot = form(
+export const createSpot = command(
   NewSpotSchema,
-  async ({ path }) => {
+  async ({ current, path }) => {
     const connection = new DriverRemoteConnection(
       'ws://localhost:8182/gremlin',
     )
@@ -20,32 +21,42 @@ export const createSpot = form(
 
     const now = new Date().toISOString()
 
+    console.debug({ create: path })
+
     try {
-      await (
+      let traversal = (
         g.mergeV(new Map([[T.label, 'Root']]))
         .option(Merge.onCreate, { createdAt: now })
-        .as('root')
-        .coalesce(
-          (
-            __.outE('CONTAINS')
-            .has('path', path)
-            .constant('Match')
-          ),
-          (
-            __.addV('Spot')
-            .property({ createdAt: now })
-            .as('spot')
-            .addE('CONTAINS')
-            .from_('root')
-            .to('spot')
-            .property({ path, createdAt: now })
-          ),
-        )
-        .iterate()
       )
+      for(const elem of path) {
+        traversal = (
+          traversal
+          .as('parent')
+          .coalesce(
+            (
+              __.outE('CONTAINS')
+              .has('path', elem)
+              .inV()
+            ),
+            (
+              __.addV('Spot')
+              .property({ createdAt: now })
+              .addE('CONTAINS')
+              .from_('parent')
+              .property({ path: elem, createdAt: now })
+              .inV()
+            ),
+          )
+        )
+      }
+
+      await traversal.iterate()
+
+      return { success: true }
     } catch(error) {
       console.error({ error })
-    }  finally {
+      return { error: (error as Error).message }
+    }     finally {
       await connection.close()
     }
   }

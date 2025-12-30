@@ -5,12 +5,23 @@
   import { onMount } from 'svelte'
 
   const path = page.params.path?.split('/') ?? []
-  let files = null
+  let files = $state(await searchFor({ path }))
   let menued = $state(false)
-
-  files = await searchFor({ path })
-
   let addSpotModal = $state<HTMLDialogElement>()
+
+  async function processSpot(evt: SubmitEvent) {
+    try {
+      evt.preventDefault()
+      const formData = new FormData(evt.currentTarget as HTMLFormElement)
+      const path = formData.getAll('path') as Array<string>
+      await createSpot({ path })
+      if(!addSpotModal) throw new Error('¿How was this directory submitted?')
+      addSpotModal.requestClose()
+    } catch(error) {
+      console.error({ error })
+    }
+  }
+
 
   function addSpot() {
     addSpotModal?.showModal()
@@ -22,15 +33,15 @@
 </svelte:head>
 
 <main>
-  <section id="actions" class:open={menued}>
+  <menu id="actions" class:open={menued}>
     <ul>
       <li><button onclick={addSpot}>Add Directory</button></li>
-      <li>Import File</li>
-      <li>Import Directory</li>
-      <li>Export to CAR</li>
-      <li>Export to CBOR-DAG</li>
+      <li><button>Import File</button></li>
+      <li><button>Import Directory</button></li>
+      <li><button>Export to CAR</button></li>
+      <li><button>Export to CBOR-DAG</button></li>
     </ul>
-  </section>
+  </menu>
   <section id="locations">
     <section class="general tools">
       <button onclick={() => menued = !menued}>
@@ -59,24 +70,19 @@
   <section id="details">
     <nav>
       <ul>
+        {#each Object.entries(files) as [path, id]}
+          <li>{path} ({id})</li>
+        {/each}
       </ul>
     </nav>
   </section>
-  <dialog bind:this={addSpotModal}>
-    <form {...createSpot.enhance(async ({ form, data, submit }) => {
-      try {
-        await submit()
-        form.reset()
-
-        if(!addSpotModal) throw new Error('¿How was this directory submitted?')
-        addSpotModal.requestClose()
-      } catch (error) {
-        console.error({ error })
-      }
-    })}>
+  <dialog id="add-spot" bind:this={addSpotModal}>
+    <form onsubmit={processSpot}>
       <fieldset>
-        <legend>New Directory</legend>
-        <input {...createSpot.fields.path.as('text')}/>
+        <legend>Path to New Spot</legend>
+        {#each path as element}
+          <input name="path" value={element}/>
+        {/each}
         <button>Add</button>
       </fieldset>
     </form>
@@ -84,15 +90,30 @@
 </main>
 
 <style>
+  :root {
+    color-scheme: light dark;
+    font-size: 1.1em;
+  }
+
+  :global(body) {
+    margin: 0;
+  }
+
+  input, button {
+    font-size: 1em;
+  }
+
   ul {
     padding: 0;
     list-style: none;
 
-    & li {
+    #locations & li, #actions & button {
+      display: block;
       padding: 0.5rem 1rem;
       border: 1px solid #333;
       border-radius: 0.5rem;
       margin-bottom: 0.25rem;
+      margin-inline : auto;
     }
   }
 
@@ -128,6 +149,12 @@
 
     & .general.tools {
       display: flex;
+    }
+
+    #add-spot input {
+      field-sizing: content;
+      min-width: 5ch;
+      padding: 0.25em 0.5em;
     }
   }
 </style>

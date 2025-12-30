@@ -2,9 +2,15 @@ import { process, structure, driver } from 'gremlin'
 import * as v from 'valibot'
 import { query } from '$app/server'
 
-const { statics: __ } = process
+const { statics: __, t: T } = process
 const { DriverRemoteConnection } = driver
 const { Graph } = structure
+
+interface ReturnEntry extends Map<'path' | 'id', string | number> {}
+interface DirectoryEntry {
+  path: string
+  id: number
+}
 
 const SearchSchema = v.object({
   path: v.array(v.string()),
@@ -22,89 +28,68 @@ export const searchFor = query(
       maxMountDepth: 10,
       allowCycles: false,
     },
-  }): Promise<Array<{
-    spot: any
-    mountOrder: number
-    warning?: string
-  }>> => {
+  }): Promise<Record<string, number>> => {
     const { maxMountDepth: maxDepth, allowCycles } = options
     const connection = new DriverRemoteConnection(
       'ws://localhost:8182/gremlin',
     )
     const g = process.traversal().withRemote(connection)
 
-    try {
-      let traversal = (
-        g.V().has('label', 'Root')
-        .project('current', 'orderAccum')
-        .by(__.identity())
-        .by(__.constant(0))
-      )
+    path = path.filter(Boolean)
 
-      for(const pathElement of path) {
-        if(!allowCycles) {
+    try {
+      let traversal = g.V().has(T.label, 'Root')
+
+      for (const element of path) {
+        if (!allowCycles) {
           traversal = traversal.simplePath()
         }
 
         traversal = traversal.flatMap(
           __.union(
             (
-              __.select('current')
-              .out('CONTAINS')
-              .has('path', pathElement)
-              .project('current', 'orderAccum')
-              .by(__.identity())
-              .by(__.select('orderAccum'))
+              __.out('CONTAINS')
+              .has('path', element)
             ),
             (
-              __.as('state')
-              .select('current')
-              .repeat(__.outE('MOUNT').inV())
+              __.repeat(
+                __.outE('MOUNT')
+                .order()
+                .by('order')
+                .inV()
+              )
               .times(maxDepth)
               .emit()
-              .as('mountedNode')
-              .path()
-              .as('traversalPath')
-              .select('mountedNode')
               .out('CONTAINS')
-              .has('path', pathElement)
-              .as('result')
-              .select('state', 'traversalPath', 'result')
-              .project('current', 'orderAccum')
-              .by(__.select('result'))
-              .by(
-                __.select('state')
-                .select('orderAccum')
-                .as('prevOrder')
-                .select('traversalPath')
-                .unfold()
-                .hasLabel('MOUNT')
-                .values('order')
-                .fold()
-                .coalesce(__.unfold().sum(), __.constant(0))
-                .as('chainSum')
-                .math('prevOrder + chainSum')
-              )
+              .has('path', element)
             ),
           )
         )
       }
 
+      // Now get children of resolved directories
       const results = (
         await traversal
-        .order()
-        .by(__.select('orderAccum'))
-        .select('current', 'orderAccum')
-        .dedup()
+        .outE('CONTAINS')
+        .project('path', 'id')
+        .by(__.values('path'))
+        .by(__.inV().id())
         .toList()
-      )
+      ) as Array<ReturnEntry>
 
-      console.debug({ results })
+      const merged = new Map<string, DirectoryEntry['id']>()
+      for(const entry of results) {
+        const [path, id] = [entry.get('path')?.toString(), entry.get('id')]
+        if(path && typeof(id) === 'number' && !merged.has(path)) {
+          merged.set(path, id)
+        } else {
+          console.error({ 'Bad Values': { path, id } })
+        }
+      }
 
-      return results.map((r: any) => ({
-        spot: r.current,
-        mountOrder: r.orderAccum
-      }))
+      // const out = Array.from(merged, ([path, id]) => ({ path, id }))
+      const out = Object.fromEntries(merged)
+      return out
     } finally {
       await connection.close()
     }
