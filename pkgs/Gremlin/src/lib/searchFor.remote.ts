@@ -28,16 +28,16 @@ export const searchFor = query(
       maxMountDepth: 10,
       allowCycles: false,
     },
-  }): Promise<Record<string, number>> => {
+  }): Promise<Record<string, number> | { error: string }> => {
     const { maxMountDepth: maxDepth, allowCycles } = options
     const connection = new DriverRemoteConnection(
       'ws://localhost:8182/gremlin',
     )
-    const g = process.traversal().withRemote(connection)
-
-    path = path.filter(Boolean)
-
     try {
+      const g = process.traversal().withRemote(connection)
+
+      path = path.filter(Boolean)
+
       let traversal = g.V().has(T.label, 'Root')
 
       for (const element of path) {
@@ -90,6 +90,9 @@ export const searchFor = query(
       // const out = Array.from(merged, ([path, id]) => ({ path, id }))
       const out = Object.fromEntries(merged)
       return out
+    } catch(err) {
+      console.error({ err })
+      return { error: (err as Error).message }
     } finally {
       await connection.close()
     }

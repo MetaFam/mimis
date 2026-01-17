@@ -2,12 +2,14 @@
   import { page } from '$app/state'
   import { searchFor } from '$lib/searchFor.remote'
   import { createSpot } from '$lib/createSpot.remote'
-  import { onMount } from 'svelte'
+  import ConfigDialog from '$lib/ConfigDialog.svelte'
 
   const path = page.params.path?.split('/') ?? []
   let files = $state(await searchFor({ path }))
   let menued = $state(false)
   let addSpotModal = $state<HTMLDialogElement>()
+  let addFilesModal = $state<HTMLDialogElement>()
+  let configModal = $state<HTMLDialogElement>()
 
   async function processSpot(evt: SubmitEvent) {
     try {
@@ -22,9 +24,27 @@
     }
   }
 
+  async function processFiles(evt: SubmitEvent) {
+    try {
+      evt.preventDefault()
+      const formData = new FormData(evt.currentTarget as HTMLFormElement)
+      const files = formData.getAll('files') as Array<string>
+      console.debug({ files })
+      if(!addFilesModal) throw new Error('¿How were these files submitted?')
+      addFilesModal.requestClose()
+    } catch(error) {
+      console.error({ error })
+    }
+  }
 
   function addSpot() {
     addSpotModal?.showModal()
+  }
+  function addFiles() {
+    addFilesModal?.showModal()
+  }
+  function openSettings() {
+    configModal?.showModal()
   }
 </script>
 
@@ -36,16 +56,23 @@
   <menu id="actions" class:open={menued}>
     <ul>
       <li><button onclick={addSpot}>Add Directory</button></li>
-      <li><button>Import File</button></li>
+      <li><button onclick={addFiles}>Import File</button></li>
       <li><button>Import Directory</button></li>
       <li><button>Export to CAR</button></li>
       <li><button>Export to CBOR-DAG</button></li>
+      <li><button class="menu-open" onclick={openSettings}>
+        Settings
+      </button></li>
     </ul>
   </menu>
   <section id="locations">
     <section class="general tools">
-      <button onclick={() => menued = !menued}>
-        {menued ? '🢗☰🢗' : '🢔⦀🢔'}
+      <button
+        onclick={() => menued = !menued}
+        class:actions-open={menued}
+        title="{menued ? 'Close' : 'Open'} Actions"
+      >
+        <span>🢗</span><span>☰</span><span>🢗</span>
       </button>
       <input type="search"/>
     </section>
@@ -87,6 +114,16 @@
       </fieldset>
     </form>
   </dialog>
+  <dialog id="add-files" bind:this={addFilesModal}>
+    <form onsubmit={processFiles}>
+      <fieldset>
+        <legend>Files to Add</legend>
+        <input name="files" type="file" multiple/>
+        <button>Add</button>
+      </fieldset>
+    </form>
+  </dialog>
+  <ConfigDialog bind:self={configModal}/>
 </main>
 
 <style>
@@ -103,6 +140,27 @@
     font-size: 1em;
   }
 
+  .general.tools > button > span {
+    display: inline-block;
+    transition: all 0.5s;
+    rotate: 0deg;
+
+    &:nth-of-type(odd) {
+      translate: 0em 0.25em;
+    }
+  }
+
+  .general.tools > button.actions-open > span {
+    rotate: 90deg;
+
+    &:nth-of-type(1) {
+      translate: -0.85em 0em;
+    }
+    &:nth-of-type(3) {
+      translate: -0.2em 0em;
+    }
+  }
+
   ul {
     padding: 0;
     list-style: none;
@@ -115,10 +173,6 @@
       margin-bottom: 0.25rem;
       margin-inline : auto;
     }
-  }
-
-  body {
-    margin: 0;
   }
 
   main {

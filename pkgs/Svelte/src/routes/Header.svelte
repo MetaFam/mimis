@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { page } from '$app/state'
 	import logo from '$lib/images/svelte-logo.svg'
 	import { afterNavigate } from '$app/navigation'
   import GitHub from '$lib/images/github.svg?raw'
