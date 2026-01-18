@@ -43,7 +43,7 @@ docker start --attach janusgraph
 Once, JanusGraph is running, you can connect a Gremlin console using:
 
 ```bash
-docker exec -e GREMLIN_REMOTE_HOSTS=janusgraph -it janusgraph ./bin/gremlin.sh
+docker exec -e GREMLIN_REMOTE_HOSTS=janusgraph -it janusgraph bin/gremlin.sh
 ```
 
 Within the Gremlin console, you connect to the running JanusGraph instance using:

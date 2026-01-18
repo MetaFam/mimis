@@ -3,6 +3,8 @@
   import { searchFor } from '$lib/searchFor.remote'
   import { createSpot } from '$lib/createSpot.remote'
   import ConfigDialog from '$lib/ConfigDialog.svelte'
+  import CSSRange from '$lib/CSSRange.svelte'
+  import folder from '$lib/assets/folder.svg'
 
   const path = page.params.path?.split('/') ?? []
   let files = $state(await searchFor({ path }))
@@ -10,6 +12,7 @@
   let addSpotModal = $state<HTMLDialogElement>()
   let addFilesModal = $state<HTMLDialogElement>()
   let configModal = $state<HTMLDialogElement>()
+  let detailsPane = $state<HTMLElement>()
 
   async function processSpot(evt: SubmitEvent) {
     try {
@@ -63,6 +66,9 @@
       <li><button class="menu-open" onclick={openSettings}>
         Settings
       </button></li>
+      <li>
+        <CSSRange min={0.1} max={1.2} property="--zoom" step={0.1}/>
+      </li>
     </ul>
   </menu>
   <section id="locations">
@@ -94,15 +100,16 @@
       </ul>
     </nav>
   </section>
-  <section id="details">
-    <nav>
-      <ul>
-        {#each Object.entries(files) as [path, id]}
-          <li>{path} ({id})</li>
-        {/each}
-      </ul>
-    </nav>
-  </section>
+  <nav id="details" bind:this={detailsPane}>
+    <ul>
+      {#each Object.entries(files) as [path, id]}
+        <li><a href={path} title={path}>
+          <img src={folder} alt="📁"/>
+          <span>{path}</span>
+        </a></li>
+      {/each}
+    </ul>
+  </nav>
   <dialog id="add-spot" bind:this={addSpotModal}>
     <form onsubmit={processSpot}>
       <fieldset>
@@ -130,6 +137,7 @@
   :root {
     color-scheme: light dark;
     font-size: 1.1em;
+    --zoom: 0.5;
   }
 
   :global(body) {
@@ -209,6 +217,35 @@
       field-sizing: content;
       min-width: 5ch;
       padding: 0.25em 0.5em;
+    }
+
+    #details {
+      & > ul {
+        display: flex;
+        gap: 1em;
+      }
+
+      a {
+        display: flex;
+        width: calc(var(--zoom, 1) * 15em);
+        flex-direction: column;
+        text-decoration: none;
+
+        &:hover {
+          color: lch(from LinkText calc(l + 10) calc(c - 10) calc(h + 180));
+        }
+      }
+
+      span {
+        display: inline-block;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        line-clamp: 3;
+        -webkit-line-clamp: 3;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: center;
+      }
     }
   }
 </style>
