@@ -1,7 +1,7 @@
 {
-	"name": "gremlin",
+	"name": "gremlin-mimis",
 	"private": true,
-	"version": "0.0.1",
+	"version": "0.1.1",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
@@ -10,13 +10,16 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"gh:publish": "gh-pages --dist build/ --nojekyll --message '¡Go forth, young program, & be fruitful! 🫐'"
+		"gh:publish": "gh-pages --dist build/ --nojekyll --message '¡Go forth, young program, & be fruitful! 🫐'",
+		"gh:help": "gh-pages --help"
 
 	},
 	"dependencies": {
+		"@sveltejs/adapter-cloudflare": "^7.2.6",
 		"@sveltejs/adapter-node": "^5.4.0",
 		"@types/gremlin": "^3.6.7",
 		"gremlin": "3.7.3",
+		"kubo-rpc-client": "^6.0.2",
 		"valibot": "^1.2.0"
 	},
 	"devDependencies": {

@@ -1,11 +1,9 @@
-import { process, structure, driver } from 'gremlin'
+import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { query } from '$app/server'
 import { connect as connectJanusGraph } from '$lib/janusgraph'
 
-const { statics: __, t: T } = process
-const { DriverRemoteConnection } = driver
-const { Graph } = structure
+const { statics: __, t: T } = gremlin.process
 
 const SearchSchema = v.object({
   path: v.array(v.string()),

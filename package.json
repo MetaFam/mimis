@@ -1,49 +1,28 @@
 {
   "name": "mimis",
-  "version": "4.0.0",
   "license": "CC0-1.0",
   "author": "dysbulic <dys@dhappy.org>",
-  "homepage": "https://dysbulic.github.io/mimis/",
+  "homepage": "https://mimis.dhappy.org",
   "type": "module",
   "workspaces": {
     "packages": [
       "pkgs/*"
-    ],
-    "nohoist": [
-      "**/tailwindcss"
     ]
   },
   "scripts": {
-    "start": "deno task --filter=svelte dev",
-    "build": "deno task --filter=svelte build",
-    "gh:publish": "deno task --filter=svelte gh:publish",
-    "w3": "deno --package=@web3-storage/w3cli run w3",
-    "car": "deno run ipfs-car"
-  },
-  "dependencies": {
-    "@ipld/car": "^5.3.3",
-    "@ipld/dag-cbor": "^9.2.2",
-    "@ipld/dag-pb": "^4.1.3",
-    "@ipld/unixfs": "^3.0.0",
-    "ipfs-unixfs": "^11.2.0",
-    "kubo-rpc-client": "^5.0.2",
-    "multiformats": "^13.3.1",
-    "multihashes": "^4.0.3",
-    "supabase": "^2.24.3",
-    "toastify-js": "^1.12.0"
+    "start": "pnpm run --filter=gremlin-mimis dev",
+    "build": "pnpm run --filter=gremlin-mimis build",
+    "gh:publish": "pnpm run --filter=gremlin-mimis gh:publish",
+    "w3": "pnpm --package=@web3-storage/w3cli exec w3",
+    "car": "pnpm exec ipfs-car"
   },
   "devDependencies": {
-    "gh-pages": "^3.1.0",
-    "ipfs-car": "^1.2.0"
+    "vite": "^7.3.1"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ],
-    "rules": {
-      "import/no-anonymous-default-export": "off"
-    }
-  },
-  "packageManager": "pnpm@10.6.3+sha512.bb45e34d50a9a76e858a95837301bfb6bd6d35aea2c5d52094fa497a467c43f5c440103ce2511e9e0a2f89c3d6071baac3358fc68ac6fb75e2ceb3d2736065e6"
+  "packageManager": "pnpm@10.6.3+sha512.bb45e34d50a9a76e858a95837301bfb6bd6d35aea2c5d52094fa497a467c43f5c440103ce2511e9e0a2f89c3d6071baac3358fc68ac6fb75e2ceb3d2736065e6",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
 }

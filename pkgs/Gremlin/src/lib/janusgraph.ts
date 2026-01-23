@@ -1,6 +1,7 @@
-import { process, driver } from 'gremlin'
+import gremlin from 'gremlin'
 import settings from '$lib/settings.svelte'
 
+const { driver, process } = gremlin
 const { DriverRemoteConnection } = driver
 
 export function connect() {

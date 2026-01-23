@@ -1,9 +1,10 @@
-import { process, driver } from 'gremlin'
+import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { command } from '$app/server'
 import { connect as connectJanusGraph } from '$lib/janusgraph'
 import settings from './settings.svelte'
 
+const { driver, process } = gremlin
 const { P, t: T, merge: Merge } = process
 const { statics: __ } = process
 const { DriverRemoteConnection } = driver

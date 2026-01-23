@@ -1,9 +1,10 @@
-import { process, structure } from 'gremlin'
+import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { query } from '$app/server'
 import { connect as connectJanusGraph } from '$lib/janusgraph'
 
-const { statics: __, t: T } = process
+
+const { statics: __, t: T } = gremlin.process
 
 export interface Entry {
   name: string
