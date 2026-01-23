@@ -18,6 +18,7 @@ export class Settings {
     useStoracha: 'mimis-setting-use-storacha',
     storachaEmail: 'mimis-setting-storacha-email',
     storachaSpace: 'mimis-setting-storacha-space',
+    detailsZoom: 'mimis-setting-details-zoom',
   } as const
   static defaults = {
     [Settings.keys.ipfsURLPattern]: (
@@ -47,6 +48,9 @@ export class Settings {
     ),
     [Settings.keys.storachaEmail]: '',
     [Settings.keys.storachaSpace]: 'Mïmis',
+    [Settings.keys.detailsZoom]: (
+      env.PUBLIC_DETAILS_ZOOM ? Number(env.PUBLIC_DETAILS_ZOOM) : 1
+    ),
   }
 
   constructor(args?: Record<keyof typeof Settings.keys, unknown>) {
@@ -76,7 +80,7 @@ export class Settings {
   }
 
   valueOf(key: Omit<keyof typeof Settings.keys, 'limit' | 'debugging' | 'useStoracha' | 'useKubo'>): string
-  valueOf(key: 'limit'): number
+  valueOf(key: 'limit' | 'detailsZoom'): number
   valueOf(key: 'debugging' | 'useStoracha' | 'useKubo'): boolean
   valueOf(key: keyof typeof Settings.keys) {
     const defaultVal = Settings.defaults[Settings.keys[key]]
@@ -120,6 +124,7 @@ export class Settings {
   useStoracha = $state(Boolean(this.valueOf('useStoracha')))
   storachaEmail = $state(this.valueOf('storachaEmail'))
   storachaSpace = $state(this.valueOf('storachaSpace'))
+  detailsZoom = $state(this.valueOf('detailsZoom'))
 
   save(key?: keyof typeof Settings.keys) {
     if(typeof localStorage !== 'undefined') {

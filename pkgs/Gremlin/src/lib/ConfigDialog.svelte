@@ -43,6 +43,14 @@
         <input type="checkbox" bind:checked={values.debugging}/>
         <span>Debug Logging</span>
       </label>
+      <label>
+        <span>Details Zoom</span>
+        <input
+          type="text" inputmode="numeric"
+          pattern="[0-9]*\.?[0-9]*"
+          bind:value={settings.detailsZoom}
+        />
+      </label>
     </fieldset>
     <fieldset>
       <legend>IPFS Settings</legend>

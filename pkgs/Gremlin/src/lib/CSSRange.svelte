@@ -3,12 +3,10 @@
   let {
     min = 0, max = 100, step = 1, property,
     prefix = '', suffix = '', label = null,
-  } = $props()
-  let value = $state(
-    browser ? (
+    value = $bindable(browser ? (
       document.documentElement.style.getPropertyValue(property) ?? 0
-    ) : 0
-  )
+    ) : 0),
+  } = $props()
 
   function oninput(
     evt: Event & {
@@ -29,3 +27,12 @@
     <input type="range" bind:value {min} {max} {step} {oninput}/>
   </label>
 </form>
+
+<style>
+  form, label {
+    display: flex;
+  }
+  label, input {
+    flex-grow: 1;
+  }
+</style>

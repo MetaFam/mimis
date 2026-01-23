@@ -2,12 +2,12 @@ import { process, driver } from 'gremlin'
 import * as v from 'valibot'
 import { command } from '$app/server'
 
-const { t: T, merge: Merge } = process
+const { P, t: T, merge: Merge } = process
 const { statics: __ } = process
 const { DriverRemoteConnection } = driver
 
 const NewFilesSchema = v.object({
-  container: v.number(),
+  containerId: v.number(),
   files: v.array(v.object({
     cid: v.string(),
     type: v.string(),
@@ -18,7 +18,7 @@ const NewFilesSchema = v.object({
 
 export const addFiles = command(
   NewFilesSchema,
-  async ({ container, files }) => {
+  async ({ containerId, files }) => {
     const connection = new DriverRemoteConnection(
       'ws://localhost:8182/gremlin',
     )
@@ -28,11 +28,37 @@ export const addFiles = command(
 
     try {
       let traversal = (
-        g.V(new Map([[T.id, container]]))
+        g.V().has(T.id, containerId)
       )
 
       for(const { cid, name, type, size } of files) {
-        console.debug({ add: `${cid} (${type})` })
+        const [_, title, ext] = (
+          name.match(/^(.*)\.([^.]+)$/) ?? [null, name, '']
+        )
+
+        console.debug({ add: `${title}⁄${ext}: ${cid} @ ${containerId} (${type})` })
+
+        if(title !== ext && title.length > 0) {
+          traversal = (
+            traversal
+            .as('grandparent')
+            .coalesce(
+              (
+                __.outE('CONTAINS')
+                .has('path', title)
+                .inV()
+              ),
+              (
+                __.addV('Spot')
+                .property({ createdAt: now })
+                .addE('CONTAINS')
+                .from_('grandparent')
+                .property({ path: title, createdAt: now })
+                .inV()
+              ),
+            )
+          )
+        }
 
         traversal = (
           traversal
@@ -40,7 +66,7 @@ export const addFiles = command(
           .coalesce(
             (
               __.outE('CONTAINS')
-              .has('path', 'svg')
+              .has('path', ext)
               .inV()
             ),
             (
@@ -48,17 +74,48 @@ export const addFiles = command(
               .property({ createdAt: now })
               .addE('CONTAINS')
               .from_('parent')
-              .property({ path: 'svg', createdAt: now })
+              .property({ path: ext, createdAt: now })
               .inV()
             ),
           )
+          .as('new')
         )
 
-        await traversal.iterate()
+        traversal = (
+          traversal
+          .coalesce(
+            (
+              __.outE('REPRESENTATION')
+              .has('type', type)
+              .inV()
+              .has('cid', cid)
+              .not(__.inE('PREVIOUS'))
+            ),
+            (
+              __.addV('File')
+              .property({ createdAt: now, cid, size })
+              .as('file')
+              .addE('REPRESENTATION')
+              .from_('new')
+              .property({ type, createdAt: now })
+              .outV()
+              .outE('REPRESENTATION')
+              .has('type', type)
+              .inV()
+              .where(P.neq('file'))
+              .not(__.inE('PREVIOUS'))
+              .addE('PREVIOUS')
+              .from_('file')
+              .property({ createdAt: now })
+            ),
+          )
+        )
       }
+
+      await traversal.iterate()
       return { success: true }
     } catch(error) {
-      console.error({ error })
+      console.error({ 'In addFiles': error })
       return { error: (error as Error).message }
     } finally {
       await connection.close()

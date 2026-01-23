@@ -7,13 +7,13 @@ const { statics: __ } = process
 const { DriverRemoteConnection } = driver
 
 const NewSpotSchema = v.object({
-  current: v.optional(v.string()),
+  containerId: v.optional(v.number()),
   path: v.array(v.pipe(v.string(), v.nonEmpty())),
 })
 
 export const createSpot = command(
   NewSpotSchema,
-  async ({ current, path }) => {
+  async ({ containerId, path }) => {
     const connection = new DriverRemoteConnection(
       'ws://localhost:8182/gremlin',
     )
@@ -25,7 +25,7 @@ export const createSpot = command(
 
     try {
       let traversal = (
-        g.mergeV(new Map([[T.label, 'Root']]))
+        g.mergeV(new Map([[T.id, containerId]]))
         .option(Merge.onCreate, { createdAt: now })
       )
       for(const elem of path) {
