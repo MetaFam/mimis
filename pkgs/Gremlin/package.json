@@ -12,7 +12,6 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"gh:publish": "gh-pages --dist build/ --nojekyll --message '¡Go forth, young program, & be fruitful! 🫐'",
 		"gh:help": "gh-pages --help"
-
 	},
 	"dependencies": {
 		"@sveltejs/adapter-cloudflare": "^7.2.6",
@@ -31,5 +30,12 @@
 		"svelte-check": "^4.3.4",
 		"typescript": "^5.9.3",
 		"vite": "^7.2.2"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"esbuild",
+			"sharp",
+			"workerd"
+		]
 	}
 }
