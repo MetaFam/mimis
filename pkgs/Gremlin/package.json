@@ -12,7 +12,9 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "eslint .",
 		"gh:publish": "gh-pages --dist build/ --nojekyll --message '¡Go forth, young program, & be fruitful! 🫐'",
-		"gh:help": "gh-pages --help"
+		"gh:help": "gh-pages --help",
+		"deploy": "pnpm run build && wrangler pages deploy",
+		"cf-typegen": "wrangler types src/worker-configuration.d.ts"
 	},
 	"dependencies": {
 		"gremlin": "3.7.3",
