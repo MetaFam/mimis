@@ -1,6 +1,8 @@
 import { process, driver } from 'gremlin'
 import * as v from 'valibot'
 import { command } from '$app/server'
+import { connect as connectJanusGraph } from '$lib/janusgraph'
+import settings from './settings.svelte'
 
 const { P, t: T, merge: Merge } = process
 const { statics: __ } = process
@@ -19,11 +21,7 @@ const NewFilesSchema = v.object({
 export const addFiles = command(
   NewFilesSchema,
   async ({ containerId, files }) => {
-    const connection = new DriverRemoteConnection(
-      'ws://localhost:8182/gremlin',
-    )
-    const g = process.traversal().withRemote(connection)
-
+    const { g, connection } = connectJanusGraph()
     const now = new Date().toISOString()
 
     try {
@@ -36,7 +34,11 @@ export const addFiles = command(
           name.match(/^(.*)\.([^.]+)$/) ?? [null, name, '']
         )
 
-        console.debug({ add: `${title}⁄${ext}: ${cid} @ ${containerId} (${type})` })
+        if(settings.debugging) {
+          console.debug({
+            Add: `${title}⁄${ext}: ${cid} @ ${containerId} (${type})`
+          })
+        }
 
         if(title !== ext && title.length > 0) {
           traversal = (

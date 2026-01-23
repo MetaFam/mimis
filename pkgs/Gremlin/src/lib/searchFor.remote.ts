@@ -1,16 +1,16 @@
-import { process, structure, driver } from 'gremlin'
+import { process, structure } from 'gremlin'
 import * as v from 'valibot'
 import { query } from '$app/server'
+import { connect as connectJanusGraph } from '$lib/janusgraph'
 
 const { statics: __, t: T } = process
-const { DriverRemoteConnection } = driver
-const { Graph } = structure
 
-interface ReturnEntry extends Map<'path' | 'id', string | number> {}
-interface DirectoryEntry {
-  path: string
-  id: number
+export interface Entry {
+  name: string
+  type: string
+  cid: string | null
 }
+interface ReturnEntry extends Map<keyof Entry, string | null> {}
 
 const SearchSchema = v.object({
   path: v.array(v.string()),
@@ -28,14 +28,11 @@ export const searchFor = query(
       maxMountDepth: 10,
       allowCycles: false,
     },
-  }): Promise<Record<string, number> | { error: string }> => {
+  }): Promise<Array<Entry> | { error: string }> => {
     const { maxMountDepth: maxDepth, allowCycles } = options
-    const connection = new DriverRemoteConnection(
-      'ws://localhost:8182/gremlin',
-    )
-    try {
-      const g = process.traversal().withRemote(connection)
+    const { g, connection } = connectJanusGraph()
 
+    try {
       path = path.filter(Boolean)
 
       let traversal = g.V().has(T.label, 'Root')
@@ -63,32 +60,53 @@ export const searchFor = query(
         )
       }
 
-      // Now get children of resolved directories
       const results = (
         await traversal
         .outE('CONTAINS')
-        .project('path', 'id')
-        .by(__.values('path'))
-        .by(__.inV().id())
+        .as('contains')
+        .values('path').as('name')
+        .select('contains')
+        .inV()
+        .coalesce(
+          (
+            __.outE('REPRESENTATION')
+            .has('type', 'image/svg+xml')
+            .inV()
+            .map(
+              __.project('type', 'cid')
+              .by(__.constant('image'))
+              .by(__.values('cid'))
+            )
+          ),
+          (
+            __.project('type', 'cid')
+            .by(__.constant('spot'))
+            .by(__.constant(null))
+          ),
+        )
+        .as('result')
+        .project('name', 'type', 'cid')
+        .by(__.select('name'))
+        .by(__.select('result').select('type'))
+        .by(__.select('result').select('cid'))
+        .dedup()
         .toList()
       ) as Array<ReturnEntry>
 
-      const merged = new Map<string, DirectoryEntry['id']>()
-      for(const entry of results) {
-        const [path, id] = [entry.get('path')?.toString(), entry.get('id')]
-        if(path && typeof(id) === 'number' && !merged.has(path)) {
-          merged.set(path, id)
-        } else {
-          console.error({ 'Bad Values': { path, id } })
-        }
-      }
-
-      // const out = Array.from(merged, ([path, id]) => ({ path, id }))
-      const out = Object.fromEntries(merged)
-      return out
-    } catch(err) {
-      console.error({ err })
-      return { error: (err as Error).message }
+      return results.map((entry) => ({
+        name: (
+          entry.get('name')?.toString()
+          ?? (() => { throw new Error('Name is missing.') })()
+        ),
+        type: (
+          entry.get('type')?.toString()
+          ?? (() => { throw new Error('Type is missing.') })()
+        ),
+        cid: entry.get('cid')?.toString() ?? null,
+      }))
+    } catch(error) {
+      console.error({ error })
+      return { error: (error as Error).message }
     } finally {
       await connection.close()
     }

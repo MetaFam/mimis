@@ -12,6 +12,28 @@ Initially, Mïmis is focused on making available public resource, and relies on 
 
 The Interplanetary File System is a content-addresses distributed hash table for peer-to-peer file sharing. It is used to store both the data in Mïmis & the update information for synchronizing participants' graphs.
 
+##### Kubo
+
+[Kubo](https://docs.ipfs.tech/how-to/command-line-quick-start/) is [Protocol Labs](https://www.protocol.ai) Go-based primary implementation of IPFS. It is designed to run locally, and allow users to participate in the network.
+
+###### Setup
+
+In order for Mïmis to access Kubo via the browser, the API endpoint needs to send a CORS `Access-Control-Allow-Origin` HTTP header. The configuration allows this & to add it using the `jq` command, do:
+
+```bash
+KEY=API.HTTPHeaders.Access-Control-Allow-Origin
+CURRENT=$(ipfs config $KEY)
+VAL=$(jq -c '. + ["http://localhost:5173"]' <<< ${CURRENT:-[]})
+echo "Setting to '$VAL'"
+ipfs config --json $KEY "$VAL"
+```
+
+Additionally, Kubo allows defining [authorzation parameters](https://github.com/ipfs/kubo/blob/master/docs/config.md#apiauthorizations) *(both credentials and tokens)* and limiting which endpoints those authorizations can access.
+
+##### Storacha
+
+[Storacha](https://storacha.network) is a CDN for provisioning IPFS resources. To use it, enable it in Mïmis' settings & provide an email address that will be used for authentication.
+
 #### Veilid
 
 [Veilid](https://veilid.com) is a protocol for anonymous communication with a plan in its roadmap for a [DHT](https://veilid.gitlab.io/developer-book/concepts/dht.html). Once that exists, the plan is to also use it for anonymous storage of file information.
@@ -20,7 +42,7 @@ The Interplanetary File System is a content-addresses distributed hash table for
 
 #### TinkerPop
 
-Data is stored in a [TinkerPop](https://tinkerpop.apache.org)-compatible database which is qureried using Gremlin.
+Data is stored in a [TinkerPop](https://tinkerpop.apache.org)-compatible database which is queried using Gremlin.
 
 IPFS deals specifically with directed **acyclic** graphs. Preventing cycles in the complex mass of interconnected paths that is Mïmis is essentially impossible, and so the acyclic data structures from IPFS are used to create more complex potentially cyclic ones in the database.
 

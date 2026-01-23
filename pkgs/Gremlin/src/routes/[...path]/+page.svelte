@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state'
-  import { searchFor } from '$lib/searchFor.remote'
+  import { afterNavigate } from '$app/navigation'
+  import { searchFor, type Entry } from '$lib/searchFor.remote'
   import { createSpot } from '$lib/createSpot.remote'
   import { addFiles } from '$lib/addFiles.remote'
   import { spotId } from '$lib/spotId.remote'
@@ -8,12 +9,12 @@
   import CSSRange from '$lib/CSSRange.svelte'
   import Breadcrumbs from '$lib/Breadcrumbs.svelte'
   import folder from '$lib/assets/folder.svg'
-  import { afterNavigate } from '$app/navigation'
   import settings from '$lib/settings.svelte'
   import { kuboUpload } from '$lib/ipfs'
+  import { toHTTP, valueOrThrow } from '$lib'
 
   let path = $state(page.params.path?.split('/').filter(Boolean) ?? [])
-  let files = $derived(valueOrThrow(await searchFor({ path })) as Array<string>)
+  let files = $derived(valueOrThrow(await searchFor({ path })) as Array<Entry>)
   let menued = $state(false)
   let addSpotModal = $state<HTMLDialogElement>()
   let addFilesModal = $state<HTMLDialogElement>()
@@ -25,21 +26,6 @@
       to?.url.pathname.split('/').map(decodeURI).filter(Boolean) ?? []
     )
   })
-
-  function valueOrThrow(test: unknown) {
-    if(isError(test)) throw new Error(test.error)
-    return test
-  }
-
-  function isError(maybe: unknown): maybe is { error: string } {
-    return (
-      typeof(maybe) === 'object'
-      && maybe != null
-      && Object.keys(maybe).length === 1
-      && Object.keys(maybe).at(0) === 'error'
-      && typeof(Object.values(maybe).at(0)) === 'string'
-    )
-  }
 
   async function processSpot(evt: SubmitEvent) {
     try {
@@ -151,15 +137,22 @@
     </nav>
     <nav id="details">
       <ul>
-        {#each Object.keys(files) as sub}
+        {#each files as { name, type, cid }}
           <li>
-            <a
-              href="{path.length > 0 ? '/' : ''}{path.join('/')}/{sub}"
-              title={sub}
-            >
-              <img src={folder} alt="📁"/>
-              <span>{sub}</span>
-            </a>
+            {#if type === "spot"}
+              <a
+                href="{path.length > 0 ? '/' : ''}{path.join('/')}/{name}"
+                title={name}
+              >
+                <img src={folder} alt="📁"/>
+                <span>{name}</span>
+              </a>
+            {:else if type === 'image' && cid}
+              <img src={toHTTP({ cid })} alt={name}/>
+              <span>{name}</span>
+            {:else}
+              <aside>Unknown Type: {type}</aside>
+            {/if}
           </li>
         {/each}
       </ul>
@@ -304,13 +297,17 @@
 
     & a {
       display: flex;
-      width: calc(var(--zoom, 1) * 15em);
       flex-direction: column;
       text-decoration: none;
 
       &:hover {
         color: lch(from LinkText calc(l + 10) calc(c - 10) calc(h + 180));
       }
+    }
+
+    & img {
+      width: calc(var(--zoom, 1) * 15em);
+      max-height: calc(var(--zoom, 1) * 10em);
     }
 
     & span {

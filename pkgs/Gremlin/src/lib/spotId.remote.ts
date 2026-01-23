@@ -1,6 +1,7 @@
 import { process, structure, driver } from 'gremlin'
 import * as v from 'valibot'
 import { query } from '$app/server'
+import { connect as connectJanusGraph } from '$lib/janusgraph'
 
 const { statics: __, t: T } = process
 const { DriverRemoteConnection } = driver
@@ -24,12 +25,8 @@ export const spotId = query(
     },
   }): Promise<number | { error: string }> => {
     const { maxMountDepth: maxDepth, allowCycles } = options
-    const connection = new DriverRemoteConnection(
-      'ws://localhost:8182/gremlin',
-    )
+    const { g, connection } = connectJanusGraph()
     try {
-      const g = process.traversal().withRemote(connection)
-
       path = path.filter(Boolean)
 
       let traversal = g.V().has(T.label, 'Root')

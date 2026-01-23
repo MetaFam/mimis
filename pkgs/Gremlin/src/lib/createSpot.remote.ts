@@ -1,6 +1,8 @@
 import { process, driver } from 'gremlin'
 import * as v from 'valibot'
 import { command } from '$app/server'
+import { connect as connectJanusGraph } from '$lib/janusgraph'
+import settings from './settings.svelte'
 
 const { t: T, merge: Merge } = process
 const { statics: __ } = process
@@ -14,14 +16,10 @@ const NewSpotSchema = v.object({
 export const createSpot = command(
   NewSpotSchema,
   async ({ containerId, path }) => {
-    const connection = new DriverRemoteConnection(
-      'ws://localhost:8182/gremlin',
-    )
-    const g = process.traversal().withRemote(connection)
-
+    const { g, connection } = connectJanusGraph()
     const now = new Date().toISOString()
 
-    console.debug({ create: path })
+    if(settings.debugging) console.debug({ Create: path })
 
     try {
       let traversal = (

@@ -19,6 +19,7 @@ export class Settings {
     storachaEmail: 'mimis-setting-storacha-email',
     storachaSpace: 'mimis-setting-storacha-space',
     detailsZoom: 'mimis-setting-details-zoom',
+    janusGraphURL: 'mimis-setting-janusgraph-url',
   } as const
   static defaults = {
     [Settings.keys.ipfsURLPattern]: (
@@ -50,6 +51,9 @@ export class Settings {
     [Settings.keys.storachaSpace]: 'Mïmis',
     [Settings.keys.detailsZoom]: (
       env.PUBLIC_DETAILS_ZOOM ? Number(env.PUBLIC_DETAILS_ZOOM) : 1
+    ),
+    [Settings.keys.janusGraphURL]: (
+      env.PUBLIC_JANUSGRAPH_URL || 'ws://localhost:8182/gremlin'
     ),
   }
 
@@ -125,6 +129,7 @@ export class Settings {
   storachaEmail = $state(this.valueOf('storachaEmail'))
   storachaSpace = $state(this.valueOf('storachaSpace'))
   detailsZoom = $state(this.valueOf('detailsZoom'))
+  janusGraphURL = $state(this.valueOf('janusGraphURL'))
 
   save(key?: keyof typeof Settings.keys) {
     if(typeof localStorage !== 'undefined') {
