@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Settings, settings } from '$lib/settings.svelte'
+
   let {
     self = $bindable(),
     onsubmit = $bindable(),
@@ -88,7 +89,7 @@
 
     </fieldset>
     <menu>
-      <button type="button" onclick={(evt) => {
+      <button type="button" onclick={() => {
         values.values = settings
         self.close()
       }}>Cancel</button>

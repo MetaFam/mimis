@@ -1,5 +1,6 @@
 <script lang="ts">
   import { browser } from "$app/environment"
+
   let {
     min = 0, max = 100, step = 1, property,
     prefix = '', suffix = '', label = null,
@@ -8,11 +9,7 @@
     ) : 0),
   } = $props()
 
-  function oninput(
-    evt: Event & {
-      currentTarget: EventTarget & HTMLInputElement
-    }
-  ) {
+  function oninput() {
     document.documentElement.style.setProperty(
       property, `${prefix}${value}${suffix}`
     )

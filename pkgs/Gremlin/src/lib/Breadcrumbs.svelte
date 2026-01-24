@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths'
   import root from '$lib/assets/root.svg'
 
   let { path = [] } = $props()
@@ -12,7 +13,7 @@
     <li>
       <button>⇨</button>
       <a
-        href={whole}
+        href={resolve(whole as '/')}
         title={idx === 0 ? '𝙍𝙤𝙤𝙩' : decoded}
       >
         {#if idx === 0}

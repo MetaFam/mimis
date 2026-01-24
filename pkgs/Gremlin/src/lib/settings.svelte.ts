@@ -1,4 +1,3 @@
-// @ts-ignore
 import { browser } from '$app/environment'
 import { page } from '$app/state'
 import { env } from '$env/dynamic/public'
@@ -73,7 +72,9 @@ export class Settings {
           break
         }
         default: {
+          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           (Object.keys(Settings.keys).includes(key)) ? (
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (this as any)[key as keyof typeof Settings.keys] = val
           ) : (
             console.warn(`Unhanded constructor argument: "${key}".`)
@@ -109,7 +110,8 @@ export class Settings {
   }
   set values(settings: Settings) {
     for(const key of Object.keys(Settings.keys)) {
-      ;(this as any)[key as keyof typeof Settings.keys] = (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this as any)[key as keyof typeof Settings.keys] = (
         settings[key as keyof typeof Settings.keys]
       )
     }

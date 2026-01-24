@@ -1,8 +1,7 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { query } from '$app/server'
-import { connect as connectJanusGraph } from '$lib/janusgraph'
-
+import { connect as connectJanusGraph } from '$lib/janusgraph.ts'
 
 const { statics: __, t: T } = gremlin.process
 
@@ -11,7 +10,6 @@ export interface Entry {
   type: string
   cid: string | null
 }
-interface ReturnEntry extends Map<keyof Entry, string | null> {}
 
 const SearchSchema = v.object({
   path: v.array(v.string()),
@@ -31,15 +29,16 @@ export const searchFor = query(
     },
   }): Promise<Array<Entry> | { error: string }> => {
     const { maxMountDepth: maxDepth, allowCycles } = options
-    const { g, connection } = connectJanusGraph()
+    const { generateG: genG, connection } = connectJanusGraph()
 
     try {
       path = path.filter(Boolean)
 
+      const g = genG()
       let traversal = g.V().has(T.label, 'Root')
 
-      for (const element of path) {
-        if (!allowCycles) {
+      for(const element of path) {
+        if(!allowCycles) {
           traversal = traversal.simplePath()
         }
 
@@ -92,7 +91,7 @@ export const searchFor = query(
         .by(__.select('result').select('cid'))
         .dedup()
         .toList()
-      ) as Array<ReturnEntry>
+      ) as Array<Map<keyof Entry, string | null>>
 
       return results.map((entry) => ({
         name: (
@@ -106,10 +105,14 @@ export const searchFor = query(
         cid: entry.get('cid')?.toString() ?? null,
       }))
     } catch(error) {
-      console.error({ error })
+      console.error({ addFile: error })
       return { error: (error as Error).message }
     } finally {
-      await connection.close()
+      try {
+        await connection.close()
+      } catch (error) {
+        console.error({ 'addFile Close Failed': (error as Error).message })
+      }
     }
   }
 )

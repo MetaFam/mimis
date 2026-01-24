@@ -1,4 +1,4 @@
-import { settings } from '$lib/settings.svelte'
+import { settings } from '$lib/settings.svelte.ts'
 
 export function toHTTP({
   url, cid,
@@ -27,7 +27,10 @@ export function toHTTP({
 }
 
 export function valueOrThrow(test: unknown) {
-  if(isError(test)) throw new Error(test.error)
+  if(isError(test)) {
+    console.debug({ Throwing: test })
+    throw new Error(test.error)
+  }
   return test
 }
 

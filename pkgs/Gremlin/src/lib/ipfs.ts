@@ -1,6 +1,6 @@
 import type { Version } from 'multiformats'
 import { create as ipfsFactory } from 'kubo-rpc-client'
-import settings from '$lib/settings.svelte'
+import settings from '$lib/settings.svelte.ts'
 
 export async function kuboUpload(
   { files, progress }:
@@ -18,7 +18,7 @@ export async function kuboUpload(
   if(settings.debugging) {
     console.debug({ Adding: files, 'Total Size': total, options })
   }
-  let infos = []
+  const infos = []
   let idx = 0
   const url = settings.ipfsAPI.replace(/\/+$/, '')
   if(settings.debugging) console.debug({ 'IPFS API URL': url })

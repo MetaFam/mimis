@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state'
   import { afterNavigate } from '$app/navigation'
+  import { resolve } from '$app/paths'
   import { searchFor, type Entry } from '$lib/searchFor.remote'
   import { createSpot } from '$lib/createSpot.remote'
   import { addFiles } from '$lib/addFiles.remote'
@@ -14,7 +15,9 @@
   import { toHTTP, valueOrThrow } from '$lib'
 
   let path = $state(page.params.path?.split('/').filter(Boolean) ?? [])
+  console.debug('¡HERE!')
   let files = $derived(valueOrThrow(await searchFor({ path })) as Array<Entry>)
+  console.debug({ files })
   let menued = $state(false)
   let addSpotModal = $state<HTMLDialogElement>()
   let addFilesModal = $state<HTMLDialogElement>()
@@ -39,7 +42,7 @@
       valueOrThrow(await createSpot({ containerId, path }))
       addSpotModal.requestClose()
     } catch(error) {
-      console.error({ error })
+      console.error({ processSpot: error })
     }
   }
 
@@ -66,7 +69,7 @@
       form.reset()
       addFilesModal.requestClose()
     } catch(error) {
-      console.error({ error })
+      console.error({ processFiles: error })
     }
   }
 </script>
@@ -115,7 +118,7 @@
     </section>
     <nav class="system locations">
       <ul>
-        <li><a href="/">Root</a></li>
+        <li><a href={resolve('/')}>Root</a></li>
         <li>Recent</li>
         <li>Categories</li>
         <li>Volumes</li>
@@ -123,10 +126,23 @@
     </nav>
     <nav class="user locations">
       <ul>
-        <li><a href="/media/book/by/">Books</a></li>
-        <li><a href="/media/movies/entitled/">Movies</a></li>
-        <!-- <li><a href="/television/eposodes/ordered/by/internet release/">Latest TV</a></li> -->
-        <li><a href="/science/biology/papers/ordered/by/publication date/">Biology Papers</a></li>
+        <li><a
+          href={resolve('/media/book/by/')}>Books</a></li>
+        <li><a href={resolve('/media/movies/entitled/')}>
+          Movies
+        </a></li>
+        <!--
+        <li><a
+          href={resolve('/television/episodes/ordered/by/internet release/')}
+        >
+          Latest TV
+        </a></li>
+        -->
+        <li><a href={
+          resolve('/science/biology/papers/ordered/by/publication date/')
+        }>
+          Biology Papers
+        </a></li>
         <li><button type="button">➕</button></li>
       </ul>
     </nav>
@@ -137,11 +153,19 @@
     </nav>
     <nav id="details">
       <ul>
-        {#each files as { name, type, cid }}
+        {#each files as { name, type, cid } (cid)}
           <li>
             {#if type === "spot"}
               <a
-                href="{path.length > 0 ? '/' : ''}{path.join('/')}/{name}"
+                href={resolve(
+                  `${
+                    path.length > 0 ? '/' : ''
+                  }${
+                    path.join('/')
+                  }/${
+                    name
+                  }` as '/'
+                )}
                 title={name}
               >
                 <img src={folder} alt="📁"/>

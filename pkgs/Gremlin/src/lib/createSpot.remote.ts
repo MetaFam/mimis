@@ -1,8 +1,8 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { command } from '$app/server'
-import { connect as connectJanusGraph } from '$lib/janusgraph'
-import settings from './settings.svelte'
+import { connect as connectJanusGraph } from './janusgraph.ts'
+import settings from '$lib/settings.svelte.ts'
 
 const { t: T, merge: Merge, statics: __ } = gremlin.process
 
@@ -14,16 +14,19 @@ const NewSpotSchema = v.object({
 export const createSpot = command(
   NewSpotSchema,
   async ({ containerId, path }) => {
-    const { g, connection } = connectJanusGraph()
+    const { generateG: genG, connection } = connectJanusGraph()
     const now = new Date().toISOString()
 
     if(settings.debugging) console.debug({ Create: path })
 
     try {
+      const g = genG()
+
       let traversal = (
         g.mergeV(new Map([[T.id, containerId]]))
         .option(Merge.onCreate, { createdAt: now })
       )
+
       for(const elem of path) {
         traversal = (
           traversal
@@ -52,8 +55,14 @@ export const createSpot = command(
     } catch(error) {
       console.error({ error })
       return { error: (error as Error).message }
-    }     finally {
-      await connection.close()
+    } finally {
+      try {
+        await connection.close()
+      } catch (error) {
+        console.error({
+          'createSpot Close Failed': (error as Error).message,
+        })
+      }
     }
   }
 )

@@ -1,7 +1,7 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { query } from '$app/server'
-import { connect as connectJanusGraph } from '$lib/janusgraph'
+import { connect as connectJanusGraph } from '$lib/janusgraph.ts'
 
 const { statics: __, t: T } = gremlin.process
 
@@ -23,10 +23,11 @@ export const spotId = query(
     },
   }): Promise<number | { error: string }> => {
     const { maxMountDepth: maxDepth, allowCycles } = options
-    const { g, connection } = connectJanusGraph()
+    const { generateG: genG, connection } = connectJanusGraph()
     try {
       path = path.filter(Boolean)
 
+      const g = genG()
       let traversal = g.V().has(T.label, 'Root')
 
       for (const element of path) {
@@ -55,11 +56,17 @@ export const spotId = query(
       traversal = traversal.id().limit(1)
       const result = await traversal.next()
       return result.value
-    } catch(err) {
-      console.error({ 'In spotId': err })
-      return { error: (err as Error).message }
+    } catch(error) {
+      console.error({ 'In spotId': (error as Error).message })
+      return { error: (error as Error).message }
     } finally {
-      await connection.close()
+      try {
+        await connection.close()
+      } catch(error) {
+        console.error({
+          'spotId Close Failed': (error as Error).message,
+        })
+      }
     }
   }
 )

@@ -1,5 +1,5 @@
 import gremlin from 'gremlin'
-import settings from '$lib/settings.svelte'
+import settings from '$lib/settings.svelte.ts'
 
 const { driver, process } = gremlin
 const { DriverRemoteConnection } = driver
@@ -10,6 +10,8 @@ export function connect() {
   )
   return {
     connection,
-    g: process.traversal().withRemote(connection),
+    generateG: () => (
+      process.traversal().withRemote(connection)
+    ),
   }
 }

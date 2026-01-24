@@ -1,13 +1,11 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { command } from '$app/server'
-import { connect as connectJanusGraph } from '$lib/janusgraph'
-import settings from './settings.svelte'
+import { connect as connectJanusGraph } from '$lib/janusgraph.ts'
+import settings from '$lib/settings.svelte.ts'
 
-const { driver, process } = gremlin
-const { P, t: T, merge: Merge } = process
-const { statics: __ } = process
-const { DriverRemoteConnection } = driver
+const { process } = gremlin
+const { P, t: T, statics: __ } = process
 
 const NewFilesSchema = v.object({
   containerId: v.number(),
@@ -22,16 +20,15 @@ const NewFilesSchema = v.object({
 export const addFiles = command(
   NewFilesSchema,
   async ({ containerId, files }) => {
-    const { g, connection } = connectJanusGraph()
+    const { generateG: genG, connection } = connectJanusGraph()
     const now = new Date().toISOString()
 
     try {
-      let traversal = (
-        g.V().has(T.id, containerId)
-      )
+      const g = genG()
+      let traversal = g.V().has(T.id, containerId)
 
       for(const { cid, name, type, size } of files) {
-        const [_, title, ext] = (
+        const [, title, ext] = (
           name.match(/^(.*)\.([^.]+)$/) ?? [null, name, '']
         )
 
@@ -118,10 +115,16 @@ export const addFiles = command(
       await traversal.iterate()
       return { success: true }
     } catch(error) {
-      console.error({ 'In addFiles': error })
+      console.error({ addFiles: error })
       return { error: (error as Error).message }
     } finally {
-      await connection.close()
+      try {
+        await connection.close()
+      } catch(error) {
+        console.error({
+          'addFiles Close Failed': (error as Error).message,
+        })
+      }
     }
   }
 )
