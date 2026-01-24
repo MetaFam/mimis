@@ -14,6 +14,9 @@ importers:
       kubo-rpc-client:
         specifier: ^6.0.2
         version: 6.0.2
+      multiformats:
+        specifier: ^13.4.2
+        version: 13.4.2
       valibot:
         specifier: ^1.2.0
         version: 1.2.0(typescript@5.9.3)

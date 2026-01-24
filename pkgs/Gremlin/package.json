@@ -19,6 +19,7 @@
 	"dependencies": {
 		"gremlin": "3.7.3",
 		"kubo-rpc-client": "^6.0.2",
+		"multiformats": "^13.4.2",
 		"valibot": "^1.2.0"
 	},
 	"devDependencies": {

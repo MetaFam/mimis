@@ -1,4 +1,7 @@
 <script lang="ts">
+  // The derived Promises are ugly as hell, but they've
+  // resisted several attempts to make them prettier.
+
   import { page } from '$app/state'
   import { afterNavigate } from '$app/navigation'
   import { resolve } from '$app/paths'
@@ -9,73 +12,92 @@
   import ConfigDialog from '$lib/ConfigDialog.svelte'
   import CSSRange from '$lib/CSSRange.svelte'
   import Breadcrumbs from '$lib/Breadcrumbs.svelte'
-  import folder from '$lib/assets/folder.svg'
   import settings from '$lib/settings.svelte'
   import { kuboUpload } from '$lib/ipfs'
-  import { toHTTP, valueOrThrow } from '$lib'
+  import { toHTTP, throwError } from '$lib'
+  import folder from '$lib/assets/folder.svg'
 
-  let path = $state(page.params.path?.split('/').filter(Boolean) ?? [])
-  console.debug('¡HERE!')
-  let files = $derived(valueOrThrow(await searchFor({ path })) as Array<Entry>)
-  console.debug({ files })
+  let error = $state<string | null>(null)
+  let path = $state(
+    page.params.path?.split('/').filter(Boolean) ?? []
+  )
   let menued = $state(false)
   let addSpotModal = $state<HTMLDialogElement>()
   let addFilesModal = $state<HTMLDialogElement>()
   let configModal = $state<HTMLDialogElement>()
-  let containerId = $derived(valueOrThrow(await spotId({ path })) as number)
+  // https://svelte.dev/docs/svelte/runtime-warnings#Client-warnings-await_waterfall
+  let spotsPromise = $derived(searchFor({ path }))
+  let spotsOrError = $derived(
+    await spotsPromise
+  ) as Array<Entry> | { error: string }
+  let idPromise = $derived(spotId({ path }))
+  let idOrError = $derived(
+    await idPromise
+  ) as number | { error: string }
 
   afterNavigate(async ({ to }) => {
     path = (
-      to?.url.pathname.split('/').map(decodeURI).filter(Boolean) ?? []
+      to?.url.pathname
+      .split('/')
+      .map(decodeURI)
+      .filter(Boolean)
+      ?? []
     )
   })
 
   async function processSpot(evt: SubmitEvent) {
-    try {
-      evt.preventDefault()
-      if(containerId == null) {
-        throw new Error('No Container Specified: ¡I don’t know where I am!')
-      }
-      if(!addSpotModal) throw new Error('¿How was this directory submitted?')
-      const formData = new FormData(evt.currentTarget as HTMLFormElement)
-      const path = formData.getAll('path') as Array<string>
-      valueOrThrow(await createSpot({ containerId, path }))
-      addSpotModal.requestClose()
-    } catch(error) {
-      console.error({ processSpot: error })
+    evt.preventDefault()
+    const containerId = throwError(idOrError) as number
+    if(containerId == null) {
+      throw new Error('No Container Specified: ¡I don’t know where I am!')
     }
+    if(!addSpotModal) throw new Error('¿How was this directory submitted?')
+    const formData = new FormData(evt.currentTarget as HTMLFormElement)
+    const path = formData.getAll('path') as Array<string>
+    throwError(await createSpot({ containerId, path }))
+    addSpotModal.requestClose()
   }
 
   async function processFiles(evt: SubmitEvent) {
-    try {
-      evt.preventDefault()
-      if(containerId == null) {
-        throw new Error('No Container Specified: ¡I don’t know where I am!')
-      }
-      if(!addFilesModal) throw new Error('¿How were these files submitted?')
-      const form = evt.currentTarget as HTMLFormElement
-      const formData = new FormData(form)
-      const files = formData.getAll('files') as Array<File>
-      const cids = await kuboUpload({ files })
-      const entries = cids.map((entry, idx) => ({
+    evt.preventDefault()
+    const containerId = throwError(idOrError) as number
+    if(containerId == null) {
+      throw new Error('No Container Specified: ¡I don’t know where I am!')
+    }
+    if(!addFilesModal) throw new Error('¿How were these files submitted?')
+    const form = evt.currentTarget as HTMLFormElement
+    const formData = new FormData(form)
+    const files = formData.getAll('files') as Array<File>
+    const cids = throwError(
+      await kuboUpload({ files })
+    ) as Array<Entry>
+    const entries = cids.map((entry, idx) => {
+      if(entry.cid == null) throw new Error('No CID.')
+      return {
         ...entry,
+        cid: entry.cid,
         name: files[idx].name,
         size: files[idx].size,
-      }))
-      valueOrThrow(await addFiles({
-        containerId,
-        files: entries,
-      }))
-      form.reset()
-      addFilesModal.requestClose()
-    } catch(error) {
-      console.error({ processFiles: error })
-    }
+      }
+    })
+    console.debug({ entries })
+    throwError(await addFiles({
+      containerId,
+      files: entries,
+    }))
+    form.reset()
+    addFilesModal.requestClose()
+  }
+
+  const display = () => {
+    const spots = throwError(spotsOrError) as Array<Entry>
+    console.debug(JSON.stringify(spots, null, 2))
+    return spots
   }
 </script>
 
 <svelte:head>
-  <title>ï: {path}</title>
+  <title>ï: {path.at(-1)}</title>
 </svelte:head>
 
 <main>
@@ -153,7 +175,7 @@
     </nav>
     <nav id="details">
       <ul>
-        {#each files as { name, type, cid } (cid)}
+        {#each display() as { name, type, cid } (name)}
           <li>
             {#if type === "spot"}
               <a

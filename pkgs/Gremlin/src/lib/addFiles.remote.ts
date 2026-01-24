@@ -1,13 +1,15 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { command } from '$app/server'
-import { connect as connectJanusGraph } from '$lib/janusgraph.ts'
 import settings from '$lib/settings.svelte.ts'
+import {
+  connect as connectJanusGraph, connectToG,
+} from '$lib/janusgraph.ts'
 
 const { process } = gremlin
 const { P, t: T, statics: __ } = process
 
-const NewFilesSchema = v.object({
+const NewSpotsSchema = v.object({
   containerId: v.number(),
   files: v.array(v.object({
     cid: v.string(),
@@ -18,13 +20,13 @@ const NewFilesSchema = v.object({
 })
 
 export const addFiles = command(
-  NewFilesSchema,
+  NewSpotsSchema,
   async ({ containerId, files }) => {
-    const { generateG: genG, connection } = connectJanusGraph()
+    const connection = connectJanusGraph()
     const now = new Date().toISOString()
 
     try {
-      const g = genG()
+      const g = connectToG(connection)
       let traversal = g.V().has(T.id, containerId)
 
       for(const { cid, name, type, size } of files) {
@@ -121,9 +123,7 @@ export const addFiles = command(
       try {
         await connection.close()
       } catch(error) {
-        console.error({
-          'addFiles Close Failed': (error as Error).message,
-        })
+        console.error({ 'addFiles Close Failed': error })
       }
     }
   }

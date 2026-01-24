@@ -26,7 +26,7 @@ export function toHTTP({
   )
 }
 
-export function valueOrThrow(test: unknown) {
+export function throwError(test: unknown) {
   if(isError(test)) {
     console.debug({ Throwing: test })
     throw new Error(test.error)
