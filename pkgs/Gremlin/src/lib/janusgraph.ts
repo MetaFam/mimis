@@ -15,7 +15,7 @@ export function connect() {
 }
 
 export function connectToG(
-  connection: DriverRemoteConnection
+  connection: ReturnType<typeof connect>
 ) {
   return process.traversal().withRemote(connection)
 }

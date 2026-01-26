@@ -28,8 +28,7 @@ export function toHTTP({
 
 export function throwError(test: unknown) {
   if(isError(test)) {
-    console.debug({ Throwing: test })
-    throw new Error(test.error)
+    throw new Error(test.error || '¡Unknown Error!')
   }
   return test
 }
@@ -42,4 +41,11 @@ function isError(maybe: unknown): maybe is { error: string } {
     && Object.keys(maybe).at(0) === 'error'
     && typeof(Object.values(maybe).at(0)) === 'string'
   )
+}
+
+export class ConnectionError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'ConnectionError'
+  }
 }

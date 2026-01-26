@@ -86,7 +86,17 @@
           autocomplete="new-password"
         />
       </label>
-
+    </fieldset>
+    <fieldset>
+      <legend>JanusGraph</legend>
+      <label>
+        <span>Connection URL</span>
+        <input bind:value={values.janusGraphURL}/>
+      </label>
+      <label>
+        <span>Public Server URL</span>
+        <input bind:value={values.publicJanusGraphURL}/>
+      </label>
     </fieldset>
     <menu>
       <button type="button" onclick={() => {

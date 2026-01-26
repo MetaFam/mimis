@@ -4,6 +4,7 @@ import { query } from '$app/server'
 import {
   connect as connectJanusGraph, connectToG,
 } from '$lib/janusgraph.ts'
+import { ConnectionError } from '$lib'
 
 const { statics: __, t: T } = gremlin.process
 
@@ -33,7 +34,7 @@ export const searchFor = query(
     },
   }) => {
     const { maxMountDepth: maxDepth, allowCycles } = options
-    const connection = connectJanusGraph()
+    const connection = await connectJanusGraph()
 
     try {
       path = path.filter(Boolean)
@@ -96,14 +97,21 @@ export const searchFor = query(
         .dedup()
         .toList()
       ) as Array<Map<keyof Entry, string | null>>
-
-      return Object.entries(results)
-    } catch (error) {
+      return results.map(Object.fromEntries)
+    } catch (err) {
+      let error = (err as Error)
+      if(error.name === 'TypeError') {
+        error = new ConnectionError(
+          'Connection Error: Could not connect to JanusGraph.'
+        )
+      }
       console.error({ searchFor: error })
-      return { error: (error as Error).message }
+      return { error: error.message }
     } finally {
       try {
-        await connection.close()
+        if(connection) {
+          await connection.close()
+        }
       } catch (error) {
         console.error({ 'searchFor Close Failed': error })
       }

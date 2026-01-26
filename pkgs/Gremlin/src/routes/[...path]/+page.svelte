@@ -10,6 +10,7 @@
   import { addFiles } from '$lib/addFiles.remote'
   import { spotId } from '$lib/spotId.remote'
   import ConfigDialog from '$lib/ConfigDialog.svelte'
+  import ErrorDialog from '$lib/ErrorDialog.svelte'
   import CSSRange from '$lib/CSSRange.svelte'
   import Breadcrumbs from '$lib/Breadcrumbs.svelte'
   import settings from '$lib/settings.svelte'
@@ -27,9 +28,6 @@
   let configModal = $state<HTMLDialogElement>()
   // https://svelte.dev/docs/svelte/runtime-warnings#Client-warnings-await_waterfall
   let spotsPromise = $derived(searchFor({ path }))
-  let spotsOrError = $derived(
-    await spotsPromise
-  ) as Array<Entry> | { error: string }
   let idPromise = $derived(spotId({ path }))
   let idOrError = $derived(
     await idPromise
@@ -46,53 +44,70 @@
   })
 
   async function processSpot(evt: SubmitEvent) {
-    evt.preventDefault()
-    const containerId = throwError(idOrError) as number
-    if(containerId == null) {
-      throw new Error('No Container Specified: ¡I don’t know where I am!')
+    try {
+      evt.preventDefault()
+      const containerId = throwError(idOrError) as number
+      if(containerId == null) {
+        throw new Error('No Container Specified: ¡I don’t know where I am!')
+      }
+      if(!addSpotModal) throw new Error('¿How was this directory submitted?')
+      const formData = new FormData(evt.currentTarget as HTMLFormElement)
+      const path = formData.getAll('path') as Array<string>
+      throwError(await createSpot({ containerId, path }))
+      addSpotModal.requestClose()
+    } catch(err) {
+      console.error({ err })
+      error = (err as Error).message
     }
-    if(!addSpotModal) throw new Error('¿How was this directory submitted?')
-    const formData = new FormData(evt.currentTarget as HTMLFormElement)
-    const path = formData.getAll('path') as Array<string>
-    throwError(await createSpot({ containerId, path }))
-    addSpotModal.requestClose()
   }
 
   async function processFiles(evt: SubmitEvent) {
-    evt.preventDefault()
-    const containerId = throwError(idOrError) as number
-    if(containerId == null) {
-      throw new Error('No Container Specified: ¡I don’t know where I am!')
-    }
-    if(!addFilesModal) throw new Error('¿How were these files submitted?')
-    const form = evt.currentTarget as HTMLFormElement
-    const formData = new FormData(form)
-    const files = formData.getAll('files') as Array<File>
-    const cids = throwError(
-      await kuboUpload({ files })
-    ) as Array<Entry>
-    const entries = cids.map((entry, idx) => {
-      if(entry.cid == null) throw new Error('No CID.')
-      return {
-        ...entry,
-        cid: entry.cid,
-        name: files[idx].name,
-        size: files[idx].size,
+    try {
+      evt.preventDefault()
+      const containerId = throwError(idOrError) as number
+      if(containerId == null) {
+        throw new Error('No Container Specified: ¡I don’t know where I am!')
       }
-    })
-    console.debug({ entries })
-    throwError(await addFiles({
-      containerId,
-      files: entries,
-    }))
-    form.reset()
-    addFilesModal.requestClose()
+      if(!addFilesModal) throw new Error('¿How were these files submitted?')
+      const form = evt.currentTarget as HTMLFormElement
+      const formData = new FormData(form)
+      const files = formData.getAll('files') as Array<File>
+      const cids = throwError(
+        await kuboUpload({ files })
+      ) as Array<Entry>
+      const entries = cids.map((entry, idx) => {
+        if(entry.cid == null) throw new Error('No CID.')
+        return {
+          ...entry,
+          cid: entry.cid,
+          name: files[idx].name,
+          size: files[idx].size,
+        }
+      })
+      console.debug({ entries })
+      throwError(await addFiles({
+        containerId,
+        files: entries,
+      }))
+      form.reset()
+      addFilesModal.requestClose()
+    } catch(err) {
+      console.error({ err })
+      error = (err as Error).message
+    }
   }
 
-  const display = () => {
-    const spots = throwError(spotsOrError) as Array<Entry>
-    console.debug(JSON.stringify(spots, null, 2))
-    return spots
+  const display = async () => {
+    try {
+      const spots = throwError(
+        await spotsPromise
+      ) as Array<Entry>
+      console.debug(JSON.stringify(spots, null, 2))
+      return spots
+    } catch(err) {
+      console.error({ err })
+      error = (err as Error).message
+    }
   }
 </script>
 
@@ -175,7 +190,7 @@
     </nav>
     <nav id="details">
       <ul>
-        {#each display() as { name, type, cid } (name)}
+        {#each await display() as { name, type, cid } (name)}
           <li>
             {#if type === "spot"}
               <a
@@ -223,6 +238,9 @@
     </form>
   </dialog>
   <ConfigDialog bind:self={configModal}/>
+  {#if error}
+    <ErrorDialog bind:error={error}/>
+  {/if}
 </main>
 
 <style>
@@ -345,9 +363,12 @@
       display: flex;
       flex-direction: column;
       text-decoration: none;
+      align-items: center;
 
       &:hover {
-        color: lch(from LinkText calc(l + 10) calc(c - 10) calc(h + 180));
+        color: lch(
+          from LinkText calc(l + 10) calc(c - 10) calc(h + 180)
+        );
       }
     }
 
