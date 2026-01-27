@@ -151,7 +151,9 @@
       >
         <span>🢗</span><span>☰</span><span>🢗</span>
       </button>
-      <input type="search"/>
+      <section class="search">
+        <input type="search"/>
+      </section>
     </section>
     <nav class="system locations">
       <ul>
@@ -190,7 +192,7 @@
     </nav>
     <nav id="details">
       <ul>
-        {#each await display() as { name, type, cid } (name)}
+        {#each await display() as { name, type, cid } (cid || name)}
           <li>
             {#if type === "spot"}
               <a
@@ -322,6 +324,26 @@
 
   .general.tools {
     display: flex;
+
+    & button {
+      min-width: 4em;
+    }
+
+    .search {
+      position: relative;
+      display: flex;
+
+      &::before {
+        content: '🔎';
+        position: absolute;
+        top: calc(50% - 1ex);
+        left: 0.25em;
+      }
+
+      & input {
+        padding-inline-start: 1.5em;
+      }
+    }
   }
 
   #add-spot input {
