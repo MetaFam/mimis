@@ -4,9 +4,10 @@ import { command } from '$app/server'
 import settings from '$lib/settings.svelte.ts'
 import {
   connect as connectJanusGraph, connectToG,
+  mergeRoot,
 } from '$lib/janusgraph.ts'
 
-const { t: T, merge: Merge, statics: __ } = gremlin.process
+const { statics: __ } = gremlin.process
 
 const NewSpotSchema = v.object({
   containerId: v.optional(v.number()),
@@ -24,10 +25,11 @@ export const createSpot = command(
     try {
       const g = connectToG(connection)
 
-      let traversal = (
-        g.mergeV(new Map([[T.id, containerId]]))
-        .option(Merge.onCreate, { createdAt: now })
-      )
+      if(containerId == null) {
+        containerId = await mergeRoot(g)
+      }
+
+      let traversal = g.V(containerId)
 
       for(const elem of path) {
         traversal = (
@@ -51,9 +53,9 @@ export const createSpot = command(
         )
       }
 
-      await traversal.iterate()
+      const result = await traversal.id().next()
 
-      return { success: true }
+      return result.value
     } catch(error) {
       console.error({ createSpot: error })
       return { error: (error as Error).message }

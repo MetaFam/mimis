@@ -19,6 +19,8 @@ export class Settings {
     storachaSpace: 'mimis-setting-storacha-space',
     detailsZoom: 'mimis-setting-details-zoom',
     janusGraphURL: 'mimis-setting-janusgraph-url',
+    janusGraphUsername: 'mimis-setting-janusgraph-username',
+    janusGraphPassword: 'mimis-setting-janusgraph-password',
     publicJanusGraphURL: 'mimis-setting-public-janusgraph-url',
   } as const
   static defaults = {
@@ -54,6 +56,12 @@ export class Settings {
     ),
     [Settings.keys.janusGraphURL]: (
       env.PUBLIC_JANUSGRAPH_URL || 'ws://localhost:8182/gremlin'
+    ),
+    [Settings.keys.janusGraphUsername]: (
+      env.PUBLIC_JANUSGRAPH_USERNAME || 'mimis'
+    ),
+    [Settings.keys.janusGraphPassword]: (
+      env.PUBLIC_JANUSGRAPH_PASSWORD || 'This is the password for the user "mimis".'
     ),
     [Settings.keys.publicJanusGraphURL]: (
       env.PUBLIC_PUBLIC_JANUSGRAPH_URL || 'ws://janus.mimis.dhappy.org:8182/gremlin'
@@ -136,6 +144,8 @@ export class Settings {
   storachaSpace = $state(this.valueOf('storachaSpace'))
   detailsZoom = $state(this.valueOf('detailsZoom'))
   janusGraphURL = $state(this.valueOf('janusGraphURL'))
+  janusGraphUsername = $state(this.valueOf('janusGraphUsername'))
+  janusGraphPassword = $state(this.valueOf('janusGraphPassword'))
   publicJanusGraphURL = $state(this.valueOf('publicJanusGraphURL'))
 
   save(key?: keyof typeof Settings.keys) {

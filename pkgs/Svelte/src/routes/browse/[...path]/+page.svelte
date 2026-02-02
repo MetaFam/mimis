@@ -16,7 +16,7 @@
   $effect(() => {
     limit = ((limit) => (
       limit ? Number(limit) : settings.limit
-      ))(page.url.searchParams.get('limit'))
+    ))(page.url.searchParams.get('limit'))
     offset = Number(page.url.searchParams.get('offset'))
   })
 

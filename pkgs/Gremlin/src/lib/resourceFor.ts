@@ -1,3 +1,45 @@
-export function resourceFor(path: Array<string>) {
-  return { cid: 'bafyfoo' }
+import {
+  connect as connectJanusGraph, connectToG,
+} from '$lib/janusgraph.ts'
+import { spotId } from '$lib/spotId.remote.ts'
+import { isError } from '$lib'
+
+export async function resourceAt({
+  containerId, type,
+}: {
+  containerId: number
+  type: string
+}) {
+  const connection = connectJanusGraph()
+
+  try {
+    const g = connectToG(connection)
+    const traversal = (
+      g.V(containerId)
+      .outE('REPRESENTATION')
+      .has('type', type)
+      .inV()
+      .values('cid')
+    )
+    const result = await traversal.next()
+    return result.value
+  } finally {
+    connection.close()
+  }
+}
+
+export async function resourceFor(
+  { path }: {path: Array<string> }
+) {
+  if(path.at(-1) === 'svg') {
+    const spot = await spotId({ path })
+    console.debug({ spot })
+    if(spot != null && !isError(spot)) {
+      return { cid: await resourceAt({
+        containerId: spot,
+        type: 'image/svg+xml',
+      }) }
+    }
+  }
+  return null
 }

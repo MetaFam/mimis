@@ -1,0 +1,18 @@
+# Gremlin Console Remote Connection with Authentication
+#
+# Usage from gremlin console:
+#   :remote connect tinkerpop.server conf/remote.yaml
+#   :remote console
+
+hosts: [localhost]
+port: 8182
+serializer: {
+  className: org.apache.tinkerpop.gremlin.util.ser.GraphBinaryMessageSerializerV4,
+  config: {
+    ioRegistries: [org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry]
+  }
+}
+
+# SASL credentials - must match what's configured in gremlin-server.yaml
+username: mimis
+password: 'This is the password for the user "mimis".'

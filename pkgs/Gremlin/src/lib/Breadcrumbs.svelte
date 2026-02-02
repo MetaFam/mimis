@@ -1,6 +1,8 @@
 <script lang="ts">
   import { resolve } from '$app/paths'
+  import { throwError } from '$lib'
   import root from '$lib/assets/root.svg'
+  import { searchFor, type Entry } from './searchFor.remote'
 
   let { path = [] } = $props()
 </script>
@@ -11,7 +13,7 @@
     {@const elem = `${path.at(idx - 1)}`}
     {@const decoded = decodeURI(elem)}
     <li>
-      <button>⇨</button>
+      <button class:expanded={elem.selected}>⇨</button>
       <a
         href={resolve(whole as '/')}
         title={idx === 0 ? '𝙍𝙤𝙤𝙩' : decoded}

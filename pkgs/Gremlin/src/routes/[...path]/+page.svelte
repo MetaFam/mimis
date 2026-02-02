@@ -1,13 +1,11 @@
 <script lang="ts">
-  // The derived Promises are ugly as hell, but they've
-  // resisted several attempts to make them prettier.
-
   import { page } from '$app/state'
   import { afterNavigate } from '$app/navigation'
   import { resolve } from '$app/paths'
+  import appKit from '$lib/appkit'
   import { searchFor, type Entry } from '$lib/searchFor.remote'
   import { createSpot } from '$lib/createSpot.remote'
-  import { addFiles } from '$lib/addFiles.remote'
+  import { addFiles as filesToSpot } from '$lib/addFiles.remote'
   import { spotId } from '$lib/spotId.remote'
   import ConfigDialog from '$lib/ConfigDialog.svelte'
   import ErrorDialog from '$lib/ErrorDialog.svelte'
@@ -16,22 +14,27 @@
   import settings from '$lib/settings.svelte'
   import { kuboUpload } from '$lib/ipfs'
   import { toHTTP, throwError } from '$lib'
-  import folder from '$lib/assets/folder.svg'
+  import Folder from '$lib/assets/folder.svg'
+  import Eyes from '$lib/assets/infinity eyes.svg'
+  import ImportDirectoryDialog from '$lib/ImportDirectoryDialog.svelte'
 
   let error = $state<string | null>(null)
   let path = $state(
     page.params.path?.split('/').filter(Boolean) ?? []
   )
   let menued = $state(false)
-  let addSpotModal = $state<HTMLDialogElement>()
-  let addFilesModal = $state<HTMLDialogElement>()
-  let configModal = $state<HTMLDialogElement>()
+  let addSpotDialog = $state<HTMLDialogElement>()
+  let addFilesDialog = $state<HTMLDialogElement>()
+  let importDirectoryDialog = $state<HTMLDialogElement>()
+  let configDialog = $state<HTMLDialogElement>()
+  let walletConnected = $state(false)
   // https://svelte.dev/docs/svelte/runtime-warnings#Client-warnings-await_waterfall
   let spotsPromise = $derived(searchFor({ path }))
   let idPromise = $derived(spotId({ path }))
-  let idOrError = $derived(
-    await idPromise
-  ) as number | { error: string }
+
+  appKit?.subscribeEvents((evt) => {
+    walletConnected = !!appKit?.getIsConnectedState()
+  })
 
   afterNavigate(async ({ to }) => {
     path = (
@@ -43,54 +46,55 @@
     )
   })
 
-  async function processSpot(evt: SubmitEvent) {
+  async function addSpot(evt: SubmitEvent) {
     try {
       evt.preventDefault()
-      const containerId = throwError(idOrError) as number
-      if(containerId == null) {
-        throw new Error('No Container Specified: ¡I don’t know where I am!')
-      }
-      if(!addSpotModal) throw new Error('¿How was this directory submitted?')
+      if(!addSpotDialog) throw new Error('¿How was this directory submitted?')
+
       const formData = new FormData(evt.currentTarget as HTMLFormElement)
-      const path = formData.getAll('path') as Array<string>
-      throwError(await createSpot({ containerId, path }))
-      addSpotModal.requestClose()
+      if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
+        const containerId = throwError(await idPromise) as number
+        const path = formData.getAll('path') as Array<string>
+        throwError(await createSpot({ containerId, path }))
+      }
+      addSpotDialog.requestClose()
     } catch(err) {
       console.error({ err })
       error = (err as Error).message
     }
   }
 
-  async function processFiles(evt: SubmitEvent) {
+  async function addFiles(evt: SubmitEvent) {
     try {
       evt.preventDefault()
-      const containerId = throwError(idOrError) as number
-      if(containerId == null) {
-        throw new Error('No Container Specified: ¡I don’t know where I am!')
-      }
-      if(!addFilesModal) throw new Error('¿How were these files submitted?')
+      if(!addFilesDialog) throw new Error('¿How were these files submitted?')
       const form = evt.currentTarget as HTMLFormElement
       const formData = new FormData(form)
-      const files = formData.getAll('files') as Array<File>
-      const cids = throwError(
-        await kuboUpload({ files })
-      ) as Array<Entry>
-      const entries = cids.map((entry, idx) => {
-        if(entry.cid == null) throw new Error('No CID.')
-        return {
-          ...entry,
-          cid: entry.cid,
-          name: files[idx].name,
-          size: files[idx].size,
+      if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
+        const containerId = throwError(await idPromise) as number
+        if(containerId == null) {
+          throw new Error('No Container Specified: ¡I don’t know where I am!')
         }
-      })
-      console.debug({ entries })
-      throwError(await addFiles({
-        containerId,
-        files: entries,
-      }))
+
+        const files = formData.getAll('files') as Array<File>
+        const cids = throwError(await kuboUpload({ files })) as Array<Entry>
+        const entries = cids.map((entry, idx) => {
+          if(entry.cid == null) throw new Error('No CID.')
+          return {
+            ...entry,
+            cid: entry.cid,
+            name: files[idx].name,
+            size: files[idx].size,
+          }
+        })
+        if(settings.debugging) console.debug({ entries })
+        throwError(await filesToSpot({
+          containerId,
+          files: entries,
+        }))
+      }
       form.reset()
-      addFilesModal.requestClose()
+      addFilesDialog.requestClose()
     } catch(err) {
       console.error({ err })
       error = (err as Error).message
@@ -113,23 +117,26 @@
 
 <svelte:head>
   <title>ï: {path.at(-1)}</title>
+  <link rel="icon" href={Eyes}/>
 </svelte:head>
 
 <main>
   <menu id="actions" class:open={menued}>
     <ul>
-      <li><button onclick={() => addSpotModal?.showModal()}>
+      <li><button onclick={() => addSpotDialog?.showModal()}>
         Add Directory
       </button></li>
-      <li><button onclick={() => addFilesModal?.showModal()}>
+      <li><button onclick={() => addFilesDialog?.showModal()}>
         Import Files
       </button></li>
-      <li><button>Import Directory</button></li>
+      <li><button onclick={() => importDirectoryDialog?.showModal()}>
+        Import Directory
+      </button></li>
       <li><button>Export to CAR</button></li>
       <li><button>Export to CBOR-DAG</button></li>
       <li><button
         class="menu-open"
-        onclick={() => configModal?.showModal()}
+          onclick={() => configDialog?.showModal()}
       >
         Settings
       </button></li>
@@ -139,6 +146,13 @@
           property="--zoom" label="🔎"
           bind:value={settings.detailsZoom}
         />
+      </li>
+      <li>
+        {#if walletConnected}
+          <appkit-button network="eip155"></appkit-button>
+        {:else}
+          <button onclick={() => appKit?.open()}>Connect Wallet</button>
+        {/if}
       </li>
     </ul>
   </menu>
@@ -207,7 +221,7 @@
                 )}
                 title={name}
               >
-                <img src={folder} alt="📁"/>
+                <img src={Folder} alt="📁"/>
                 <span>{name}</span>
               </a>
             {:else if type === 'image' && cid}
@@ -221,25 +235,32 @@
       </ul>
     </nav>
   </section>
-  <dialog id="add-spot" bind:this={addSpotModal}>
-    <form onsubmit={processSpot}>
+  <dialog id="add-spot" bind:this={addSpotDialog}>
+    <form onsubmit={addSpot} class="adder">
       <fieldset>
         <legend>Path to New Spot</legend>
         <input name="path" value=""/>
-        <button>Add</button>
+        <menu>
+          <button name="action" value="add">Add</button>
+          <button name="action" value="cancel">Cancel</button>
+        </menu>
       </fieldset>
     </form>
   </dialog>
-  <dialog id="add-files" bind:this={addFilesModal}>
-    <form onsubmit={processFiles}>
+  <dialog id="add-files" bind:this={addFilesDialog}>
+    <form onsubmit={addFiles} class="adder">
       <fieldset>
         <legend>Files to Add</legend>
         <input name="files" type="file" multiple/>
-        <button>Add</button>
+        <menu>
+          <button name="action" value="add">Add</button>
+          <button name="action" value="cancel">Cancel</button>
+        </menu>
       </fieldset>
     </form>
   </dialog>
-  <ConfigDialog bind:self={configModal}/>
+  <ImportDirectoryDialog bind:self={importDirectoryDialog}/>
+  <ConfigDialog bind:self={configDialog}/>
   {#if error}
     <ErrorDialog bind:error={error}/>
   {/if}
@@ -306,9 +327,13 @@
     transition: width 0.75s cubic-bezier(0.4, 0.0, 0.2, 1);
     interpolate-size: allow-keywords;
     white-space: nowrap;
-    padding-inline-end: 0;
-    margin-inline-end: 0;
+    padding-inline: 0;
+    margin-inline: 0;
     border-inline-end: 2px solid #3330;
+
+    & li {
+      place-items: center;
+    }
 
     &.open {
       width: max-content;
@@ -348,8 +373,25 @@
 
   #add-spot input {
     field-sizing: content;
-    min-width: 5ch;
+    min-width: 15ch;
     padding: 0.25em 0.5em;
+  }
+
+  #begin-dir fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75em;
+  }
+
+  .adder {
+    & menu {
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: flex-start;
+      gap: 0.5em;
+      margin: 0;
+      margin-block-start: 1rem;
+    }
   }
 
   #files, #crumbs {
@@ -364,11 +406,6 @@
 
   #crumbs {
     border: 2px dashed #999;
-
-    & ol {
-      margin: 0em;
-      padding: 0.1em;
-    }
   }
 
   #details {

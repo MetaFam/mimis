@@ -33,7 +33,7 @@ export function throwError(test: unknown) {
   return test
 }
 
-function isError(maybe: unknown): maybe is { error: string } {
+export function isError(maybe: unknown): maybe is { error: string } {
   return (
     typeof(maybe) === 'object'
     && maybe != null

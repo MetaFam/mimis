@@ -33,6 +33,7 @@ export const spotId = query(
       let traversal = g.V().has(T.label, 'Root')
 
       for (const element of path) {
+        console.debug({ Checking: element })
         if (!allowCycles) {
           traversal = traversal.simplePath()
         }
@@ -55,8 +56,7 @@ export const spotId = query(
         )
       }
 
-      traversal = traversal.id().limit(1)
-      const result = await traversal.next()
+      const result = await traversal.id().next()
       return result.value
     } catch(error) {
       console.error({ spotId: error })

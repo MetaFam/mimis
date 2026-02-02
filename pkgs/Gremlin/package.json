@@ -17,10 +17,16 @@
 		"cf-typegen": "wrangler types src/worker-configuration.d.ts"
 	},
 	"dependencies": {
+		"@reown/appkit": "^1.8.17",
+		"@reown/appkit-adapter-wagmi": "^1.8.17",
+		"@reown/appkit-wallet-button": "^1.8.17",
 		"gremlin": "3.7.3",
+		"ignore": "^7.0.5",
 		"kubo-rpc-client": "^6.0.2",
 		"multiformats": "^13.4.2",
-		"valibot": "^1.2.0"
+		"valibot": "^1.2.0",
+		"viem": "^2.45.1",
+		"wagmi": "^3.4.2"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",
@@ -44,9 +50,8 @@
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
-			"esbuild",
-			"sharp",
-			"workerd"
+			"@reown/appkit",
+			"esbuild"
 		]
 	}
 }

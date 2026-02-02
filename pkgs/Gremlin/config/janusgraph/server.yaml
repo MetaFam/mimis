@@ -1,0 +1,82 @@
+# JanusGraph Gremlin Server Configuration with SASL Authentication
+
+host: 0.0.0.0
+port: 8182
+evaluationTimeout: 30000
+
+# WebSocket channelizer - use WsAndHttpChannelizer if you need both
+channelizer: org.apache.tinkerpop.gremlin.server.channel.WebSocketChannelizer
+graphManager: org.janusgraph.graphdb.management.JanusGraphManager
+
+graphs: {
+  graph: /etc/opt/janusgraph/mimis.properties
+}
+
+scriptEngines: {
+  gremlin-groovy: {
+    plugins: {
+      org.janusgraph.graphdb.tinkerpop.plugin.JanusGraphGremlinPlugin: {},
+      org.apache.tinkerpop.gremlin.server.jsr223.GremlinServerGremlinPlugin: {},
+      org.apache.tinkerpop.gremlin.tinkergraph.jsr223.TinkerGraphGremlinPlugin: {},
+      org.apache.tinkerpop.gremlin.jsr223.ImportGremlinPlugin: {
+        classImports: [java.lang.Math],
+        methodImports: [java.lang.Math#*]
+      },
+      org.apache.tinkerpop.gremlin.jsr223.ScriptFileGremlinPlugin: {
+        files: [scripts/empty-sample.groovy]
+      }
+    }
+  }
+}
+
+# serializers:
+#   - { className: org.apache.tinkerpop.gremlin.util.ser.GraphSONMessageSerializerV4, config: { ioRegistries: [org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry] }}
+#   - { className: org.apache.tinkerpop.gremlin.util.ser.GraphBinaryMessageSerializerV4, config: { ioRegistries: [org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry] }}
+
+processors:
+  - {
+    className: org.apache.tinkerpop.gremlin.server.op.session.SessionOpProcessor,
+    config: { sessionTimeout: 28800000 }
+  }
+  - {
+    className: org.apache.tinkerpop.gremlin.server.op.traversal.TraversalOpProcessor,
+    config: { cacheExpirationTime: 600000, cacheMaxSize: 1000 }
+  }
+
+# SASL Authentication for WebSocket
+# -----------------------------------
+# The credentialsDb MUST be a full JanusGraph properties file pointing to
+# a SEPARATE storage location from your main graph. This is where usernames
+# and password hashes are stored.
+#
+# defaultUsername/defaultPassword: Created on first startup if no users exist
+authentication: {
+  authenticator: org.janusgraph.graphdb.tinkerpop.gremlin.server.auth.JanusGraphSimpleAuthenticator,
+  authenticationHandler: org.apache.tinkerpop.gremlin.server.handler.SaslAuthenticationHandler,
+  config: {
+    defaultUsername: Set in .env @ gremlinserver.authentication.config.defaultUsername,
+    defaultPassword: Set in .env @ gremlinserver.authentication.config.defaultPassword,
+    credentialsDb: /etc/opt/janusgraph/credentials.properties
+  }
+}
+
+metrics: {
+  consoleReporter: { enabled: true, interval: 180000 },
+  csvReporter: {
+    enabled: true,
+    interval: 180000,
+    fileName: /tmp/gremlin-server-metrics.csv
+  },
+  # jmxReporter: {enabled: true},
+  # slf4jReporter: {enabled: true, interval: 180000},
+  # graphiteReporter: {enabled: false, interval: 180000}
+}
+
+maxInitialLineLength: 4096
+maxHeaderSize: 8192
+maxChunkSize: 8192
+maxContentLength: 65536
+maxAccumulationBufferComponents: 1024
+resultIterationBatchSize: 64
+writeBufferLowWaterMark: 32768
+writeBufferHighWaterMark: 65536

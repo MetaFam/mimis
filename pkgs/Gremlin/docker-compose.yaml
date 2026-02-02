@@ -1,0 +1,28 @@
+services:
+  janusgraph:
+    image: janusgraph/janusgraph:latest
+    container_name: authed-janusgraph
+    ports:
+      - "8182:8182"
+    volumes:
+      - ./config/janusgraph/server.yaml:/opt/janusgraph/conf/janusgraph-server.yaml:ro
+      - ./config/janusgraph/mimis.properties:/etc/opt/janusgraph/mimis.properties:ro
+      - ./config/janusgraph/credentials.properties:/etc/opt/janusgraph/credentials.properties:ro
+      - janusgraph-data:/var/lib/janusgraph
+    env_file:
+      - path: .env
+        required: false
+      - path: .env.local
+        required: false
+    environment:
+      # These get overridden by mounted configs, but useful for debugging
+      - JANUS_PROPS_TEMPLATE=berkeleyje-lucene
+    healthcheck:
+      test: ["CMD-SHELL", "bin/gremlin.sh -e scripts/remote-connect.groovy || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  janusgraph-data:

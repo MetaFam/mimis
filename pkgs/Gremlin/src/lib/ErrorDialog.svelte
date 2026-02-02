@@ -3,9 +3,12 @@
 
   let { error = $bindable() } = $props()
   let janusGraphURL = $state(settings.publicJanusGraphURL)
+  let dialog = $state<HTMLDialogElement>()
+
+  $effect(() => dialog?.showModal())
 </script>
 
-<dialog open>
+<dialog bind:this={dialog}>
   <p>{error}</p>
   {#if (
     error.startsWith('Connection Error:')
