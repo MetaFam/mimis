@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fileTreeToCIDTree as treeToCIDs } from '$lib/fileTree2CIDTree'
   import settings from '$lib/settings.svelte'
   import { spiderDirHandles } from '$lib/dirHandles2JSTree'
   import {
@@ -45,7 +46,12 @@
   }
   async function doImport(evt: SubmitEvent) {
     evt.preventDefault()
+    if(!tree) throw new Error('No tree to import.')
     const form = evt.currentTarget as HTMLFormElement
+    if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
+      const { descendingTo: cidTree } = treeToCIDs(tree)
+      console.debug({ cidTree })
+    }
     form.reset()
     tree = undefined
     dir = undefined
@@ -66,9 +72,11 @@
       if(tree == null) return
       walk({
         tree,
-        fn: function (node: Node) {
-          if(regex.test(node.title)) {
-            node.selected = false
+        walker: {
+          descendingTo({ root }: { root: Node }) {
+            if(regex.test(root.title)) {
+              root.selected = false
+            }
           }
         }
       })
@@ -103,7 +111,7 @@
         evt.preventDefault()
         node.selected = !node.selected
       }}
-    >{node.selected ? '✅' : '❎'}</dd>
+    >{node.selected ? '✅' : '❌'}</dd>
     <dt>Name</dt>
     <dd for="name">{node.title}</dd  >
     <dt>Size</dt>

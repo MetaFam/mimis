@@ -8,6 +8,7 @@ export type NodeCommons = {
 	selected?: boolean
 	size: number
 	expanded?: boolean
+	path?: string
 }
 
 export type DirNode = NodeCommons & {
@@ -20,6 +21,7 @@ export type DirNode = NodeCommons & {
 export type FileNode = NodeCommons & {
 	type: 'file'
 	handle?: FileSystemFileHandle
+	file?: File
 	childCount: 0
 }
 

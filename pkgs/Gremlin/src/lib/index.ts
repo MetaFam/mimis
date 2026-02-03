@@ -1,5 +1,6 @@
 import { settings } from '$lib/settings.svelte.ts'
 import type { Node, DirNode } from '../types'
+import type { Walker } from "./fileTree2CIDTree.ts";
 
 export function toHTTP({
   url, cid,
@@ -91,12 +92,31 @@ export function expandLevels(
 }
 
 export function walk(
-  { tree, fn }: { tree: Node, fn: (node: Node) => void }
+  { tree, walker }: { tree: Node, walker: Walker }
 ) {
-  fn(tree)
-  for(const child of (tree as DirNode).children ?? []) {
-    walk({ tree: child, fn } )
+  const out: {
+    descendingTo: unknown
+    descendingFrom: unknown
+    ascendingFrom: unknown
+    ascendingTo: unknown
+  } = {
+    descendingTo: null,
+    descendingFrom: null,
+    ascendingFrom: null,
+    ascendingTo: null,
   }
+  out.descendingTo = walker.descendingTo?.({ root: tree, walker })
+  for(const child of (tree as DirNode).children ?? []) {
+    out.descendingFrom = walker.descendingFrom?.(
+      { from: tree, to: child, walker }
+    )
+    walk({ tree: child, walker })
+    out.ascendingTo = walker.ascendingTo?.(
+      { to: tree, from: child, walker }
+    )
+  }
+  out.ascendingFrom = walker.ascendingFrom?.({ root: tree, walker })
+  return out
 }
 
 export function filter(

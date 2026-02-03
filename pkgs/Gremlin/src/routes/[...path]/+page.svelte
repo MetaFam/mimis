@@ -208,28 +208,27 @@
       <ul>
         {#each await display() as { name, type, cid } (cid || name)}
           <li>
-            {#if type === "spot"}
-              <a
-                href={resolve(
-                  `${
-                    path.length > 0 ? '/' : ''
-                  }${
-                    path.join('/')
-                  }/${
-                    name
-                  }` as '/'
-                )}
-                title={name}
-              >
+            <a
+              href={resolve(
+                `${
+                  path.length > 0 ? '/' : ''
+                }${
+                  path.join('/')
+                }/${
+                  name
+                }` as '/'
+              )}
+              title={name}
+            >
+              {#if type === "spot"}
                 <img src={Folder} alt="📁"/>
-                <span>{name}</span>
-              </a>
-            {:else if type === 'image' && cid}
-              <img src={toHTTP({ cid })} alt={name}/>
+              {:else if type === 'image' && cid}
+                <img src={toHTTP({ cid })} alt={name}/>
+              {:else}
+                <aside>Unknown Type: {type}</aside>
+              {/if}
               <span>{name}</span>
-            {:else}
-              <aside>Unknown Type: {type}</aside>
-            {/if}
+            </a>
           </li>
         {/each}
       </ul>
