@@ -62,11 +62,16 @@ export const spiderDirHandles = ({
       children: [],
       size: 0,
       childCount: 0,
+      get selected() {
+        return this.children?.some((c) => c.selected)
+      },
+      set selected(value: boolean) {
+        this.children?.forEach((c) => { c.selected = value })
+      },
     }
 
     type Handle = (
-      FileSystemDirectoryHandle
-      | FileSystemFileHandle
+      FileSystemDirectoryHandle | FileSystemFileHandle
     )
 
     for await (const handle of (
