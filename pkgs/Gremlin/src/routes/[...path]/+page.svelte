@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state'
+  import { browser } from '$app/environment'
   import { afterNavigate } from '$app/navigation'
   import { resolve } from '$app/paths'
   import appKit from '$lib/appkit'
@@ -148,7 +149,7 @@
         />
       </li>
       <li>
-        {#if walletConnected}
+        {#if browser && walletConnected}
           <appkit-button network="eip155"></appkit-button>
         {:else}
           <button onclick={() => appKit?.open()}>Connect Wallet</button>
