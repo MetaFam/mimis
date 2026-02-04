@@ -3,7 +3,6 @@
   import { browser } from '$app/environment'
   import { afterNavigate } from '$app/navigation'
   import { resolve } from '$app/paths'
-  import appKit from '$lib/appkit'
   import { searchFor, type Entry } from '$lib/searchFor.remote'
   import { createSpot } from '$lib/createSpot.remote'
   import { addFiles as filesToSpot } from '$lib/addFiles.remote'
@@ -18,6 +17,9 @@
   import Folder from '$lib/assets/folder.svg'
   import Eyes from '$lib/assets/infinity eyes.svg'
   import ImportDirectoryDialog from '$lib/ImportDirectoryDialog.svelte'
+
+  let appKit = null
+  if(browser) appKit = (await import('$lib/appkit')).default
 
   let error = $state<string | null>(null)
   let path = $state(
