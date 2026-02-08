@@ -2,7 +2,7 @@ import {
   connect as connectJanusGraph, connectToG,
 } from '$lib/janusgraph.ts'
 import { spotId } from '$lib/spotId.remote.ts'
-import { isError } from '$lib'
+import { isError, viewable } from '$lib'
 
 export async function resourceAt({
   containerId, type,
@@ -29,9 +29,9 @@ export async function resourceAt({
 }
 
 export async function resourceFor(
-  { path }: {path: Array<string> }
+  { path }: { path: Array<string> }
 ) {
-  if(path.at(-1) === 'svg') {
+  if(viewable(path.at(-1))) {
     const spot = await spotId({ path })
     console.debug({ spot })
     if(spot != null && !isError(spot)) {

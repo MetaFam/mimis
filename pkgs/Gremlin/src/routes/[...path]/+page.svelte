@@ -18,6 +18,7 @@
   import Eyes from '$lib/assets/infinity eyes.svg'
   import ImportDirectoryDialog from '$lib/ImportDirectoryDialog.svelte'
 
+  // If loaded on the server, fails with "`HTMLElement` not found."
   let appKit = null
   if(browser) appKit = (await import('$lib/appkit')).default
 
@@ -263,9 +264,7 @@
   </dialog>
   <ImportDirectoryDialog bind:self={importDirectoryDialog}/>
   <ConfigDialog bind:self={configDialog}/>
-  {#if error}
-    <ErrorDialog bind:error={error}/>
-  {/if}
+  <ErrorDialog bind:error={error} open={!!error}/>
 </main>
 
 <style>

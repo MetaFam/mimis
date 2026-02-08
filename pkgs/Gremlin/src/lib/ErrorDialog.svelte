@@ -1,17 +1,18 @@
 <script lang="ts">
   import settings from '$lib/settings.svelte'
+    import { preventDefault } from 'svelte/legacy';
 
-  let { error = $bindable() } = $props()
+  let { error = $bindable(), open = false } = $props()
   let janusGraphURL = $state(settings.publicJanusGraphURL)
   let dialog = $state<HTMLDialogElement>()
 
-  $effect(() => dialog?.showModal())
+  $effect(() => { if(open) dialog?.showModal() })
 </script>
 
 <dialog bind:this={dialog}>
   <p>{error}</p>
   {#if (
-    error.startsWith('Connection Error:')
+    error?.startsWith('Connection Error:')
     && settings.janusGraphURL !== settings.publicJanusGraphURL
   )}
     <p>Currently attempting to connect to <code>{settings.janusGraphURL}</code>.</p>
@@ -32,7 +33,11 @@
       </menu>
     </form>
   {:else}
-    <form onsubmit={() => error = null}>
+    <form onsubmit={(evt) => {
+      evt.preventDefault()
+      error = null
+      dialog?.close()
+    }}>
       <menu><button>Ok</button></menu>
     </form>
   {/if}

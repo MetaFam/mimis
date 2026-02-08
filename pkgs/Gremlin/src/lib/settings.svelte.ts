@@ -25,7 +25,7 @@ export class Settings {
   } as const
   static defaults = {
     [Settings.keys.ipfsURLPattern]: (
-      env.PUBLIC_IPFS_URL_PATTERN || 'http://localhost:8080/ipfs/{cid}{path}'
+      env.PUBLIC_IPFS_URL_PATTERN || 'http://{cid}.ipfs.localhost:8080{path}'
     ),
     [Settings.keys.ipfsAPI]: (
       env.PUBLIC_IPFS_API || 'http://localhost:5001/api/v0'

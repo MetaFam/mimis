@@ -49,7 +49,7 @@
     if(!tree) throw new Error('No tree to import.')
     const form = evt.currentTarget as HTMLFormElement
     if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
-      const { descendingTo: cidTree } = treeToCIDs(tree)
+      const { descendingTo: cidTree } = await treeToCIDs(tree)
       console.debug({ cidTree })
     }
     form.reset()
@@ -113,11 +113,11 @@
       }}
     >{node.selected ? '✅' : '❌'}</dd>
     <dt>Name</dt>
-    <dd for="name">{node.title}</dd  >
+    <dd data-for="name">{node.title}</dd  >
     <dt>Size</dt>
-    <dd for="size">{metricise(node.size)}</dd>
+    <dd data-for="size">{metricise(node.size)}</dd>
     <dt id="view">View</dt>
-    <dd for="view">
+    <dd data-for="view">
       {#if !!file && node.type === 'file'}
         <object
           data={URL.createObjectURL(file)}
@@ -214,7 +214,7 @@
             onclick={() => {
               eraseDialog?.showModal()
             }}
-          ><img src={Eraser} alt="erase"/></button>
+          ><img src={Eraser} alt="erase" style:color="#FFF"/></button>
           <button
             type="button"
             title="Filter"

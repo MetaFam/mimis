@@ -2,6 +2,13 @@ import { settings } from '$lib/settings.svelte.ts'
 import type { Node, DirNode } from '../types'
 import type { Walker } from "./fileTree2CIDTree.ts";
 
+export function viewable(extension?: string) {
+  return (
+    ['svg', 'png', 'jpg', 'jpeg', 'webp', 'avif', 'mp4']
+    .includes(extension ?? '')
+  )
+}
+
 export function toHTTP({
   url, cid,
 }: {
@@ -21,6 +28,7 @@ export function toHTTP({
   if(cid == null) {
     throw new Error('Could not determine `cid`.')
   }
+  console.debug({ pattern: settings.ipfsURLPattern })
   return (
     settings.ipfsURLPattern
     .replace('{cid}', cid)
@@ -35,7 +43,9 @@ export function throwError(test: unknown) {
   return test
 }
 
-export function isError(maybe: unknown): maybe is { error: string } {
+export function isError(
+  maybe: unknown
+): maybe is { error: string } {
   return (
     typeof(maybe) === 'object'
     && maybe != null
@@ -91,31 +101,41 @@ export function expandLevels(
   expand(tree, levels)
 }
 
-export function walk(
+export interface WalkOut {
+  descendingTo: unknown
+  descendingFrom: unknown
+  ascendingFrom: unknown
+  ascendingTo: unknown
+}
+
+export async function walk(
   { tree, walker }: { tree: Node, walker: Walker }
 ) {
-  const out: {
-    descendingTo: unknown
-    descendingFrom: unknown
-    ascendingFrom: unknown
-    ascendingTo: unknown
-  } = {
+  const out: WalkOut = {
     descendingTo: null,
     descendingFrom: null,
     ascendingFrom: null,
     ascendingTo: null,
   }
-  out.descendingTo = walker.descendingTo?.({ root: tree, walker })
+
+  let result = await walker.descendingTo?.({ root: tree, walker, out })
+  result = { ...(out.descendingTo ?? {}), ...(result ?? {}) }
   for(const child of (tree as DirNode).children ?? []) {
-    out.descendingFrom = walker.descendingFrom?.(
-      { from: tree, to: child, walker }
+    result = await walker.descendingFrom?.(
+      { from: tree, to: child, walker, out }
     )
-    walk({ tree: child, walker })
-    out.ascendingTo = walker.ascendingTo?.(
-      { to: tree, from: child, walker }
+    result = { ...(out.descendingTo ?? {}), ...(result ?? {}) }
+
+    await walk({ tree: child, walker })
+
+    result = await walker.ascendingTo?.(
+      { to: tree, from: child, walker, out }
     )
+    result = { ...(out.descendingTo ?? {}), ...(result ?? {}) }
   }
-  out.ascendingFrom = walker.ascendingFrom?.({ root: tree, walker })
+  result = await walker.ascendingFrom?.({ root: tree, walker, out })
+  result = { ...(out.descendingTo ?? {}), ...(result ?? {}) }
+
   return out
 }
 

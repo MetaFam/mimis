@@ -75,7 +75,14 @@ export const searchFor = query(
         .coalesce(
           (
             __.outE('REPRESENTATION')
-            .has('type', 'image/svg+xml')
+            .or(
+              __.has('type', 'image/svg+xml'),
+              __.has('type', 'image/png'),
+              __.has('type', 'image/jpeg'),
+              __.has('type', 'image/webm'),
+              __.has('type', 'image/avif'),
+              __.has('type', 'video/mp4'),
+            )
             .inV()
             .map(
               __.project('type', 'cid')

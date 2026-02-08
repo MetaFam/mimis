@@ -1,17 +1,18 @@
 import type { MaybePromise } from 'viem'
 import { kuboUpload } from '$lib/ipfs'
-import { isDirNode, walk } from '$lib'
+import { isDirNode, walk, type WalkOut } from '$lib'
 import type { Node } from '../types.ts'
 
 export type OneTimeWalkFunction = (
-  ({ root, walker }: { root: Node, walker: Walker }) => (
+  ({ root, walker, out }:
+    { root: Node, walker: Walker, out: WalkOut }) => (
     MaybePromise<unknown>
   )
 )
 export type LoopedWalkFunction = (
   (
-    { from, to, walker }:
-    { from: Node, to: Node, walker: Walker }
+    { from, to, walker, out }:
+    { from: Node, to: Node, walker: Walker, out: WalkOut }
   ) => MaybePromise<unknown>
 )
 
@@ -28,20 +29,25 @@ export interface FileWalker extends Walker {
   path?: string
 }
 
-export function fileTreeToCIDTree(tree: Node) {
+export async function fileTreeToCIDTree(tree: Node) {
   return (
-    walk({
+    await walk({
       tree,
       walker: {
         rootAt: {},
+        async descendingFrom(
+          { from, to }
+        ) {
+          console.debug({ DescendingFrom: from.title, to: to.title })
+        },
         async descendingTo(
-          { root, walker }: { root: Node, walker: Walker }
+          { root, walker }
         ) {
           console.debug({ Visiting: root.title })
           walker.count ??= 0
           walker.path ??= ''
           walker.count++
-          const path = walker
+          const { path } = walker
           const { handle, file, children, ...rest } = root
           const newPath = `${path ? path : ''}/${root.title}`
           const out = { ...rest, path: newPath }
@@ -49,15 +55,21 @@ export function fileTreeToCIDTree(tree: Node) {
             handle instanceof FileSystemFileHandle
             || file instanceof File
           ) {
-            if(!(handle ?? file)) throw new Error('No handle found to leverage.')
+            if(!(handle ?? file)) {
+              throw new Error('No handle found to leverage.')
+            }
             const [{ cid }] = await kuboUpload(
-              { files: [(handle ? await handle.getFile() : file)] }
+              { files: [(handle ? (
+                await (handle as FileSystemFileHandle).getFile()
+              ) : file)] }
             )
-            out.cid = cid
+            out.cid = cid.toString()
           } else if(handle == null && isDirNode(root)) {
-            out.children = (await walk({ tree, walker })).descendingTo
+            // Do nothing
           } else {
-            console.warn(`¿What are you? Well: ${typeof handle} / ${typeof file}`)
+            console.warn(
+              `¿What are you? Well: ${typeof handle} / ${typeof file}`
+            )
           }
           if((walker as FileWalker).rootAt[newPath]) {
             throw new Error(`Path collision at ${newPath}.`)
