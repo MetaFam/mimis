@@ -1,5 +1,5 @@
 import { settings } from '$lib/settings.svelte.ts'
-import type { Node, DirNode } from '../types'
+import type { Node, DirNode } from '../types.ts'
 import type { Walker } from "./fileTree2CIDTree.ts";
 
 export function viewable(extension?: string) {
@@ -106,6 +106,7 @@ export interface WalkOut {
   descendingFrom: unknown
   ascendingFrom: unknown
   ascendingTo: unknown
+  walk: unknown
 }
 
 export async function walk(
@@ -116,25 +117,26 @@ export async function walk(
     descendingFrom: null,
     ascendingFrom: null,
     ascendingTo: null,
+    walk: null,
   }
 
-  let result = await walker.descendingTo?.({ root: tree, walker, out })
-  result = { ...(out.descendingTo ?? {}), ...(result ?? {}) }
+  out.descendingTo = await walker.descendingTo?.({ root: tree, walker, out })
+  console.debug({ 'descendingTo out': { ...out } })
   for(const child of (tree as DirNode).children ?? []) {
-    result = await walker.descendingFrom?.(
+    out.descendingFrom = await walker.descendingFrom?.(
       { from: tree, to: child, walker, out }
     )
-    result = { ...(out.descendingTo ?? {}), ...(result ?? {}) }
+    console.debug({ 'descendingFrom out': { ...out } })
 
-    await walk({ tree: child, walker })
+    out.walk = await walk({ tree: child, walker })
 
-    result = await walker.ascendingTo?.(
+    out.ascendingTo = await walker.ascendingTo?.(
       { to: tree, from: child, walker, out }
     )
-    result = { ...(out.descendingTo ?? {}), ...(result ?? {}) }
+    console.debug({ 'ascendingTo out': { ...out } })
   }
-  result = await walker.ascendingFrom?.({ root: tree, walker, out })
-  result = { ...(out.descendingTo ?? {}), ...(result ?? {}) }
+  out.ascendingFrom = await walker.ascendingFrom?.({ root: tree, walker, out })
+  console.debug({ 'ascendingFrom out': { ...out } })
 
   return out
 }

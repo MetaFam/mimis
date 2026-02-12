@@ -1,5 +1,6 @@
 import type { MaybePromise } from 'viem'
 import { kuboUpload } from '$lib/ipfs'
+import settings from '$lib/settings.svelte.ts'
 import { isDirNode, walk, type WalkOut } from '$lib'
 import type { Node } from '../types.ts'
 
@@ -34,23 +35,13 @@ export async function fileTreeToCIDTree(tree: Node) {
     await walk({
       tree,
       walker: {
-        rootAt: {},
-        async descendingFrom(
-          { from, to }
-        ) {
-          console.debug({ DescendingFrom: from.title, to: to.title })
-        },
-        async descendingTo(
-          { root, walker }
-        ) {
-          console.debug({ Visiting: root.title })
+        async descendingTo({ root, walker, out }) {
+          if(settings.debugging) {
+            console.debug({ DescendingTo: root.title, out: { ...out } })
+          }
           walker.count ??= 0
-          walker.path ??= ''
           walker.count++
-          const { path } = walker
           const { handle, file, children, ...rest } = root
-          const newPath = `${path ? path : ''}/${root.title}`
-          const out = { ...rest, path: newPath }
           if(
             handle instanceof FileSystemFileHandle
             || file instanceof File
@@ -63,22 +54,33 @@ export async function fileTreeToCIDTree(tree: Node) {
                 await (handle as FileSystemFileHandle).getFile()
               ) : file)] }
             )
-            out.cid = cid.toString()
-          } else if(handle == null && isDirNode(root)) {
-            // Do nothing
+            return (
+              { ...rest, cid: cid.toString() }
+            )
+          } else if(isDirNode(root)) {
+            if(out.descendingTo) {
+              console.warn('`descendingTo` already set.')
+            }
+            return { ...rest, children: [] }
           } else {
             console.warn(
               `¿What are you? Well: ${typeof handle} / ${typeof file}`
             )
           }
-          if((walker as FileWalker).rootAt[newPath]) {
-            throw new Error(`Path collision at ${newPath}.`)
-          }
-          walker.rootAt[newPath] = out
-          console.debug({ Leaving: root.title, out })
-          return out
         },
-      },
+        async ascendingTo({ to, from, out }) {
+          if(settings.debugging) {
+            console.debug({
+              AscendingTo: to.title, from: from.title, out: { ...out },
+            })
+          }
+          if(Array.isArray(out.descendingTo?.children)) {
+            out.descendingTo.children.push(out.walk.descendingTo)
+          } else {
+            console.warn('`out.descendingTo.children` is not an array.')
+          }
+        },
+      }
     })
   )
 }
