@@ -1,12 +1,11 @@
 <script lang="ts">
   import settings from '$lib/settings.svelte'
-    import { preventDefault } from 'svelte/legacy';
 
-  let { error = $bindable(), open = false } = $props()
+  let { error = $bindable() } = $props()
   let janusGraphURL = $state(settings.publicJanusGraphURL)
   let dialog = $state<HTMLDialogElement>()
 
-  $effect(() => { if(open) dialog?.showModal() })
+  $effect(() => { if(!!error) dialog?.showModal() })
 </script>
 
 <dialog bind:this={dialog}>

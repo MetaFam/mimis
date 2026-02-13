@@ -4,16 +4,20 @@ import settings from '$lib/settings.svelte.ts'
 import { isDirNode, walk, type WalkOut } from '$lib'
 import type { Node } from '../types.ts'
 
+export type TreeNode = {
+  children?: Array<TreeNode>
+}
+
 export type OneTimeWalkFunction = (
   ({ root, walker, out }:
-    { root: Node, walker: Walker, out: WalkOut }) => (
+    { root: TreeNode, walker: Walker, out: WalkOut }) => (
     MaybePromise<unknown>
   )
 )
 export type LoopedWalkFunction = (
   (
     { from, to, walker, out }:
-    { from: Node, to: Node, walker: Walker, out: WalkOut }
+    { from: TreeNode, to: TreeNode, walker: Walker, out: WalkOut }
   ) => MaybePromise<unknown>
 )
 
@@ -41,31 +45,32 @@ export async function fileTreeToCIDTree(tree: Node) {
           }
           walker.count ??= 0
           walker.count++
-          const { handle, file, children, ...rest } = root
-          if(
-            handle instanceof FileSystemFileHandle
-            || file instanceof File
-          ) {
-            if(!(handle ?? file)) {
-              throw new Error('No handle found to leverage.')
-            }
-            const [{ cid }] = await kuboUpload(
-              { files: [(handle ? (
+          const { handle, file, children, selected, ...rest } = root
+          if(selected !== false) {
+            if(
+              handle instanceof FileSystemFileHandle
+              || file instanceof File
+            ) {
+              if(!(handle ?? file)) {
+                throw new Error('No handle found to leverage.')
+              }
+              const input = (handle ? (
                 await (handle as FileSystemFileHandle).getFile()
-              ) : file)] }
-            )
-            return (
-              { ...rest, cid: cid.toString() }
-            )
-          } else if(isDirNode(root)) {
-            if(out.descendingTo) {
-              console.warn('`descendingTo` already set.')
+              ) : file)
+              const [{ cid }] = await kuboUpload({ files: [input] })
+              return (
+                { ...rest, mimetype: input.type, cid: cid.toString() }
+              )
+            } else if(isDirNode(root)) {
+              if(out.descendingTo) {
+                console.warn('`descendingTo` already set.')
+              }
+              return { ...rest, children: [] }
+            } else {
+              console.warn(
+                `¿What are you? Well: ${typeof handle} / ${typeof file}`
+              )
             }
-            return { ...rest, children: [] }
-          } else {
-            console.warn(
-              `¿What are you? Well: ${typeof handle} / ${typeof file}`
-            )
           }
         },
         async ascendingTo({ to, from, out }) {
@@ -74,13 +79,17 @@ export async function fileTreeToCIDTree(tree: Node) {
               AscendingTo: to.title, from: from.title, out: { ...out },
             })
           }
-          if(Array.isArray(out.descendingTo?.children)) {
-            out.descendingTo.children.push(out.walk.descendingTo)
-          } else {
-            console.warn('`out.descendingTo.children` is not an array.')
+          if(to.selected !== false) {
+            if(Array.isArray(out.descendingTo?.children)) {
+              if(out.walk?.descendingTo != null) {
+                out.descendingTo.children.push(out.walk?.descendingTo)
+              }
+            } else {
+              console.warn('`out.descendingTo.children` is not an array.')
+            }
           }
         },
-      }
+      },
     })
   )
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { isHttpError } from '@sveltejs/kit';
   import { page } from '$app/state'
   import { browser } from '$app/environment'
   import { afterNavigate } from '$app/navigation'
@@ -63,8 +64,11 @@
       }
       addSpotDialog.requestClose()
     } catch(err) {
-      console.error({ err })
+      console.error({ 'addSpot func': err })
       error = (err as Error).message
+      if(!error && isHttpError(err)) {
+        error = `HTTP Error: ${err.status}: ${err.body.message}`
+      }
     }
   }
 
@@ -100,7 +104,7 @@
       form.reset()
       addFilesDialog.requestClose()
     } catch(err) {
-      console.error({ err })
+      console.error({ 'addFiles func': err })
       error = (err as Error).message
     }
   }
@@ -113,7 +117,16 @@
       console.debug(JSON.stringify(spots, null, 2))
       return spots
     } catch(err) {
-      console.error({ err })
+      console.error({ display: err })
+      error = (err as Error).message
+    }
+  }
+
+  async function id() {
+    try {
+      return throwError(await idPromise)
+    } catch(err) {
+      console.error({ display: err })
       error = (err as Error).message
     }
   }
@@ -146,7 +159,7 @@
       </button></li>
       <li>
         <CSSRange
-          min={0.1} max={1.5} step={0.1}
+          min={0.1} max={2} step={0.1}
           property="--zoom" label="🔎"
           bind:value={settings.detailsZoom}
         />
@@ -183,8 +196,7 @@
     </nav>
     <nav class="user locations">
       <ul>
-        <li><a
-          href={resolve('/media/book/by/')}>Books</a></li>
+        <li><a href={resolve('/media/book/by/')}>Books</a></li>
         <li><a href={resolve('/media/movies/entitled/')}>
           Movies
         </a></li>
@@ -262,9 +274,12 @@
       </fieldset>
     </form>
   </dialog>
-  <ImportDirectoryDialog bind:self={importDirectoryDialog}/>
+  <ImportDirectoryDialog
+    bind:self={importDirectoryDialog}
+    containerId={await id()}
+  />
   <ConfigDialog bind:self={configDialog}/>
-  <ErrorDialog bind:error={error} open={!!error}/>
+  <ErrorDialog bind:error/>
 </main>
 
 <style>

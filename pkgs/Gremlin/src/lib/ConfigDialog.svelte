@@ -97,6 +97,22 @@
         <span>Public Server URL</span>
         <input bind:value={values.publicJanusGraphURL}/>
       </label>
+      <label>
+        <span>Username</span>
+        <input
+          bind:value={values.janusGraphUsername}
+          placeholder="Leave blank to disable authentication…"
+          autocomplete="username"
+        />
+      </label>
+      <label>
+        <span>Password</span>
+        <input
+          type="password"
+          bind:value={values.janusGraphPassword}
+          autocomplete="new-password"
+        />
+      </label>
     </fieldset>
     <menu>
       <button type="button" onclick={() => {

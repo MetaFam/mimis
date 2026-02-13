@@ -1,6 +1,6 @@
 import { settings } from '$lib/settings.svelte.ts'
 import type { Node, DirNode } from '../types.ts'
-import type { Walker } from "./fileTree2CIDTree.ts";
+import type { TreeNode, Walker } from "./fileTree2CIDTree.ts";
 
 export function viewable(extension?: string) {
   return (
@@ -77,14 +77,16 @@ export function selectAll(roots: Array<Node> | Node) {
   return select(roots)
 }
 
-export function metricise(size: number) {
+export function metricise(size: number, options = { precision: 3 }) {
   const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
   let adjustedSize = size
   let unitIndex = 0
   while(adjustedSize >= 1024 && unitIndex++ < units.length - 1) {
     adjustedSize /= 1024
   }
-  return `${adjustedSize.toLocaleString()}${units[unitIndex]}`
+  return `${adjustedSize.toLocaleString(
+    undefined, { maximumFractionDigits: options.precision }
+  )}${units[unitIndex]}`
 }
 
 export function expandLevels(
@@ -110,7 +112,7 @@ export interface WalkOut {
 }
 
 export async function walk(
-  { tree, walker }: { tree: Node, walker: Walker }
+  { tree, walker }: { tree: TreeNode, walker: Walker }
 ) {
   const out: WalkOut = {
     descendingTo: null,
@@ -121,34 +123,34 @@ export async function walk(
   }
 
   out.descendingTo = await walker.descendingTo?.({ root: tree, walker, out })
-  console.debug({ 'descendingTo out': { ...out } })
-  for(const child of (tree as DirNode).children ?? []) {
+  for(const child of tree.children ?? []) {
     out.descendingFrom = await walker.descendingFrom?.(
       { from: tree, to: child, walker, out }
     )
-    console.debug({ 'descendingFrom out': { ...out } })
 
     out.walk = await walk({ tree: child, walker })
 
     out.ascendingTo = await walker.ascendingTo?.(
       { to: tree, from: child, walker, out }
     )
-    console.debug({ 'ascendingTo out': { ...out } })
   }
   out.ascendingFrom = await walker.ascendingFrom?.({ root: tree, walker, out })
-  console.debug({ 'ascendingFrom out': { ...out } })
 
   return out
 }
 
 export function filter(
-  { tree, fn }: { tree: Node, fn: (node: Node) => boolean }
-): Node | null {
-  if(!fn(tree)) return null
-  if(isDirNode(tree)) {
-    const newNode = { ...tree }
-    newNode.children = tree.children.filter(fn)
-    return newNode
+  { tree, fn }: { tree: TreeNode, fn: (node: TreeNode) => boolean }
+): TreeNode {
+  if(tree.children != null) {
+    return ({
+      ...tree,
+      children: (
+        tree.children
+        .filter(fn)
+        .map((child) => filter({ tree: child, fn }))
+      )
+    })
   }
   return tree
 }

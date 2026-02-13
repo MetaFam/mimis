@@ -63,10 +63,16 @@ export const spiderDirHandles = ({
       size: 0,
       childCount: 0,
       get selected() {
-        return this.children?.some((c) => c.selected)
+        const selecteds = this.children?.some((c) => c.selected)
+        const unselecteds = this.children?.some((c) => c.selected === false)
+
+        if(selecteds && unselecteds) return null
+        return selecteds
       },
-      set selected(value: boolean) {
-        this.children?.forEach((c) => { c.selected = value })
+      set selected(value: boolean | null) {
+        if(value != null) {
+          this.children?.forEach((c) => { c.selected = value })
+        }
       },
     }
 

@@ -10,7 +10,7 @@ import {
 const { statics: __ } = gremlin.process
 
 const NewSpotSchema = v.object({
-  containerId: v.optional(v.number()),
+  containerId: v.optional(v.nullable(v.number())),
   path: v.array(v.pipe(v.string(), v.nonEmpty())),
 })
 
