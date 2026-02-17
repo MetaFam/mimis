@@ -18,6 +18,7 @@
   import Folder from '$lib/assets/folder.svg'
   import Eyes from '$lib/assets/infinity eyes.svg'
   import ImportDirectoryDialog from '$lib/ImportDirectoryDialog.svelte'
+    import { janusToCAR } from '$lib/janus2CAR';
 
   // If loaded on the server, fails with "`HTMLElement` not found."
   let appKit = null
@@ -32,6 +33,8 @@
   let addFilesDialog = $state<HTMLDialogElement>()
   let importDirectoryDialog = $state<HTMLDialogElement>()
   let configDialog = $state<HTMLDialogElement>()
+  let filesInput = $state<FileList>()
+  let pathInput = $state<string>('')
   let walletConnected = $state(false)
   // https://svelte.dev/docs/svelte/runtime-warnings#Client-warnings-await_waterfall
   let spotsPromise = $derived(searchFor({ path }))
@@ -150,10 +153,12 @@
         Import Directory
       </button></li>
       <li><button>Export to CAR</button></li>
-      <li><button>Export to CBOR-DAG</button></li>
+      <li><button
+        onclick={() => { janusToCAR({}) }}
+        >Export to CBOR-DAG</button></li>
       <li><button
         class="menu-open"
-          onclick={() => configDialog?.showModal()}
+        onclick={() => configDialog?.showModal()}
       >
         Settings
       </button></li>
@@ -254,9 +259,16 @@
     <form onsubmit={addSpot} class="adder">
       <fieldset>
         <legend>Path to New Spot</legend>
-        <input name="path" value=""/>
+        <input
+          name="path"
+          bind:value={pathInput}
+        />
         <menu>
-          <button name="action" value="add">Add</button>
+          <button
+            name="action"
+            value="add"
+            disabled={pathInput?.trim() === ''}
+          >Add</button>
           <button name="action" value="cancel">Cancel</button>
         </menu>
       </fieldset>
@@ -266,9 +278,18 @@
     <form onsubmit={addFiles} class="adder">
       <fieldset>
         <legend>Files to Add</legend>
-        <input name="files" type="file" multiple/>
+        <input
+          bind:files={filesInput}
+          name="files"
+          type="file"
+          multiple
+        />
         <menu>
-          <button name="action" value="add">Add</button>
+          <button
+            name="action"
+            value="add"
+            disabled={(filesInput ?? []).length < 1}
+          >Add</button>
           <button name="action" value="cancel">Cancel</button>
         </menu>
       </fieldset>
@@ -397,17 +418,6 @@
     display: flex;
     flex-direction: column;
     gap: 0.75em;
-  }
-
-  .adder {
-    & menu {
-      display: flex;
-      flex-direction: row-reverse;
-      justify-content: flex-start;
-      gap: 0.5em;
-      margin: 0;
-      margin-block-start: 1rem;
-    }
   }
 
   #files, #crumbs {

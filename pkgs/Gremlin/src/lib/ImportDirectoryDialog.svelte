@@ -86,7 +86,7 @@
           {/if}
         </button>
         <menu>
-          <button name="action" value="spider">
+          <button name="action" value="spider" disabled={!dir}>
             {#if working}
               <img src={Spinner} alt="spin"/>
             {:else}
@@ -98,9 +98,13 @@
       </fieldset>
     </form>
   {:else}
-    <FileTree {tree} onsubmit={doImport} id="files"/>
+    <FileTree {tree} onsubmit={doImport}/>
   {/if}
 </dialog>
 
 <style>
+  button img {
+    width: 1em;
+    max-height: 1em;
+  }
 </style>

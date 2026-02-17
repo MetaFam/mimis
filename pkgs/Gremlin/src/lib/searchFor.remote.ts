@@ -24,6 +24,17 @@ const SearchSchema = v.object({
   })),
 })
 
+const isImageType = () => (
+  __.or(
+    __.has('type', 'image/svg+xml'),
+    __.has('type', 'image/png'),
+    __.has('type', 'image/jpeg'),
+    __.has('type', 'image/webm'),
+    __.has('type', 'image/avif'),
+    __.has('type', 'video/mp4'),
+  )
+)
+
 export const searchFor = query(
   SearchSchema,
   async ({
@@ -74,15 +85,19 @@ export const searchFor = query(
         .inV()
         .coalesce(
           (
-            __.outE('REPRESENTATION')
-            .or(
-              __.has('type', 'image/svg+xml'),
-              __.has('type', 'image/png'),
-              __.has('type', 'image/jpeg'),
-              __.has('type', 'image/webm'),
-              __.has('type', 'image/avif'),
-              __.has('type', 'video/mp4'),
+            __.out('CONTAINS')
+            .outE('REPRESENTATION')
+            .filter(isImageType())
+            .inV()
+            .map(
+              __.project('type', 'cid')
+              .by(__.constant('image'))
+              .by(__.values('cid'))
             )
+          ),
+          (
+            __.outE('REPRESENTATION')
+            .filter(isImageType())
             .inV()
             .map(
               __.project('type', 'cid')

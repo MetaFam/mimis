@@ -1,127 +1,137 @@
-// import { CarWriter } from '@ipld/car'
-import * as UnixFS from '@ipld/unixfs'
-import * as Rabin from '@ipld/unixfs/file/chunker/rabin'
-import { CAREncoderStream } from 'ipfs-car'
-import * as RawLeaf from 'multiformats/codecs/raw'
-// import * as Trickle from '@ipld/unixfs/file/layout/trickle'
-// import * as Balanced from '@ipld/unixfs/file/layout/balanced'
-import { defaults as unixFSDefaults } from '@ipld/unixfs/file'
-// import { sha256 } from 'multiformats/hashes/sha2'
-import type { CID } from 'multiformats/cid'
-import type { WunderbaumNode } from 'wb_node'
+import { CID } from 'multiformats/cid'
+// import * as json from '@ipld/dag-json'
+import * as cbor from '@ipld/dag-cbor'
+import { sha256 } from 'multiformats/hashes/sha2'
+import { type ByteView } from 'multiformats'
+import { settings } from '$lib/settings.svelte.ts'
+import { nodeInfo } from '$lib/nodeInfo.remote.ts'
+import { getIPFS, blocksToCAR } from '$lib/ipfs.ts'
 import type { Logger } from '../types'
 
-// export const UnixFSLeaf = {
-//   code: UnixFS.code,
-//   name: UnixFS.name,
-//   encode: UnixFS.encodeFileChunk,
-// }
+type Options = {
+  log?: Logger
+  batchSize?: number
+  rootId?: number | null
+}
 
-// export const UnixFSRawLeaf = {
-//   code: UnixFS.code,
-//   name: UnixFS.name,
-//   encode: UnixFS.encodeRaw,
-// }
+export type Node = {
+  type: 'node'
+  labels: Array<string>
+  properties: Array<string>
+}
 
-export const wunder2CAR = async (
-  { root, log }:
-  {
-    root: WunderbaumNode
-    log: Logger
-  }
-) => {
-  const {
-    readable: unixfsReadable,
-    writable: unixfsWritable,
-  } = new TransformStream()
-  type Writer = UnixFS.View & { ready: Promise<void> }
-  const settings = unixFSDefaults()
-  settings.chunker = await Rabin.create()
-  settings.fileChunkEncoder = RawLeaf
-  settings.smallFileEncoder = RawLeaf
-  // fileLayout: Trickle.configure({ maxDirectLeaves: 100 }),
-  // fileLayout: Balanced.withWidth(Balanced.defaults.width),
-  const writer = UnixFS.createWriter({
-    writable: unixfsWritable,
-    settings,
-  }) as Writer
+export type Nodes = Record<string, Node>
+export type CIDs = Record<string, CID>
 
-  type Block = {
-    cid: CID
-    bytes: Uint8Array
-  }
-  const blocks: Array<Block> = []
-  unixfsReadable.pipeTo(new WritableStream({
-    write(block) { blocks.push(block) },
-  }))
-  log?.('Ingesting Tree…')
-  await ingest(root)
+type Block = {
+  cid: CID
+  bytes: Uint8Array
+}
 
-  const blockStream = new ReadableStream({
-    pull(controller) {
-      if(blocks.length > 0) {
-        controller.enqueue(blocks.shift())
-      } else {
-        controller.close()
-      }
+export type Encoder = {
+  encode: (val: unknown) => ByteView<unknown>
+  name: string
+  code: number
+}
+
+export class Serializer {
+  path: Array<string> = []
+  log?: Logger = null
+  batchSize = 1_500
+  encoder: Encoder = cbor
+  carReadable: ReadableStream | null = null
+  carWritable: WritableStream | null = null
+  carWriter: ReturnType<WritableStream["getWriter"]> | null = null
+  blocks: Array<Block> = []
+
+  constructor(
+    { log = null, batchSize = 1000, encoder = cbor }:
+    { log?: Logger, batchSize?: number, encoder?: Encoder }
+  ) {
+    if(log != null) {
+      this.log = log
+    } else if(settings.debugging) {
+      this.log = console.debug
     }
-  })
 
-  if(!blocks || blocks.length === 0) {
-    throw new Error('No blocks generated.')
-  }
+    this.batchSize = batchSize
+    this.encoder = encoder
 
-  const rootBlock = blocks.at(-1)
-  if(!rootBlock) {
-    throw new Error('No root block found.')
-  }
+    const { readable, writable } = new TransformStream()
+    this.carReadable = readable
+    this.carWritable = writable
+    this.carWriter = writable.getWriter()
 
-  type Chunk = Uint8Array
-  const chunks: Array<Chunk> = []
-  await (
-    blockStream
-    .pipeThrough(new CAREncoderStream([rootBlock.cid]))
-    .pipeTo(new WritableStream({
-      write(chunk) { chunks.push(chunk) },
+    const blocks = this.blocks
+    this.carReadable.pipeTo(new WritableStream({
+      write(block) { blocks.push(block) },
     }))
-  )
+  }
 
-  return URL.createObjectURL(new Blob(chunks))
+  async node(rootId?: number | null): Promise<CID> {
+    const { edges, id, properties, ...props } = await nodeInfo(rootId)
 
-  async function ingest(node: WunderbaumNode) {
-    log?.(`Ingesting Directory: ${node.title}`)
-    if(!node.children) {
-      throw new Error(`Not A Directory: ${node.title}`)
+    const relationships = await Promise.all(
+      edges.map(async ({ targetId, ...edge }) => ({
+        ...edge,
+        target: await this.node(targetId),
+      }))
+    )
+
+    const cid = await this.addToCAR({
+      ...props,
+      properties: Object.fromEntries(
+        Object.entries(properties).map(([key, value]) => {
+          if(key === 'cid') {
+            value = CID.parse(value as string)
+          }
+          return [key, value]
+        })
+      ),
+      relationships,
+    })
+    this.log?.({ cid: cid.toString() })
+    return cid
+  }
+
+  async addToCAR(data: unknown) {
+    const bytes = this.encoder.encode(data)
+    const hash = await sha256.digest(bytes)
+    const cid = CID.create(1, this.encoder.code, hash)
+    if(this.carWriter == null) throw new Error('No `carWriter`.')
+    const writtenCID = await getIPFS().block.put(
+      bytes, { format: this.encoder.name },
+    )
+    if(!cid.equals(writtenCID)) {
+      throw new Error(
+        `CID Mismatch: Expected ${cid.toString()}, got ${writtenCID.toString()}.`
+      )
     }
-    const dir = writer.createDirectoryWriter()
-    for(const child of node.children) {
-      if(!child.selected && child.getSelectedNodes().length === 0) {
-        continue
-      }
+    await this.carWriter.write({ cid, bytes })
+    return cid
+  }
 
-      if(!!child.children) {
-        await writer.ready
-        dir.set(child.title, await ingest(child))
-      } else {
-        const file = writer.createFileWriter()
-        const handle = await child.data.handle?.getFile()
-        if(!handle) {
-          throw new Error(
-            `Invalid File Handle: ${child.title}`
-          )
-        }
-        log?.(`Ingesting File: ${child.title}`)
-        await handle.stream().pipeTo(new WritableStream({
-          async write(chunk) {
-            await writer.ready
-            await file.write(chunk)
-          },
-        }))
-        const link = await file.close()
-        await writer.ready
-        dir.set(child.title, link)
-      }
-    }
-    return dir.close()
+  async generateCAR() {
+    return await blocksToCAR(this.blocks)
   }
 }
+
+export async function janusToCAR(
+  { log = null, batchSize = 1000, rootId = null }: Options
+) {
+  try {
+    const encoder = cbor
+    const serializer = new Serializer({
+      log, batchSize, encoder,
+    })
+    serializer.log?.(`Exporting nodes to \`${encoder.name}\`…`)
+    const rootCID = await serializer.node(rootId)
+    const out = await serializer.generateCAR()
+    serializer.log?.({ out, rootCID: rootCID.toString() })
+    return rootCID
+  } catch(error) {
+    console.error({ 'Graph Serializing Error': error })
+    throw error
+  }
+}
+

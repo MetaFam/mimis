@@ -56,13 +56,23 @@
    ) : ( null ))}
   <dl>
     <dt>Selected?</dt>
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
     <dd
-      for="selected"
+      data-for="selected"
       onclick={(evt) => {
         evt.preventDefault()
         node.selected = !node.selected
       }}
-    >{node.selected == null ? '▣' : (node.selected ? '✅' : '❌')}</dd>
+    >
+      {#if node.selected == null}
+        <span class="mixed">▣</span>
+      {:else if node.selected}
+        ✅
+      {:else}
+        ❌
+      {/if}
+    </dd>
     <dt>Name</dt>
     <dd data-for="name">{node.title}</dd  >
     <dt>Size</dt>
@@ -253,5 +263,9 @@
     height: 1.5em;
     width: 2em;
     color: light-dark(darkblue, aliceblue);
+  }
+
+  .mixed {
+    color: light-dark(darkblue, lightblue);
   }
 </style>

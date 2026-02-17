@@ -17,11 +17,13 @@
 		"cf-typegen": "wrangler types src/worker-configuration.d.ts"
 	},
 	"dependencies": {
+		"@ipld/dag-cbor": "^9.2.5",
 		"@reown/appkit": "^1.8.17",
 		"@reown/appkit-adapter-wagmi": "^1.8.17",
 		"@reown/appkit-wallet-button": "^1.8.17",
 		"gremlin": "3.7.3",
 		"ignore": "^7.0.5",
+		"ipfs-car": "^3.1.0",
 		"kubo-rpc-client": "^6.0.2",
 		"multiformats": "^13.4.2",
 		"valibot": "^1.2.0",
@@ -50,8 +52,8 @@
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
-			"@reown/appkit",
-			"esbuild"
+			"esbuild",
+			"protobufjs"
 		]
 	}
 }
