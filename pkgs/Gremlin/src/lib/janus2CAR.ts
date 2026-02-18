@@ -3,10 +3,15 @@ import { CID } from 'multiformats/cid'
 import * as cbor from '@ipld/dag-cbor'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { type ByteView } from 'multiformats'
+import {
+  createConfig as createWAGMIConfig, http, signTypedData,
+} from '@wagmi/core'
+import { mainnet as L1, sepolia } from '@wagmi/core/chains'
 import { settings } from '$lib/settings.svelte.ts'
 import { nodeInfo } from '$lib/nodeInfo.remote.ts'
 import { getIPFS, blocksToCAR } from '$lib/ipfs.ts'
 import type { Logger } from '../types'
+import type { KuboRPCClient } from "kubo-rpc-client";
 
 type Options = {
   log?: Logger
@@ -35,6 +40,7 @@ export type Encoder = {
 }
 
 export class Serializer {
+  private ipfs: KuboRPCClient | null = null
   path: Array<string> = []
   log?: Logger = null
   batchSize = 1_500
@@ -45,8 +51,20 @@ export class Serializer {
   blocks: Array<Block> = []
 
   constructor(
-    { log = null, batchSize = 1000, encoder = cbor }:
-    { log?: Logger, batchSize?: number, encoder?: Encoder }
+    {
+      log = null,
+      batchSize = 1000,
+      encoder = cbor,
+      writeCAR = false,
+      writeIPFS = true,
+    }:
+    {
+      log?: Logger
+      batchSize?: number
+      encoder?: Encoder
+      writeCAR?: boolean
+      writeIPFS?: boolean
+    }
   ) {
     if(log != null) {
       this.log = log
@@ -57,15 +75,27 @@ export class Serializer {
     this.batchSize = batchSize
     this.encoder = encoder
 
-    const { readable, writable } = new TransformStream()
-    this.carReadable = readable
-    this.carWritable = writable
-    this.carWriter = writable.getWriter()
+    if(!writeIPFS && !writeCAR) {
+      throw new Error(
+        'At least one of `writeIPFS` or `writeCAR` must be true.'
+      )
+    }
 
-    const blocks = this.blocks
-    this.carReadable.pipeTo(new WritableStream({
-      write(block) { blocks.push(block) },
-    }))
+    if(writeIPFS) {
+      this.ipfs = getIPFS()
+    }
+
+    if(writeCAR) {
+      const { readable, writable } = new TransformStream()
+      this.carReadable = readable
+      this.carWritable = writable
+      this.carWriter = writable.getWriter()
+
+      const blocks = this.blocks
+      this.carReadable.pipeTo(new WritableStream({
+        write(block) { blocks.push(block) },
+      }))
+    }
   }
 
   async node(rootId?: number | null): Promise<CID> {
@@ -74,11 +104,11 @@ export class Serializer {
     const relationships = await Promise.all(
       edges.map(async ({ targetId, ...edge }) => ({
         ...edge,
-        target: await this.node(targetId),
+        target: await this.node(targetId as number),
       }))
     )
 
-    const cid = await this.addToCAR({
+    const cid = await this.addToIPFS({
       ...props,
       properties: Object.fromEntries(
         Object.entries(properties).map(([key, value]) => {
@@ -91,23 +121,27 @@ export class Serializer {
       relationships,
     })
     this.log?.({ cid: cid.toString() })
-    return cid
+    return cid as CID
   }
 
-  async addToCAR(data: unknown) {
+  async addToIPFS(data: unknown) {
     const bytes = this.encoder.encode(data)
     const hash = await sha256.digest(bytes)
     const cid = CID.create(1, this.encoder.code, hash)
-    if(this.carWriter == null) throw new Error('No `carWriter`.')
-    const writtenCID = await getIPFS().block.put(
-      bytes, { format: this.encoder.name },
-    )
-    if(!cid.equals(writtenCID)) {
-      throw new Error(
-        `CID Mismatch: Expected ${cid.toString()}, got ${writtenCID.toString()}.`
+    if(this.ipfs != null) {
+      const writtenCID = await this.ipfs.block.put(
+        bytes, { format: this.encoder.name },
       )
+      if(!cid.equals(writtenCID)) {
+        throw new Error(
+          'CID Mismatch:'
+          + ` Expected ${cid.toString()}, got ${writtenCID.toString()}.`
+        )
+      }
     }
-    await this.carWriter.write({ cid, bytes })
+    if(this.carWriter != null) {
+      await this.carWriter.write({ cid, bytes })
+    }
     return cid
   }
 
@@ -115,6 +149,28 @@ export class Serializer {
     return await blocksToCAR(this.blocks)
   }
 }
+
+export async function signCID(cid: string) {
+  const config = createWAGMIConfig({
+    chains: [L1, sepolia],
+    transports: {
+      [L1.id]: http(),
+      [sepolia.id]: http(),
+    },
+  })
+
+  const sig = await signTypedData(config, {
+    types: {
+      Root: [
+        { name: 'cid', type: 'string' },
+      ],
+    },
+    primaryType: 'Root',
+    message: { cid },
+  })
+  return sig
+}
+
 
 export async function janusToCAR(
   { log = null, batchSize = 1000, rootId = null }: Options
@@ -126,9 +182,17 @@ export async function janusToCAR(
     })
     serializer.log?.(`Exporting nodes to \`${encoder.name}\`…`)
     const rootCID = await serializer.node(rootId)
-    const out = await serializer.generateCAR()
-    serializer.log?.({ out, rootCID: rootCID.toString() })
-    return rootCID
+    const signature = await signCID(rootCID.toString())
+    const updateCID = await serializer.addToIPFS({
+      cid: rootCID,
+      signature,
+    })
+    const out = { cid: updateCID }
+    if(serializer.carWriter != null) {
+      out.car = await serializer.generateCAR()
+    }
+    serializer.log?.({ out })
+    return out
   } catch(error) {
     console.error({ 'Graph Serializing Error': error })
     throw error

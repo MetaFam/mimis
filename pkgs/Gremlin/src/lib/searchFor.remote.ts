@@ -4,6 +4,7 @@ import { query } from '$app/server'
 import {
   connect as connectJanusGraph, connectToG,
 } from '$lib/janusgraph.ts'
+import settings from "$lib/settings.svelte.ts";
 import { ConnectionError } from '$lib'
 
 const { statics: __, t: T } = gremlin.process
@@ -91,7 +92,7 @@ export const searchFor = query(
             .inV()
             .map(
               __.project('type', 'cid')
-              .by(__.constant('image'))
+              .by(__.constant('spot'))
               .by(__.values('cid'))
             )
           ),
@@ -124,7 +125,7 @@ export const searchFor = query(
       let error = (err as Error)
       if(error.name === 'TypeError') {
         error = new ConnectionError(
-          'Connection Error: Could not connect to JanusGraph.'
+          `Connection Error: Could not connect to JanusGraph @ ${settings.janusGraphURL}.`
         )
       }
       console.error({ searchFor: error })

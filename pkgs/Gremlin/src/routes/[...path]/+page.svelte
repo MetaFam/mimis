@@ -228,6 +228,7 @@
     <nav id="details">
       <ul>
         {#each await display() as { name, type, cid } (cid || name)}
+          {@const target = type !== 'spot' ? { target: '_blank' } : {}}
           <li>
             <a
               href={resolve(
@@ -240,11 +241,12 @@
                 }` as '/'
               )}
               title={name}
+              {...target}
             >
-              {#if type === "spot"}
-                <img src={Folder} alt="📁"/>
-              {:else if type === 'image' && cid}
+              {#if cid}
                 <img src={toHTTP({ cid })} alt={name}/>
+              {:else if type === 'spot'}
+                <img src={Folder} alt="📁"/>
               {:else}
                 <aside>Unknown Type: {type}</aside>
               {/if}
@@ -350,6 +352,10 @@
       border-radius: 0.5rem;
       margin-bottom: 0.25rem;
       margin-inline : auto;
+
+      &:hover {
+        background-color: #9999;
+      }
     }
   }
 

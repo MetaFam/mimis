@@ -1,3 +1,12 @@
+@font-face {
+  font-family: Bastavar;
+  src: local(Bastavar), url('/Bastavar.woff') type(woff);
+}
+
+:root {
+  font-family: Bastavar, Arial, Helvetica, sans-serif;
+}
+
 dialog.wide {
   width: 90%;
 }

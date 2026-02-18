@@ -77,7 +77,7 @@ export function selectAll(roots: Array<Node> | Node) {
   return select(roots)
 }
 
-export function metricise(size: number, options = { precision: 3 }) {
+export function metricize(size: number, options = { precision: 3 }) {
   const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
   let adjustedSize = size
   let unitIndex = 0

@@ -32,7 +32,7 @@
 	 */
 	"vars": {
 		"PUBLIC_APPKIT_PROJECT_ID": "101a9a9ea0737af81f87ae784a9884ef",
-		"PUBLIC_JANUSGRAPH_URL": "ws://janus.mimis.dhappy.org",
+		"PUBLIC_JANUSGRAPH_URL": "ws://janus.mimis.dhappy.org:8182",
 	}
 	/**
 	 * Static Assets

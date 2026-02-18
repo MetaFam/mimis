@@ -5,7 +5,7 @@ export type Node = DirNode | FileNode
 export type NodeCommons = {
 	title: string
 	cid?: string
-	selected?: boolean
+	selected?: boolean | null
 	size: number
 	expanded?: boolean
 	path?: string

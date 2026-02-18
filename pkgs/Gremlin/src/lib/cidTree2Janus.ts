@@ -1,10 +1,11 @@
 import { createSpot } from '$lib/createSpot.remote.ts'
 import { addFiles } from '$lib/addFiles.remote.ts'
-import { walk } from '$lib'
+import { walk, metricize, toHTTP } from '$lib'
 import type { TreeNode } from '$lib/fileTree2CIDTree.ts'
 
 export async function cidTreeToJanus(
-  { tree, containerId: rootId }: { tree: TreeNode, containerId: number }
+  { tree, containerId: rootId, log }:
+  { tree: TreeNode, containerId: number, log?: (msg: unknown) => void | null }
 ) {
    return (
     await walk({
@@ -22,7 +23,10 @@ export async function cidTreeToJanus(
               type: root.mimetype,
               size: root.size,
             }] })
-            console.debug({ Adding: walker.path, rootId, containerId })
+            log?.(
+              `Adding @ ${walker.path.join('/')}`
+              + ` <a href="${toHTTP({ cid: root.cid })}" target="_blank>${root.title}</a> (${metricize(root.size)}).`
+            )
           }
           walker.path.push(root.title)
         },

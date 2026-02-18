@@ -29,7 +29,6 @@ export const spiderDirHandles = ({
     path: string = '',
   ) {
     const current = `${path}${dir.name}/`
-    log?.(`Traversing: ${current}`)
 
     if(ignores) {
       try {
@@ -52,6 +51,9 @@ export const spiderDirHandles = ({
           gitignores.push({ ig, path: current })
         }
       } catch(error) {
+        if(!(error instanceof DOMException && error.name === 'NotFoundError')) {
+          log?.(`Error reading gitignore for ${current}: ${error.message}`)
+        }
         console.error({ error })
       }
     }
@@ -60,8 +62,9 @@ export const spiderDirHandles = ({
       type: 'directory',
       title: dir.name,
       children: [],
-      size: 0,
+      size: 0 ,
       childCount: 0,
+
       get selected() {
         const selecteds = this.children?.some((c) => c.selected)
         const unselecteds = this.children?.some((c) => c.selected === false)
@@ -81,7 +84,7 @@ export const spiderDirHandles = ({
     )
 
     for await (const handle of (
-      dir as unknown as { values: () => Array<Handle> }
+      dir as unknown as { values: () => Array<FileSystemHandle> }
     ).values()) {
       const next = `${current}${handle.name}`
       const ignored = gitignores.some((gi) => {
@@ -108,12 +111,13 @@ export const spiderDirHandles = ({
 
       if(!ignored) {
         let node
-        if(handle.kind === 'directory') {
+        if(handle instanceof FileSystemDirectoryHandle) {
+          log?.(`Traversing: ${next}`)
           node = (
             await read(handle, current)
           )
           here.childCount += node.childCount
-        } else {
+        } else if(handle instanceof FileSystemFileHandle) {
           log?.(`Leaf: ${next}`)
 
           const file = await handle.getFile()
@@ -124,6 +128,8 @@ export const spiderDirHandles = ({
             handle,
           }
           here.childCount += 1
+        } else {
+          log?.(`Unknown Handle: ${next}`)
         }
         if(node) {
           here.size += node.size

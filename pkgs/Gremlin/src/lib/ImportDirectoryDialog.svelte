@@ -12,11 +12,11 @@
   let tree = $state<DirNode>()
   let dir = $state<FileSystemDirectoryHandle>()
   let working = $state(false)
+  let logs = $state([])
+
 
   const log = (msg: any) => {
-    if(settings.debugging) {
-      console.debug(msg)
-    }
+    logs.unshift(msg)
   }
 
   async function beginSpider(evt: SubmitEvent) {
@@ -27,11 +27,12 @@
       const formData = new FormData(form)
       if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
         tree = await spiderDirHandles({
-          dir, log, gitignores: !!formData.get('gitignores'),
+          dir, log, gitignores: Boolean(formData.get('gitignores')),
         })
         if(!tree) throw Error('Spider returned no tree.')
         selectAll(tree)
         expandLevels({ tree, levels: 1 })
+        logs = []
       } else {
         dir = undefined
         self?.close()
@@ -45,11 +46,13 @@
     if(!tree) throw new Error('No tree to import.')
     const form = evt.currentTarget as HTMLFormElement
     if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
-      const { descendingTo: cidTree } = await treeToCIDs(tree)
+      const { descendingTo: cidTree } = await treeToCIDs(tree, { log })
       console.debug({ cidTree, containerId })
-      cidTreeToJanus({ tree: cidTree, containerId })
+      cidTreeToJanus({ tree: cidTree, containerId, log })
     }
     form.reset()
+  }
+  function close() {
     tree = undefined
     dir = undefined
     self?.close()
@@ -97,8 +100,29 @@
         </menu>
       </fieldset>
     </form>
+  {:else if logs.length > 0}
+    <ul class="logs">
+      {#each logs as log}
+        <li>{@html log}</li>
+      {/each}
+    </ul>
+    <form>
+      <menu>
+        <button
+          type="button"
+          name="action" value="clear"
+          onclick={() => {
+            logs = []
+            if(tree) {
+              close()
+            }
+          }}
+        >Clear</button>
+        <div class="spacer"></div>
+      </menu>
+    </form>
   {:else}
-    <FileTree {tree} onsubmit={doImport}/>
+    <FileTree {tree} onsubmit={doImport} oncancel={close}/>
   {/if}
 </dialog>
 

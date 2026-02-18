@@ -34,14 +34,16 @@ export interface FileWalker extends Walker {
   path?: string
 }
 
-export async function fileTreeToCIDTree(tree: Node) {
+export async function fileTreeToCIDTree(
+  tree: Node, { log }: { log?: (msg: unknown) => void | null } = {},
+) {
   return (
     await walk({
       tree,
       walker: {
         async descendingTo({ root, walker, out }) {
           if(settings.debugging) {
-            console.debug({ DescendingTo: root.title, out: { ...out } })
+            log?.(`DescendingTo: ${root.title}`)
           }
           walker.count ??= 0
           walker.count++
@@ -75,9 +77,7 @@ export async function fileTreeToCIDTree(tree: Node) {
         },
         async ascendingTo({ to, from, out }) {
           if(settings.debugging) {
-            console.debug({
-              AscendingTo: to.title, from: from.title, out: { ...out },
-            })
+            log?.(`AscendingTo: ${to.title}, from: ${from.title}`)
           }
           if(to.selected !== false) {
             if(Array.isArray(out.descendingTo?.children)) {

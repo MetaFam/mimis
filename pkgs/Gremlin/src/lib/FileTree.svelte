@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { filter, isDirNode, metricise, walk } from '$lib'
+  import { filter, isDirNode, metricize, walk } from '$lib'
   import type { DirNode, Node } from '../types'
   import Eraser from '$lib/assets/erase.svg'
   import Filter from '$lib/assets/filter.svg'
 
-  let { tree = $bindable(), onsubmit } = $props()
+  let { tree = $bindable(), onsubmit, oncancel } = $props()
   let regexDialog = $state<HTMLDialogElement>()
   let eraseDialog = $state<HTMLDialogElement>()
 
@@ -76,7 +76,7 @@
     <dt>Name</dt>
     <dd data-for="name">{node.title}</dd  >
     <dt>Size</dt>
-    <dd data-for="size">{metricise(node.size, { precision: 1 })}</dd>
+    <dd data-for="size">{metricize(node.size, { precision: 1 })}</dd>
     <dt id="view">View</dt>
     <dd data-for="view">
       {#if !!file && node.type === 'file'}
@@ -125,7 +125,13 @@
     {@render listFiles({ tree, id: 'files' })}
     <menu>
       <button name="action" value="import">Import</button>
-      <button name="action" value="cancel">Cancel</button>
+      <button
+        type="button"
+        name="action" value="cancel"
+        onclick={oncancel}
+      >
+        Cancel
+      </button>
       <div class="spacer"></div>
       <button
         type="button"
@@ -149,7 +155,7 @@
   <form onsubmit={regexFilter}>
     <fieldset>
       <legend>Regex to Unselect</legend>
-      <input name="regex"/>
+      <input name="regex" required/>
       <menu>
         <button name="action" value="import">Unselect</button>
         <button name="action" value="cancel">Cancel</button>
