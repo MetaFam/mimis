@@ -113,9 +113,7 @@
           name="action" value="clear"
           onclick={() => {
             logs = []
-            if(tree) {
-              close()
-            }
+            if(tree) close()
           }}
         >Clear</button>
         <div class="spacer"></div>

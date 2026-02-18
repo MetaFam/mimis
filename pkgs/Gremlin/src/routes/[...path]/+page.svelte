@@ -1,5 +1,7 @@
 <script lang="ts">
   import { isHttpError } from '@sveltejs/kit';
+  import type { AppKit } from '@reown/appkit'
+  import { onMount } from 'svelte'
   import { page } from '$app/state'
   import { browser } from '$app/environment'
   import { afterNavigate } from '$app/navigation'
@@ -13,16 +15,12 @@
   import CSSRange from '$lib/CSSRange.svelte'
   import Breadcrumbs from '$lib/Breadcrumbs.svelte'
   import settings from '$lib/settings.svelte'
+  import ImportDirectoryDialog from '$lib/ImportDirectoryDialog.svelte'
+  import { janusToDAG } from '$lib/janus2DAG.ts'
   import { kuboUpload } from '$lib/ipfs'
-  import { toHTTP, throwError } from '$lib'
+  import { toHTTP, throwError, logHeader } from '$lib'
   import Folder from '$lib/assets/folder.svg'
   import Eyes from '$lib/assets/infinity eyes.svg'
-  import ImportDirectoryDialog from '$lib/ImportDirectoryDialog.svelte'
-    import { janusToCAR } from '$lib/janus2CAR';
-
-  // If loaded on the server, fails with "`HTMLElement` not found."
-  let appKit = null
-  if(browser) appKit = (await import('$lib/appkit')).default
 
   let error = $state<string | null>(null)
   let path = $state(
@@ -32,16 +30,28 @@
   let addSpotDialog = $state<HTMLDialogElement>()
   let addFilesDialog = $state<HTMLDialogElement>()
   let importDirectoryDialog = $state<HTMLDialogElement>()
+  let logDialog = $state<HTMLDialogElement>()
   let configDialog = $state<HTMLDialogElement>()
   let filesInput = $state<FileList>()
   let pathInput = $state<string>('')
+  let logs = $state<Array<string>>([])
   let walletConnected = $state(false)
-  // https://svelte.dev/docs/svelte/runtime-warnings#Client-warnings-await_waterfall
+
   let spotsPromise = $derived(searchFor({ path }))
   let idPromise = $derived(spotId({ path }))
 
-  appKit?.subscribeEvents((evt) => {
-    walletConnected = !!appKit?.getIsConnectedState()
+  logHeader()
+
+  // If loaded on the server, fails with "`HTMLElement` not found."
+  let appKit: AppKit | null = null
+  onMount(async () => {
+    const { getAppKit } = await import('$lib/appkit')
+    appKit = getAppKit()
+
+    walletConnected = !!appKit.getIsConnectedState()
+    appKit.subscribeEvents((evt) => {
+      walletConnected = !!appKit?.getIsConnectedState()
+    })
   })
 
   afterNavigate(async ({ to }) => {
@@ -112,6 +122,19 @@
     }
   }
 
+  async function buildDAG() {
+    logDialog?.showModal()
+    const log = (msg: string) => {
+      logs.unshift(msg)
+    }
+    const { cid } = await janusToDAG({ log })
+    log(
+
+      'Update built with root CID:'
+      + ` <a href="${toHTTP({ cid })}" target="_blank">${cid.toString()}</a>`
+    )
+  }
+
   const display = async () => {
     try {
       const spots = throwError(
@@ -153,9 +176,7 @@
         Import Directory
       </button></li>
       <li><button>Export to CAR</button></li>
-      <li><button
-        onclick={() => { janusToCAR({}) }}
-        >Export to CBOR-DAG</button></li>
+      <li><button onclick={buildDAG}>Export to CBOR-DAG</button></li>
       <li><button
         class="menu-open"
         onclick={() => configDialog?.showModal()}
@@ -295,6 +316,19 @@
           <button name="action" value="cancel">Cancel</button>
         </menu>
       </fieldset>
+    </form>
+  </dialog>
+  <dialog id="logs" bind:this={logDialog}>
+    <form>
+      <ol reversed>
+        {#each logs as log}
+          <li>{@html log}</li>
+        {/each}
+      </ol>
+      <menu>
+        <button onclick={() => logDialog?.close()}>Close</button>
+        <span class="spacer"></span>
+      </menu>
     </form>
   </dialog>
   <ImportDirectoryDialog
@@ -477,6 +511,18 @@
       overflow: hidden;
       text-overflow: ellipsis;
       text-align: center;
+    }
+  }
+
+  #logs {
+    & form {
+      max-height: 90dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    & ol {
+      overflow-y: scroll;
     }
   }
 </style>

@@ -1,6 +1,7 @@
+import { CID } from 'multiformats'
 import { settings } from '$lib/settings.svelte.ts'
+import type { TreeNode, Walker } from "$lib/fileTree2CIDTree.ts";
 import type { Node, DirNode } from '../types.ts'
-import type { TreeNode, Walker } from "./fileTree2CIDTree.ts";
 
 export function viewable(extension?: string) {
   return (
@@ -12,7 +13,7 @@ export function viewable(extension?: string) {
 export function toHTTP({
   url, cid,
 }: {
-  url?: string | null; cid?: string | null;
+  url?: string | null; cid?: string | CID | null;
 }) {
   if((!url && !cid) || (url && cid)) {
     throw new Error('Must provide either `url` xor `cid`.')
@@ -23,17 +24,30 @@ export function toHTTP({
       /^(?:ipfs:\/\/)?([^/]+)(\/.*)?$/.exec(url) ?? []
     )
   } else if(cid != null) {
+    if(cid instanceof CID) {
+      cid = cid.toString()
+    }
     [cid, ...path] = cid.split('/')
   }
   if(cid == null) {
     throw new Error('Could not determine `cid`.')
   }
-  console.debug({ pattern: settings.ipfsURLPattern })
   return (
     settings.ipfsURLPattern
     .replace('{cid}', cid)
     .replace('{path}', `/${path.join('/')}`)
   )
+}
+
+export function logHeader(str = 'Mïmis', style: string | null = null) {
+  style ??= (
+    'background-color: light-dark(lightblue, darkblue);'
+    + 'color: light-dark(darkblue, lightblue);'
+    + 'font-size: 15pt;'
+    + 'font-family: script, Helvetica, sans-serif;'
+    + 'padding: 0.5rem;'
+  )
+  console.log(`%c${str}`, style)
 }
 
 export function throwError(test: unknown) {

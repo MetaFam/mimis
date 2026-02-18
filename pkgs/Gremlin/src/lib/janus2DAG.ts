@@ -3,20 +3,20 @@ import { CID } from 'multiformats/cid'
 import * as cbor from '@ipld/dag-cbor'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { type ByteView } from 'multiformats'
-import {
-  createConfig as createWAGMIConfig, http, signTypedData,
-} from '@wagmi/core'
-import { mainnet as L1, sepolia } from '@wagmi/core/chains'
+import type { KuboRPCClient } from 'kubo-rpc-client'
+import { signTypedData } from '@wagmi/core'
 import { settings } from '$lib/settings.svelte.ts'
 import { nodeInfo } from '$lib/nodeInfo.remote.ts'
 import { getIPFS, blocksToCAR } from '$lib/ipfs.ts'
 import type { Logger } from '../types'
-import type { KuboRPCClient } from "kubo-rpc-client";
+import { toHTTP } from "./index.ts";
 
 type Options = {
   log?: Logger
   batchSize?: number
   rootId?: number | null
+  generateCAR?: boolean
+  insertInIPFS?: boolean
 }
 
 export type Node = {
@@ -55,15 +55,15 @@ export class Serializer {
       log = null,
       batchSize = 1000,
       encoder = cbor,
-      writeCAR = false,
-      writeIPFS = true,
+      generateCAR = false,
+      insertInIPFS = true,
     }:
     {
       log?: Logger
       batchSize?: number
       encoder?: Encoder
-      writeCAR?: boolean
-      writeIPFS?: boolean
+      generateCAR?: boolean
+      insertInIPFS?: boolean
     }
   ) {
     if(log != null) {
@@ -75,17 +75,17 @@ export class Serializer {
     this.batchSize = batchSize
     this.encoder = encoder
 
-    if(!writeIPFS && !writeCAR) {
+    if(!insertInIPFS && !generateCAR) {
       throw new Error(
-        'At least one of `writeIPFS` or `writeCAR` must be true.'
+        'At least one of `insertInIPFS` or `generateCAR` must be true.'
       )
     }
 
-    if(writeIPFS) {
+    if(insertInIPFS) {
       this.ipfs = getIPFS()
     }
 
-    if(writeCAR) {
+    if(generateCAR) {
       const { readable, writable } = new TransformStream()
       this.carReadable = readable
       this.carWritable = writable
@@ -99,6 +99,7 @@ export class Serializer {
   }
 
   async node(rootId?: number | null): Promise<CID> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { edges, id, properties, ...props } = await nodeInfo(rootId)
 
     const relationships = await Promise.all(
@@ -120,7 +121,12 @@ export class Serializer {
       ),
       relationships,
     })
-    this.log?.({ cid: cid.toString() })
+    this.log?.(
+      `Node ${id} serialized to`
+      + ` <a href="${toHTTP({ cid })}" target="_blank">`
+      + cid.toString()
+      + '</a>.'
+    )
     return cid as CID
   }
 
@@ -151,15 +157,10 @@ export class Serializer {
 }
 
 export async function signCID(cid: string) {
-  const config = createWAGMIConfig({
-    chains: [L1, sepolia],
-    transports: {
-      [L1.id]: http(),
-      [sepolia.id]: http(),
-    },
-  })
+  const { getWagmiAdapter } = await import('$lib/appkit')
+  const adapter = getWagmiAdapter()
 
-  const sig = await signTypedData(config, {
+  const sig = await signTypedData(adapter.wagmiConfig, {
     types: {
       Root: [
         { name: 'cid', type: 'string' },
@@ -172,26 +173,34 @@ export async function signCID(cid: string) {
 }
 
 
-export async function janusToCAR(
-  { log = null, batchSize = 1000, rootId = null }: Options
+export async function janusToDAG(
+  {
+    log = null,
+    batchSize = 1000,
+    rootId = null,
+    generateCAR = false,
+    insertInIPFS = true,
+  }: Options = {}
 ) {
   try {
     const encoder = cbor
     const serializer = new Serializer({
-      log, batchSize, encoder,
+      log, batchSize, encoder, generateCAR, insertInIPFS,
     })
     serializer.log?.(`Exporting nodes to \`${encoder.name}\`…`)
     const rootCID = await serializer.node(rootId)
+    serializer.log?.('Awaiting Ethereum signature by user…')
     const signature = await signCID(rootCID.toString())
     const updateCID = await serializer.addToIPFS({
       cid: rootCID,
       signature,
     })
-    const out = { cid: updateCID }
+    const out: { cid: CID, car?: { url: string, cid: CID } } = (
+      { cid: updateCID }
+    )
     if(serializer.carWriter != null) {
       out.car = await serializer.generateCAR()
     }
-    serializer.log?.({ out })
     return out
   } catch(error) {
     console.error({ 'Graph Serializing Error': error })

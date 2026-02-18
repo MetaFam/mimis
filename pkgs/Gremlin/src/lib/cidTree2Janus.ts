@@ -25,7 +25,9 @@ export async function cidTreeToJanus(
             }] })
             log?.(
               `Adding @ ${walker.path.join('/')}`
-              + ` <a href="${toHTTP({ cid: root.cid })}" target="_blank>${root.title}</a> (${metricize(root.size)}).`
+              + ` <a href="${toHTTP({ cid: root.cid })}" target="_blank>`
+              + root.title
+              + `</a> (${metricize(root.size)}).`
             )
           }
           walker.path.push(root.title)
