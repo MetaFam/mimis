@@ -72,6 +72,11 @@ export class Serializer {
       this.log = console.debug
     }
 
+    this.log?.(
+      `Serializing: ${insertInIPFS ? '' : 'not '}in IPFS;`
+      + ` ${generateCAR ? '' : 'not '}building CAR`
+    )
+
     this.batchSize = batchSize
     this.encoder = encoder
 
@@ -152,7 +157,7 @@ export class Serializer {
   }
 
   async generateCAR() {
-    return await blocksToCAR(this.blocks)
+    return await blocksToCAR(this.blocks, { log: this.log })
   }
 }
 
@@ -161,17 +166,12 @@ export async function signCID(cid: string) {
   const adapter = getWagmiAdapter()
 
   const sig = await signTypedData(adapter.wagmiConfig, {
-    types: {
-      Root: [
-        { name: 'cid', type: 'string' },
-      ],
-    },
+    types: { Root: [{ name: 'cid', type: 'string' }] },
     primaryType: 'Root',
     message: { cid },
   })
   return sig
 }
-
 
 export async function janusToDAG(
   {
@@ -194,7 +194,16 @@ export async function janusToDAG(
     const updateCID = await serializer.addToIPFS({
       cid: rootCID,
       signature,
+      info: 'Mïmis Graph Update',
+      url: 'https://mimis.dhappy.org',
+      generated: new Date().toISOString(),
     })
+    serializer.log?.(
+      `Update written to`
+      + ` <a href="${toHTTP({ cid: updateCID })}" target="_blank">`
+      + updateCID.toString()
+      + '</a>.'
+    )
     const out: { cid: CID, car?: { url: string, cid: CID } } = (
       { cid: updateCID }
     )
@@ -207,4 +216,3 @@ export async function janusToDAG(
     throw error
   }
 }
-

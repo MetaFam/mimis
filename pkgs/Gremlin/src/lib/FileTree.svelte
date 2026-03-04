@@ -183,6 +183,8 @@
     gap: 0.5em;
     margin: 0;
     --icon-size: calc(var(--zoom, 1) * 3em);
+    max-height: calc(100dvh - 10em);
+    overflow-y: scroll;
 
     & ol, & li, & dl, & details, & summary, ::details-content {
       display: grid;
@@ -255,7 +257,7 @@
       background-repeat: no-repeat;
       background-size: contain;
       display: inline-block;
-        width: var(--icon-size);
+      width: var(--icon-size);
       height: var(--icon-size);
       margin-inline-start: calc(var(--depth, 1) * 1.5em);
     }

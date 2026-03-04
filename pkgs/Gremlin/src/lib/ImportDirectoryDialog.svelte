@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fileTreeToCIDTree as treeToCIDs } from '$lib/fileTree2CIDTree'
+  import { fileTreeToCIDTree as treeToCIDs, type TreeNode } from '$lib/fileTree2CIDTree'
   import settings from '$lib/settings.svelte'
   import { spiderDirHandles } from '$lib/dirHandles2JSTree'
   import { expandLevels, selectAll } from '$lib'
@@ -12,7 +12,7 @@
   let tree = $state<DirNode>()
   let dir = $state<FileSystemDirectoryHandle>()
   let working = $state(false)
-  let logs = $state([])
+  let logs = $state<Array<unknown>>([])
 
 
   const log = (msg: any) => {
@@ -26,6 +26,7 @@
       const form = evt.currentTarget as HTMLFormElement
       const formData = new FormData(form)
       if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
+        log?.(`Spidering ${dir?.name}:`)
         tree = await spiderDirHandles({
           dir, log, gitignores: Boolean(formData.get('gitignores')),
         })
@@ -43,14 +44,25 @@
   }
   async function doImport(evt: SubmitEvent) {
     evt.preventDefault()
-    if(!tree) throw new Error('No tree to import.')
-    const form = evt.currentTarget as HTMLFormElement
-    if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
-      const { descendingTo: cidTree } = await treeToCIDs(tree, { log })
-      console.debug({ cidTree, containerId })
-      cidTreeToJanus({ tree: cidTree, containerId, log })
+    try {
+      if(!tree) throw new Error('No tree to import.')
+      const form = evt.currentTarget as HTMLFormElement
+      if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
+        const {
+          descendingTo: cidTree
+        } = await treeToCIDs(tree, { log }) as {
+          descendingTo: TreeNode
+        }
+        cidTreeToJanus({ tree: cidTree, containerId, log })
+      }
+      form.reset()
+    } catch(err) {
+      let msg = (err as Error).message
+      if(msg === 'Failed to fetch') {
+        msg = `Unable to connect to IPFS daemon @ ${settings.ipfsAPI}.`
+      }
+      log(msg)
     }
-    form.reset()
   }
   function close() {
     tree = undefined
@@ -65,6 +77,25 @@
       <p>¡Many sorries! Your browser does not support <code>showDirectoryPicker()</code>, so it is not possible to spider the file system.</p>
       <menu>
         <button name="action" value="acquiesce">OK</button>
+      </menu>
+    </form>
+  {:else if logs.length > 0}
+    <form class="logs">
+      <ol reversed>
+        {#each logs as log}
+          <li>{@html log}</li>
+        {/each}
+      </ol>
+      <menu>
+        <button
+          type="button"
+          name="action" value="clear"
+          onclick={() => {
+            logs = []
+            if(tree) close()
+          }}
+        >Clear</button>
+        <div class="spacer"></div>
       </menu>
     </form>
   {:else if !tree}
@@ -100,25 +131,6 @@
         </menu>
       </fieldset>
     </form>
-  {:else if logs.length > 0}
-    <ul class="logs">
-      {#each logs as log}
-        <li>{@html log}</li>
-      {/each}
-    </ul>
-    <form>
-      <menu>
-        <button
-          type="button"
-          name="action" value="clear"
-          onclick={() => {
-            logs = []
-            if(tree) close()
-          }}
-        >Clear</button>
-        <div class="spacer"></div>
-      </menu>
-    </form>
   {:else}
     <FileTree {tree} onsubmit={doImport} oncancel={close}/>
   {/if}
@@ -128,5 +140,15 @@
   button img {
     width: 1em;
     max-height: 1em;
+  }
+
+  .logs {
+    display: flex;
+    flex-direction: column;
+
+    & ol {
+      max-height: calc(100dvh - 7.5em);
+      overflow-y: scroll;
+    }
   }
 </style>

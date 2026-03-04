@@ -16,11 +16,12 @@
   import Breadcrumbs from '$lib/Breadcrumbs.svelte'
   import settings from '$lib/settings.svelte'
   import ImportDirectoryDialog from '$lib/ImportDirectoryDialog.svelte'
-  import { janusToDAG } from '$lib/janus2DAG.ts'
+  import { janusToDAG } from '$lib/janus2DAG'
   import { kuboUpload } from '$lib/ipfs'
   import { toHTTP, throwError, logHeader } from '$lib'
   import Folder from '$lib/assets/folder.svg'
   import Eyes from '$lib/assets/infinity eyes.svg'
+  import Background from '$lib/assets/background.svg'
 
   let error = $state<string | null>(null)
   let path = $state(
@@ -123,16 +124,36 @@
   }
 
   async function buildDAG() {
+    const { cid, log } = await build(
+      { generateCAR: false, insertInIPFS: true }
+    )
+    log(
+      'Update built with root CID:'
+      + ` <a href="${toHTTP({ cid })}" target="_blank">`
+      + cid.toString()
+      + '</a>'
+    )
+ }
+
+  async function buildCAR() {
+    const { car: { url } = {}, log } = await build(
+      { generateCAR: true, insertInIPFS: false }
+    )
+    log(
+      'Update built to CAR:'
+      + ` <a href="${url}" target="_blank" download>`
+      + url
+      + '</a>'
+    )
+   }
+
+  async function build(opts) {
     logDialog?.showModal()
     const log = (msg: string) => {
       logs.unshift(msg)
     }
-    const { cid } = await janusToDAG({ log })
-    log(
-
-      'Update built with root CID:'
-      + ` <a href="${toHTTP({ cid })}" target="_blank">${cid.toString()}</a>`
-    )
+    const result = await janusToDAG({ log, ...opts })
+    return { ...result, log }
   }
 
   const display = async () => {
@@ -140,7 +161,9 @@
       const spots = throwError(
         await spotsPromise
       ) as Array<Entry>
-      console.debug(JSON.stringify(spots, null, 2))
+      if(settings.debugging) {
+        console.debug(JSON.stringify(spots, null, 2))
+      }
       return spots
     } catch(err) {
       console.error({ display: err })
@@ -175,7 +198,7 @@
       <li><button onclick={() => importDirectoryDialog?.showModal()}>
         Import Directory
       </button></li>
-      <li><button>Export to CAR</button></li>
+      <li><button onclick={buildCAR}>Export to CAR</button></li>
       <li><button onclick={buildDAG}>Export to CBOR-DAG</button></li>
       <li><button
         class="menu-open"
@@ -188,6 +211,17 @@
           min={0.1} max={2} step={0.1}
           property="--zoom" label="🔎"
           bind:value={settings.detailsZoom}
+        />
+      </li>
+      <li id="bg">
+        <img class="icon" src={Background}/>
+        <input
+          type="color"
+          oninput={(evt) => {
+            document.documentElement.style.setProperty(
+              '--display-color', evt.target?.value
+          )
+          }}
         />
       </li>
       <li>
@@ -354,24 +388,32 @@
     font-size: 1em;
   }
 
-  .general.tools > button > span {
-    display: inline-block;
+  .general.tools > button {
+    margin-inline-start: 0;
     transition: all 0.5s;
-    rotate: 0deg;
 
-    &:nth-of-type(odd) {
-      translate: 0em 0.25em;
+    & > span {
+      display: inline-block;
+      rotate: 0deg;
+
+      &:nth-of-type(odd) {
+        translate: 0em 0.25em;
+      }
     }
   }
 
-  .general.tools > button.actions-open > span {
-    rotate: 90deg;
+  .general.tools > button.actions-open {
+    margin-inline-start: -25%;
 
-    &:nth-of-type(1) {
-      translate: -0.85em 0em;
-    }
-    &:nth-of-type(3) {
-      translate: -0.2em 0em;
+    & > span {
+      rotate: 90deg;
+
+      &:nth-of-type(1) {
+        translate: -0.85em 0em;
+      }
+      &:nth-of-type(3) {
+        translate: -0.2em 0em;
+      }
     }
   }
 
@@ -406,9 +448,17 @@
     white-space: nowrap;
     padding-inline: 0;
     margin-inline: 0;
+    margin-block-start: 3em;
     border-inline-end: 2px solid #3330;
 
+    & ul {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
     & li {
+      display: inline-block;
       place-items: center;
     }
 
@@ -418,10 +468,25 @@
       margin-inline-end: 0.5rem;
       border-inline-end: 2px solid #333;
     }
+
+    & #bg {
+      display: flex;
+      justify-content: center;
+
+      & .icon {
+        max-width: 1.5em;
+      }
+
+      & input[type="color"] {
+        flex-grow: 1;
+        height: 2em;
+      }
+    }
   }
 
   #details {
     flex-grow: 1;
+    background-color: var(--display-color, #2223);
   }
 
   .general.tools {

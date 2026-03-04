@@ -52,9 +52,9 @@ export const spiderDirHandles = ({
         }
       } catch(error) {
         if(!(error instanceof DOMException && error.name === 'NotFoundError')) {
-          log?.(`Error reading gitignore for ${current}: ${error.message}`)
+          log?.(`Error reading gitignore for ${current}: ${(error as Error).message}`)
+          console.error({ current, error })
         }
-        console.error({ error })
       }
     }
 
@@ -78,10 +78,6 @@ export const spiderDirHandles = ({
         }
       },
     }
-
-    type Handle = (
-      FileSystemDirectoryHandle | FileSystemFileHandle
-    )
 
     for await (const handle of (
       dir as unknown as { values: () => Array<FileSystemHandle> }

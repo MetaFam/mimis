@@ -8,7 +8,7 @@
 }
 
 dialog.wide {
-  width: 90%;
+  width: min(100%, calc(max-content + 10%));
 }
 
 div.spacer {
