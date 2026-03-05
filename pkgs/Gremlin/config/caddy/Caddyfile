@@ -1,0 +1,3 @@
+janus.mimis.dhappy.org {
+	reverse_proxy janusgraph:8182
+}

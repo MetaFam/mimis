@@ -15,7 +15,6 @@ services:
       - path: .env.local
         required: false
     environment:
-      # These get overridden by mounted configs, but useful for debugging
       - JANUS_PROPS_TEMPLATE=berkeleyje-lucene
       - gremlinserver.graphs.graph=/etc/opt/janusgraph/mimis.properties
       - janusgraph.graph.replace-instance-if-exists=true
@@ -26,5 +25,20 @@ services:
       retries: 5
       start_period: 60s
 
+  caddy:
+    profiles: ["production"]
+    image: caddy:latest
+    container_name: mimis-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      janusgraph:
+        condition: service_healthy
+
 volumes:
   janusgraph-data:
+  caddy-data:
