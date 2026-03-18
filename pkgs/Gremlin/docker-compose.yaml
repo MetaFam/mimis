@@ -1,7 +1,9 @@
 services:
   janusgraph:
-    image: janusgraph/janusgraph:latest
     container_name: authed-janusgraph
+    build:
+      context: config/janusgraph/
+      dockerfile: Dockerfile
     expose:
       - "8182"
     volumes:
@@ -19,7 +21,7 @@ services:
       - gremlinserver.graphs.graph=/etc/opt/janusgraph/mimis.properties
       - janusgraph.graph.replace-instance-if-exists=true
     healthcheck:
-      test: ["CMD-SHELL", "bin/gremlin.sh -e scripts/remote-connect.groovy || exit 1"]
+      test: ["CMD-SHELL", "nc -z localhost 8182"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -29,7 +31,7 @@ services:
     image: caddy:latest
     container_name: mimis-caddy
     ports:
-      - "80:80"
+      - "88:80"
       - "443:443"
     volumes:
       - ./config/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
