@@ -55,7 +55,7 @@ export class Settings {
       env.PUBLIC_DETAILS_ZOOM ? Number(env.PUBLIC_DETAILS_ZOOM) : 1
     ),
     [Settings.keys.janusGraphURL]: (
-      env.PUBLIC_JANUSGRAPH_URL || 'ws://localhost:8182/gremlin'
+      env.PUBLIC_JANUSGRAPH_URL || 'wss://janus.mimis.dhappy.org/gremlin'
     ),
     [Settings.keys.janusGraphUsername]: (
       env.PUBLIC_JANUSGRAPH_USERNAME || 'mimis'
