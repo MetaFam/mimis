@@ -61,7 +61,7 @@ export class Settings {
       env.PUBLIC_JANUSGRAPH_USERNAME || 'mimis'
     ),
     [Settings.keys.janusGraphPassword]: (
-      env.PUBLIC_JANUSGRAPH_PASSWORD || 'ThisistheJanusGraphpasswordformimis.'
+      env.PUBLIC_JANUSGRAPH_PASSWORD || 'This is the JanusGraph password for mimis.'
     ),
     [Settings.keys.publicJanusGraphURL]: (
       env.PUBLIC_PUBLIC_JANUSGRAPH_URL || 'wss://janus.mimis.dhappy.org/gremlin'

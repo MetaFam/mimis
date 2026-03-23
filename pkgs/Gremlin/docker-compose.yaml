@@ -4,8 +4,8 @@ services:
     build:
       context: config/janusgraph/
       dockerfile: Dockerfile
-    expose:
-      - "8182"
+    ports:
+      - "8182:8182"
     volumes:
       - ./config/janusgraph/server.yaml:/opt/janusgraph/conf/janusgraph-server.yaml:ro
       - ./config/janusgraph/mimis.properties:/etc/opt/janusgraph/mimis.properties:ro

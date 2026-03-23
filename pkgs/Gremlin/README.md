@@ -92,7 +92,7 @@ One of the most fundamental is as a collaborative file system called Argus allow
 * maintain individual hierarchical collections of information
 * create links to incorporate parts of others' collections into their own
 * suggest updates to others' resources
-* represent resources which served as sources for a work
+* represent resources which served as [sources](https://www.w3.org/TR/2013/NOTE-prov-primer-20130430/) for a work
 
 #### Graph Structure
 

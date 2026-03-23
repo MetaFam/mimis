@@ -3,6 +3,7 @@ import settings from '$lib/settings.svelte.ts'
 
 const { driver, process } = gremlin
 const {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   GraphTraversalSource, merge: Merge, t: T,
 } = process
 const {
@@ -14,8 +15,13 @@ export function connect() {
   if(settings.debugging) {
     console.debug({ Connecting: settings.janusGraphURL })
   }
-  const opts: { authenticator?: PlainTextSaslAuthenticator } = {}
+  const opts: { authenticator?: InstanceType<typeof PlainTextSaslAuthenticator> } = {}
   if(settings.janusGraphUsername) {
+    if(settings.debugging) {
+      console.debug(
+        `Connecting to Janus (${settings.janusGraphURL}) as ${settings.janusGraphUsername}`
+      )
+    }
     opts.authenticator = (
       new PlainTextSaslAuthenticator(
         settings.janusGraphUsername,
@@ -35,7 +41,7 @@ export function connectToG(
   return process.traversal().withRemote(connection)
 }
 
-export async function mergeRoot(g: GraphTraversalSource) {
+export async function mergeRoot(g: InstanceType<typeof GraphTraversalSource>) {
   const now = new Date().toISOString()
   const traversal = (
     g.mergeV(new Map([[T.label, 'Root']]))

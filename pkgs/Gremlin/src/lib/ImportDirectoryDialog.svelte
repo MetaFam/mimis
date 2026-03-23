@@ -55,6 +55,7 @@
         }
         cidTreeToJanus({ tree: cidTree, containerId, log })
       }
+      log?.('Import complete.')
       form.reset()
     } catch(err) {
       let msg = (err as Error).message
@@ -73,7 +74,7 @@
 
 <dialog id="begin-dir" class:wide={!!tree} bind:this={self}>
   {#if typeof(window) === 'undefined' || typeof(window.showDirectoryPicker) !== 'function'}
-    <form onsubmit={(evt) => self.close()}>
+    <form onsubmit={() => self.close()}>
       <p>¡Many sorries! Your browser does not support <code>showDirectoryPicker()</code>, so it is not possible to spider the file system.</p>
       <menu>
         <button name="action" value="acquiesce">OK</button>
