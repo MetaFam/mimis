@@ -19,6 +19,8 @@
   import { janusToDAG } from '$lib/janus2DAG'
   import { kuboUpload } from '$lib/ipfs'
   import { toHTTP, throwError, logHeader } from '$lib'
+  import { getAccount, signMessage } from '@wagmi/core'
+  import { createSiweMessage } from 'viem/siwe'
   import Folder from '$lib/assets/folder.svg'
   import Eyes from '$lib/assets/infinity eyes.svg'
   import Background from '$lib/assets/background.svg'
@@ -37,23 +39,81 @@
   let pathInput = $state<string>('')
   let logs = $state<Array<string>>([])
   let walletConnected = $state(false)
+  let whoAmI = $state<string | null>(null)
+  let signingIn = false
 
-  let spotsPromise = $derived(searchFor({ path }))
-  let idPromise = $derived(spotId({ path }))
+  let spotsPromise = $derived(searchFor({
+    path, address: whoAmI,
+  }))
+  let idPromise = $derived(spotId({
+    path, address: whoAmI,
+  }))
 
   logHeader()
 
   // If loaded on the server, fails with "`HTMLElement` not found."
   let appKit: AppKit | null = null
+  let wagmiConfig: ReturnType<typeof import('$lib/appkit').getWagmiAdapter>['wagmiConfig'] | null = null
   onMount(async () => {
-    const { getAppKit } = await import('$lib/appkit')
+    const { getAppKit, getWagmiAdapter } = await import('$lib/appkit')
     appKit = getAppKit()
+    wagmiConfig = getWagmiAdapter().wagmiConfig
 
     walletConnected = !!appKit.getIsConnectedState()
-    appKit.subscribeEvents((evt) => {
-      walletConnected = !!appKit?.getIsConnectedState()
+    appKit.subscribeEvents(async () => {
+      const connected = !!appKit?.getIsConnectedState()
+      walletConnected = connected
+      if(connected && !whoAmI && !signingIn) {
+        await siweSignIn()
+      }
     })
   })
+
+  async function siweSignIn() {
+    if(!wagmiConfig) return
+    const account = getAccount(wagmiConfig)
+    if(!account.address) return
+
+    signingIn = true
+    try {
+      const nonceRes = await fetch('/api/auth/nonce', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: account.address }),
+      })
+      const { nonce } = await nonceRes.json()
+
+      const message = createSiweMessage({
+        domain: window.location.host,
+        address: account.address,
+        statement: 'Sign in to Mïmis.',
+        uri: window.location.origin,
+        version: '1',
+        chainId: account.chainId ?? 1,
+        nonce,
+      })
+
+      const signature = await signMessage(wagmiConfig, { message })
+
+      const verifyRes = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, signature }),
+      })
+      if(verifyRes.ok) {
+        whoAmI = account.address
+      } else {
+        const { error: msg } = await verifyRes.json()
+        console.error('SIWE verification failed:', msg)
+        error = `Sign-in failed: ${msg}`
+      }
+    } catch(err) {
+      console.error('SIWE sign-in error:', err)
+      error = (err as Error).message
+    } finally {
+      signingIn = false
+    }
+  }
 
   afterNavigate(async ({ to }) => {
     path = (
@@ -74,7 +134,9 @@
       if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
         const containerId = throwError(await idPromise) as number
         const path = formData.getAll('path') as Array<string>
-        throwError(await createSpot({ containerId, path }))
+        throwError(await createSpot({
+          containerId, path, address: whoAmI,
+        }))
       }
       addSpotDialog.requestClose()
     } catch(err) {
@@ -189,7 +251,10 @@
 <main>
   <menu id="actions" class:open={menued}>
     <ul>
-      <li><button onclick={() => addSpotDialog?.showModal()}>
+      <li><button
+        aria-disabled={!whoAmI}
+        onclick={() => whoAmI ? addSpotDialog?.showModal() : appKit?.open()}
+      >
         Add Directory
       </button></li>
       <li><button onclick={() => addFilesDialog?.showModal()}>
@@ -278,7 +343,7 @@
   </section>
   <section id="files">
     <nav id="crumbs">
-      <Breadcrumbs {path}/>
+      <Breadcrumbs {path} address={whoAmI}/>
     </nav>
     <nav id="details">
       <ul>
@@ -421,6 +486,10 @@
     padding: 0;
     list-style: none;
 
+    #actions & button[aria-disabled="true"] {
+      opacity: 0.5;
+    }
+
     #locations & li, #actions & button {
       display: block;
       padding: 0.5rem 1rem;
@@ -487,6 +556,15 @@
   #details {
     flex-grow: 1;
     background-color: var(--display-color, #2223);
+
+    &, & a {
+      color: contrast-color(var(--display-color, #222));
+    }
+    a:hover {
+      color: color-mix(
+        in oklab, contrast-color(var(--display-color, #222)) 75%, coral 25%
+      );
+    }
   }
 
   .general.tools {

@@ -4,7 +4,7 @@ import settings from '$lib/settings.svelte.ts'
 const { driver, process } = gremlin
 const {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  GraphTraversalSource, merge: Merge, t: T,
+  GraphTraversalSource, statics: __, merge: Merge, t: T,
 } = process
 const {
   DriverRemoteConnection,
@@ -50,4 +50,47 @@ export async function mergeRoot(g: InstanceType<typeof GraphTraversalSource>) {
   )
   const results = await traversal.next()
   return results.value as number
+}
+
+export function mergePath({ traversal, path, now }: {
+  traversal: ReturnType<ReturnType<typeof connectToG>['V']>
+  path: string[]
+  now: string
+}) {
+  for(const elem of path) {
+    traversal = (
+      traversal
+      .as('parent')
+      .coalesce(
+        (
+          __.outE('CONTAINS')
+          .has('path', elem)
+          .inV()
+        ),
+        (
+          __.addV('Spot')
+          .property({ createdAt: now })
+          .addE('CONTAINS')
+          .from_('parent')
+          .property({ path: elem, createdAt: now })
+          .inV()
+        ),
+      )
+    )
+  }
+  return traversal
+}
+
+export async function findSpotRoot(
+  g: InstanceType<typeof GraphTraversalSource>,
+  address: string,
+): Promise<number | null> {
+  const result = await (
+    g.V().has(T.label, 'Root')
+    .outE('ACCOUNT').has('signer', address).inV()
+    .out('SPOTROOT')
+    .id()
+    .next()
+  )
+  return (result.value as number) ?? null
 }

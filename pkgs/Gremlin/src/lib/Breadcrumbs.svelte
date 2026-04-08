@@ -4,7 +4,10 @@
   import root from '$lib/assets/root.svg'
   import { searchFor, type Entry } from './searchFor.remote'
 
-  let { path = [] } = $props()
+  let { path = [], address = null }: {
+    path: string[]
+    address: string | null
+  } = $props()
 </script>
 
 <ol>
@@ -16,7 +19,7 @@
       <button class:expanded={elem.selected}>⇨</button>
       <a
         href={resolve(whole as '/')}
-        title={idx === 0 ? '𝙍𝙤𝙤𝙩' : decoded}
+        title={idx === 0 ? (address ?? '𝙍𝙤𝙤𝙩') : decoded}
       >
         {#if idx === 0}
           <img src={root} alt="🪾"/>

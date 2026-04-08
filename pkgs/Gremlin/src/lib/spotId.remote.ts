@@ -3,12 +3,14 @@ import * as v from 'valibot'
 import { query } from '$app/server'
 import {
   connect as connectJanusGraph, connectToG,
+  findSpotRoot,
 } from '$lib/janusgraph.ts'
 
 const { statics: __, t: T } = gremlin.process
 
 const SearchSchema = v.object({
   path: v.array(v.string()),
+  address: v.optional(v.nullable(v.string())),
   options: v.optional(v.object({
     maxMountDepth: v.optional(v.number(), 10),
     allowCycles: v.optional(v.boolean(), false),
@@ -19,6 +21,7 @@ export const spotId = query(
   SearchSchema,
   async ({
     path = [],
+    address,
     options = {
       maxMountDepth: 10,
       allowCycles: false,
@@ -30,7 +33,15 @@ export const spotId = query(
       path = path.filter(Boolean)
 
       const g = connectToG(connection)
-      let traversal = g.V().has(T.label, 'Root')
+
+      let startId: number | null = null
+      if(address) {
+        startId = await findSpotRoot(g, address)
+      }
+
+      let traversal = startId
+        ? g.V(startId)
+        : g.V().has(T.label, 'Root')
 
       for (const element of path) {
         console.debug({ Checking: element })

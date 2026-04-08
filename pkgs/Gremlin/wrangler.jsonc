@@ -33,7 +33,10 @@
 	"vars": {
 		"PUBLIC_APPKIT_PROJECT_ID": "101a9a9ea0737af81f87ae784a9884ef",
 		"PUBLIC_JANUSGRAPH_URL": "wss://janus.mimis.dhappy.org/gremlin",
-	}
+	},
+	"kv_namespaces": [
+		{ "binding": "NONCES", "id": "4e06bb35287e44f6b4bbd80939c8570a" }
+	]
 	/**
 	 * Static Assets
 	 * https://developers.cloudflare.com/workers/static-assets/binding/
