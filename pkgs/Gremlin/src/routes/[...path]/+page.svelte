@@ -257,10 +257,16 @@
       >
         Add Directory
       </button></li>
-      <li><button onclick={() => addFilesDialog?.showModal()}>
+      <li><button
+        aria-disabled={!whoAmI}
+        onclick={() => whoAmI ? addFilesDialog?.showModal() : appKit?.open()}
+      >
         Import Files
       </button></li>
-      <li><button onclick={() => importDirectoryDialog?.showModal()}>
+      <li><button
+        aria-disabled={!whoAmI}
+        onclick={() => whoAmI ? importDirectoryDialog?.showModal() : appKit?.open()}
+      >
         Import Directory
       </button></li>
       <li><button onclick={buildCAR}>Export to CAR</button></li>
