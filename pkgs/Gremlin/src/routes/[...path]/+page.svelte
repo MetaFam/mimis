@@ -67,11 +67,20 @@
         await siweSignIn()
       }
     })
+    if(walletConnected && !whoAmI) {
+      await siweSignIn()
+    }
   })
 
   async function siweSignIn() {
     if(!wagmiConfig) return
     const account = getAccount(wagmiConfig)
+    if(settings.debugging) {
+      console.debug('SIWE attempt:', {
+        address: account.address,
+        status: account.status,
+      })
+    }
     if(!account.address) return
 
     signingIn = true
@@ -133,9 +142,9 @@
       const formData = new FormData(evt.currentTarget as HTMLFormElement)
       if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
         const containerId = throwError(await idPromise) as number
-        const path = formData.getAll('path') as Array<string>
+        const terminal = formData.getAll('path') as Array<string>
         throwError(await createSpot({
-          containerId, path, address: whoAmI,
+          containerId, path: [...path, terminal], address: whoAmI,
         }))
       }
       addSpotDialog.requestClose()

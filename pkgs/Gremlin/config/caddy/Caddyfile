@@ -1,3 +1,19 @@
 janus.mimis.dhappy.org {
 	reverse_proxy janusgraph:8182
 }
+
+localhost:8183 {
+    @options method OPTIONS
+    handle @options {
+        header Access-Control-Allow-Origin "*"
+        header Access-Control-Allow-Methods "GET, POST, OPTIONS"
+        header Access-Control-Allow-Headers "Content-Type"
+        respond 204
+    }
+    handle {
+        header Access-Control-Allow-Origin "*"
+        header Access-Control-Allow-Methods "GET, POST, OPTIONS"
+        header Access-Control-Allow-Headers "Content-Type"
+        reverse_proxy janusgraph:8182
+    }
+}

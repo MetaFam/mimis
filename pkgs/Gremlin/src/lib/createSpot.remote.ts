@@ -21,24 +21,30 @@ export const createSpot = command(
     const connection = connectJanusGraph()
     const now = new Date().toISOString()
 
-    if(settings.debugging) console.debug({ Create: path })
+    if(settings.debugging) {
+      console.debug({ Create: path, containerId, address })
+    }
+    console.debug({ Create: path, containerId, address })
 
     try {
       const g = connectToG(connection)
 
+      const rootId = await mergeRoot(g)
       if(containerId == null) {
-        containerId = await mergeRoot(g)
+        containerId = rootId
       }
 
       if(address) {
-        containerId = await mergeAccount(g, containerId, address, now)
+        containerId = await mergeAccount(g, rootId, address, now)
       }
+
+      console.debug({ containerId })
 
       const traversal = mergePath({
         traversal: g.V(containerId), path, now,
       })
       const result = await traversal.id().next()
-
+      console.debug({ Created: path, id: result.value })
       return result.value
     } catch(error) {
       console.error({ createSpot: error })
@@ -70,17 +76,17 @@ async function mergeAccount(
       (
         __.as('root')
         .addV('Account')
-        .property({ createdAt: now, signer: address })
-        .as('account')
         .addE('ACCOUNT')
+        .property({ createdAt: now, signer: address })
         .from_('root')
-        .property({ signer: address, createdAt: now })
-        .select('account')
+        .inV()
       ),
     )
     .id()
     .next()
   )
+
+  console.debug({ accountId: account.value })
 
   const spotRoot = await (
     g.V(account.value)
@@ -89,46 +95,14 @@ async function mergeAccount(
       (
         __.as('account')
         .addV('SpotRoot')
-        .property({ createdAt: now, inserter: address })
-        .as('spotRoot')
         .addE('SPOTROOT')
         .from_('account')
-        .property({ inserter: address, createdAt: now })
-        .select('spotRoot')
+        .inV()
       ),
     )
     .id()
     .next()
   )
 
-  // Create app/argus path
-  const argusTraversal = mergePath({
-    traversal: g.V(spotRoot.value),
-    path: ['app', 'argus'],
-    now,
-  })
-  const argusId = await argusTraversal.id().next()
-
-  // Create app/mïmis as a MOUNT to the global Root
-  const mimisTraversal = mergePath({
-    traversal: g.V(spotRoot.value),
-    path: ['app', 'mïmis'],
-    now,
-  })
-  await (
-    mimisTraversal
-    .coalesce(
-      __.outE('MOUNT'),
-      (
-        __.as('mimis')
-        .addE('MOUNT')
-        .to(__.V(rootId))
-        .property({ order: 0, createdAt: now })
-        .select('mimis')
-      ),
-    )
-    .next()
-  )
-
-  return argusId.value as number
+  return spotRoot.value as number
 }

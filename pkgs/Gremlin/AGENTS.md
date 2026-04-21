@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Mïmis is a P2P distributed file system that combines IPFS (content-addressed storage), JanusGraph/Gremlin (graph database for structure), and Ethereum (wallet-based identity). This package (`gremlin-mimis`) is the SvelteKit web frontend.
 
-The system uses Copy on Write to provide an apparently mutable file system on top of IPFS's immutable content-addressed substrate. Structural changes are tracked in JanusGraph while file data remains immutable on IPFS.
+The system uses Copy on Write to provide an apparently mutable file system on top of IPFS's immutable content-addressed substrate. Structural changes are exchanged as CBOR-DAG nodes, one IPFS node per node in the tree. Updates are broadcast tracked in JanusGraph while file data remains immutable on IPFS.
 
 ## Commands
 
@@ -57,7 +57,7 @@ Files in `src/lib/` suffixed with `.remote.ts` are SvelteKit remote functions �
 
 ### Graph Data Model
 
-The graph has **Account** nodes at the top level connected to a single **Root** node via `ACCOUNT` edges with a `signer` value. **Spots** (conceptual nodes / "nöopoints") are arranged hierarchically below Root via `CONTAINS` edges with `path` attributes. Each Spot can have file **representations** (one per MIME type) stored on IPFS, linked via `REPRESENTATION` edges. New representations of the same type link to the previous via `PREVIOUS` edges (versioning). **Union mounts** (`MOUNT` edges with an `order` property) layer multiple trees together. Account trees are signed with Ethereum keypairs.
+The graph has **Account** nodes at the top level connected to a single **Root** node via `ACCOUNT` edges with a `signer` value. **Spots** (conceptual nodes / "nöopoints“) are arranged hierarchically below Root via `CONTAINS` edges with `path` attributes. Each Spot can have file **representations** (one per MIME type) stored on IPFS, linked via `REPRESENTATION` edges. New representations of the same type link to the previous via `PREVIOUS` edges (versioning). **Union mounts** (`MOUNT` edges with an `order` property) layer multiple trees together. Account tree updates (i.e. layers in some union mount) are signed with Ethereum keypairs.
 
 ### Key Integration Points
 

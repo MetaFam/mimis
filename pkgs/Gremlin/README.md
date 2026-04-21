@@ -14,19 +14,28 @@ The Interplanetary File System is a content-addresses distributed hash table for
 
 ##### Kubo
 
-[Kubo](https://docs.ipfs.tech/how-to/command-line-quick-start/) is [Protocol Labs](https://www.protocol.ai) Go-based primary implementation of IPFS. It is designed to run locally, and allow users to participate in the network.
+[Kubo](https://docs.ipfs.tech/how-to/command-line-quick-start/) is [Protocol Labs](https://www.protocol.ai)’ Go-based primary implementation of IPFS. It is designed to run locally, and allow users to participate in the network.
 
 ###### Setup
 
-In order for Mïmis to access Kubo via the browser, the API endpoint needs to send a CORS `Access-Control-Allow-Origin` HTTP header. The configuration allows this & to add it using the `jq` command, do:
+To run an IPFS daemon, [download Kubo](https://dist.ipfs.tech), then run:
+
+```bash
+ipfs init # if running for the first time
+ipfs daemon
+```
+
+In order for Mïmis to access Kubo via the browser, the API endpoint needs to send a CORS `Access-Control-Allow-Origin` HTTP header. The configuration allows this & to add it using [the `jq` command](https://jqlang.org), do:
 
 ```bash
 KEY=API.HTTPHeaders.Access-Control-Allow-Origin
 CURRENT=$(ipfs config $KEY)
-VAL=$(jq -c '. + ["http://localhost:5173"]' <<< ${CURRENT:-[]})
+VAL=$(jq -c '. + ["http://localhost:5173", "https://mimis.dhappy.org"]' <<< ${CURRENT:-[]})
 echo "Setting to '$VAL'"
 ipfs config --json $KEY "$VAL"
 ```
+
+Then restart the IPFS daemon.
 
 Additionally, Kubo allows defining [authorzation parameters](https://github.com/ipfs/kubo/blob/master/docs/config.md#apiauthorizations) *(both credentials and tokens)* and limiting which endpoints those authorizations can access.
 
@@ -48,24 +57,22 @@ IPFS deals specifically with directed **acyclic** graphs. Preventing cycles in t
 
 ##### Debugging
 
-Setting up JanusGraph & the Gremlin console takes some specialized commands, so those are noted here for ease of access…
-
-If running for the first time, use:
+To run Janus Graph for local development, do:
 
 ```bash
-docker run --name janusgraph -p 8182:8182 janusgraph/janusgraph:latest
+docker compose up
 ```
 
-If the JanusGraph image is already present in Docker *(use `docker image ls` to verify)*, use:
+To run with [Caddy](https://caddyserver.com) teminating SSL, as is needed for a secure web socket, run:
 
 ```bash
-docker start --attach janusgraph
+docker compose -f docker-compose.yaml -f docker-compose.production.yaml up
 ```
 
 Once, JanusGraph is running, you can connect a Gremlin console using:
 
 ```bash
-docker exec -e GREMLIN_REMOTE_HOSTS=janusgraph -it janusgraph bin/gremlin.sh
+docker exec -e GREMLIN_REMOTE_HOSTS=janusgraph -it authed-janusgraph bin/gremlin.sh
 ```
 
 Within the Gremlin console, you connect to the running JanusGraph instance using:
@@ -77,9 +84,8 @@ g = traversal().withRemote('conf/remote-graph.properties')
 As with most containers, if you just want to poke around the file system:
 
 ```bash
-docker exec -it janusgraph /bin/bash
+docker exec -it authed-janusgraph /bin/bash
 ```
-
 
 ## Use Cases
 
@@ -96,7 +102,7 @@ One of the most fundamental is as a collaborative file system called Argus allow
 
 #### Graph Structure
 
-The most basic idiom in Argus is a directory tree. Nodes in the tree represent conceptual points in the space of all ideas. *(In the system, these nodes are “nöopoints” where the sum of all concepts is Vernadsky's “nöosphere”, though they are refered to, for simplicity sake, as “Spot”s.)* The edges between nodes contains the path elements which are associated with folders in a traditional file system.
+The most basic idiom in Argus is a directory tree. Nodes in the tree represent conceptual points in the space of all ideas. *(In the system, these nodes are “nöopoints” where the sum of all concepts is Vernadsky's “nöosphere”, though they are refered to, for simplicity sake, as “Spots”.)* The edges between nodes contains the path elements which are associated with folders in a traditional file system.
 
 ![basic graph structure](docs/basic%20graph.svg)
 

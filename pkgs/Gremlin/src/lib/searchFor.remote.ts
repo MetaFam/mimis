@@ -61,7 +61,7 @@ export const searchFor = query(
         startId = await findSpotRoot(g, address)
       }
 
-      let traversal = startId !- null
+      let traversal = startId != null
         ? g.V(startId)
         : g.V().has(T.label, 'Root')
 

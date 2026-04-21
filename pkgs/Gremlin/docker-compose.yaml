@@ -11,11 +11,6 @@ services:
       - ./config/janusgraph/mimis.properties:/etc/opt/janusgraph/mimis.properties:ro
       - ./config/janusgraph/credentials.properties:/etc/opt/janusgraph/credentials.properties:ro
       - janusgraph-data:/var/lib/janusgraph
-    env_file:
-      - path: .env
-        required: false
-      - path: .env.local
-        required: false
     environment:
       - JANUS_PROPS_TEMPLATE=berkeleyje-lucene
       - gremlinserver.graphs.graph=/etc/opt/janusgraph/mimis.properties

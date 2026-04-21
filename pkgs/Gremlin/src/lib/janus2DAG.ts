@@ -189,8 +189,19 @@ export async function janusToDAG(
     })
     serializer.log?.(`Exporting nodes to \`${encoder.name}\`…`)
     const rootCID = await serializer.node(rootId)
-    serializer.log?.('Awaiting Ethereum signature by user…')
-    const signature = await signCID(rootCID.toString())
+
+    let signature: string | null = null
+    while(!signature) {
+      try {
+        serializer.log?.('Awaiting Ethereum signature by user…')
+        signature = await signCID(rootCID.toString())
+      } catch(err) {
+        serializer.log?.(
+          `Signing failed: ${(err as Error).message}. Retrying…`
+        )
+      }
+    }
+
     const updateCID = await serializer.addToIPFS({
       cid: rootCID,
       signature,

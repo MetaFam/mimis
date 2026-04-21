@@ -5,12 +5,21 @@ port: 8182
 evaluationTimeout: 30000
 
 # WebSocket channelizer - use WsAndHttpChannelizer if you need both
-channelizer: org.apache.tinkerpop.gremlin.server.channel.WebSocketChannelizer
+channelizer: org.apache.tinkerpop.gremlin.server.channel.WsAndHttpChannelizer
+# channelizer: org.apache.tinkerpop.gremlin.server.channel.WebSocketChannelizer
 graphManager: org.janusgraph.graphdb.management.JanusGraphManager
 
 graphs: {
   graph: /etc/opt/janusgraph/mimis.properties
 }
+
+serializers:
+  - { className: org.apache.tinkerpop.gremlin.util.ser.GraphSONMessageSerializerV3,
+      config: { ioRegistries: [org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry] }
+    }
+  - { className: org.apache.tinkerpop.gremlin.util.ser.GraphSONMessageSerializerV1,
+      config: { ioRegistries: [org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry] }
+    }
 
 scriptEngines: {
   gremlin-groovy: {
@@ -50,15 +59,16 @@ processors:
 # and password hashes are stored.
 #
 # defaultUsername/defaultPassword: Created on first startup if no users exist
-authentication: {
-  authenticator: org.janusgraph.graphdb.tinkerpop.gremlin.server.auth.JanusGraphSimpleAuthenticator,
-  authenticationHandler: org.apache.tinkerpop.gremlin.server.handler.SaslAuthenticationHandler,
-  config: {
-    defaultUsername: Set in .env @ gremlinserver.authentication.config.defaultUsername,
-    defaultPassword: Set in .env @ gremlinserver.authentication.config.defaultPassword,
-    credentialsDb: /etc/opt/janusgraph/credentials.properties
-  }
-}
+
+# authentication: {
+#   authenticator: org.janusgraph.graphdb.tinkerpop.gremlin.server.auth.JanusGraphSimpleAuthenticator,
+#   authenticationHandler: org.apache.tinkerpop.gremlin.server.handler.SaslAuthenticationHandler,
+#   config: {
+#     defaultUsername: Set in .env @ gremlinserver.authentication.config.defaultUsername,
+#     defaultPassword: Set in .env @ gremlinserver.authentication.config.defaultPassword,
+#     credentialsDb: /etc/opt/janusgraph/credentials.properties
+#   }
+# }
 
 metrics: {
   consoleReporter: { enabled: true, interval: 180000 },
