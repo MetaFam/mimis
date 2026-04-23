@@ -90,7 +90,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ address: account.address }),
       })
-      const { nonce } = await nonceRes.json()
+      const { nonce } = await nonceRes.json() as { nonce: string }
 
       const message = createSiweMessage({
         domain: window.location.host,
@@ -112,7 +112,7 @@
       if(verifyRes.ok) {
         whoAmI = account.address
       } else {
-        const { error: msg } = await verifyRes.json()
+        const { error: msg } = await verifyRes.json() as { error: string }
         console.error('SIWE verification failed:', msg)
         error = `Sign-in failed: ${msg}`
       }
@@ -144,7 +144,7 @@
         const containerId = throwError(await idPromise) as number
         const terminal = formData.getAll('path') as Array<string>
         throwError(await createSpot({
-          containerId, path: [...path, terminal], address: whoAmI,
+          containerId, path: [...path, ...terminal], address: whoAmI,
         }))
       }
       addSpotDialog.requestClose()
@@ -218,10 +218,13 @@
     )
    }
 
-  async function build(opts) {
+  async function build(opts: unknown) {
     logDialog?.showModal()
-    const log = (msg: string) => {
-      logs.unshift(msg)
+    const log = (msg: unknown) => {
+      logs.unshift(msg as string)
+    }
+    if(typeof opts !== 'object' || opts == null) {
+      throw new Error('Invalid build options.')
     }
     const result = await janusToDAG({ log, ...opts })
     return { ...result, log }
@@ -299,7 +302,7 @@
           type="color"
           oninput={(evt) => {
             document.documentElement.style.setProperty(
-              '--display-color', evt.target?.value
+              '--display-color', (evt.target as HTMLInputElement)?.value
           )
           }}
         />
@@ -435,7 +438,8 @@
   <dialog id="logs" bind:this={logDialog}>
     <form>
       <ol reversed>
-        {#each logs as log}
+        {#each logs as log, idx (logs.length - idx)}
+          // eslint-disable-next-line svelte/no-at-html-tags
           <li>{@html log}</li>
         {/each}
       </ol>
