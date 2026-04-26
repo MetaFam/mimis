@@ -15,7 +15,7 @@
   let logs = $state<Array<unknown>>([])
 
 
-  const log = (msg: any) => {
+  const log = (msg: unknown) => {
     logs.unshift(msg)
   }
 

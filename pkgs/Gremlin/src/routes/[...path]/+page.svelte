@@ -7,6 +7,7 @@
   import { afterNavigate } from '$app/navigation'
   import { resolve } from '$app/paths'
   import { searchFor, type Entry } from '$lib/searchFor.remote'
+  import { representations, type Representation } from '$lib/representations.remote'
   import { createSpot } from '$lib/createSpot.remote'
   import { addFiles as filesToSpot } from '$lib/addFiles.remote'
   import { spotId } from '$lib/spotId.remote'
@@ -45,9 +46,22 @@
   let spotsPromise = $derived(searchFor({
     path, address: whoAmI,
   }))
+  let representationsPromise = $derived(representations({
+    path, address: whoAmI,
+  }))
   let idPromise = $derived(spotId({
     path, address: whoAmI,
   }))
+
+  function soleDisplayable(
+    reps: Array<Representation> | { error: string } | undefined,
+  ) {
+    console.debug({ reps })
+    if(!Array.isArray(reps)) throw new Error('`reps` is not an array.')
+    if(reps.length !== 1) return false
+    const [rep] = reps
+    return rep
+  }
 
   logHeader()
 
@@ -364,35 +378,54 @@
       <Breadcrumbs {path} address={whoAmI}/>
     </nav>
     <nav id="details">
-      <ul>
-        {#each await display() as { name, type, cid } (cid || name)}
-          {@const target = type !== 'spot' ? { target: '_blank' } : {}}
-          <li>
-            <a
-              href={resolve(
-                `${
-                  path.length > 0 ? '/' : ''
-                }${
-                  path.join('/')
-                }/${
-                  name
-                }` as '/'
-              )}
-              title={name}
-              {...target}
-            >
-              {#if cid}
-                <img src={toHTTP({ cid })} alt={name}/>
-              {:else if type === 'spot'}
-                <img src={Folder} alt="📁"/>
-              {:else}
-                <aside>Unknown Type: {type}</aside>
-              {/if}
-              <span>{name}</span>
-            </a>
-          </li>
-        {/each}
-      </ul>
+      {#await representationsPromise then reps}
+        {@const sole = soleDisplayable(reps)}
+        {#if sole}
+          <figure id="media">
+            {#if sole.type.startsWith('image/')}
+              <img src={toHTTP({ cid: sole.cid })} alt={path.at(-1) ?? ''}/>
+            {:else if sole.type.startsWith('video/')}
+              <video src={toHTTP({ cid: sole.cid })} controls></video>
+            {:else}
+              <object data={toHTTP({ cid: sole.cid })} type={sole.type}>
+                <a href={toHTTP({ cid: sole.cid })} target="_blank">
+                  View {path.at(-1) ?? 'file'}
+                </a>
+              </object>
+            {/if}
+          </figure>
+        {:else}
+          <ul>
+            {#each await display() as { name, type, cid } (cid || name)}
+              {@const target = type !== 'spot' ? { target: '_blank' } : {}}
+              <li>
+                <a
+                  href={resolve(
+                    `${
+                      path.length > 0 ? '/' : ''
+                    }${
+                      path.join('/')
+                    }/${
+                      name
+                    }` as '/'
+                  )}
+                  title={name}
+                  {...target}
+                >
+                  {#if cid}
+                    <img src={toHTTP({ cid })} alt={name}/>
+                  {:else if type === 'spot'}
+                    <img src={Folder} alt="📁"/>
+                  {:else}
+                    <aside>Unknown Type: {type}</aside>
+                  {/if}
+                  <span>{name}</span>
+                </a>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      {/await}
     </nav>
   </section>
   <dialog id="add-spot" bind:this={addSpotDialog}>
@@ -662,6 +695,20 @@
     & img {
       width: calc(var(--zoom, 1) * 15em);
       max-height: calc(var(--zoom, 1) * 10em);
+    }
+
+    & #media {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      & img, & video, & object {
+        width: auto;
+        max-width: 100%;
+        max-height: 90dvh;
+        object-fit: contain;
+      }
     }
 
     & span {
