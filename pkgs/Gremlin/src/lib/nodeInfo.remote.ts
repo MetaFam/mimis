@@ -39,7 +39,9 @@ export const nodeInfo = query(
         return {
           label,
           properties,
-          targetId: (IN as Map<EnumValue, unknown>).get(T.id),
+          targetId: (
+            IN as Map<InstanceType<typeof EnumValue>, unknown>
+          ).get(T.id),
         }
       })
       return { label, id, properties, edges }

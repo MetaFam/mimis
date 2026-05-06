@@ -43,20 +43,13 @@
   let whoAmI = $state<string | null>(null)
   let signingIn = false
 
-  let spotsPromise = $derived(searchFor({
-    path, address: whoAmI,
-  }))
-  let representationsPromise = $derived(representations({
-    path, address: whoAmI,
-  }))
-  let idPromise = $derived(spotId({
-    path, address: whoAmI,
-  }))
+  let spotsPromise = $derived(searchFor({ path }))
+  let representationsPromise = $derived(representations({ path }))
+  let idPromise = $derived(spotId({ path }))
 
   function soleDisplayable(
     reps: Array<Representation> | { error: string } | undefined,
   ) {
-    console.debug({ reps })
     if(!Array.isArray(reps)) throw new Error('`reps` is not an array.')
     if(reps.length !== 1) return false
     const [rep] = reps
@@ -77,6 +70,10 @@
     appKit.subscribeEvents(async () => {
       const connected = !!appKit?.getIsConnectedState()
       walletConnected = connected
+       if(connected) {
+        const account = getAccount(wagmiConfig)
+        whoAmI = account.address
+      }
       if(connected && !whoAmI && !signingIn) {
         await siweSignIn()
       }
@@ -155,10 +152,10 @@
 
       const formData = new FormData(evt.currentTarget as HTMLFormElement)
       if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
-        const containerId = throwError(await idPromise) as number
+        const containerId = await id()
         const terminal = formData.getAll('path') as Array<string>
         throwError(await createSpot({
-          containerId, path: [...path, ...terminal], address: whoAmI,
+          containerId, path: [...path, ...terminal],
         }))
       }
       addSpotDialog.requestClose()
@@ -178,7 +175,7 @@
       const form = evt.currentTarget as HTMLFormElement
       const formData = new FormData(form)
       if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
-        const containerId = throwError(await idPromise) as number
+        const containerId = await id()
         if(containerId == null) {
           throw new Error('No Container Specified: ¡I don’t know where I am!')
         }
@@ -472,7 +469,7 @@
     <form>
       <ol reversed>
         {#each logs as log, idx (logs.length - idx)}
-          // eslint-disable-next-line svelte/no-at-html-tags
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           <li>{@html log}</li>
         {/each}
       </ol>

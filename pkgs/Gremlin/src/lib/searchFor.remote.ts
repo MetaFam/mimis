@@ -1,12 +1,14 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
-import { query } from '$app/server'
+import { getRequestEvent, query } from '$app/server'
 import {
   connect as connectJanusGraph, connectToG,
   findSpotRoot,
 } from '$lib/janusgraph.ts'
 import settings from "$lib/settings.svelte.ts";
 import { ConnectionError } from '$lib'
+import { getSessionAddress, parseSession } from "./server/auth.ts";
+import { error } from "node:console";
 
 const { statics: __, t: T } = gremlin.process
 
@@ -54,16 +56,10 @@ export const searchFor = query(
     try {
       path = path.filter(Boolean)
 
+      const address = await getSessionAddress()
       const g = connectToG(connection)
-
-      let startId: number | null = null
-      if(address) {
-        startId = await findSpotRoot(g, address)
-      }
-
-      let traversal = startId != null
-        ? g.V(startId)
-        : g.V().has(T.label, 'Root')
+      const startId = await findSpotRoot(g, address)
+      let traversal = g.V(startId)
 
       for(const element of path) {
         if(!allowCycles) {

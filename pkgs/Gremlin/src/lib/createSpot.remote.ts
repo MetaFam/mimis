@@ -1,32 +1,29 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
-import { command } from '$app/server'
+import { error } from '@sveltejs/kit'
+import { command, getRequestEvent } from '$app/server'
 import settings from '$lib/settings.svelte.ts'
 import {
   connect as connectJanusGraph, connectToG,
   mergeRoot, mergePath,
 } from '$lib/janusgraph.ts'
+import { getSessionAddress, parseSession } from '$lib/server/auth.ts'
 
 const { statics: __ } = gremlin.process
 
 const NewSpotSchema = v.object({
   containerId: v.optional(v.nullable(v.number())),
   path: v.array(v.pipe(v.string(), v.nonEmpty())),
-  address: v.optional(v.nullable(v.string())),
 })
 
 export const createSpot = command(
   NewSpotSchema,
-  async ({ containerId, path, address }) => {
+  async ({ containerId, path }) => {
     const connection = connectJanusGraph()
     const now = new Date().toISOString()
 
-    if(settings.debugging) {
-      console.debug({ Create: path, containerId, address })
-    }
-    console.debug({ Create: path, containerId, address })
-
     try {
+      const address = await getSessionAddress()
       const g = connectToG(connection)
 
       const rootId = await mergeRoot(g)
@@ -34,11 +31,9 @@ export const createSpot = command(
         containerId = rootId
       }
 
-      if(address) {
-        containerId = await mergeAccount(g, rootId, address, now)
-      }
+      containerId = await mergeAccount(g, rootId, address, now)
 
-      console.debug({ containerId })
+      console.debug({ createSpot: containerId })
 
       const traversal = mergePath({
         traversal: g.V(containerId), path, now,

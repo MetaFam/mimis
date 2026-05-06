@@ -1,4 +1,6 @@
+import { getRequestEvent } from '$app/server'
 import { env } from '$env/dynamic/private'
+import { error } from '@sveltejs/kit'
 
 const SESSION_COOKIE = 'mimis_session'
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
@@ -84,4 +86,14 @@ export function clearSessionCookie(): string {
   return (
     `${SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`
   )
+}
+
+export async function getSessionAddress() {
+  const { request } = getRequestEvent()
+  const address = await parseSession(request.headers.get('cookie'))
+
+  if(!address) {
+    throw error(401, 'Unauthorized: No valid session cookie found.')
+  }
+  return address
 }

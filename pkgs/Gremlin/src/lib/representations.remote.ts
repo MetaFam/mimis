@@ -7,6 +7,7 @@ import {
 } from '$lib/janusgraph.ts'
 import settings from '$lib/settings.svelte.ts'
 import { ConnectionError } from '$lib'
+import { getSessionAddress } from "./server/auth.ts";
 
 const { statics: __, t: T } = gremlin.process
 
@@ -17,7 +18,6 @@ export interface Representation {
 
 const SearchSchema = v.object({
   path: v.array(v.string()),
-  address: v.optional(v.nullable(v.string())),
   options: v.optional(v.object({
     maxMountDepth: v.optional(v.number(), 10),
     allowCycles: v.optional(v.boolean(), false),
@@ -28,7 +28,6 @@ export const representations = query(
   SearchSchema,
   async ({
     path = [],
-    address,
     options = {
       maxMountDepth: 10,
       allowCycles: false,
@@ -40,16 +39,10 @@ export const representations = query(
     try {
       path = path.filter(Boolean)
 
+      const address = await getSessionAddress()
       const g = connectToG(connection)
-
-      let startId: number | null = null
-      if(address) {
-        startId = await findSpotRoot(g, address)
-      }
-
-      let traversal = startId != null
-        ? g.V(startId)
-        : g.V().has(T.label, 'Root')
+      let startId = await findSpotRoot(g, address)
+      let traversal = g.V(startId)
 
       for(const element of path) {
         if(!allowCycles) {

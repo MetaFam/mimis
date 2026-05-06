@@ -84,7 +84,7 @@
     <form class="logs">
       <ol reversed>
         {#each logs as log, idx (logs.length - idx)}
-          // eslint-disable-next-line svelte/no-at-html-tags
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
           <li>{@html log}</li>
         {/each}
       </ol>

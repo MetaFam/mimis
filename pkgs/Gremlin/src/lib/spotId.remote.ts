@@ -1,16 +1,18 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
-import { query } from '$app/server'
+import { getRequestEvent, query } from '$app/server'
+import { error } from '@sveltejs/kit'
 import {
   connect as connectJanusGraph, connectToG,
   findSpotRoot,
 } from '$lib/janusgraph.ts'
+import { getSessionAddress, parseSession } from '$lib/server/auth.ts'
+import { getAddress } from "viem";
 
 const { statics: __, t: T } = gremlin.process
 
 const SearchSchema = v.object({
   path: v.array(v.string()),
-  address: v.optional(v.nullable(v.string())),
   options: v.optional(v.object({
     maxMountDepth: v.optional(v.number(), 10),
     allowCycles: v.optional(v.boolean(), false),
@@ -21,7 +23,6 @@ export const spotId = query(
   SearchSchema,
   async ({
     path = [],
-    address,
     options = {
       maxMountDepth: 10,
       allowCycles: false,
@@ -32,19 +33,17 @@ export const spotId = query(
     try {
       path = path.filter(Boolean)
 
+      const address = await getSessionAddress()
       const g = connectToG(connection)
+      const startId = await findSpotRoot(g, address)
 
-      let startId: number | null = null
-      if(address) {
-        startId = await findSpotRoot(g, address)
+      if(!startId) {
+        throw error(404, 'No spot found for the given address.')
       }
 
-      let traversal = startId
-        ? g.V(startId)
-        : g.V().has(T.label, 'Root')
+      let traversal = g.V(startId)
 
       for (const element of path) {
-        console.debug({ Checking: element })
         if (!allowCycles) {
           traversal = traversal.simplePath()
         }
