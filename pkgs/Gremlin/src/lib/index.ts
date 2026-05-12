@@ -173,3 +173,31 @@ export function isDirNode(node?: Node | null): node is DirNode {
   if(node == null) return false
   return node.type === 'directory'
 }
+
+export function map2Obj(input: unknown) {
+  if(!(input instanceof Map) && (typeof input !== 'object' || input == null)) {
+    return input ?? null
+  }
+
+  if (input instanceof Map) {
+    const obj = {}
+    for (const [key, value] of input) {
+      const stringKey = (
+        typeof key === 'object'
+      ) ? (
+        key.label as string ?? JSON.stringify(key)
+      ) : (
+        String(key)
+      )
+      obj[stringKey] = map2Obj(value);
+    }
+    return obj;
+  }
+
+  // If it's an Array, recurse through elements
+  if (Array.isArray(input)) {
+    return input.map(map2Obj);
+  }
+
+  return input;
+}

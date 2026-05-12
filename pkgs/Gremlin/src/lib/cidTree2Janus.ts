@@ -15,9 +15,9 @@ export async function cidTreeToJanus(
         walker.index ??= 0
         walker.index++
         if(root.type === 'file') {
-          (await upsertSpot(
+          const traversal = await upsertSpot(
             { path: walker.path, containerId: rootId }
-          )).next()
+          )
           await addFiles({ traversal, files: [{
             cid: root.cid,
             name: root.title,
@@ -26,7 +26,7 @@ export async function cidTreeToJanus(
           }] })
           console.debug({ Postadd: root })
           const msg = (
-          `Adding #${String(walker.index).padStart(4, '0')} ${walker.path.join('/')}/`
+            `Adding #${String(walker.index).padStart(4, '0')} ${walker.path.join('/')}/`
             + `<a href="${toHTTP({ cid: root.cid })}" target="_blank>`
             + root.title
             + `</a> (${metricize(root.size)}).`

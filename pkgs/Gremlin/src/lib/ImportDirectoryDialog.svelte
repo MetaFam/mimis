@@ -147,6 +147,7 @@
   .logs {
     display: flex;
     flex-direction: column;
+    margin-inline-start: 1rem;
 
     & ol {
       max-height: calc(100dvh - 7.5em);

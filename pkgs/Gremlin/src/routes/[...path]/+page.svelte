@@ -734,6 +734,8 @@
   }
 
   #logs {
+    margin-inline-start: 4rem;
+
     & form {
       max-height: 90dvh;
       display: flex;
