@@ -2,7 +2,7 @@
   import { resolve } from '$app/paths'
   import { throwError } from '$lib'
   import root from '$lib/assets/root.svg'
-  import { searchFor, type Entry } from './searchFor.remote'
+  import { searchFor, type Entry } from '$lib/remotes/searchFor.remote.ts'
 
   let { path = [], address = null }: {
     path: string[]

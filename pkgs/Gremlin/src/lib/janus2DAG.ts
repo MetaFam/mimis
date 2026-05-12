@@ -6,10 +6,10 @@ import { type ByteView } from 'multiformats'
 import type { KuboRPCClient } from 'kubo-rpc-client'
 import { signTypedData } from '@wagmi/core'
 import { settings } from '$lib/settings.svelte.ts'
-import { nodeInfo } from '$lib/nodeInfo.remote.ts'
+import { nodeInfo } from '$lib/remotes/nodeInfo.remote.ts'
 import { getIPFS, blocksToCAR } from '$lib/ipfs.ts'
 import type { Logger } from '../types'
-import { toHTTP } from "./index.ts";
+import { toHTTP } from '$lib/index.ts'
 
 type Options = {
   log?: Logger

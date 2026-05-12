@@ -1,4 +1,4 @@
-import { json } from '@sveltejs/kit'
+import { json, error  } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import { v7 as uuidV7 } from 'uuid'
 import { getNonceStore } from '$lib/server/nonces'
@@ -6,7 +6,7 @@ import { getNonceStore } from '$lib/server/nonces'
 export const POST: RequestHandler = async ({ request, platform }) => {
   const { address } = await request.json() as { address: string }
   if(!address) {
-    return json({ error: 'Address Is Required' }, { status: 422 })
+    throw error(422, 'Address Is Required')
   }
 
   const nonces = getNonceStore(platform)

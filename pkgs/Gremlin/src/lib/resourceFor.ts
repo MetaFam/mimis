@@ -1,7 +1,7 @@
 import {
   connect as connectJanusGraph, connectToG,
-} from '$lib/janusgraph.ts'
-import { spotId } from '$lib/spotId.remote.ts'
+} from './server/janusgraph.ts'
+import { spotId } from '$lib/remotes/spotId.remote.ts'
 import { isError, viewable } from '$lib'
 
 export async function resourceAt({

@@ -1,7 +1,9 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { query } from '$app/server'
-import { connect as connectJanusGraph, connectToG } from '$lib/janusgraph.ts'
+import {
+  connect as connectJanusGraph, connectToG
+} from '$lib/server/janusgraph.ts'
 
 const { statics: __, t: T, EnumValue } = gremlin.process
 

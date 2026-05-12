@@ -1,4 +1,4 @@
-import { json } from '@sveltejs/kit'
+import { json, error } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import { verifyMessage } from 'viem'
 import { parseSiweMessage, validateSiweMessage } from 'viem/siwe'
@@ -10,28 +10,19 @@ export const POST: RequestHandler = async ({ request, platform }) => {
     message?: string, signature?: string
   }
   if(!message || !signature) {
-    return json(
-      { error: 'message and signature are required' },
-      { status: 422 },
-    )
+    throw error(422, 'Message and signature are required')
   }
 
   const parsed = parseSiweMessage(message)
   const address = parsed.address?.toLowerCase()
   if(!address) {
-    return json(
-      { error: 'Invalid SIWE Message' },
-      { status: 422 },
-    )
+    throw error(422, 'Invalid SIWE Message')
   }
 
   const nonces = getNonceStore(platform)
   const storedNonce = await nonces.get(`nonce:${address}`)
   if(!storedNonce || storedNonce !== parsed.nonce) {
-    return json(
-      { error: 'Invalid Or Expired Nonce' },
-      { status: 401 },
-    )
+    throw error(401, 'Invalid Or Expired Nonce')
   }
 
   const valid = {
@@ -47,11 +38,11 @@ export const POST: RequestHandler = async ({ request, platform }) => {
     }),
   }
   if(!await valid.message) {
-    return json({ error: 'Invalid SIWE Message Fields' }, { status: 401 })
+    throw error(401, 'Invalid SIWE Message Fields')
   }
 
   if(!await valid.recovery) {
-    return json({ error: 'Invalid Signature' }, { status: 401 })
+    throw error(401, 'Invalid Signature')
   }
 
   await nonces.delete(`nonce:${address}`)

@@ -1,13 +1,12 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { query } from '$app/server'
+import { error } from '@sveltejs/kit'
 import {
   connect as connectJanusGraph, connectToG,
-  findSpotRoot,
-} from '$lib/janusgraph.ts'
+} from '$lib/server/janusgraph.ts'
 import settings from '$lib/settings.svelte.ts'
-import { ConnectionError } from '$lib'
-import { getSessionAddress } from "./server/auth.ts";
+import { getSessionAddress } from '$lib/server/auth.ts'
 
 const { statics: __, t: T } = gremlin.process
 
@@ -41,8 +40,11 @@ export const representations = query(
 
       const address = await getSessionAddress()
       const g = connectToG(connection)
-      let startId = await findSpotRoot(g, address)
-      let traversal = g.V(startId)
+      let traversal = (
+        g.V()
+        .has(T.label, 'SpotRoot')
+        .has('address', address)
+      )
 
       for(const element of path) {
         if(!allowCycles) {
@@ -78,14 +80,12 @@ export const representations = query(
       ) as Array<Map<keyof Representation, string>>
       return results.map(Object.fromEntries) as Array<Representation>
     } catch(err) {
-      let error = err as Error
+      let msg = (err as Error).message
       if(error.name === 'TypeError') {
-        error = new ConnectionError(
-          `Connection Error: Could not connect to JanusGraph @ ${settings.janusGraphURL}.`
-        )
+        msg = `Connection Error: Could not connect to JanusGraph @ ${settings.janusGraphURL}.`
       }
-      console.error({ representations: error })
-      return { error: error.message }
+      console.error({ representations: err })
+      throw error(500, `Fetching Representations: "${msg}"`)
     } finally {
       try {
         if(connection) {

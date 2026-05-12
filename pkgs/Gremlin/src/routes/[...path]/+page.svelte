@@ -6,11 +6,11 @@
   import { browser } from '$app/environment'
   import { afterNavigate } from '$app/navigation'
   import { resolve } from '$app/paths'
-  import { searchFor, type Entry } from '$lib/searchFor.remote'
-  import { representations, type Representation } from '$lib/representations.remote'
-  import { createSpot } from '$lib/createSpot.remote'
-  import { addFiles as filesToSpot } from '$lib/addFiles.remote'
-  import { spotId } from '$lib/spotId.remote'
+  import { searchFor, type Entry } from '$lib/remotes/searchFor.remote'
+  import { representations, type Representation } from '$lib/remotes/representations.remote'
+  import { upsertSpot } from '$lib/remotes/upsertSpot.remote'
+  import { addFiles as filesToSpot } from '$lib/remotes/addFiles.remote'
+  import { spotId } from '$lib/remotes/spotId.remote'
   import ConfigDialog from '$lib/ConfigDialog.svelte'
   import ErrorDialog from '$lib/ErrorDialog.svelte'
   import CSSRange from '$lib/CSSRange.svelte'
@@ -18,14 +18,14 @@
   import settings from '$lib/settings.svelte'
   import ImportDirectoryDialog from '$lib/ImportDirectoryDialog.svelte'
   import { janusToDAG } from '$lib/janus2DAG'
+  import { graphToCSV } from '$lib/janus2CSV'
   import { kuboUpload } from '$lib/ipfs'
   import { toHTTP, throwError, logHeader } from '$lib'
-  import { getAccount, signMessage } from '@wagmi/core'
+  import { getConnection, signMessage } from '@wagmi/core'
   import { createSiweMessage } from 'viem/siwe'
   import Folder from '$lib/assets/folder.svg'
   import Eyes from '$lib/assets/infinity eyes.svg'
   import Background from '$lib/assets/background.svg'
-
   let error = $state<string | null>(null)
   let path = $state(
     page.params.path?.split('/').filter(Boolean) ?? []
@@ -44,12 +44,10 @@
   let signingIn = false
 
   let spotsPromise = $derived(searchFor({ path }))
-  let representationsPromise = $derived(representations({ path }))
+  let repsPromise = $derived(representations({ path }))
   let idPromise = $derived(spotId({ path }))
 
-  function soleDisplayable(
-    reps: Array<Representation> | { error: string } | undefined,
-  ) {
+  function soleDisplayable(reps?: Array<Representation>) {
     if(!Array.isArray(reps)) throw new Error('`reps` is not an array.')
     if(reps.length !== 1) return false
     const [rep] = reps
@@ -60,19 +58,25 @@
 
   // If loaded on the server, fails with "`HTMLElement` not found."
   let appKit: AppKit | null = null
-  let wagmiConfig: ReturnType<typeof import('$lib/appkit').getWagmiAdapter>['wagmiConfig'] | null = null
+  let wagmiConfig: ReturnType<
+    typeof import('$lib/appkit').getWagmiAdapter
+  >['wagmiConfig'] | null = null
   onMount(async () => {
     const { getAppKit, getWagmiAdapter } = await import('$lib/appkit')
     appKit = getAppKit()
-    wagmiConfig = getWagmiAdapter().wagmiConfig
+    ;({ wagmiConfig } = getWagmiAdapter())
+
+    if(!wagmiConfig) {
+      throw new Error('WAGMI config not available from AppKit.')
+    }
 
     walletConnected = !!appKit.getIsConnectedState()
     appKit.subscribeEvents(async () => {
       const connected = !!appKit?.getIsConnectedState()
       walletConnected = connected
        if(connected) {
-        const account = getAccount(wagmiConfig)
-        whoAmI = account.address
+        const account = getConnection(wagmiConfig)
+        whoAmI = account.address ?? null
       }
       if(connected && !whoAmI && !signingIn) {
         await siweSignIn()
@@ -85,7 +89,7 @@
 
   async function siweSignIn() {
     if(!wagmiConfig) return
-    const account = getAccount(wagmiConfig)
+    const account = getConnection(wagmiConfig)
     if(settings.debugging) {
       console.debug('SIWE attempt:', {
         address: account.address,
@@ -123,13 +127,16 @@
       if(verifyRes.ok) {
         whoAmI = account.address
       } else {
-        const { error: msg } = await verifyRes.json() as { error: string }
-        console.error('SIWE verification failed:', msg)
-        error = `Sign-in failed: ${msg}`
+        const msg = (
+          verifyRes.statusText
+          || 'Unknown error during SIWE verification.'
+        )
+        console.error({ 'SIWE Verification Failed': msg })
+        throw error(500, `Sign-in failed: "${msg}"`)
       }
     } catch(err) {
-      console.error('SIWE sign-in error:', err)
-      error = (err as Error).message
+      console.error({ 'SIWE Sign-In Error': err })
+      throw error(500, `'SIWE Sign-In Error:': "${(err as Error).message}"`)
     } finally {
       signingIn = false
     }
@@ -154,9 +161,11 @@
       if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
         const containerId = await id()
         const terminal = formData.getAll('path') as Array<string>
-        throwError(await createSpot({
-          containerId, path: [...path, ...terminal],
-        }))
+        const create = [...path, ...terminal]
+        console.debug({ containerId, create })
+        await upsertSpot({
+          containerId, path: create,
+        })
       }
       addSpotDialog.requestClose()
     } catch(err) {
@@ -192,10 +201,10 @@
           }
         })
         if(settings.debugging) console.debug({ entries })
-        throwError(await filesToSpot({
+        await filesToSpot({
           containerId,
           files: entries,
-        }))
+        })
       }
       form.reset()
       addFilesDialog.requestClose()
@@ -292,8 +301,12 @@
       >
         Import Directory
       </button></li>
-      <li><button onclick={buildCAR}>Export to CAR</button></li>
+      <li><button
+        aria-disabled={!whoAmI}
+        onclick={buildCAR}
+      >Export to CAR</button></li>
       <li><button onclick={buildDAG}>Export to CBOR-DAG</button></li>
+      <li><button onclick={graphToCSV}>Export to CSV</button></li>
       <li><button
         class="menu-open"
         onclick={() => configDialog?.showModal()}
@@ -375,7 +388,7 @@
       <Breadcrumbs {path} address={whoAmI}/>
     </nav>
     <nav id="details">
-      {#await representationsPromise then reps}
+      {#await repsPromise then reps}
         {@const sole = soleDisplayable(reps)}
         {#if sole}
           <figure id="media">

@@ -1,5 +1,5 @@
-import { createSpot } from '$lib/createSpot.remote.ts'
-import { addFiles } from '$lib/addFiles.remote.ts'
+import { upsertSpot } from './remotes/upsertSpot.remote.ts'
+import { addFiles } from '$lib/remotes/addFiles.remote.ts'
 import { walk, metricize, toHTTP } from '$lib'
 import type { TreeNode } from '$lib/fileTree2CIDTree.ts'
 
@@ -15,10 +15,10 @@ export async function cidTreeToJanus(
         walker.index ??= 0
         walker.index++
         if(root.type === 'file') {
-          const containerId = await createSpot(
+          (await upsertSpot(
             { path: walker.path, containerId: rootId }
-          )
-          await addFiles({ containerId, files: [{
+          )).next()
+          await addFiles({ traversal, files: [{
             cid: root.cid,
             name: root.title,
             type: root.mimetype,

@@ -1,5 +1,6 @@
 import gremlin from 'gremlin'
 import settings from '$lib/settings.svelte.ts'
+import { getSessionAddress } from "./auth.ts";
 
 const { driver, process } = gremlin
 const {
@@ -29,10 +30,9 @@ export function connect() {
       )
     )
   }
-  const connection = new DriverRemoteConnection(
+  return new DriverRemoteConnection(
     settings.janusGraphURL, opts,
   )
-  return connection
 }
 
 export function connectToG(
@@ -41,22 +41,52 @@ export function connectToG(
   return process.traversal().withRemote(connection)
 }
 
-export async function mergeRoot(g: InstanceType<typeof GraphTraversalSource>) {
-  const now = new Date().toISOString()
-  const traversal = (
-    g.mergeV(new Map([[T.label, 'Root']]))
-    .option(Merge.onCreate, { createdAt: now })
-    .id()
+export async function mergeRoot({ traversal, now }: {
+  traversal: ReturnType<ReturnType<typeof connectToG>['V']>
+  now?: string
+}) {
+  return (
+    traversal
+    .mergeV(new Map([[T.label, 'Root']]))
+    .option(Merge.onCreate, { createdAt: now ?? new Date().toISOString() })
   )
-  const results = await traversal.next()
-  return results.value as number
 }
 
-export function mergePath({ traversal, path, now }: {
-  traversal: ReturnType<ReturnType<typeof connectToG>['V']>
-  path: string[]
-  now: string
+export function mergeSpotRoot({ traversal, address, now }: {
+  traversal: InstanceType<typeof GraphTraversalSource>
+  address: string
+  now?: string
 }) {
+  return (
+    traversal
+    .mergeV(new Map([[T.label, 'SpotRoot'], ['signer', address]]))
+    .option(Merge.onCreate, { createdAt: now ?? new Date().toISOString() })
+  )
+}
+
+export async function mergePath({
+  traversal, containerId, path, now: createdAt,
+}: {
+  traversal: ReturnType<ReturnType<typeof connectToG>['V']>
+  containerId?: number
+  path: string[]
+  now?: string
+}) {
+  createdAt ??= new Date().toISOString()
+  const address = await getSessionAddress()
+
+  if(containerId != null) {
+    if(!await(
+      mergeSpotRoot({ traversal: connectToG(connection), address, now })
+      .out()
+      .hasId(containerId)
+      .hasNext()
+    )) {
+      throw error(400, `Continer id, "${containerId}", does not belong to the user.`)
+    }
+    traversal = traversal.V(containerId)
+  }
+
   for(const elem of path) {
     traversal = (
       traversal
@@ -69,28 +99,14 @@ export function mergePath({ traversal, path, now }: {
         ),
         (
           __.addV('Spot')
-          .property({ createdAt: now })
+          .property({ createdAt })
           .addE('CONTAINS')
           .from_('parent')
-          .property({ path: elem, createdAt: now })
+          .property({ path: elem, createdAt })
           .inV()
         ),
       )
     )
   }
   return traversal
-}
-
-export async function findSpotRoot(
-  g: InstanceType<typeof GraphTraversalSource>,
-  address: string,
-): Promise<number | null> {
-  const result = await (
-    g.V().has(T.label, 'Root')
-    .outE('ACCOUNT').has('signer', address).inV()
-    .out('SPOTROOT')
-    .id()
-    .next()
-  )
-  return (result.value as number) ?? null
 }

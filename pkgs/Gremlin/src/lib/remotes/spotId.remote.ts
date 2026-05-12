@@ -1,15 +1,14 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
-import { getRequestEvent, query } from '$app/server'
+import { query } from '$app/server'
 import { error } from '@sveltejs/kit'
 import {
   connect as connectJanusGraph, connectToG,
-  findSpotRoot,
-} from '$lib/janusgraph.ts'
-import { getSessionAddress, parseSession } from '$lib/server/auth.ts'
-import { getAddress } from "viem";
+  mergeSpotRoot,
+} from '$lib/server/janusgraph.ts'
+import { getSessionAddress } from '$lib/server/auth.ts'
 
-const { statics: __, t: T } = gremlin.process
+const { statics: __ } = gremlin.process
 
 const SearchSchema = v.object({
   path: v.array(v.string()),
@@ -27,7 +26,7 @@ export const spotId = query(
       maxMountDepth: 10,
       allowCycles: false,
     },
-  }): Promise<number | { error: string }> => {
+  }) => {
     const { maxMountDepth: maxDepth, allowCycles } = options
     const connection = connectJanusGraph()
     try {
@@ -35,13 +34,7 @@ export const spotId = query(
 
       const address = await getSessionAddress()
       const g = connectToG(connection)
-      const startId = await findSpotRoot(g, address)
-
-      if(!startId) {
-        throw error(404, 'No spot found for the given address.')
-      }
-
-      let traversal = g.V(startId)
+      let traversal = mergeSpotRoot({ traversal: g, address })
 
       for (const element of path) {
         if (!allowCycles) {
@@ -68,9 +61,9 @@ export const spotId = query(
 
       const result = await traversal.id().next()
       return result.value
-    } catch(error) {
-      console.error({ spotId: error })
-      return { error: (error as Error).message }
+    } catch(err) {
+      console.error({ spotId: err })
+      throw error(500, `Spot ID: "${(err as Error).message}"`)
     } finally {
       try {
         await connection.close()
