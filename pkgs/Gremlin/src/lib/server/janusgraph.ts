@@ -1,11 +1,11 @@
 import gremlin from 'gremlin'
+import { error } from '@sveltejs/kit'
 import settings from '$lib/settings.svelte.ts'
 import { getSessionAddress } from "./auth.ts";
 
 const { driver, process } = gremlin
 const {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  GraphTraversalSource, statics: __, merge: Merge, t: T,
+  GraphTraversalSource, GraphTraversal, statics: __, merge: Merge, t: T,
 } = process
 const {
   DriverRemoteConnection,
@@ -42,7 +42,7 @@ export function connectToG(
 }
 
 export async function mergeRoot({ traversal, now }: {
-  traversal: ReturnType<ReturnType<typeof connectToG>['V']>
+  traversal: InstanceType<typeof GraphTraversalSource>
   now?: string
 }) {
   return (
@@ -67,9 +67,9 @@ export function mergeSpotRoot({ traversal, address, now }: {
 export async function mergePath({
   traversal, containerId, path, now: createdAt,
 }: {
-  traversal: ReturnType<ReturnType<typeof connectToG>['V']>
+  traversal: InstanceType<typeof GraphTraversalSource>
   containerId?: number
-  path: string[]
+  path: Array<string>
   now?: string
 }) {
   createdAt ??= new Date().toISOString()
@@ -77,12 +77,12 @@ export async function mergePath({
 
   if(containerId != null) {
     if(!await(
-      mergeSpotRoot({ traversal: connectToG(connection), address, now })
+      mergeSpotRoot({ traversal, address, now: createdAt })
       .out()
       .hasId(containerId)
       .hasNext()
     )) {
-      throw error(400, `Continer id, "${containerId}", does not belong to the user.`)
+      throw error(400, `Container id, "${containerId}", does not belong to the user.`)
     }
     traversal = traversal.V(containerId)
   }

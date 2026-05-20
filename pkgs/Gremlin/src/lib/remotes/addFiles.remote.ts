@@ -1,13 +1,14 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { command } from '$app/server'
+import { error } from '@sveltejs/kit'
 import settings from '$lib/settings.svelte.ts'
 import {
   connect as connectJanusGraph, connectToG, mergePath,
 } from '$lib/server/janusgraph.ts'
 
 const { process } = gremlin
-const { P, t: T, statics: __ } = process
+const { t: T, statics: __ } = process
 
 const NewSpotsSchema = v.object({
   containerId: v.number(),
@@ -27,23 +28,24 @@ export const addFiles = command(
 
     try {
       return {
-        spotIds: await Promise.all(
+        fileIds: await Promise.all(
           files.map(async ({ cid, name, type, size }) => {
-            const path = (
+            const [_, title, ext] = (
               name.match(/^(?:(.*)\.)?([^.]+)$/) ?? [null, name, null]
-            ).filter(Boolean) as Array<string>
+            )
+
+            const path: Array<string> = []
+
+            if(title !== ext) {
+              path.push(title)
+            }
 
             const genTraversal = async () => {
-              let traversal = connectToG(connection)
-
-              // Early versions named files ext.ext to keep information out
-              // of the filename while maintaining legacy compatibility,
-              if(!(path.length === 2 && path.at(0) === path.at(-1))) {
-                traversal = await (
-                  mergePath({ traversal, containerId, path })
-                )
-              }
-              return traversal
+              return await (
+                mergePath({
+                  traversal: connectToG(connection), containerId, path,
+                })
+              )
             }
 
             if(settings.debugging) {
@@ -52,44 +54,53 @@ export const addFiles = command(
               })
             }
 
-            let traversal = genTraversal()
-
-            if(!await (
-              genTraversal()
+            const { value: existing } = await (
+              (await genTraversal())
               .outE()
               .has(T.label, 'REPRESENTATION')
               .in_('File')
-              .has('cid', cid)
               .has('type', type)
               .not(__.inE('PREVIOUS'))
-              .hasNext()
-            )) {
+              .project('id', 'cid')
+              .by(__.id())
+              .by('cid')
+              .next()
+            )
+
+            if(existing && existing.cid === cid) {
+              return existing.id
+            }
+
+            let traversal = (
+              (await genTraversal())
+              .as('spot')
+              .addV()
+              .has(T.label, 'File')
+              .property({ createdAt: now, cid, type, size })
+              .as('file')
+              .addE('REPRESENTATION')
+              .from_('spot')
+              .property({ createdAt: now })
+            )
+
+            if(existing) {
               traversal = (
                 traversal
-                .as('spot')
-                .addE()
-                .has(T.label, 'REPRESENTATION')
-                .addV()
-                .has(T.label, 'File')
-                .property({ createdAt: now, cid, type, size })
-                .as('file')
-                .addE('REPRESENTATION')
-                .from_('spot')
-                .property({ createdAt: now })
-                .addE()
-                .has(T.label, 'PREVIOUS')
+                .V(existing.id)
+                .addE('PREVIOUS')
                 .from_('file')
+                .property({ createdAt: now })
               )
             }
 
-            const { value: spotId } = (await traversal).id().iterate()
-            return spotId
+            const { value: fileId } = await traversal.select('file').id().next()
+            return fileId
           })
         )
       }
-    } catch(error) {
-      console.error({ addFiles: error })
-      throw error(500, (error as Error).message)
+    } catch(err) {
+      console.error({ addFiles: err })
+      throw error(500, (err as Error).message)
     } finally {
       try {
         await connection.close()

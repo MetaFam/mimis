@@ -1,7 +1,7 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { query } from '$app/server'
-import { error } from '@sveltejs/kit'
+import { error, isHttpError } from '@sveltejs/kit'
 import {
   connect as connectJanusGraph, connectToG,
 } from '$lib/server/janusgraph.ts'
@@ -57,6 +57,8 @@ export const searchFor = query(
       if(!address) {
         address = await getSessionAddress()
       }
+      if(!address) return null
+
       const g = connectToG(connection)
       let traversal = g.V().has(T.label, 'SpotRoot').has('signer', address)
 
@@ -128,6 +130,9 @@ export const searchFor = query(
       ) as Array<Map<keyof Entry, string | null>>
       return results.map(Object.fromEntries)
     } catch (err) {
+      if(isHttpError(err)) {
+        throw err
+      }
       let { message: msg } = (err as Error)
       if(error.name === 'TypeError') {
         msg = (

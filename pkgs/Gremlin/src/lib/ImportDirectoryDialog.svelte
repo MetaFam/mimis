@@ -3,7 +3,7 @@
   import settings from '$lib/settings.svelte'
   import { spiderDirHandles } from '$lib/dirHandles2JSTree'
   import { expandLevels, selectAll } from '$lib'
-  import { type DirNode, type Node } from '../types'
+  import { type DirNode } from '../types'
   import Spinner from '$lib/assets/spinner.svg'
   import { cidTreeToJanus } from '$lib/cidTree2Janus'
   import FileTree from './FileTree.svelte';
@@ -110,7 +110,7 @@
         </label>
         <button type="button" onclick={async () => {
           working = true
-          dir = await window.showDirectoryPicker()
+          dir = await window.showDirectoryPicker({ mode: 'read' })
           working = false
         }}>
           {#if dir}

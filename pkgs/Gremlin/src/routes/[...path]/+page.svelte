@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { isHttpError } from '@sveltejs/kit';
+  import { isHttpError, error } from '@sveltejs/kit';
   import type { AppKit } from '@reown/appkit'
   import { onMount } from 'svelte'
   import { page } from '$app/state'
@@ -19,14 +19,15 @@
   import ImportDirectoryDialog from '$lib/ImportDirectoryDialog.svelte'
   import { janusToDAG } from '$lib/janus2DAG'
   import { graphToCSV } from '$lib/janus2CSV'
-  import { kuboUpload } from '$lib/ipfs'
-  import { toHTTP, throwError, logHeader } from '$lib'
+  import { kuboUpload, type Spot } from '$lib/ipfs'
+  import { toHTTP, logHeader } from '$lib'
   import { getConnection, signMessage } from '@wagmi/core'
   import { createSiweMessage } from 'viem/siwe'
   import Folder from '$lib/assets/folder.svg'
   import Eyes from '$lib/assets/infinity eyes.svg'
   import Background from '$lib/assets/background.svg'
-  let error = $state<string | null>(null)
+
+  let errorMsg = $state<string | null>(null)
   let path = $state(
     page.params.path?.split('/').filter(Boolean) ?? []
   )
@@ -75,6 +76,7 @@
       const connected = !!appKit?.getIsConnectedState()
       walletConnected = connected
        if(connected) {
+        if(!wagmiConfig) throw new Error('WAGMI Config Not Available')
         const account = getConnection(wagmiConfig)
         whoAmI = account.address ?? null
       }
@@ -169,11 +171,11 @@
       }
       addSpotDialog.requestClose()
     } catch(err) {
-      console.error({ 'addSpot func': err })
-      error = (err as Error).message
-      if(!error && isHttpError(err)) {
-        error = `HTTP Error: ${err.status}: ${err.body.message}`
+      errorMsg = (err as Error).message
+      if(isHttpError(err)) {
+        errorMsg = `HTTP Error: ${err.status}: ${err.body.message}`
       }
+      console.error({ 'addSpot func': err, errorMsg })
     }
   }
 
@@ -190,7 +192,7 @@
         }
 
         const files = formData.getAll('files') as Array<File>
-        const cids = throwError(await kuboUpload({ files })) as Array<Entry>
+        const cids = await kuboUpload({ files }) as Array<Spot>
         const entries = cids.map((entry, idx) => {
           if(entry.cid == null) throw new Error('No CID.')
           return {
@@ -210,7 +212,7 @@
       addFilesDialog.requestClose()
     } catch(err) {
       console.error({ 'addFiles func': err })
-      error = (err as Error).message
+      errorMsg = (err as Error).message
     }
   }
 
@@ -252,25 +254,23 @@
 
   const display = async () => {
     try {
-      const spots = throwError(
-        await spotsPromise
-      ) as Array<Entry>
+      const spots = await spotsPromise as Array<Entry>
       if(settings.debugging) {
         console.debug(JSON.stringify(spots, null, 2))
       }
       return spots
     } catch(err) {
       console.error({ display: err })
-      error = (err as Error).message
+      errorMsg = (err as Error).message
     }
   }
 
   async function id() {
     try {
-      return throwError(await idPromise)
+      return await idPromise as number
     } catch(err) {
-      console.error({ display: err })
-      error = (err as Error).message
+      console.error({ id: err })
+      errorMsg = (err as Error).message
     }
   }
 </script>
@@ -497,7 +497,7 @@
     containerId={await id()}
   />
   <ConfigDialog bind:self={configDialog}/>
-  <ErrorDialog bind:error/>
+  <ErrorDialog bind:error={errorMsg}/>
 </main>
 
 <style>

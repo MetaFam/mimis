@@ -1,6 +1,5 @@
 import { getRequestEvent } from '$app/server'
 import { env } from '$env/dynamic/private'
-import { error } from '@sveltejs/kit'
 
 const SESSION_COOKIE = 'mimis_session'
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
@@ -59,26 +58,26 @@ export async function createSessionCookie(address: string): Promise<string> {
 
 export async function parseSession(
   cookieHeader: string | null,
-): Promise<string | undefined> {
-  if(!cookieHeader) return undefined
+) {
+  if(!cookieHeader) return null
 
   const match = (
     cookieHeader.split(';')
     .map((c) => c.trim())
     .find((c) => c.startsWith(`${SESSION_COOKIE}=`))
   )
-  if(!match) return undefined
+  if(!match) return null
 
   const token = match.slice(SESSION_COOKIE.length + 1)
   const payload = await verify(token)
-  if(!payload) return undefined
+  if(!payload) return null
 
   try {
-    const { address, expires } = JSON.parse(payload)
-    if(Date.now() > expires) return undefined
-    return address as string
+    const session = JSON.parse(payload)
+    if(Date.now() > session.expires) return null
+    return session as { address: string, expires: number }
   } catch {
-    return undefined
+    return null
   }
 }
 
@@ -90,10 +89,8 @@ export function clearSessionCookie(): string {
 
 export async function getSessionAddress() {
   const { request } = getRequestEvent()
-  const address = await parseSession(request.headers.get('cookie'))
-
-  if(!address) {
-    throw error(401, 'Unauthorized: No valid session cookie found.')
-  }
-  return address
+  const { address } = (
+    (await parseSession(request.headers.get('cookie'))) ?? {}
+  )
+  return address ?? null
 }

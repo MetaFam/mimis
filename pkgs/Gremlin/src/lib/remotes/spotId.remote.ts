@@ -3,8 +3,7 @@ import * as v from 'valibot'
 import { query } from '$app/server'
 import { error } from '@sveltejs/kit'
 import {
-  connect as connectJanusGraph, connectToG,
-  mergeSpotRoot,
+  connect as connectJanusGraph, connectToG, mergeSpotRoot,
 } from '$lib/server/janusgraph.ts'
 import { getSessionAddress } from '$lib/server/auth.ts'
 
@@ -33,6 +32,8 @@ export const spotId = query(
       path = path.filter(Boolean)
 
       const address = await getSessionAddress()
+      if(!address) return null
+
       const g = connectToG(connection)
       let traversal = mergeSpotRoot({ traversal: g, address })
 

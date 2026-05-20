@@ -1,9 +1,11 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
+import { error } from '@sveltejs/kit'
 import { query } from '$app/server'
 import {
-  connect as connectJanusGraph, connectToG
+  connect as connectJanusGraph, connectToG, mergeSpotRoot,
 } from '$lib/server/janusgraph.ts'
+import { getSessionAddress } from '$lib/server/auth.ts'
 
 const { statics: __, t: T, EnumValue } = gremlin.process
 
@@ -13,13 +15,24 @@ export const nodeInfo = query(
   IdSchema,
   async (nodeId?: number | null) => {
     const connection = await connectJanusGraph()
+    const now = new Date().toISOString()
 
     try {
       const g = connectToG(connection)
 
       if(nodeId == null) {
-        const rootId = await g.V().has(T.label, 'Root').id().next()
-        nodeId = rootId.value
+        const address = await getSessionAddress()
+        if(!address) return null
+
+        const { value: rootId } = await (
+          mergeSpotRoot({ traversal: connectToG(connection), address, now })
+          .id().next()
+        )
+        nodeId = rootId
+      }
+
+      if(nodeId == null) {
+        throw error(500, 'Root node not found.')
       }
 
       const vertexMap = await g.V(nodeId).elementMap().next()

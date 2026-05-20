@@ -1,11 +1,11 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
+import { error } from '@sveltejs/kit'
 import { command } from '$app/server'
 import {
   connect as connectJanusGraph, connectToG, mergeSpotRoot, mergePath,
-} from '../server/janusgraph.ts'
+} from '$lib/server/janusgraph.ts'
 import { getSessionAddress } from '$lib/server/auth.ts'
-import { error } from "node:console";
 import { isHttpError } from "@sveltejs/kit";
 
 const { statics: __ } = gremlin.process
@@ -23,6 +23,9 @@ export const upsertSpot = command(
 
     try {
       const address = await getSessionAddress()
+      if(!address) {
+        throw error(401, 'Unauthorized: No valid session cookie found.')
+      }
       let traversal = (
         mergeSpotRoot({ traversal: connectToG(connection), address, now })
       )
@@ -51,11 +54,11 @@ export const upsertSpot = command(
         )).value
       )
     } catch(err) {
-      console.error({ createSpot: err })
+      console.error({ upsertSpot: err })
       if(isHttpError(err)) {
         throw err
       }
-      throw error(500, `Spot Upsert: "${(err as Error)?.message}"`)
+      throw error(500, `Spot Upsert: "${(err as Error)?.message ?? err}"`)
     } finally {
       try {
         await connection.close()

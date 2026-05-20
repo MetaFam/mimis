@@ -48,3 +48,7 @@ form {
     margin-block-start: 1rem;
   }
 }
+
+button:disabled {
+  background-color: light-dark(#9995, #6665);
+}
