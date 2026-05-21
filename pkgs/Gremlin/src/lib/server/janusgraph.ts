@@ -5,8 +5,11 @@ import { getSessionAddress } from "./auth.ts";
 
 const { driver, process } = gremlin
 const {
-  GraphTraversalSource, GraphTraversal, statics: __, merge: Merge, t: T,
+  statics: __, merge: Merge, t: T,
 } = process
+
+type GraphTraversalSource = InstanceType<typeof process.GraphTraversalSource>
+
 const {
   DriverRemoteConnection,
   auth: { PlainTextSaslAuthenticator },
@@ -42,7 +45,7 @@ export function connectToG(
 }
 
 export async function mergeRoot({ traversal, now }: {
-  traversal: InstanceType<typeof GraphTraversalSource>
+  traversal: GraphTraversalSource
   now?: string
 }) {
   return (
@@ -52,28 +55,30 @@ export async function mergeRoot({ traversal, now }: {
   )
 }
 
-export function mergeSpotRoot({ traversal, address, now }: {
-  traversal: InstanceType<typeof GraphTraversalSource>
-  address: string
+export function mergeSpotRoot({ traversal, address, now: createdAt }: {
+  traversal: GraphTraversalSource
+  address?: string
   now?: string
 }) {
+  address ??= getSessionAddress({ throw: true })
+  createdAt ??= new Date().toISOString()
   return (
     traversal
     .mergeV(new Map([[T.label, 'SpotRoot'], ['signer', address]]))
-    .option(Merge.onCreate, { createdAt: now ?? new Date().toISOString() })
+    .option(Merge.onCreate, { createdAt })
   )
 }
 
 export async function mergePath({
   traversal, containerId, path, now: createdAt,
 }: {
-  traversal: InstanceType<typeof GraphTraversalSource>
+  traversal: GraphTraversalSource
   containerId?: number
   path: Array<string>
   now?: string
 }) {
   createdAt ??= new Date().toISOString()
-  const address = await getSessionAddress()
+  const address = await getSessionAddress({ throw: true })
 
   if(containerId != null) {
     if(!await(

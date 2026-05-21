@@ -1,3 +1,4 @@
+import { error } from '@sveltejs/kit'
 import { getRequestEvent } from '$app/server'
 import { env } from '$env/dynamic/private'
 
@@ -87,10 +88,13 @@ export function clearSessionCookie(): string {
   )
 }
 
-export async function getSessionAddress() {
+export async function getSessionAddress(opts: { throw?: boolean } = {}) {
   const { request } = getRequestEvent()
   const { address } = (
     (await parseSession(request.headers.get('cookie'))) ?? {}
   )
+  if(opts.throw && !address) {
+    throw error(401, 'Unauthorized: No valid session cookie found.')
+  }
   return address ?? null
 }

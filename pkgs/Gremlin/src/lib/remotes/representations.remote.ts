@@ -3,7 +3,7 @@ import * as v from 'valibot'
 import { query } from '$app/server'
 import { error } from '@sveltejs/kit'
 import {
-  connect as connectJanusGraph, connectToG,
+  connect as connectJanusGraph, connectToG, mergePath, mergeSpotRoot,
 } from '$lib/server/janusgraph.ts'
 import settings from '$lib/settings.svelte.ts'
 import { getSessionAddress } from '$lib/server/auth.ts'
@@ -32,49 +32,21 @@ export const representations = query(
       allowCycles: false,
     },
   }) => {
-    const { maxMountDepth: maxDepth, allowCycles } = options
-    const connection = await connectJanusGraph()
+    const connection = connectJanusGraph()
 
     try {
       path = path.filter(Boolean)
 
-      const address = await getSessionAddress()
-      const g = connectToG(connection)
-      let traversal = (
-        g.V()
-        .has(T.label, 'SpotRoot')
-        .has('address', address)
-      )
-
-      for(const element of path) {
-        if(!allowCycles) {
-          traversal = traversal.simplePath()
-        }
-
-        traversal = (
-          traversal
-          .until(
-            __.not(__.outE('MOUNT'))
-            .or().loops().is(maxDepth)
-          )
-          .repeat(
-            __.outE('MOUNT')
-            .order()
-            .by('order')
-            .inV()
-          )
-          .outE('CONTAINS')
-          .has('path', element)
-          .inV()
-        )
-      }
+      let traversal = connectToG(connection)
+      traversal = await mergeSpotRoot({ traversal })
+      traversal = await mergePath({ traversal, path })
 
       const results = (
         await traversal
-        .outE('REPRESENTATION').as('rep')
+        .outE('REPRESENTATION')
         .inV()
         .project('type', 'cid')
-        .by(__.select('rep').values('type'))
+        .by(__.values('type'))
         .by(__.values('cid'))
         .toList()
       ) as Array<Map<keyof Representation, string>>

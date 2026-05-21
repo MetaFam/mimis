@@ -4,6 +4,7 @@ import { query } from '$app/server'
 import { error, isHttpError } from '@sveltejs/kit'
 import {
   connect as connectJanusGraph, connectToG,
+  mergeSpotRoot,
 } from '$lib/server/janusgraph.ts'
 import settings from '$lib/settings.svelte.ts'
 import { getSessionAddress } from '$lib/server/auth.ts'
@@ -33,6 +34,7 @@ const isImageType = () => (
     __.has('type', 'image/png'),
     __.has('type', 'image/jpeg'),
     __.has('type', 'image/webm'),
+    __.has('type', 'image/webp'),
     __.has('type', 'image/avif'),
     __.has('type', 'video/mp4'),
   )
@@ -60,7 +62,8 @@ export const searchFor = query(
       if(!address) return null
 
       const g = connectToG(connection)
-      let traversal = g.V().has(T.label, 'SpotRoot').has('signer', address)
+      // Can generate new nodes & this method should be read-only
+      let traversal = mergeSpotRoot({ traversal: g, address })
 
       for(const element of path) {
         if(!allowCycles) {
@@ -96,8 +99,8 @@ export const searchFor = query(
           (
             __.out('CONTAINS')
             .outE('REPRESENTATION')
-            .filter(isImageType())
             .inV()
+            .filter(isImageType())
             .map(
               __.project('type', 'cid')
               .by(__.constant('spot'))
@@ -106,8 +109,8 @@ export const searchFor = query(
           ),
           (
             __.outE('REPRESENTATION')
-            .filter(isImageType())
             .inV()
+            .filter(isImageType())
             .map(
               __.project('type', 'cid')
               .by(__.constant('image'))
@@ -128,7 +131,9 @@ export const searchFor = query(
         .dedup()
         .toList()
       ) as Array<Map<keyof Entry, string | null>>
-      return results.map(Object.fromEntries)
+      const spots = results.map(Object.fromEntries)
+      console.debug({ spots })
+      return spots
     } catch (err) {
       if(isHttpError(err)) {
         throw err

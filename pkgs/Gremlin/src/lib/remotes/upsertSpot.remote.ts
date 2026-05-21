@@ -22,10 +22,7 @@ export const upsertSpot = command(
     const now = new Date().toISOString()
 
     try {
-      const address = await getSessionAddress()
-      if(!address) {
-        throw error(401, 'Unauthorized: No valid session cookie found.')
-      }
+      const address = await getSessionAddress({ throw: true })
       let traversal = (
         mergeSpotRoot({ traversal: connectToG(connection), address, now })
       )

@@ -14,6 +14,7 @@ export async function cidTreeToJanus(
         walker.path ??= []
         walker.index ??= 0
         walker.index++
+        console.debug({ root })
         if(root.type === 'file') {
           const traversal = await upsertSpot(
             { path: walker.path, containerId: rootId }
@@ -24,14 +25,12 @@ export async function cidTreeToJanus(
             type: root.mimetype,
             size: root.size,
           }] })
-          console.debug({ Postadd: root })
           const msg = (
             `Adding #${String(walker.index).padStart(4, '0')} ${walker.path.join('/')}/`
             + `<a href="${toHTTP({ cid: root.cid })}" target="_blank>`
             + root.title
             + `</a> (${metricize(root.size)}).`
           )
-          console.debug({ msg })
           log?.(msg)
         }
         walker.path.push(root.title)

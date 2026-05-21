@@ -27,77 +27,91 @@ export const addFiles = command(
     const now = new Date().toISOString()
 
     try {
-      return {
-        fileIds: await Promise.all(
-          files.map(async ({ cid, name, type, size }) => {
-            const [_, title, ext] = (
-              name.match(/^(?:(.*)\.)?([^.]+)$/) ?? [null, name, null]
-            )
+      // ToDo: Switch to AbortController fired on first error
+      const retStaisi = await Promise.allSettled(
+        files.map(async ({ cid, name, type, size }) => {
+          const [_, title, ext] = (
+            name.match(/^(.+)\.([^.]+)$/) ?? [null, name, null]
+          )
 
-            const path: Array<string> = []
+          const path: Array<string> = []
 
-            if(title !== ext) {
-              path.push(title)
-            }
+          // Files are named ext.ext so there's no
+          // context information in the file name
+          if(title !== ext) {
+            path.push(title)
+          }
 
-            const genTraversal = async () => {
-              return await (
-                mergePath({
-                  traversal: connectToG(connection), containerId, path,
-                })
-              )
-            }
-
-            if(settings.debugging) {
-              console.debug({
-                Add: `${path.join(' → ')}: ${cid} @ ${containerId} (${type})`
+          const genTraversal = async () => (
+            await (
+              mergePath({
+                traversal: connectToG(connection), containerId, path,
               })
-            }
-
-            const { value: existing } = await (
-              (await genTraversal())
-              .outE()
-              .has(T.label, 'REPRESENTATION')
-              .in_('File')
-              .has('type', type)
-              .not(__.inE('PREVIOUS'))
-              .project('id', 'cid')
-              .by(__.id())
-              .by('cid')
-              .next()
             )
+          )
 
-            if(existing && existing.cid === cid) {
-              return existing.id
-            }
+          if(settings.debugging) {
+            console.debug({
+              Add: `${path.join(' → ')}: ${cid} @ ${containerId} (${type})`
+            })
+          }
 
-            let traversal = (
-              (await genTraversal())
-              .as('spot')
-              .addV()
-              .has(T.label, 'File')
-              .property({ createdAt: now, cid, type, size })
-              .as('file')
-              .addE('REPRESENTATION')
-              .from_('spot')
-              .property({ createdAt: now })
+          const { value: existing } = await (
+            (await genTraversal())
+            .outE()
+            .has(T.label, 'REPRESENTATION')
+            .in_('File')
+            .has('type', type)
+            .not(__.inE('PREVIOUS'))
+            .project('id', 'cid')
+            .by(__.id())
+            .by('cid')
+            .next()
+          )
+
+          console.debug({ existing, type })
+
+          if(existing && existing.cid === cid) {
+            return existing.id
+          }
+
+          let traversal = (
+            (await genTraversal())
+            .as('spot')
+            .addV('File')
+            .property('createdAt', now)
+            .property('cid', cid)
+            .property('type', type)
+            .property('size', size)
+            .as('file')
+            .addE('REPRESENTATION')
+            .from_('spot')
+            .property('createdAt', now)
+          )
+
+          if(existing) {
+            traversal = (
+              traversal
+              .V(existing.id)
+              .addE('PREVIOUS')
+              .from_('file')
+              .property('createdAt', now)
             )
+          }
 
-            if(existing) {
-              traversal = (
-                traversal
-                .V(existing.id)
-                .addE('PREVIOUS')
-                .from_('file')
-                .property({ createdAt: now })
-              )
-            }
-
-            const { value: fileId } = await traversal.select('file').id().next()
-            return fileId
-          })
-        )
-      }
+          const { value: fileId } = await (
+            traversal.select('file').id().next()
+          )
+          return fileId
+        })
+      )
+      console.debug({ retStaisi })
+      return retStaisi.map(({ status, value }) => {
+        if(status === 'rejected') {
+          return { error: (value as Error)?.message ?? null }
+        }
+        return value
+      })
     } catch(err) {
       console.error({ addFiles: err })
       throw error(500, (err as Error).message)
