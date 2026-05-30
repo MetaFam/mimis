@@ -1,0 +1,64 @@
+/* Breeze-inspired palette and global resets for the Dolphin clone. */
+
+:root {
+  --bg-window: #eff0f1;
+  --bg-view: #fcfcfc;
+  --bg-header: #f7f7f8;
+  --bg-sidebar: #eff0f1;
+  --bg-hover: #e3f3fb;
+  --border: #d4d5d6;
+  --border-strong: #bcbdbe;
+
+  --text: #232629;
+  --text-muted: #6e7173;
+  --text-on-accent: #ffffff;
+
+  --accent: #3daee9;
+  --accent-strong: #2980b9;
+  --selection: #3daee9;
+  --selection-soft: #cdeefb;
+
+  --toolbar-height: 40px;
+  --location-height: 34px;
+  --statusbar-height: 26px;
+  --radius: 4px;
+  --shadow-menu: 0 4px 16px rgba(0, 0, 0, 0.22);
+
+  --font: 'Segoe UI', 'Noto Sans', 'Cantarell', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg-window);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+/* Thin Breeze-like scrollbars. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
