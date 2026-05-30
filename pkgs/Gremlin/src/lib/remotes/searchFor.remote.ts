@@ -56,14 +56,11 @@ export const searchFor = query(
     try {
       path = path.filter(Boolean)
 
-      if(!address) {
-        address = await getSessionAddress()
-      }
+      address ??= await getSessionAddress()
       if(!address) return null
 
       const g = connectToG(connection)
-      // Can generate new nodes & this method should be read-only
-      let traversal = mergeSpotRoot({ traversal: g, address })
+      let traversal = await mergeSpotRoot({ traversal: g, address, create: false })
 
       for(const element of path) {
         if(!allowCycles) {

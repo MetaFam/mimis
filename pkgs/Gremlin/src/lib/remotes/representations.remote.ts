@@ -37,9 +37,18 @@ export const representations = query(
     try {
       path = path.filter(Boolean)
 
-      let traversal = connectToG(connection)
-      traversal = await mergeSpotRoot({ traversal })
-      traversal = await mergePath({ traversal, path })
+      let travers = connectToG(connection)
+      travers = await mergeSpotRoot({ traversal: travers, create: false })
+      travers = await mergePath({ traversal: travers, path, create: false })
+      travers = travers.id() //outE('REPRESENTATION').inV()
+      const map = await travers.next()
+
+      const address = await getSessionAddress()
+
+      console.debug({ map, address, path })
+
+      let traversal = await mergeSpotRoot({ traversal: connectToG(connection), create: false })
+      traversal = await mergePath({ traversal, path, create: false })
 
       const results = (
         await traversal
@@ -50,13 +59,14 @@ export const representations = query(
         .by(__.values('cid'))
         .toList()
       ) as Array<Map<keyof Representation, string>>
+      console.debug({ representations: results, path })
       return results.map(Object.fromEntries) as Array<Representation>
     } catch(err) {
       let msg = (err as Error).message
       if(error.name === 'TypeError') {
         msg = `Connection Error: Could not connect to JanusGraph @ ${settings.janusGraphURL}.`
       }
-      console.error({ representations: err })
+      console.error({ representations: err, stack: (err as Error)?.stack })
       throw error(500, `Fetching Representations: "${msg}"`)
     } finally {
       try {

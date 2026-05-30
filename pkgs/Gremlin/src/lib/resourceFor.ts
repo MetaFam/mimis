@@ -17,8 +17,8 @@ export async function resourceAt({
     const traversal = (
       g.V(containerId)
       .outE('REPRESENTATION')
-      .has('type', type)
       .inV()
+      .has('type', type)
       .values('cid')
     )
     const result = await traversal.next()

@@ -5,6 +5,7 @@ import { error } from '@sveltejs/kit'
 import settings from '$lib/settings.svelte.ts'
 import {
   connect as connectJanusGraph, connectToG, mergePath,
+  mergeSpotRoot,
 } from '$lib/server/janusgraph.ts'
 
 const { process } = gremlin
@@ -42,13 +43,16 @@ export const addFiles = command(
             path.push(title)
           }
 
-          const genTraversal = async () => (
-            await (
+          const genTraversal = async ({ create = false } = { create: false }) => {
+            // const traversal = await (
+            //   mergeSpotRoot({ traversal: connectToG(connection), create })
+            // )
+            return (
               mergePath({
-                traversal: connectToG(connection), containerId, path,
+                traversal: connectToG(connection), containerId, path, create,
               })
             )
-          )
+          }
 
           if(settings.debugging) {
             console.debug({
@@ -56,11 +60,12 @@ export const addFiles = command(
             })
           }
 
+          const { value: val } = await (await genTraversal()).outE().propertyMap().next()
+          console.debug({ containerId, val })
+
           const { value: existing } = await (
             (await genTraversal())
-            .outE()
-            .has(T.label, 'REPRESENTATION')
-            .in_('File')
+            .out('REPRESENTATION')
             .has('type', type)
             .not(__.inE('PREVIOUS'))
             .project('id', 'cid')
@@ -76,7 +81,7 @@ export const addFiles = command(
           }
 
           let traversal = (
-            (await genTraversal())
+            (await genTraversal({ create: true }))
             .as('spot')
             .addV('File')
             .property('createdAt', now)

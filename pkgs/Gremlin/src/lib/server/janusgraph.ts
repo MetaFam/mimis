@@ -55,62 +55,85 @@ export async function mergeRoot({ traversal, now }: {
   )
 }
 
-export function mergeSpotRoot({ traversal, address, now: createdAt }: {
+export async function mergeSpotRoot({ traversal, address, now: createdAt, create }: {
   traversal: GraphTraversalSource
-  address?: string
-  now?: string
+  address?: string | null
+  now?: string | null
+  create?: boolean
 }) {
-  address ??= getSessionAddress({ throw: true })
+  address ??= await getSessionAddress({ throw: true })
   createdAt ??= new Date().toISOString()
+  create ??= true
   return (
-    traversal
-    .mergeV(new Map([[T.label, 'SpotRoot'], ['signer', address]]))
-    .option(Merge.onCreate, { createdAt })
+    (create ? (
+      traversal
+      .mergeV(new Map([[T.label, 'SpotRoot'], ['signer', address]]))
+      .option(Merge.onCreate, { createdAt })
+    ) : (
+      traversal
+      .V()
+      .hasLabel('SpotRoot')
+      .has('signer', address)
+    ))
   )
 }
 
 export async function mergePath({
-  traversal, containerId, path, now: createdAt,
+  traversal, containerId, path, now: createdAt, create,
 }: {
   traversal: GraphTraversalSource
   containerId?: number
   path: Array<string>
   now?: string
+  create?: boolean
 }) {
   createdAt ??= new Date().toISOString()
-  const address = await getSessionAddress({ throw: true })
+  create ??= true
 
   if(containerId != null) {
-    if(!await(
-      mergeSpotRoot({ traversal, address, now: createdAt })
-      .out()
+    if(!await (
+      (await mergeSpotRoot({ traversal, now: createdAt, create: false }))
+      .repeat(__.out())
+      .until(
+        __.hasId(containerId)
+        .or()
+        .count().is(0)
+      )
       .hasId(containerId)
       .hasNext()
     )) {
       throw error(400, `Container id, "${containerId}", does not belong to the user.`)
     }
+    console.debug({ mergePath: `Starting at ${containerId}.` })
     traversal = traversal.V(containerId)
   }
 
   for(const elem of path) {
+    console.debug({ mergePath: elem, create })
     traversal = (
-      traversal
-      .as('parent')
-      .coalesce(
-        (
-          __.outE('CONTAINS')
-          .has('path', elem)
-          .inV()
-        ),
-        (
-          __.addV('Spot')
-          .property({ createdAt })
-          .addE('CONTAINS')
-          .from_('parent')
-          .property({ path: elem, createdAt })
-          .inV()
-        ),
-      )
+      (create ? (
+        traversal
+        .as('parent')
+        .coalesce(
+          (
+            __.outE('CONTAINS')
+            .has('path', elem)
+            .inV()
+          ),
+          (
+            __.addV('Spot')
+            .property(new Map(Object.entries({ createdAt })))
+            .addE('CONTAINS')
+            .from_('parent')
+            .property(new Map(Object.entries({ path: elem, createdAt })))
+            .inV()
+          ),
+        )
+      ) : (
+        traversal.outE('CONTAINS')
+        .has('path', elem)
+        .inV()
+      ))
     )
   }
   return traversal

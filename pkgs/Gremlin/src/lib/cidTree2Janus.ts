@@ -1,4 +1,4 @@
-import { upsertSpot } from './remotes/upsertSpot.remote.ts'
+import { upsertSpot } from '$lib/remotes/upsertSpot.remote.ts'
 import { addFiles } from '$lib/remotes/addFiles.remote.ts'
 import { walk, metricize, toHTTP } from '$lib'
 import type { TreeNode } from '$lib/fileTree2CIDTree.ts'

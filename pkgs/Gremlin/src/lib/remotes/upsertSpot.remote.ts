@@ -22,31 +22,30 @@ export const upsertSpot = command(
     const now = new Date().toISOString()
 
     try {
-      const address = await getSessionAddress({ throw: true })
-      let traversal = (
-        mergeSpotRoot({ traversal: connectToG(connection), address, now })
+      let traversal = await (
+        mergeSpotRoot({ traversal: connectToG(connection), now, create: true })
       )
 
       if(containerId != null) {
         if(await (
-          mergeSpotRoot({ traversal: connectToG(connection), address, now })
+          (await mergeSpotRoot({ traversal: connectToG(connection), create: false }))
           .repeat(__.out())
           .until(
             __.hasId(containerId)
             .or()
             .count().is(0)
           )
-          .hasId(containerId)
           .hasNext()
         )) {
-          throw error(400, `Continer id, "${containerId}", does not belong to the user.`)
+          const address = await getSessionAddress()
+          throw error(400, `Container, "${containerId}", does not belong to the user ${address}.`)
         }
         traversal = traversal.V(containerId)
       }
 
       return (
         (await (
-          (await mergePath({ traversal, path, now }))
+          (await mergePath({ traversal, path, now, create: true }))
           .id().next()
         )).value
       )

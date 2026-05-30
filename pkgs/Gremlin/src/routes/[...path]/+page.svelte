@@ -49,6 +49,7 @@
   let idPromise = $derived(spotId({ path }))
 
   function soleDisplayable(reps?: Array<Representation>) {
+    console.debug({ reps })
     if(!Array.isArray(reps)) throw new Error('`reps` is not an array.')
     if(reps.length !== 1) return false
     const [rep] = reps
@@ -67,15 +68,11 @@
     appKit = getAppKit()
     ;({ wagmiConfig } = getWagmiAdapter())
 
-    if(!wagmiConfig) {
-      throw new Error('WAGMI config not available from AppKit.')
-    }
-
     walletConnected = !!appKit.getIsConnectedState()
     appKit.subscribeEvents(async () => {
       const connected = !!appKit?.getIsConnectedState()
       walletConnected = connected
-       if(connected) {
+      if(connected) {
         if(!wagmiConfig) throw new Error('WAGMI Config Not Available')
         const account = getConnection(wagmiConfig)
         whoAmI = account.address ?? null
@@ -83,6 +80,7 @@
       if(connected && !whoAmI && !signingIn) {
         await siweSignIn()
       }
+      console.debug({ connected })
     })
     if(walletConnected && !whoAmI) {
       await siweSignIn()
@@ -407,7 +405,6 @@
         {:else}
           <ul>
             {#each await display() as { name, type, cid } (cid || name)}
-              {@const target = type !== 'spot' ? { target: '_blank' } : {}}
               <li>
                 <a
                   href={resolve(
@@ -420,12 +417,11 @@
                     }` as '/'
                   )}
                   title={name}
-                  {...target}
                 >
                   {#if cid}
                     <img src={toHTTP({ cid })} alt={name}/>
                   {:else if type === 'spot'}
-                    <img src={Folder} alt="📁"/>
+                    <img src={Folder} class="folder"alt="📁"/>
                   {:else}
                     <aside>Unknown Type: {type}</aside>
                   {/if}
@@ -694,6 +690,8 @@
       flex-direction: column;
       text-decoration: none;
       align-items: center;
+      height: 100%;
+      place-content: space-evenly;
 
       &:hover {
         color: lch(
@@ -703,8 +701,12 @@
     }
 
     & img {
-      width: calc(var(--zoom, 1) * 15em);
+      max-width: calc(var(--zoom, 1) * 15em);
       max-height: calc(var(--zoom, 1) * 10em);
+
+      &.folder {
+        width: calc(var(--zoom, 1) * 15em);
+      }
     }
 
     & #media {

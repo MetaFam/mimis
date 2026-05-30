@@ -35,7 +35,7 @@ export const spotId = query(
       if(!address) return null
 
       const g = connectToG(connection)
-      let traversal = mergeSpotRoot({ traversal: g, address })
+      let traversal = await mergeSpotRoot({ traversal: g, address })
 
       for (const element of path) {
         if (!allowCycles) {
