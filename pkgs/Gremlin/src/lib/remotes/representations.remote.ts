@@ -1,7 +1,7 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { query } from '$app/server'
-import { error } from '@sveltejs/kit'
+import { error, isHttpError } from '@sveltejs/kit'
 import {
   connect as connectJanusGraph, connectToG, mergePath, mergeSpotRoot,
 } from '$lib/server/janusgraph.ts'
@@ -65,6 +65,8 @@ export const representations = query(
       let msg = (err as Error).message
       if(error.name === 'TypeError') {
         msg = `Connection Error: Could not connect to JanusGraph @ ${settings.janusGraphURL}.`
+      } else if(isHttpError(err)) {
+        throw err
       }
       console.error({ representations: err, stack: (err as Error)?.stack })
       throw error(500, `Fetching Representations: "${msg}"`)

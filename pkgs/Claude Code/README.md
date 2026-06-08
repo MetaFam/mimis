@@ -1,42 +1,24 @@
-# sv
+# Claude’s Mïmis
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+This is a version of the Mïmis file system and browser hallucinated by Claude Opus 4.8.
 
-## Creating a project
+## File System Structure
 
-If you're seeing this, you've probably already done this step. Congrats!
+Rather than a file and folders analogy, Mïmis is organized as a finite-state transducer. It takes a path as input, does some internal machinations, & spits out the CID of a resource.
 
-```sh
-# create a new project
-npx sv create my-app
-```
+So, in a traditional file system the path elements are associated with the nodes *(the labels on files and folders)*. In Mïmis, the path elements are properties of the edges that transition between semantic locations called `Spot`s.
 
-To recreate this project with the same configuration:
+There are several kinds of edges that can exit a `Spot`:
 
-```sh
-# recreate this project
-pnpm dlx sv@0.15.3 create --template minimal --types ts --install pnpm .
-```
+* A `CONTAINS` edge which has a `path` property containing the path element to be consumed when the edge is traversed connecting it to another `Spot`.
+* A `REPRESENTATION` edge with links to a `File` which has `cid`, `type`, & `size` properties.
+* A `SIGNIFIER` edge which has a `term` property which is an arbitrary string & a `weight` property that varies −1 – +1.
+* A `MOUNT` edge representing a member of a union mount. They have an `order` property to specify where they occur in the union.
 
-## Developing
+Files have no name. The path is consumed by traversing edges matching their `path` property. When it terminates that `Spot` can have zero or more `REPRESENTATION` edges, but only one per `type` of `File`.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+By pushing all the file information into the path, multiple distinct paths can lead to the same location with no duplication of information.
 
-```sh
-npm run dev
+The overarching architecture of the system is updates are published as trees originating at a `SpotRoot` with one per user based on an Ethereum signature of the root CID.
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+The `SIGNIFIER` edges serve to create a semantic overlay to contextualize the relationships between `Spot`s.

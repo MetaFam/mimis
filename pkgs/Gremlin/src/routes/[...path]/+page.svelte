@@ -44,9 +44,27 @@
   let whoAmI = $state<string | null>(null)
   let signingIn = false
 
-  let spotsPromise = $derived(searchFor({ path }))
-  let repsPromise = $derived(representations({ path }))
-  let idPromise = $derived(spotId({ path }))
+  let spotsPromise = $derived(async () => {
+    try {
+      return await searchFor({ path })
+    } catch(err) {
+      console.error({ searchFor: err })
+    }
+  })
+  let repsPromise = $derived(async () => {
+    try {
+      return await representations({ path })
+    } catch(err) {
+      console.error({ representations: err })
+    }
+  })
+  let idPromise = $derived(async () => {
+    try {
+      return await spotId({ path })
+    } catch(err) {
+      console.error({ spotId: err })
+    }
+  })
 
   function soleDisplayable(reps?: Array<Representation>) {
     console.debug({ reps })
@@ -54,6 +72,19 @@
     if(reps.length !== 1) return false
     const [rep] = reps
     return rep
+  }
+
+  async function reps() {
+    try {
+      return await repsPromise as Array<Representation>
+    } catch(err) {
+      console.error({ reps: err })
+      errorMsg = (err as Error).message
+      if(isHttpError(err)) {
+        errorMsg = `HTTP Error: ${err.status}: ${err.body.message}`
+      }
+      return []
+    }
   }
 
   logHeader()
@@ -386,8 +417,8 @@
       <Breadcrumbs {path} address={whoAmI}/>
     </nav>
     <nav id="details">
-      {#await repsPromise then reps}
-        {@const sole = soleDisplayable(reps)}
+      {#await reps() then rs}
+        {@const sole = soleDisplayable(rs)}
         {#if sole}
           <figure id="media">
             {#if sole.type.startsWith('image/')}

@@ -63,7 +63,7 @@ To run Janus Graph for local development, do:
 docker compose up
 ```
 
-To run with [Caddy](https://caddyserver.com) teminating SSL, as is needed for a secure web socket, run:
+To run with [Caddy](https://caddyserver.com) terminating SSL, as is needed for a secure web socket, run:
 
 ```bash
 docker compose -f docker-compose.yaml -f docker-compose.production.yaml up

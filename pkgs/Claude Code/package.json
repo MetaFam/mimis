@@ -1,5 +1,6 @@
 {
-	"name": "claude-code",
+	"name": "claudes-mimis",
+	"description": "Claude’s Mïmis",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
