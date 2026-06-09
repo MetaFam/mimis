@@ -22,6 +22,7 @@
 		"@reown/appkit-adapter-wagmi": "^1.8.17",
 		"@reown/appkit-wallet-button": "^1.8.17",
 		"@wagmi/core": "^3.3.4",
+		"force-graph": "^1.51.4",
 		"gh-pages": "^6.3.0",
 		"gremlin": "3.7.3",
 		"ignore": "^7.0.5",

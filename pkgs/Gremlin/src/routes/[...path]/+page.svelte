@@ -76,7 +76,7 @@
 
   async function reps() {
     try {
-      return await repsPromise as Array<Representation>
+      return await repsPromise() as Array<Representation>
     } catch(err) {
       console.error({ reps: err })
       errorMsg = (err as Error).message
@@ -190,7 +190,7 @@
 
       const formData = new FormData(evt.currentTarget as HTMLFormElement)
       if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
-        const containerId = await id()
+        const containerId = await idPromise()
         const terminal = formData.getAll('path') as Array<string>
         const create = [...path, ...terminal]
         console.debug({ containerId, create })
@@ -283,7 +283,7 @@
 
   const display = async () => {
     try {
-      const spots = await spotsPromise as Array<Entry>
+      const spots = await spotsPromise() as Array<Entry>
       if(settings.debugging) {
         console.debug(JSON.stringify(spots, null, 2))
       }
@@ -296,7 +296,7 @@
 
   async function id() {
     try {
-      return await idPromise as number
+      return await idPromise() as number
     } catch(err) {
       console.error({ id: err })
       errorMsg = (err as Error).message
@@ -336,6 +336,7 @@
       >Export to CAR</button></li>
       <li><button onclick={buildDAG}>Export to CBOR-DAG</button></li>
       <li><button onclick={graphToCSV}>Export to CSV</button></li>
+      <li><a class="button" href={resolve('/graph')}>Force Graph</a></li>
       <li><button
         class="menu-open"
         onclick={() => configDialog?.showModal()}
@@ -417,7 +418,7 @@
       <Breadcrumbs {path} address={whoAmI}/>
     </nav>
     <nav id="details">
-      {#await reps() then rs}
+      {#each await reps() as rs }
         {@const sole = soleDisplayable(rs)}
         {#if sole}
           <figure id="media">
@@ -462,7 +463,7 @@
             {/each}
           </ul>
         {/if}
-      {/await}
+      {/each}
     </nav>
   </section>
   <dialog id="add-spot" bind:this={addSpotDialog}>
@@ -579,8 +580,10 @@
       opacity: 0.5;
     }
 
-    #locations & li, #actions & button {
+    #locations & li, #actions & button, #actions & a.button {
       display: block;
+      text-decoration: none;
+      color: inherit;
       padding: 0.5rem 1rem;
       border: 1px solid #333;
       border-radius: 0.5rem;
