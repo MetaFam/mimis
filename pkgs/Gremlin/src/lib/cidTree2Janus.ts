@@ -14,12 +14,12 @@ export async function cidTreeToJanus(
         walker.path ??= []
         walker.index ??= 0
         walker.index++
-        console.debug({ root })
+        console.debug({ root, rootId   })
         if(root.type === 'file') {
-          const traversal = await upsertSpot(
+          const containerId = await upsertSpot(
             { path: walker.path, containerId: rootId }
           )
-          await addFiles({ traversal, files: [{
+          await addFiles({ containerId, files: [{
             cid: root.cid,
             name: root.title,
             type: root.mimetype,

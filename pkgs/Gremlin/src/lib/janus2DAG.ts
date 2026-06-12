@@ -107,6 +107,8 @@ export class Serializer {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { edges, id, properties, ...props } = await nodeInfo(rootId)
 
+    console.debug({ edges, id, properties, props })
+
     const relationships = await Promise.all(
       edges.map(async ({ targetId, ...edge }) => ({
         ...edge,
@@ -187,7 +189,7 @@ export async function janusToDAG(
     const serializer = new Serializer({
       log, batchSize, encoder, generateCAR, insertInIPFS,
     })
-    serializer.log?.(`Exporting nodes to \`${encoder.name}\`…`)
+    serializer.log?.(`Exporting tree rooted at ${rootId} to \`${encoder.name}\`…`)
     const rootCID = await serializer.node(rootId)
 
     let signature: string | null = null

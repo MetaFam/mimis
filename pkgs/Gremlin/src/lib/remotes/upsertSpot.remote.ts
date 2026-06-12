@@ -27,14 +27,10 @@ export const upsertSpot = command(
       )
 
       if(containerId != null) {
-        if(await (
+        if(!await (
           (await mergeSpotRoot({ traversal: connectToG(connection), create: false }))
+          .until(__.hasId(containerId))
           .repeat(__.out())
-          .until(
-            __.hasId(containerId)
-            .or()
-            .count().is(0)
-          )
           .hasNext()
         )) {
           const address = await getSessionAddress()

@@ -27,6 +27,8 @@ export const addFiles = command(
     const connection = connectJanusGraph()
     const now = new Date().toISOString()
 
+    console.debug({ addFiles: { containerId, files } })
+
     try {
       // ToDo: Switch to AbortController fired on first error
       const retStaisi = await Promise.allSettled(

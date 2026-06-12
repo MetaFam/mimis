@@ -25,14 +25,14 @@ export const nodeInfo = query(
         if(!address) return null
 
         const { value: rootId } = await (
-          mergeSpotRoot({ traversal: connectToG(connection), address, now })
+          (await mergeSpotRoot({ traversal: connectToG(connection), address, now }))
           .id().next()
         )
         nodeId = rootId
-      }
 
-      if(nodeId == null) {
-        throw error(500, 'Root node not found.')
+        if(nodeId == null) {
+          throw error(500, `SpotRoot for ${address} not found.`)
+        }
       }
 
       const vertexMap = await g.V(nodeId).elementMap().next()

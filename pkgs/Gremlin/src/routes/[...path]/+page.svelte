@@ -231,7 +231,7 @@
             size: files[idx].size,
           }
         })
-        if(settings.debugging) console.debug({ entries })
+        if(settings.debugging) console.debug({ entries, containerId })
         await filesToSpot({
           containerId,
           files: entries,
@@ -284,6 +284,7 @@
   const display = async () => {
     try {
       const spots = await spotsPromise() as Array<Entry>
+      console.debug({ spots })
       if(settings.debugging) {
         console.debug(JSON.stringify(spots, null, 2))
       }
@@ -418,7 +419,34 @@
       <Breadcrumbs {path} address={whoAmI}/>
     </nav>
     <nav id="details">
-      {#each await reps() as rs }
+      <ul>
+        {#each await display() as { name, type, cid } (cid || name)}
+          <li>
+            <a
+              href={resolve(
+                `${
+                  path.length > 0 ? '/' : ''
+                }${
+                  path.join('/')
+                }/${
+                  name
+                }` as '/'
+              )}
+              title={name}
+            >
+              {#if cid}
+                <img src={toHTTP({ cid })} alt={name}/>
+              {:else if type === 'spot'}
+                <img src={Folder} class="folder"alt="📁"/>
+              {:else}
+                <aside>Unknown Type: {type}</aside>
+              {/if}
+              <span>{name}</span>
+            </a>
+          </li>
+        {/each}
+      </ul>
+      {#await reps() then rs}
         {@const sole = soleDisplayable(rs)}
         {#if sole}
           <figure id="media">
@@ -434,36 +462,8 @@
               </object>
             {/if}
           </figure>
-        {:else}
-          <ul>
-            {#each await display() as { name, type, cid } (cid || name)}
-              <li>
-                <a
-                  href={resolve(
-                    `${
-                      path.length > 0 ? '/' : ''
-                    }${
-                      path.join('/')
-                    }/${
-                      name
-                    }` as '/'
-                  )}
-                  title={name}
-                >
-                  {#if cid}
-                    <img src={toHTTP({ cid })} alt={name}/>
-                  {:else if type === 'spot'}
-                    <img src={Folder} class="folder"alt="📁"/>
-                  {:else}
-                    <aside>Unknown Type: {type}</aside>
-                  {/if}
-                  <span>{name}</span>
-                </a>
-              </li>
-            {/each}
-          </ul>
         {/if}
-      {/each}
+      {/await}
     </nav>
   </section>
   <dialog id="add-spot" bind:this={addSpotDialog}>
