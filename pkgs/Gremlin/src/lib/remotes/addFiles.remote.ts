@@ -56,6 +56,8 @@ export const addFiles = command(
             )
           }
 
+          type ||= `application/octet-stream;extension=${ext ?? '𝘶𝘯𝘬𝘯𝘰𝘸𝘯'}`
+
           if(settings.debugging) {
             console.debug({
               Add: `${path.join(' → ')}: ${cid} @ ${containerId} (${type})`

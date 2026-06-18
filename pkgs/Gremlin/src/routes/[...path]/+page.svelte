@@ -69,6 +69,9 @@
   function soleDisplayable(reps?: Array<Representation>) {
     console.debug({ reps })
     if(!Array.isArray(reps)) throw new Error('`reps` is not an array.')
+    reps = reps.filter(
+      (rep) => rep.type.startsWith('image/') || rep.type.startsWith('video/')
+    )
     if(reps.length !== 1) return false
     const [rep] = reps
     return rep
@@ -231,7 +234,7 @@
             size: files[idx].size,
           }
         })
-        if(settings.debugging) console.debug({ entries, containerId })
+        if(settings.debugging) console.debug({ entries, containerId } )
         await filesToSpot({
           containerId,
           files: entries,

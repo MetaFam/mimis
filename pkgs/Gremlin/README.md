@@ -28,11 +28,11 @@ ipfs daemon
 In order for Mïmis to access Kubo via the browser, the API endpoint needs to send a CORS `Access-Control-Allow-Origin` HTTP header. The configuration allows this & to add it using [the `jq` command](https://jqlang.org), do:
 
 ```bash
-KEY=API.HTTPHeaders.Access-Control-Allow-Origin
-CURRENT=$(ipfs config $KEY)
-VAL=$(jq -c '. + ["http://localhost:5173", "https://mimis.dhappy.org"]' <<< ${CURRENT:-[]})
-echo "Setting to '$VAL'"
-ipfs config --json $KEY "$VAL"
+  KEY=API.HTTPHeaders.Access-Control-Allow-Origin
+  CURRENT=$(ipfs config $KEY)
+  VAL=$(jq -c '. + ["http://localhost:5173", "https://mimis.dhappy.org"]' <<< ${CURRENT:-[]})
+  echo "Setting to '$VAL'"
+  ipfs config --json $KEY "$VAL"
 ```
 
 Then restart the IPFS daemon.
@@ -93,7 +93,7 @@ The data is Mïmis is custom structured to support a variety of different applic
 
 ### Collaborative File System
 
-One of the most fundamental is as a collaborative file system called Argus allowing users to:
+One of the most fundamental is as a collaborative file system called Argüs allowing users to:
 
 * maintain individual hierarchical collections of information
 * create links to incorporate parts of others' collections into their own
