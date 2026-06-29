@@ -64,12 +64,10 @@ export const addFiles = command(
             })
           }
 
-          const { value: val } = await (await genTraversal()).outE().propertyMap().next()
-          console.debug({ containerId, val })
-
           const { value: existing } = await (
             (await genTraversal())
-            .out('REPRESENTATION')
+            .outE('REPRESENTATION')
+            .inV()
             .has('type', type)
             .not(__.inE('PREVIOUS'))
             .project('id', 'cid')
@@ -80,8 +78,8 @@ export const addFiles = command(
 
           console.debug({ existing, type })
 
-          if(existing && existing.cid === cid) {
-            return existing.id
+          if(existing && existing.get('cid') === cid) {
+            return existing.get('id')
           }
 
           let traversal = (
@@ -101,7 +99,7 @@ export const addFiles = command(
           if(existing) {
             traversal = (
               traversal
-              .V(existing.id)
+              .V(existing.get('id'))
               .addE('PREVIOUS')
               .from_('file')
               .property('createdAt', now)
@@ -115,9 +113,11 @@ export const addFiles = command(
         })
       )
       console.debug({ retStaisi })
-      return retStaisi.map(({ status, value }) => {
+      return retStaisi.map(({ status, value, reason }) => {
         if(status === 'rejected') {
-          return { error: (value as Error)?.message ?? null }
+          const error = (reason as Error)?.message ?? null
+          console.debug({ status, error })
+          return { error }
         }
         return value
       })

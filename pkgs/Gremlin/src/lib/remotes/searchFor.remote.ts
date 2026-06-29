@@ -3,13 +3,13 @@ import * as v from 'valibot'
 import { query } from '$app/server'
 import { error, isHttpError } from '@sveltejs/kit'
 import {
-  connect as connectJanusGraph, connectToG,
-  mergeSpotRoot,
+  connect as connectJanusGraph, connectToG, mergeSpotRoot,
 } from '$lib/server/janusgraph.ts'
 import settings from '$lib/settings.svelte.ts'
 import { getSessionAddress } from '$lib/server/auth.ts'
 
-const { statics: __, t: T } = gremlin.process
+const { statics: __, scope: Scope } = gremlin.process
+type GraphTraversal = InstanceType<typeof gremlin.process.GraphTraversal>
 
 export interface Spot {
   name: string
@@ -37,6 +37,20 @@ const isImageType = () => (
     __.has('type', 'image/webp'),
     __.has('type', 'image/avif'),
     __.has('type', 'video/mp4'),
+  )
+)
+
+const singleDisplayable = (typeLabel: string, cids: GraphTraversal) => (
+  cids
+  .fold()
+  .filter(__.unfold())
+  .project('type', 'cid')
+  .by(__.constant(typeLabel))
+  .by(
+    __.coalesce(
+      __.filter(__.count(Scope.local).is(1)).unfold(),
+      __.constant(null),
+    )
   )
 )
 
@@ -93,26 +107,23 @@ export const searchFor = query(
         .select('contains')
         .inV()
         .coalesce(
-          (
-            __.out('CONTAINS')
-            .outE('REPRESENTATION')
-            .inV()
-            .filter(isImageType())
-            .map(
-              __.project('type', 'cid')
-              .by(__.constant('spot'))
-              .by(__.values('cid'))
-            )
+          singleDisplayable(
+            'spot',
+            (
+              __.out('CONTAINS').outE('REPRESENTATION').inV()
+              .filter(isImageType())
+              .not(__.inE('PREVIOUS'))
+              .values('cid')
+            ),
           ),
-          (
-            __.outE('REPRESENTATION')
-            .inV()
-            .filter(isImageType())
-            .map(
-              __.project('type', 'cid')
-              .by(__.constant('image'))
-              .by(__.values('cid'))
-            )
+          singleDisplayable(
+            'image',
+            (
+              __.outE('REPRESENTATION').inV()
+              .filter(isImageType())
+              .not(__.inE('PREVIOUS'))
+              .values('cid')
+            ),
           ),
           (
             __.project('type', 'cid')

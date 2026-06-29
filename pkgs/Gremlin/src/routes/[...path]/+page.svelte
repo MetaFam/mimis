@@ -26,6 +26,8 @@
   import Folder from '$lib/assets/folder.svg'
   import Eyes from '$lib/assets/infinity eyes.svg'
   import Background from '$lib/assets/background.svg'
+  import { whoami } from '$lib/remotes/whoami.remote'
+    import { logout } from '$lib/remotes/logout.remote';
 
   let errorMsg = $state<string | null>(null)
   let path = $state(
@@ -44,27 +46,27 @@
   let whoAmI = $state<string | null>(null)
   let signingIn = false
 
-  let spotsPromise = $derived(async () => {
-    try {
-      return await searchFor({ path })
-    } catch(err) {
-      console.error({ searchFor: err })
-    }
-  })
-  let repsPromise = $derived(async () => {
-    try {
-      return await representations({ path })
-    } catch(err) {
-      console.error({ representations: err })
-    }
-  })
-  let idPromise = $derived(async () => {
-    try {
-      return await spotId({ path })
-    } catch(err) {
-      console.error({ spotId: err })
-    }
-  })
+  // let spotsPromise = $derived(async () => {
+  //   try {
+  //     return await searchFor({ path })
+  //   } catch(err) {
+  //     console.error({ searchFor: err })
+  //   }
+  // })
+  // let repsPromise = $derived(async () => {
+  //   try {
+  //     return await representations({ path })
+  //   } catch(err) {
+  //     console.error({ representations: err })
+  //   }
+  // })
+  // let idPromise = $derived(async () => {
+  //   try {
+  //     return await spotId({ path })
+  //   } catch(err) {
+  //     console.error({ spotId: err })
+  //   }
+  // })
 
   function soleDisplayable(reps?: Array<Representation>) {
     console.debug({ reps })
@@ -79,7 +81,8 @@
 
   async function reps() {
     try {
-      return await repsPromise() as Array<Representation>
+      // return await repsPromise() as Array<Representation>
+      return await representations({ path }) as Array<Representation>
     } catch(err) {
       console.error({ reps: err })
       errorMsg = (err as Error).message
@@ -104,32 +107,43 @@
 
     walletConnected = !!appKit.getIsConnectedState()
     appKit.subscribeEvents(async () => {
-      const connected = !!appKit?.getIsConnectedState()
-      walletConnected = connected
-      if(connected) {
+      walletConnected = !!appKit?.getIsConnectedState()
+      if(!walletConnected) {
+        if(whoAmI) { // was previously authenticated
+          await logout()
+        }
+        whoAmI = null
+      } else if(!whoAmI) {
         if(!wagmiConfig) throw new Error('WAGMI Config Not Available')
-        const account = getConnection(wagmiConfig)
-        whoAmI = account.address ?? null
+        const { address: localAddr = null, isConnected } = (
+          getConnection(wagmiConfig)
+        )
+        if(isConnected) {
+          const remoteAddr = await whoami()
+          if(remoteAddr?.toLowerCase() === localAddr?.toLowerCase()) {
+            whoAmI = localAddr ?? null
+          } else {
+            whoAmI = null
+          }
+          console.debug({ whoAmI, remoteAddr, localAddr })
+        }
       }
-      if(connected && !whoAmI && !signingIn) {
+      if(walletConnected && !whoAmI && !signingIn) {
         await siweSignIn()
       }
-      console.debug({ connected })
+      console.debug({ walletConnected })
     })
-    if(walletConnected && !whoAmI) {
-      await siweSignIn()
-    }
   })
 
   async function siweSignIn() {
     if(!wagmiConfig) return
     const account = getConnection(wagmiConfig)
-    if(settings.debugging) {
+    // if(settings.debugging) {
       console.debug('SIWE attempt:', {
         address: account.address,
         status: account.status,
       })
-    }
+    // }
     if(!account.address) return
 
     signingIn = true
@@ -193,7 +207,8 @@
 
       const formData = new FormData(evt.currentTarget as HTMLFormElement)
       if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
-        const containerId = await idPromise()
+        // const containerId = await idPromise()
+        const containerId = await spotId({ path })
         const terminal = formData.getAll('path') as Array<string>
         const create = [...path, ...terminal]
         console.debug({ containerId, create })
@@ -286,7 +301,8 @@
 
   const display = async () => {
     try {
-      const spots = await spotsPromise() as Array<Entry>
+      // const spots = await spotsPromise() as Array<Entry>
+      const spots = await searchFor({ path }) as Array<Entry>
       console.debug({ spots })
       if(settings.debugging) {
         console.debug(JSON.stringify(spots, null, 2))
@@ -300,7 +316,8 @@
 
   async function id() {
     try {
-      return await idPromise() as number
+      // return await idPromise() as number
+      return await spotId({ path }) as number
     } catch(err) {
       console.error({ id: err })
       errorMsg = (err as Error).message
@@ -739,7 +756,7 @@
 
     & img {
       max-width: calc(var(--zoom, 1) * 15em);
-      max-height: calc(var(--zoom, 1) * 10em);
+      height: calc(var(--zoom, 1) * 10em);
 
       &.folder {
         width: calc(var(--zoom, 1) * 15em);
@@ -754,6 +771,7 @@
 
       & img, & video, & object {
         width: auto;
+        height: auto;
         max-width: 100%;
         max-height: 90dvh;
         object-fit: contain;

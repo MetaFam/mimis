@@ -47,13 +47,16 @@ export const representations = query(
 
       console.debug({ map, address, path })
 
-      let traversal = await mergeSpotRoot({ traversal: connectToG(connection), create: false })
+      let traversal = await mergeSpotRoot({
+        traversal: connectToG(connection), create: false,
+      })
       traversal = await mergePath({ traversal, path, create: false })
 
       const results = (
         await traversal
         .outE('REPRESENTATION')
         .inV()
+        .not(__.inE('PREVIOUS'))
         .project('type', 'cid')
         .by(__.values('type'))
         .by(__.values('cid'))
