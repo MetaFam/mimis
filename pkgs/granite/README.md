@@ -10,7 +10,7 @@ A graph consists of a set of union mounted updates. Each node in an update is a 
 
 Updates are identified by a root CID, and are published broadcast via libp2p Gossipsub and an Ethereum map. Each update contains a link to the most recently published previous update from that node.
 
-Updates are **partial snapshots**: an update asserts only the paths it contains, and a publisher's effective graph is the union of their entire update chain, newest shadowing oldest. Published nodes may themselves declare **mounts** — unioning another subtree or another publisher's graph beneath them — with the node's own relationships shadowing mounted content.
+Updates are **partial snapshots**: an update asserts only the paths it contains, and a publisher's effective graph is the union of their entire update chain, newest shadowing oldest. Published nodes may themselves declare **mounts** — unioning another subtree, another publisher's graph, or a spot *within* another publisher's graph (`{ source, path }`, live across their updates) beneath them — with the node's own relationships shadowing mounted content.
 
 Each node should have its own publishing key. Multiple publishing nodes can be conglomerated through the union mounting system to form user directories.
 

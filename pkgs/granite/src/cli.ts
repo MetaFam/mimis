@@ -118,8 +118,10 @@ const jsonToTree = (value: unknown, where: string): Tree => {
     }
   }
   if(raw.mounts !== undefined) {
-    tree.mounts = (raw.mounts as { source: string, order: number }[]).map((mount) => ({
+    tree.mounts = (raw.mounts as { source: string, path?: string, order: number }[])
+    .map((mount) => ({
       source: parseSource(mount.source),
+      ...(mount.path === undefined ? {} : { path: mount.path }),
       order: mount.order,
     }))
   }

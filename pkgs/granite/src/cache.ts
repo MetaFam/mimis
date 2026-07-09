@@ -59,10 +59,13 @@ export const gremlinCache = (url: string): CacheView => {
         .toList()
       } else {
         await publisherVertex(mount.source as string).toList()
-        await g.V().has('Node', 'cid', fromCid).as('a')
+        let traversal = g.V().has('Node', 'cid', fromCid).as('a')
         .V().has('Publisher', 'address', mount.source as string)
         .addE('MOUNT').from_('a').property('order', mount.order)
-        .toList()
+        if(mount.path) {
+          traversal = traversal.property('path', mount.path)
+        }
+        await traversal.toList()
       }
     }
   }
@@ -86,14 +89,17 @@ export const gremlinCache = (url: string): CacheView => {
       }
       const mountRows = await g.V().has('Node', 'cid', id)
       .outE('MOUNT')
-      .project('order', 'target')
+      .project('order', 'target', 'path')
       .by(__.values('order'))
       .by(__.inV().coalesce(__.values('cid'), __.values('address')))
+      .by(__.coalesce(__.values('path'), __.constant('')))
       .toList()
       const mounts: NodeMountDoc[] = (mountRows as Map<string, unknown>[]).map((row) => {
         const target = row.get('target') as string
+        const path = row.get('path') as string
         return {
           source: isAddress(target) ? target : CID.parse(target),
+          ...(path === '' ? {} : { path }),
           order: Number(row.get('order')),
         }
       })

@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto'
 import {
-  isAddress,
   splitPath,
   CID,
   type Address,
@@ -84,6 +83,30 @@ type Hit = {
   via: CID,
 }
 
+// Spot → Spot between users' graphs (FR-014): resolve `segments` within
+// the publisher's effective graph, yielding the mounted spot. Live — reads
+// through the publisher's current chain every time. Shares the caller's
+// depth budget so cross-user mount cycles terminate.
+const findSpot = async (
+  deps: ResolverDeps, publisher: Address, segments: string[], depth: number,
+): Promise<Hit | undefined> => {
+  const [first, ...rest] = segments
+  let current: Hit | undefined
+  for await(const layer of chainLayers(deps, publisher)) {
+    current = await findInNode(deps, layer.root, first, depth, layer.via)
+    if(current) {
+      break
+    }
+  }
+  for(const segment of rest) {
+    if(!current) {
+      return undefined
+    }
+    current = await findInNode(deps, current.child, segment, depth, current.via)
+  }
+  return current
+}
+
 // The effective edge named `name` at a node: the node's own edges shadow
 // mounted content; mounts shadow each other by declared order; traversal
 // is bounded by maxMountDepth so cycles terminate (FR-014). Node mounts
@@ -111,10 +134,21 @@ const findInNode = async (
         return hit
       }
     } else {
-      for await(const layer of chainLayers(deps, mount.source as Address)) {
-        const hit = await findInNode(deps, layer.root, name, depth - 1, layer.via)
-        if(hit) {
-          return hit
+      const segments = splitPath(mount.path ?? '')
+      if(segments.length > 0) {
+        const spot = await findSpot(deps, mount.source as Address, segments, depth - 1)
+        if(spot) {
+          const hit = await findInNode(deps, spot.child, name, depth - 1, spot.via)
+          if(hit) {
+            return hit
+          }
+        }
+      } else {
+        for await(const layer of chainLayers(deps, mount.source as Address)) {
+          const hit = await findInNode(deps, layer.root, name, depth - 1, layer.via)
+          if(hit) {
+            return hit
+          }
         }
       }
     }

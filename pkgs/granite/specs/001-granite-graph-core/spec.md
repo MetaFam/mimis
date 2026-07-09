@@ -164,6 +164,10 @@ path both define, verifying shadow order.
 - A node mounts a publisher who has never published: the mount contributes
   nothing (absence, not an error); an unretrievable mount *target* (a node
   reference that cannot be fetched) fails loudly like any unreachable node.
+- A node mounts a path within another publisher's graph that the publisher
+  has not defined: the mount contributes nothing (absence, not an error);
+  if the path later appears in one of their updates, it starts resolving —
+  identity mounts are live.
 
 ## Requirements *(mandatory)*
 
@@ -203,11 +207,13 @@ path both define, verifying shadow order.
   their entire update chain, newest shadowing oldest, and mounting a publisher
   identity MUST mean mounting that whole chain.
 - **FR-014**: A published node MAY declare mounts — references to another
-  subtree (by node reference) or another publisher's graph (by identity) —
-  whose content unions into that node's children during resolution. The
-  node's own relationships MUST shadow mounted content; mounts MUST shadow
-  each other by their declared order; mount traversal MUST be bounded by a
-  configurable depth so that mount cycles terminate.
+  subtree (by node reference), another publisher's graph (by identity), or a
+  location *within* another publisher's graph (by identity plus path) —
+  whose content unions into that node's children during resolution.
+  Identity-based mounts are live: they follow the mounted publisher's
+  updates. The node's own relationships MUST shadow mounted content; mounts
+  MUST shadow each other by their declared order; mount traversal MUST be
+  bounded by a configurable depth so that mount cycles terminate.
 - **FR-015**: Content MUST be retrieved incrementally: a query fetches only
   the documents along the resolution paths it actually consults — as few
   nodes as possible for the search to complete. Resolving a path MUST NOT
@@ -229,8 +235,9 @@ path both define, verifying shadow order.
 - **Mount Stack (Graph)**: A reader-chosen ordered set of updates composed by
   union mounting; the thing paths are resolved against.
 - **Node Mount**: A mount declared *inside* a published node, unioning
-  another subtree or another publisher's graph into that node's children —
-  publisher-side composition, in contrast to the reader-side Mount Stack.
+  another subtree, another publisher's graph, or a spot within another
+  publisher's graph into that node's children — publisher-side composition,
+  in contrast to the reader-side Mount Stack.
 - **Registry Entry**: The durable public record mapping a publisher identity
   to the root reference of their latest update.
 - **Announcement**: The transient broadcast message telling live subscribers a

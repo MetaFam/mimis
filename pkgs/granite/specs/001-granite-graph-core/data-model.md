@@ -32,11 +32,12 @@ Identical subtrees deduplicate automatically — same content, same CID.
 
 | Field | Type | Rules |
 |-------|------|-------|
-| `source` | CID link \| string | A Node CID (mount that subtree) or a lowercase publisher address (mount that publisher's effective graph — their chain union) |
+| `source` | CID link \| string | A Node CID (mount that subtree, frozen) or a lowercase publisher address (live — follows their chain) |
+| `path` | string (optional) | Only with an address source: mount the node at this path *within* the publisher's effective graph (Spot → Spot between users' graphs) rather than their root; `/`-separated edge names |
 | `order` | int | Precedence among this node's mounts: higher order shadows lower |
 
 **Resolution semantics**: the effective children of a node are its own `edges` unioned with the effective children of each mounted root; the node's own edges always shadow mounted content, and mounts shadow one another by `order`. Mount traversal is bounded by `maxMountDepth` (config, default 8):
-content beyond the bound is not visible — bounded and deterministic, so mount cycles terminate without error. A never-published address mount contributes nothing; an unretrievable CID mount target throws `UnreachableNodeError`.
+content beyond the bound is not visible — bounded and deterministic, so mount cycles terminate without error. A never-published address mount contributes nothing, as does a `path` the mounted publisher has not defined (absence, not an error — and live: it starts resolving when their later updates define it); the path itself is resolved with the publisher's own union/mount rules, drawing on the same depth budget. An unretrievable CID mount target throws `UnreachableNodeError`.
 
 ### Update (the root document of a publish)
 

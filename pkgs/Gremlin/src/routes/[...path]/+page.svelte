@@ -27,7 +27,7 @@
   import Eyes from '$lib/assets/infinity eyes.svg'
   import Background from '$lib/assets/background.svg'
   import { whoami } from '$lib/remotes/whoami.remote'
-    import { logout } from '$lib/remotes/logout.remote';
+  import { logout } from '$lib/remotes/logout.remote'
 
   let errorMsg = $state<string | null>(null)
   let path = $state(

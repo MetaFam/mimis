@@ -12,6 +12,7 @@ export type EdgeDoc = {
 
 export type NodeMountDoc = {
   source: CID | Address,
+  path?: string,
   order: number,
 }
 
@@ -85,12 +86,27 @@ const asNodeMount = (cid: string, index: number, value: unknown): NodeMountDoc =
   if(!isPlainMap(value)) {
     throw new MalformedDocumentError(cid, field, 'mount must be a map')
   }
-  onlyKeys(cid, field, value, ['source', 'order'])
+  onlyKeys(cid, field, value, ['source', 'path', 'order'])
   const source = CID.asCID(value.source) ?? value.source
   if(!CID.asCID(source) && !isAddress(source)) {
     throw new MalformedDocumentError(
       cid, `${field}.source`, 'must be a CID link or lowercase 0x address',
     )
+  }
+  if('path' in value) {
+    if(!isAddress(source)) {
+      throw new MalformedDocumentError(
+        cid, `${field}.path`, 'path mounts require an address source (Spot → Spot is live)',
+      )
+    }
+    if(typeof value.path !== 'string') {
+      throw new MalformedDocumentError(cid, `${field}.path`, 'must be a string')
+    }
+    try {
+      splitPath(value.path)
+    } catch {
+      throw new MalformedDocumentError(cid, `${field}.path`, 'must be a valid /-separated path')
+    }
   }
   if(!Number.isInteger(value.order)) {
     throw new MalformedDocumentError(cid, `${field}.order`, 'must be an integer')

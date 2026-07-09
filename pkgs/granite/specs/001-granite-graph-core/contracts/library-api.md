@@ -32,6 +32,8 @@ type Tree = {
   edges?: Record<string, { props?: Record<string, unknown>, child: Tree | CID }>,
   mounts?: {
     source: CID | `0x${string}`,   // Node CID, or publisher address (FR-014)
+    path?: string,                 // address sources only: mount the node at this path
+                                   // within the publisher's graph (Spot → Spot, live)
     order: number,                 // higher shadows lower; own edges shadow all mounts
   }[],
 }

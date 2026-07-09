@@ -61,6 +61,84 @@ describe('directories (US4, FR-013)', () => {
     assert.equal((await stack.resolve('/lib/stuff'))?.data?.name, 'c-stuff')
   })
 
+  it('mounts a spot within another publisher’s graph, live (FR-014 path mounts)', async () => {
+    const net = network()
+    const c = net.publisher()
+    const d = net.publisher()
+    await c.granite.publish({
+      edges: {
+        music: {
+          child: {
+            edges: {
+              jazz: {
+                child: { edges: { miles: { child: leaf('kind-of-blue') } } },
+              },
+            },
+          },
+        },
+      },
+    })
+    await d.granite.publish({
+      edges: {
+        own: { child: leaf('d-own') },
+        lib: {
+          child: {
+            edges: {},
+            mounts: [{ source: c.address, path: '/music/jazz', order: 0 }],
+          },
+        },
+      },
+    })
+    const stack = await net.reader().stack([{ source: d.address }])
+    // The mounted spot's children appear beneath the mounting node
+    assert.equal((await stack.resolve('/lib/miles'))?.data?.name, 'kind-of-blue')
+    // Not the whole graph: /music itself is not mounted
+    assert.equal(await stack.resolve('/lib/music'), undefined)
+    // Live: a later update from c appears through d's mount. Redefining
+    // the `music` edge shadows the old subtree whole (spec edge case), so
+    // the update grafts the existing miles leaf by CID to keep it.
+    const miles = await stack.resolve('/lib/miles')
+    await c.granite.publish({
+      edges: {
+        music: {
+          child: {
+            edges: {
+              jazz: {
+                child: {
+                  edges: {
+                    coltrane: { child: leaf('a-love-supreme') },
+                    miles: { child: miles!.node },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+    assert.equal((await stack.resolve('/lib/coltrane'))?.data?.name, 'a-love-supreme')
+    assert.equal((await stack.resolve('/lib/miles'))?.data?.name, 'kind-of-blue')
+  })
+
+  it('a path the mounted publisher has not defined contributes nothing', async () => {
+    const net = network()
+    const c = net.publisher()
+    const d = net.publisher()
+    await c.granite.publish({ edges: { real: { child: leaf('exists') } } })
+    await d.granite.publish({
+      edges: {
+        lib: {
+          child: {
+            edges: {},
+            mounts: [{ source: c.address, path: '/no/such/spot', order: 0 }],
+          },
+        },
+      },
+    })
+    const stack = await net.reader().stack([{ source: d.address }])
+    assert.equal(await stack.resolve('/lib/anything'), undefined)
+  })
+
   it('fails loudly falling through past a broken chain link', async () => {
     const net = network()
     const a = net.publisher()

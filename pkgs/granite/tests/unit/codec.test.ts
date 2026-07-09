@@ -95,6 +95,16 @@ describe('codec shape guards (FR-012)', () => {
     await rejects({ mounts: [{ source: publisher }] }, asNode)
   })
 
+  it('accepts path mounts on addresses only, with valid paths (FR-014)', async () => {
+    const good = await roundTrip({
+      mounts: [{ source: publisher, path: '/music/jazz', order: 0 }],
+    })
+    assert.equal(asNode(good.cid, good.value).mounts[0].path, '/music/jazz')
+    await rejects({ mounts: [{ source: someCid, path: '/music', order: 0 }] }, asNode)
+    await rejects({ mounts: [{ source: publisher, path: '/a//b', order: 0 }] }, asNode)
+    await rejects({ mounts: [{ source: publisher, path: 7, order: 0 }] }, asNode)
+  })
+
   it('rejects null prev (absent-not-null) and bad publishers', async () => {
     await rejects({ granite: 1, publisher, root: someCid, prev: null, at: 1 }, asUpdate)
     await rejects({ granite: 1, publisher: publisher.toUpperCase(), root: someCid, at: 1 }, asUpdate)
