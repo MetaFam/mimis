@@ -1,8 +1,8 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { createGranite, MissingKeyError, type Announcement } from '../../src/index.ts'
-import { writeTree } from '../../src/publish.ts'
-import { decodeAndVerify } from '../../src/announce.ts'
+import { createGranite, MissingKeyError, type Announcement } from '#lib/index.ts'
+import { writeTree } from '#lib/publish.ts'
+import { decodeAndVerify } from '#lib/announce.ts'
 import { memoryStore } from '../fakes.ts'
 import { network, tick } from './harness.ts'
 

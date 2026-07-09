@@ -8,8 +8,8 @@ import {
   encode,
   splitPath,
   CID,
-} from '../../src/codec.ts'
-import { MalformedDocumentError } from '../../src/errors.ts'
+} from '#lib/codec.ts'
+import { MalformedDocumentError } from '#lib/errors.ts'
 
 const publisher = `0x${'ab'.repeat(20)}` as const
 

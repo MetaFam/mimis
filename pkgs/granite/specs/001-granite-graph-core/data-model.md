@@ -2,17 +2,12 @@
 
 **Date**: 2026-07-09 | **Plan**: [plan.md](./plan.md)
 
-Two layers: the **DAG layer** (source of truth, immutable dag-cbor documents
-on IPFS) and the **cache layer** (a TinkerPop property graph derived from the
-DAG, disposable). Every cache fact must be re-derivable from the DAG plus the
-reader's mount configuration.
+Two layers: the **DAG layer** (source of truth, immutable dag-cbor documents on IPFS) and the **cache layer** (a TinkerPop property graph derived from the DAG, disposable). Every cache fact must be re-derivable from the DAG plus the reader's mount configuration.
 
 ## DAG layer (dag-cbor documents)
 
 All documents are dag-cbor, CIDv1, sha2-256. Links are real CIDs (tag 42).
-Per the constitution, decoding anything that violates these shapes MUST
-throw, identifying the offending CID; only *absence* (a path that names no
-edge) is a non-error.
+Per the constitution, decoding anything that violates these shapes MUST throw, identifying the offending CID; only *absence* (a path that names no edge) is a non-error.
 
 ### Node
 
@@ -40,14 +35,8 @@ Identical subtrees deduplicate automatically — same content, same CID.
 | `source` | CID link \| string | A Node CID (mount that subtree) or a lowercase publisher address (mount that publisher's effective graph — their chain union) |
 | `order` | int | Precedence among this node's mounts: higher order shadows lower |
 
-**Resolution semantics**: the effective children of a node are its own
-`edges` unioned with the effective children of each mounted root; the node's
-own edges always shadow mounted content, and mounts shadow one another by
-`order`. Mount traversal is bounded by `maxMountDepth` (config, default 8):
-content beyond the bound is not visible — bounded and deterministic, so
-mount cycles terminate without error. A never-published address mount
-contributes nothing; an unretrievable CID mount target throws
-`UnreachableNodeError`.
+**Resolution semantics**: the effective children of a node are its own `edges` unioned with the effective children of each mounted root; the node's own edges always shadow mounted content, and mounts shadow one another by `order`. Mount traversal is bounded by `maxMountDepth` (config, default 8):
+content beyond the bound is not visible — bounded and deterministic, so mount cycles terminate without error. A never-published address mount contributes nothing; an unretrievable CID mount target throws `UnreachableNodeError`.
 
 ### Update (the root document of a publish)
 
@@ -62,20 +51,15 @@ The unit of publication; "an update's CID" means this document's CID.
 | `at` | int | Unix seconds at publish time (informational; ordering authority is the `prev` chain) |
 
 **Partial snapshots (FR-013)**: an Update asserts only the paths it contains.
-The publisher's effective graph is the union mount of their entire chain,
-newest shadowing oldest — `root` is the top of this update's *asserted*
-subtree relative to the universal root, not necessarily the whole tree.
-Fall-through past an unreachable `prev` link MUST fail loudly: with partial
-snapshots, "absent" cannot be distinguished from "defined below the break".
+The publisher's effective graph is the union mount of their entire chain, newest shadowing oldest — `root` is the top of this update's *asserted* subtree relative to the universal root, not necessarily the whole tree.
+Fall-through past an unreachable `prev` link MUST fail loudly: with partial snapshots, "absent" cannot be distinguished from  "defined below the break".
 
 **State transitions**: none — Updates are created and never change (FR-004).
-The publisher-level state is the chain head, advanced only by publishing a
-new Update whose `prev` is the current head.
+The publisher-level state is the chain head, advanced only by publishing a new Update whose `prev` is the current head.
 
 ### Registry entry (on-chain)
 
-`mapping(address => bytes) latest` — full CIDv1 bytes of the publisher's
-latest Update; empty bytes ⇒ never published (spec US3 scenario 4).
+`mapping(address => bytes) latest` — full CIDv1 bytes of the publisher's latest Update; empty bytes ⇒ never published (spec US3 scenario 4).
 See [contracts/registry.sol.md](./contracts/registry.sol.md).
 
 ### Announcement (Gossipsub payload)
@@ -100,11 +84,7 @@ An ordered list of mount sources; later entries shadow earlier ones (FR-009).
 |-------|------|-------|
 | `source` | CID \| address | A pinned Update CID, or a publisher address meaning "that publisher's entire update chain, expanded newest-first from latest" (FR-013) |
 
-Resolving an address-mount consults the registry (or a fresher announcement —
-either is acceptable per the spec's convergence edge case), then walks `prev`
-links to expand the chain; within the expansion, newer updates shadow older
-ones, and the whole expansion occupies that mount's position relative to the
-stack's other mounts.
+Resolving an address-mount consults the registry (or a fresher announcement — either is acceptable per the spec's convergence edge case), then walks `prev` links to expand the chain; within the expansion, newer updates shadow older ones, and the whole expansion occupies that mount's position relative to the stack's other mounts.
 
 ## Cache layer (TinkerPop property graph)
 
@@ -123,29 +103,14 @@ Full schema and traversal contracts:
 | `EDGE` | edge Node→Node | `name`, plus the Edge's `props` flattened under the `'mïm ⊫ '` prefix (trailing space included) | `Node.edges` |
 | `MOUNT` | edge Stack→Update, Node→Node, or Node→Publisher | `order` (int) | Mount stack config (Stack→Update); published NodeMounts (Node→Node for CID sources, Node→Publisher for address sources) |
 
-**Cache lifecycle**: hydration is incremental (FR-015) — resolution fetches
-only the documents along the paths it consults, upserting each visited node
-(fetch-on-miss, write-back), so the cache holds exactly what queries have
-touched. `granite hydrate` is an optional eager warm-up that walks whole
-mounted trees for traversal-style workloads. An announcement or registry
-change affecting a mounted publisher marks dependent stacks stale;
-rehydration layers the new Update and repoints `LATEST`/`MOUNT`. Dropping
-the entire graph is always safe — lazy resolution rebuilds what it needs
-(the invariant behind Constitution IV's justification).
+**Cache lifecycle**: hydration is incremental (FR-015) — resolution fetches only the documents along the paths it consults, upserting each visited node (fetch-on-miss, write-back), so the cache holds exactly what queries have touched. `granite hydrate` is an optional eager warm-up that walks whole mounted trees for traversal-style workloads. An announcement or registry change affecting a mounted publisher marks dependent stacks stale; rehydration layers the new Update and repoints `LATEST`/`MOUNT`. Dropping the entire graph is always safe — lazy resolution rebuilds what it needs (the invariant behind Constitution IV's justification).
 
-**Agreement invariant**: for any stack and path, cache-backed resolution MUST
-return the same result as the cache-free reference resolver over the same
-mount stack (`mount.ts`); this is a standing unit-test obligation (SC-004).
+**Agreement invariant**: for any stack and path, cache-backed resolution MUST return the same result as the cache-free reference resolver over the same mount stack (`mount.ts`); this is a standing unit-test obligation (SC-004).
 
 ## Validation rules (enforced at the codec boundary)
 
-- Update/Node/Edge documents failing the shape tables above ⇒ throw with the
-  offending CID and field (FR-012).
-- `publisher` must parse as an Ethereum address; announcements whose
-  recovered signer ≠ `publisher` are dropped (logged, not thrown — network
-  input is expected to be dirty).
-- Path syntax: `/`-separated non-empty edge names; the empty path resolves to
-  the stack's merged root.
-- Absent path ⇒ `undefined` (legitimate cardinality variance, per the
-  project's error-handling convention); unreachable `child` CID during a walk
+- Update/Node/Edge documents failing the shape tables above ⇒ throw with the offending CID and field (FR-012).
+- `publisher` must parse as an Ethereum address; announcements whose recovered signer ≠ `publisher` are dropped (logged, not thrown — network input is expected to be dirty).
+- Path syntax: `/`-separated non-empty edge names; the empty path resolves to the stack's merged root.
+- Absent path ⇒ `undefined` (legitimate cardinality variance, per the project's error-handling convention); unreachable `child` CID during a walk
   ⇒ throw (spec edge case: hard failure naming the unreachable reference).

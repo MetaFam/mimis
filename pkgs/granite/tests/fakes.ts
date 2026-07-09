@@ -1,13 +1,13 @@
 // In-memory fakes behind the ports, letting unit tests run with no
 // daemons. Shapes mirror src/store.ts, src/registry.ts, src/announce.ts,
 // and src/resolve.ts exactly — one production code path, swapped edges.
-import { cidOf, CID, type Address, type NodeDoc, type UpdateDoc } from '../src/codec.ts'
-import { MissingKeyError, UnreachableNodeError } from '../src/errors.ts'
-import type { Blockstore } from '../src/store.ts'
-import type { Registry } from '../src/registry.ts'
-import type { Announcer } from '../src/announce.ts'
-import type { Mount, TraversalNode } from '../src/mount.ts'
-import type { CacheView } from '../src/resolve.ts'
+import { cidOf, CID, type Address, type NodeDoc, type UpdateDoc } from '#lib/codec.ts'
+import { MissingKeyError, UnreachableNodeError } from '#lib/errors.ts'
+import type { Blockstore } from '#lib/store.ts'
+import type { Registry } from '#lib/registry.ts'
+import type { Announcer } from '#lib/announce.ts'
+import type { Mount, TraversalNode } from '#lib/mount.ts'
+import type { CacheView } from '#lib/resolve.ts'
 
 export type MemoryStore = Blockstore & {
   gets: number,

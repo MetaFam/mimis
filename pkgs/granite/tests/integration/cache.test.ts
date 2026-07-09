@@ -2,14 +2,14 @@
 // invariant, disposability, fetch counting (SC-007), and CLI contracts.
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { createGranite } from '../../src/index.ts'
-import { kuboStore, type Blockstore } from '../../src/store.ts'
-import { ethereumRegistry } from '../../src/registry.ts'
-import { kuboAnnouncer } from '../../src/announce.ts'
-import { gremlinCache } from '../../src/cache.ts'
+import { createGranite } from '#lib/index.ts'
+import { kuboStore, type Blockstore } from '#lib/store.ts'
+import { ethereumRegistry } from '#lib/registry.ts'
+import { kuboAnnouncer } from '#lib/announce.ts'
+import { gremlinCache } from '#lib/cache.ts'
 import { deployRegistry } from '../../scripts/deploy-registry.ts'
-import type { Tree } from '../../src/publish.ts'
-import { addressOf } from '../../src/keys.ts'
+import type { Tree } from '#lib/publish.ts'
+import { addressOf } from '#lib/keys.ts'
 import { anvilUp, fundedKeys, gremlinUp, kuboUp, kuboUrl, gremlinUrl, rpcUrl } from './env.ts'
 
 const counting = (inner: Blockstore): Blockstore & { gets: () => number } => {

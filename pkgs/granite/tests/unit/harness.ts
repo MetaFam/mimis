@@ -1,9 +1,9 @@
 // A tiny in-memory network: shared blockstore, registry hub, and
 // announcement bus, from which per-publisher Granite instances are built —
 // the production createGranite wired to fakes.
-import { createGranite, type Granite } from '../../src/index.ts'
-import { addressOf, generateKey } from '../../src/keys.ts'
-import type { Address } from '../../src/codec.ts'
+import { createGranite, type Granite } from '#lib/index.ts'
+import { addressOf, generateKey } from '#lib/keys.ts'
+import type { Address } from '#lib/codec.ts'
 import {
   memoryAnnouncer,
   memoryCache,

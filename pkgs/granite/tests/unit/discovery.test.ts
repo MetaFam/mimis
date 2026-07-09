@@ -1,11 +1,11 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { decode, encode } from '../../src/codec.ts'
-import { UnreachableNodeError } from '../../src/errors.ts'
-import { decodeAndVerify, maxAnnouncementBytes } from '../../src/announce.ts'
-import { addressOf, generateKey } from '../../src/keys.ts'
+import { decode, encode } from '#lib/codec.ts'
+import { UnreachableNodeError } from '#lib/errors.ts'
+import { decodeAndVerify, maxAnnouncementBytes } from '#lib/announce.ts'
+import { addressOf, generateKey } from '#lib/keys.ts'
 import { network, tick } from './harness.ts'
-import type { HistoryEntry } from '../../src/index.ts'
+import type { HistoryEntry } from '#lib/index.ts'
 
 describe('history (US3, FR-011)', () => {
   it('walks the full chain newest → oldest', async () => {

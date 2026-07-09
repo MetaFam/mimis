@@ -4,13 +4,13 @@ import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { create as createKubo } from 'kubo-rpc-client'
-import { connect } from '../../src/index.ts'
-import { asUpdate, decode } from '../../src/codec.ts'
-import { generateKey } from '../../src/keys.ts'
+import { connect } from '#lib/index.ts'
+import { asUpdate, decode } from '#lib/codec.ts'
+import { generateKey } from '#lib/keys.ts'
 import { deployRegistry } from '../../scripts/deploy-registry.ts'
 import { anvilUp, fundedKeys, kuboUp, kuboUrl, rpcUrl } from './env.ts'
 
-const cli = fileURLToPath(new URL('../../src/cli.ts', import.meta.url))
+const cli = fileURLToPath(new URL('#lib/cli.ts', import.meta.url))
 
 const runCli = (
   args: string[], env: Record<string, string> = {}, input?: string,
@@ -90,7 +90,7 @@ describe(
           id: 1,
           method: 'anvil_setBalance',
           params: [
-            (await import('../../src/keys.ts')).addressOf(env.GRANITE_KEY as `0x${string}`),
+            (await import('#lib/keys.ts')).addressOf(env.GRANITE_KEY as `0x${string}`),
             '0x8AC7230489E80000',
           ],
         }),

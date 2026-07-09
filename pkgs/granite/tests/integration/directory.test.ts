@@ -2,10 +2,10 @@
 // chain expansion, live staleness, cache/reference agreement re-check.
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { connect } from '../../src/index.ts'
-import { addressOf, generateKey } from '../../src/keys.ts'
+import { connect } from '#lib/index.ts'
+import { addressOf, generateKey } from '#lib/keys.ts'
 import { deployRegistry } from '../../scripts/deploy-registry.ts'
-import type { Tree } from '../../src/publish.ts'
+import type { Tree } from '#lib/publish.ts'
 import { anvilUp, fundedKeys, gremlinUp, kuboUp, kuboUrl, gremlinUrl, rpcUrl } from './env.ts'
 
 const leaf = (name: string): Tree => ({

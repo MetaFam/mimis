@@ -2,7 +2,7 @@
 // agreement (SC-001), full-history enumeration (SC-006), CLI contracts.
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { connect, type Announcement } from '../../src/index.ts'
+import { connect, type Announcement } from '#lib/index.ts'
 import { deployRegistry } from '../../scripts/deploy-registry.ts'
 import { anvilUp, fundedKeys, kuboUp, kuboUrl, rpcUrl } from './env.ts'
 

@@ -2,9 +2,9 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { createPublicClient, http } from 'viem'
-import { cidOf, encode } from '../../src/codec.ts'
-import { ethereumRegistry, registryAbi } from '../../src/registry.ts'
-import { addressOf } from '../../src/keys.ts'
+import { cidOf, encode } from '#lib/codec.ts'
+import { ethereumRegistry, registryAbi } from '#lib/registry.ts'
+import { addressOf } from '#lib/keys.ts'
 import { deployRegistry } from '../../scripts/deploy-registry.ts'
 import { anvilUp, fundedKeys, rpcUrl } from './env.ts'
 

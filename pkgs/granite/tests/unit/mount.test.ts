@@ -1,8 +1,8 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { UnreachableNodeError } from '../../src/errors.ts'
-import { writeTree, type Tree } from '../../src/publish.ts'
-import { stackKey } from '../../src/mount.ts'
+import { UnreachableNodeError } from '#lib/errors.ts'
+import { writeTree, type Tree } from '#lib/publish.ts'
+import { stackKey } from '#lib/mount.ts'
 import { network } from './harness.ts'
 
 const leaf = (name: string): Tree => ({

@@ -13,6 +13,9 @@
       "default": "./src/index.ts"
     }
   },
+  "imports": {
+    "#lib/*": "./src/*"
+  },
   "engines": {
     "node": ">=24"
   },
