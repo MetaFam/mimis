@@ -73,26 +73,32 @@ alternatives weighed.
   private to one process and un-queryable by other Mïmis tools); **SQLite**
   (adds a second query idiom to a workspace already standardized on Gremlin).
 
-## R5. Announcements: Kubo Gossipsub topic + EIP-191 signatures
+## R5. Announcements: Kubo Gossipsub topic + EIP-712 typed-data signatures
 
 - **Decision**: Publish announcements on a single well-known Gossipsub topic
   (`/granite/1/announce`) through Kubo's pubsub RPC. Each announcement is a
-  dag-cbor payload `{ publisher, root, prev, seq }` accompanied by an EIP-191
-  `personal_sign` signature from the publisher's Ethereum key; subscribers
-  verify with signature recovery and drop messages whose recovered address
-  does not match `publisher`.
+  dag-cbor payload `{ granite, publisher, root, prev, at }` carrying an
+  EIP-712 typed-data signature over those fields (domain
+  `{ name: "granite", version: "1" }`) from the publisher's Ethereum key;
+  subscribers verify by typed-data signer recovery and drop messages whose
+  recovered address does not match `publisher`.
 - **Rationale**: Reuses the two key systems already present (Kubo's gossipsub,
-  the publisher's Ethereum account) — no extra key type, no extra transport.
+  the publisher's Ethereum account) — no extra key type, no extra transport;
+  viem's `signTypedData`/`recoverTypedDataAddress` come along with the
+  registry client. Structured signing hashes the fields themselves — no
+  ad-hoc preimage canonicalization — adds domain separation against
+  cross-protocol replay, and any Ethereum wallet can render the payload.
   Signing makes announcements trustworthy even though gossipsub itself is
   unauthenticated; the registry remains the durable fallback when a node was
   offline (spec edge case: announcement/registry disagreement converges).
-- **Alternatives considered**: **Per-publisher topics** (readers following N
-  publishers hold N subscriptions; a single topic with signature filtering is
-  simpler at v1 scale); **libp2p peer-key signing** (adds a second identity
-  system, violating "each node should have its own publishing key" being the
-  Ethereum key); **EIP-712 typed signatures** (nicer wallet UX but v1 signs
-  programmatically; can upgrade later without protocol break by versioning
-  the topic).
+- **Alternatives considered**: **EIP-191 `personal_sign` over a concatenated
+  string** (requires inventing a canonical preimage format, lacks domain
+  separation, opaque in wallets — rejected once structured signing proved
+  free); **per-publisher topics** (readers following N publishers hold N
+  subscriptions; a single topic with signature filtering is simpler at v1
+  scale); **libp2p peer-key signing** (adds a second identity system,
+  violating "each node should have its own publishing key" being the
+  Ethereum key).
 
 ## R6. Language & test tooling: Node ≥ 24 native TS + `node:test`
 

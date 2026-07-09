@@ -12,11 +12,14 @@ Build the minimal Mïmis Granite core: publishers write trees of dag-cbor
 documents to IPFS (each node its own document, edges carrying properties plus
 the child's CID), publish each tree as an immutable update whose root document
 links to the publisher's previous update, record the latest root per publisher
-in a tiny Ethereum registry contract, and announce new roots over Gossipsub.
+in a tiny Ethereum registry contract, and announce new roots over Gossipsub
+with EIP-712-signed payloads. Updates are partial snapshots: a publisher's
+effective graph is the union of their whole chain, newest shadowing oldest.
 Readers union-mount an ordered set of updates and resolve paths with
-later-shadows-earlier semantics; the mounted view is materialized into a
-TinkerPop-compatible graph database as a disposable cache so path resolution
-and traversal are single queries instead of per-node IPFS round trips. The
+later-shadows-earlier semantics — honoring publisher-declared node mounts
+(FR-014) — and the mounted view is materialized into a TinkerPop-compatible
+graph database as a disposable cache so path resolution and traversal are
+single queries instead of per-node IPFS round trips. The
 IPFS DAG remains the sole source of truth — the cache is rebuildable from it
 at any time. Delivered as an ESM TypeScript library with a thin CLI, leaning
 on an external Kubo daemon for all IPFS/libp2p machinery.
@@ -52,8 +55,10 @@ a Gremlin Server; library importable by other Mïmis packages (e.g. Gremlin)
 
 **Performance Goals**: Publish→announcement received < 60 s (SC-003); path
 resolution over a 10-deep mount stack deterministic and correct (SC-004), and
-served from the cache without touching IPFS once hydrated; no tuning for
-graphs beyond thousands of nodes (per spec assumptions)
+served from the cache without touching IPFS once the path is resident;
+retrieval is incremental — fetches scale with path length and consulted
+layers, never graph size (FR-015, SC-007); no tuning for graphs beyond
+thousands of nodes (per spec assumptions)
 
 **Constraints**: Append-only, content-addressed, no central services;
 publisher identity = secp256k1 Ethereum account; the cache MUST be

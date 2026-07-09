@@ -1,0 +1,9 @@
+node_modules/
+dist/
+types/
+*.log
+.env*
+granite.json
+.DS_Store
+*.tmp
+*.swp

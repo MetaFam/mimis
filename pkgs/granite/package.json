@@ -1,0 +1,38 @@
+{
+  "name": "granite-mimis",
+  "version": "0.1.0",
+  "description": "Mïmis Granite — a graph database formed of union mounts of linked trees promulgated using IPFS CBOR-DAGs",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "granite": "./src/cli.ts"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "engines": {
+    "node": ">=22.6"
+  },
+  "scripts": {
+    "test": "node --experimental-strip-types --test tests/unit/*.test.ts",
+    "test:integration": "node --experimental-strip-types --test --test-concurrency=1 --test-force-exit tests/integration/*.test.ts",
+    "check": "tsc",
+    "deploy:registry": "node --experimental-strip-types scripts/deploy-registry.ts"
+  },
+  "dependencies": {
+    "@ipld/dag-cbor": "^9.2.5",
+    "gremlin": "3.7.3",
+    "kubo-rpc-client": "^6.0.2",
+    "multiformats": "^13.4.2",
+    "viem": "^2.45.1"
+  },
+  "devDependencies": {
+    "@types/gremlin": "^3.6.7",
+    "@types/node": "^22",
+    "solc": "^0.8.30",
+    "typescript": "^5.9.3"
+  }
+}

@@ -18,6 +18,7 @@ criteria. Interfaces referenced here are defined in
 
 ```console
 $ pnpm install
+$ pnpm link --global                       # puts the `granite` bin on PATH
 $ anvil &                                  # local chain on :8545
 $ pnpm run deploy:registry                 # compiles GraniteRegistry.sol, deploys to anvil, prints address
 $ cp granite.example.json granite.json     # fill in kubo/gremlin/rpc URLs + registry address
@@ -85,10 +86,10 @@ the later mount (0xBBB…).
 ### Cache disposability (Constitution IV check)
 
 ```console
-$ granite hydrate --stack demo --mount 0xAAA… --mount 0xBBB…
+$ granite hydrate --name demo --mount 0xAAA… --mount 0xBBB…
 # drop the Gremlin graph (e.g. restart TinkerGraph server), then:
 $ granite resolve /shared/path --mount 0xAAA… --mount 0xBBB… --json   # still correct (DAG fall-back)
-$ granite hydrate --stack demo --mount 0xAAA… --mount 0xBBB…          # full rebuild succeeds
+$ granite hydrate --name demo --mount 0xAAA… --mount 0xBBB…           # full rebuild succeeds
 ```
 
 **Expect**: identical resolution results with the cache cold, warm, or wiped.

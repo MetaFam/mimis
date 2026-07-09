@@ -25,29 +25,35 @@ dag-cbor encoded map (binary on the wire):
 | `root` | bytes | CIDv1 bytes of the new Update document |
 | `prev` | bytes (optional) | CIDv1 bytes of the prior Update; absent on first publish |
 | `at` | int | Unix seconds |
-| `sig` | bytes | EIP-191 signature (65 bytes) — see below |
+| `sig` | bytes | EIP-712 typed-data signature (65 bytes) — see below |
 
 Maximum encoded size: 1 KiB; larger messages are dropped without decode.
 
 ## Signing
 
-`sig` is an EIP-191 `personal_sign` signature by the publisher's key over the
-UTF-8 string:
+`sig` is an EIP-712 typed-data signature by the publisher's key — the
+structured fields are signed directly, with no ad-hoc string preimage.
+
+Domain: `{ name: "granite", version: "1" }` (no `chainId` — announcements
+are chain-agnostic). Primary type:
 
 ```text
-granite:1:<publisher>:<root-cid-string>:<prev-cid-string-or-empty>:<at>
+Announcement(address publisher,bytes root,bytes prev,uint64 at)
 ```
 
-CID strings use their canonical base32 CIDv1 text form; `publisher` is the
-lowercase hex address. (String-form preimage keeps signatures reproducible
-independent of CBOR map ordering.)
+`root` and `prev` are the raw CIDv1 bytes; an absent `prev` signs as empty
+bytes (`0x`). EIP-712 gives canonical hashing of the fields themselves
+(independent of CBOR map ordering), domain separation against cross-protocol
+replay, and payloads any Ethereum wallet can render for signing — the same
+key and machinery (viem `signTypedData` / `recoverTypedDataAddress`) already
+used for the registry.
 
 ## Verification (subscriber MUST, in order)
 
 1. Decode dag-cbor; any shape violation of the table above ⇒ drop.
 2. `granite !== 1` ⇒ drop (future versions use a different topic anyway).
-3. Recover the EIP-191 signer from `sig` and the reconstructed preimage;
-   recovered address ≠ `publisher` ⇒ drop.
+3. Recover the EIP-712 signer from `sig` over the reconstructed typed data
+   (same domain and primary type); recovered address ≠ `publisher` ⇒ drop.
 4. Deliver `{ publisher, root, prev, at }` to `follow` handlers.
 
 Drops are logged, never thrown — gossip input is expected to be dirty

@@ -40,7 +40,11 @@ if the address never published.
 
 Resolves `path` through the stack formed by the `--mount` flags in the order
 given (later flags shadow earlier). Each `<source>` is an Update CID or a
-publisher address (⇒ latest). Uses the cache when configured.
+publisher address (⇒ their entire update chain, newest shadowing oldest).
+Published node mounts are honored during the walk (FR-014). Uses the cache
+when configured: the stack is identified by a key derived from the ordered
+mount list (cache-schema.md), so repeated invocations with the same mounts
+hit the same hydrated stack without naming it.
 
 ```console
 $ granite resolve /books/dune --mount 0xAAA… --mount bafy… --json
@@ -54,7 +58,8 @@ with the offending CID on stderr.
 
 Walks the prev-chain newest→oldest, one line per update (streaming with
 `--json`). Broken chain: emits what it reached, then exits 1 naming the
-unreachable CID.
+unreachable CID. A never-published address emits nothing and exits 0 —
+absence is not an error.
 
 ### `granite follow`
 
@@ -66,11 +71,14 @@ $ granite follow --json
 …
 ```
 
-### `granite hydrate --stack <name> --mount <source>…`
+### `granite hydrate --mount <source>… [--name <alias>]`
 
-Materializes the stack into the configured cache (rebuild-from-DAG; safe to
-run anytime — the Constitution IV disposability guarantee). Errors if no
-`gremlin` endpoint is configured.
+Eagerly materializes the whole stack into the configured cache — an optional
+warm-up for traversal-style queries; `resolve` hydrates lazily on its own,
+fetching only path-relevant documents (FR-015). Rebuild-from-DAG, safe to
+run anytime — the Constitution IV disposability guarantee. The stack's
+identity is the key derived from the ordered mounts; `--name` attaches an
+optional human-readable alias. Errors if no `gremlin` endpoint is configured.
 
 ## Contract tests
 

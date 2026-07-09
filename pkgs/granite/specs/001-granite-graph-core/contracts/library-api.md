@@ -14,6 +14,7 @@ type GraniteConfig = {
     registry: `0x${string}`,    // GraniteRegistry address
   },
   key?: `0x${string}`,          // publisher private key; omit ⇒ read-only instance
+  maxMountDepth?: number,       // bound on node-mount traversal (FR-014); default 8
 }
 
 function connect(config: GraniteConfig): Promise<Granite>
@@ -29,6 +30,10 @@ Errors: unreachable Kubo/chain/Gremlin endpoints throw on first use (not on
 type Tree = {
   data?: Record<string, unknown>,
   edges?: Record<string, { props?: Record<string, unknown>, child: Tree | CID }>,
+  mounts?: {
+    source: CID | `0x${string}`,   // Node CID, or publisher address (FR-014)
+    order: number,                 // higher shadows lower; own edges shadow all mounts
+  }[],
 }
 
 Granite.publish(tree: Tree): Promise<{
@@ -44,13 +49,17 @@ Granite.publish(tree: Tree): Promise<{
   (SC-005).
 - `child: CID` grafts an existing subtree by reference (dedup / partial
   update support).
+- Trees are partial snapshots (FR-013): publish only the paths being
+  asserted — older layers of the chain keep serving everything else through
+  fall-through.
 
 ## Reading (US2, US4 / FR-009, FR-010, FR-012)
 
 ```ts
-type Mount = { source: CID | `0x${string}` }   // Update CID, or publisher ⇒ their latest
+type Mount = { source: CID | `0x${string}` }   // Update CID, or publisher ⇒ their entire
+                                                // update chain, newest shadowing oldest (FR-013)
 
-Granite.stack(name: string, mounts: Mount[]): Promise<Stack>
+Granite.stack(mounts: Mount[], alias?: string): Promise<Stack>
 
 Stack.resolve(path: string): Promise<Resolved | undefined>
 type Resolved = {
@@ -61,15 +70,27 @@ type Resolved = {
 }
 ```
 
+- Stack identity is the key derived from the ordered mount sources (see
+  cache-schema.md); `alias` is a cosmetic label — identical mount lists are
+  the same stack, in and out of the cache.
+- Resolution honors published node mounts (FR-014): own edges shadow mounted
+  content, mounts shadow by `order`, traversal bounded by `maxMountDepth`.
+- Retrieval is incremental (FR-015): only documents along the consulted
+  resolution paths are fetched; a cache miss hydrates exactly the missing
+  node — fetch counts never scale with graph size (SC-007).
 - `undefined` ⇔ path present in no mount (definitive not-present).
-- Unreachable `child` mid-walk ⇒ `UnreachableNodeError` carrying the CID.
+- Unreachable `child` or NodeMount target mid-walk ⇒ `UnreachableNodeError`
+  carrying the CID; likewise falling through past an unreachable `prev` link
+  in an expanded chain — partial snapshots mean absence cannot be asserted
+  across a break.
 - Malformed document ⇒ `MalformedDocumentError` carrying CID + field.
-- Deterministic: same stack + path ⇒ same result (SC-004).
+- Deterministic: same stack + path + depth bound ⇒ same result (SC-004).
 
 ## Cache (FR-009 performance path)
 
 ```ts
-Stack.hydrate(): Promise<void>       // materialize this stack into the cache (idempotent)
+Stack.hydrate(): Promise<void>       // OPTIONAL eager warm-up: materialize the whole stack for
+                                     // traversal-style queries; resolve hydrates lazily on its own
 Stack.invalidate(): Promise<void>    // mark stale; next resolve rehydrates affected publishers
 ```
 
@@ -87,7 +108,8 @@ Granite.history(from: `0x${string}` | CID): AsyncIterable<{
   publisher: `0x${string}`,
   prev?: CID,
   at: number,
-}>                                    // newest → oldest; throws UnreachableNodeError on a broken chain link
+}>                                    // newest → oldest; throws UnreachableNodeError on a broken
+                                      // chain link; never-published address ⇒ empty iterable
 
 Granite.follow(handler: (a: Announcement) => void): () => void       // verified announcements only; returns unsubscribe
 type Announcement = { publisher: `0x${string}`, root: CID, prev?: CID, at: number }

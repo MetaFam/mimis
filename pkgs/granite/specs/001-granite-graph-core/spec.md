@@ -19,8 +19,11 @@ registry of each publisher's latest update."
 
 A publisher assembles a tree of nodes connected by named, property-bearing
 relationships and publishes it as a single immutable update identified by one
-root reference. Every publish after the first links back to the publisher's
-previous update, so the full history of their graph is preserved as a chain.
+root reference. An update is a partial snapshot — it asserts only the paths
+it contains, and needn't describe the whole of the publisher's tree. Every
+publish after the first links back to the publisher's previous update, so the
+full history of their graph is preserved as a chain, and the publisher's
+effective graph is the union of that chain, newest shadowing oldest.
 
 **Why this priority**: Nothing else in the system exists until content can be
 published and retrieved. This is the smallest slice that is recognizably
@@ -127,6 +130,10 @@ path both define, verifying shadow order.
 2. **Given** a path defined by both publishers, **When** it is resolved,
    **Then** the publisher mounted later wins, per the reader's chosen mount
    order.
+3. **Given** a published node that declares a mount of another publisher's
+   graph, **When** a reader resolves a path passing through that node,
+   **Then** the mounted publisher's content appears beneath it, with the
+   node's own relationships shadowing anything the mount provides.
 
 ---
 
@@ -135,9 +142,11 @@ path both define, verifying shadow order.
 - A node referenced by an edge cannot be retrieved (missing or unreachable
   document): traversal surfaces a hard failure naming the unreachable
   reference — it does not silently skip or return "not present".
-- An update's previous-update link points at something unretrievable: the
-  latest update remains fully usable; only history enumeration fails, and it
-  fails loudly.
+- An update's previous-update link points at something unretrievable: layers
+  newer than the break remain usable, but because updates are partial
+  snapshots, resolution cannot distinguish "absent" from "defined below the
+  break" — falling through past the break fails loudly rather than answering
+  "not present".
 - A retrieved document does not have the expected structure (e.g. an error
   object where a node was expected): the operation fails immediately with the
   malformed content identified, per the constitution's error-handling rule.
@@ -149,6 +158,12 @@ path both define, verifying shadow order.
 - The registry and the live announcements disagree (announcement arrived but
   registry not yet updated, or vice versa): the reader may act on whichever it
   trusts; both eventually converge on the same latest root.
+- Node mounts form a cycle (A mounts B, B mounts A): resolution follows
+  mounts only to the configured depth; content beyond the bound is simply not
+  visible — bounded, deterministic, and not an error.
+- A node mounts a publisher who has never published: the mount contributes
+  nothing (absence, not an error); an unretrievable mount *target* (a node
+  reference that cannot be fetched) fails loudly like any unreachable node.
 
 ## Requirements *(mandatory)*
 
@@ -183,14 +198,29 @@ path both define, verifying shadow order.
   MUST fail immediately and identify the offending content; a path that is
   simply absent MUST yield a definitive "not present" result instead of a
   failure.
+- **FR-013**: Updates are partial snapshots: an update asserts only the paths
+  it contains. A publisher's effective graph MUST be derived by union-mounting
+  their entire update chain, newest shadowing oldest, and mounting a publisher
+  identity MUST mean mounting that whole chain.
+- **FR-014**: A published node MAY declare mounts — references to another
+  subtree (by node reference) or another publisher's graph (by identity) —
+  whose content unions into that node's children during resolution. The
+  node's own relationships MUST shadow mounted content; mounts MUST shadow
+  each other by their declared order; mount traversal MUST be bounded by a
+  configurable depth so that mount cycles terminate.
+- **FR-015**: Content MUST be retrieved incrementally: a query fetches only
+  the documents along the resolution paths it actually consults — as few
+  nodes as possible for the search to complete. Resolving a path MUST NOT
+  require retrieving an entire update or graph.
 
 ### Key Entities
 
 - **Publisher**: An identity that owns a publishing key; the unit of
   attribution and of registry entries. One person may operate many publishers.
-- **Update**: An immutable, content-addressed snapshot of a publisher's tree,
-  identified by its root reference and linking to the publisher's previous
-  update (absent on the first).
+- **Update**: An immutable, content-addressed partial snapshot of a
+  publisher's tree, asserting only the paths it contains, identified by its
+  root reference and linking to the publisher's previous update (absent on
+  the first).
 - **Node**: A single content-addressed document in an update's tree.
 - **Relationship (Edge)**: A named connection from a parent node to a child
   node, carrying its own properties and the child's reference.
@@ -198,6 +228,9 @@ path both define, verifying shadow order.
   publisher's updates describe content relative to it.
 - **Mount Stack (Graph)**: A reader-chosen ordered set of updates composed by
   union mounting; the thing paths are resolved against.
+- **Node Mount**: A mount declared *inside* a published node, unioning
+  another subtree or another publisher's graph into that node's children —
+  publisher-side composition, in contrast to the reader-side Mount Stack.
 - **Registry Entry**: The durable public record mapping a publisher identity
   to the root reference of their latest update.
 - **Announcement**: The transient broadcast message telling live subscribers a
@@ -224,6 +257,10 @@ path both define, verifying shadow order.
 - **SC-006**: A reader can enumerate a publisher's complete update history
   from the latest registry entry alone, with every historical version
   reachable.
+- **SC-007**: Resolving a single path over a large graph retrieves only the
+  documents on the consulted resolution paths — verifiable by fetch counting
+  in tests; total fetches never scale with graph size, only with path length
+  and the number of layers consulted.
 
 ## Assumptions
 
@@ -241,3 +278,6 @@ path both define, verifying shadow order.
   reader's mount order — the system imposes no cross-publisher merge policy.
 - Deletion of content from the network (as opposed to shadowing it in later
   updates) is out of scope, consistent with the append-only principle.
+- Because updates are partial snapshots, nothing obliges a publisher to
+  republish unchanged content; older layers keep serving it through
+  fall-through.
