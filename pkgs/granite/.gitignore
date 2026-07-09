@@ -4,6 +4,8 @@ types/
 *.log
 .env*
 granite.json
+granite.dev.json
+.dev-env/
 .DS_Store
 *.tmp
 *.swp

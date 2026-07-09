@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env node
 // Compiles contracts/GraniteRegistry.sol with solc-js and deploys it to
 // the configured RPC (anvil by default), printing the deployed address.
 import { readFileSync } from 'node:fs'

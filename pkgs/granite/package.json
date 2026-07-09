@@ -14,13 +14,14 @@
     }
   },
   "engines": {
-    "node": ">=22.6"
+    "node": ">=24"
   },
   "scripts": {
-    "test": "node --experimental-strip-types --test tests/unit/*.test.ts",
-    "test:integration": "node --experimental-strip-types --test --test-concurrency=1 --test-force-exit tests/integration/*.test.ts",
+    "test": "node --test tests/unit/*.test.ts",
+    "test:integration": "node --test --test-concurrency=1 --test-force-exit tests/integration/*.test.ts",
     "check": "tsc",
-    "deploy:registry": "node --experimental-strip-types scripts/deploy-registry.ts"
+    "deploy:registry": "node scripts/deploy-registry.ts",
+    "dev": "scripts/dev-env.sh"
   },
   "dependencies": {
     "@ipld/dag-cbor": "^9.2.5",

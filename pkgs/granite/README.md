@@ -20,7 +20,9 @@ Reads resolve through the mount stack and are cached in any TinkerPop-compatible
 
 ## Install
 
-Requires Node ≥ 22.6, pnpm, a [Kubo](https://github.com/ipfs/kubo) daemon (with pubsub), and an Ethereum RPC (anvil for development). A Gremlin Server is optional — without one, resolution walks the DAG directly.
+Requires Node ≥ 24 (`.node-version` pins it for fnm), pnpm, a [Kubo](https://github.com/ipfs/kubo) daemon (with pubsub), and an Ethereum RPC (anvil for development). A Gremlin Server is optional — without one, resolution walks the DAG directly.
+
+`pnpm run dev` brings up a full development environment: anvil, Kubo, Gremlin Server (Docker), a freshly deployed registry, a funded dev key, and a ready-to-use `granite.dev.json` — starting only what isn't already running, and tearing down exactly what it started on Ctrl-C.
 
 ```console
 $ pnpm install

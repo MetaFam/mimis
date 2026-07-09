@@ -18,7 +18,7 @@ const runCli = (
   try {
     const stdout = execFileSync(
       process.execPath,
-      ['--experimental-strip-types', cli, ...args],
+      [cli, ...args],
       {
         env: { ...process.env, ...env },
         ...(input === undefined ? {} : { input }),

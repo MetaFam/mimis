@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env node
 import { parseArgs } from 'node:util'
 import { readFileSync } from 'node:fs'
 import {
