@@ -12,7 +12,6 @@ export interface Spot {
 
 export function getIPFS() {
   const url = settings.ipfsAPI.replace(/\/+$/, '')
-  if(settings.debugging) console.debug({ 'IPFS API URL': url })
   return ipfsFactory(url)
 }
 

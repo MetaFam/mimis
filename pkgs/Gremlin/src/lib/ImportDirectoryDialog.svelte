@@ -3,17 +3,18 @@
   import settings from '$lib/settings.svelte'
   import { spiderDirHandles } from '$lib/dirHandles2JSTree'
   import { expandLevels, selectAll } from '$lib'
-  import { type DirNode } from '../types'
   import Spinner from '$lib/assets/spinner.svg'
   import { cidTreeToJanus } from '$lib/cidTree2Janus'
-  import FileTree from './FileTree.svelte';
+  import FileTree from '$lib/FileTree.svelte'
+  import { searchFor } from '$lib/remotes/searchFor.remote'
+  import { spotId } from '$lib/remotes/spotId.remote'
+  import { type DirNode } from '../types'
 
-  let { self = $bindable(), containerId } = $props()
+  let { self = $bindable(), path } = $props()
   let tree = $state<DirNode>()
   let dir = $state<FileSystemDirectoryHandle>()
   let working = $state(false)
   let logs = $state<Array<unknown>>([])
-
 
   const log = (msg: unknown) => {
     logs.unshift(msg)
@@ -53,10 +54,15 @@
         } = await treeToCIDs(tree, { log }) as {
           descendingTo: TreeNode
         }
-        cidTreeToJanus({ tree: cidTree, containerId, log })
+        await cidTreeToJanus({
+          tree: cidTree,
+          containerId: await spotId({ path }),
+          log,
+        })
       }
       log?.('Import complete.')
       form.reset()
+      await searchFor({ path }).refresh()
     } catch(err) {
       let msg = (err as Error).message
       if(msg === 'Failed to fetch') {
@@ -152,6 +158,10 @@
     & ol {
       max-height: calc(100dvh - 7.5em);
       overflow-y: scroll;
+
+      & li {
+        margin-inline-start: 5em;
+      }
     }
   }
 </style>

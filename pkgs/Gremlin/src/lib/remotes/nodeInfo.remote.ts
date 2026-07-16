@@ -4,8 +4,8 @@ import { error } from '@sveltejs/kit'
 import { query } from '$app/server'
 import {
   connect as connectJanusGraph, connectToG, mergeSpotRoot,
-} from '$lib/server/janusgraph.ts'
-import { getSessionAddress } from '$lib/server/auth.ts'
+} from '$lib/server/janusgraph'
+import { getSessionAddress } from '$lib/server/auth'
 
 const { statics: __, t: T, EnumValue } = gremlin.process
 
@@ -25,7 +25,11 @@ export const nodeInfo = query(
         if(!address) return null
 
         const { value: rootId } = await (
-          (await mergeSpotRoot({ traversal: connectToG(connection), address, now }))
+          (await mergeSpotRoot({
+            traversal: connectToG(connection),
+            address,
+            now,
+          }))
           .id().next()
         )
         nodeId = rootId

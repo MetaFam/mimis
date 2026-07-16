@@ -5,11 +5,11 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import { type ByteView } from 'multiformats'
 import type { KuboRPCClient } from 'kubo-rpc-client'
 import { signTypedData } from '@wagmi/core'
-import { settings } from '$lib/settings.svelte.ts'
-import { nodeInfo } from '$lib/remotes/nodeInfo.remote.ts'
-import { getIPFS, blocksToCAR } from '$lib/ipfs.ts'
+import { settings } from '$lib/settings.svelte'
+import { nodeInfo } from '$lib/remotes/nodeInfo.remote'
+import { getIPFS, blocksToCAR } from '$lib/ipfs'
+import { toHTTP } from '$lib/index'
 import type { Logger } from '../types'
-import { toHTTP } from '$lib/index.ts'
 
 type Options = {
   log?: Logger
@@ -153,6 +153,7 @@ export class Serializer {
       }
     }
     if(this.carWriter != null) {
+      await this.carWriter.ready
       await this.carWriter.write({ cid, bytes })
     }
     return cid

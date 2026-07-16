@@ -6,7 +6,7 @@
   import { browser } from '$app/environment'
   import { afterNavigate } from '$app/navigation'
   import { resolve } from '$app/paths'
-  import { searchFor, type Entry } from '$lib/remotes/searchFor.remote'
+  import { searchFor } from '$lib/remotes/searchFor.remote'
   import { representations, type Representation } from '$lib/remotes/representations.remote'
   import { upsertSpot } from '$lib/remotes/upsertSpot.remote'
   import { addFiles as filesToSpot } from '$lib/remotes/addFiles.remote'
@@ -46,28 +46,6 @@
   let whoAmI = $state<string | null>(null)
   let signingIn = false
 
-  // let spotsPromise = $derived(async () => {
-  //   try {
-  //     return await searchFor({ path })
-  //   } catch(err) {
-  //     console.error({ searchFor: err })
-  //   }
-  // })
-  // let repsPromise = $derived(async () => {
-  //   try {
-  //     return await representations({ path })
-  //   } catch(err) {
-  //     console.error({ representations: err })
-  //   }
-  // })
-  // let idPromise = $derived(async () => {
-  //   try {
-  //     return await spotId({ path })
-  //   } catch(err) {
-  //     console.error({ spotId: err })
-  //   }
-  // })
-
   logHeader()
 
   // If loaded on the server, fails with "`HTMLElement` not found."
@@ -106,19 +84,18 @@
       if(walletConnected && !whoAmI && !signingIn) {
         await siweSignIn()
       }
-      console.debug({ walletConnected })
     })
   })
 
   async function siweSignIn() {
     if(!wagmiConfig) return
     const account = getConnection(wagmiConfig)
-    // if(settings.debugging) {
+    if(settings.debugging) {
       console.debug('SIWE attempt:', {
         address: account.address,
         status: account.status,
       })
-    // }
+    }
     if(!account.address) return
 
     signingIn = true
@@ -207,7 +184,7 @@
       const form = evt.currentTarget as HTMLFormElement
       const formData = new FormData(form)
       if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
-        const containerId = await id()
+        const containerId = await spotId({ path })
         if(containerId == null) {
           throw new Error('No Container Specified: ¡I don’t know where I am!')
         }
@@ -274,22 +251,7 @@
     return { ...result, log }
   }
 
-  const display = async () => {
-    try {
-      // const spots = await spotsPromise() as Array<Entry>
-      const spots = await searchFor({ path }) as Array<Entry>
-      console.debug({ spots })
-      if(settings.debugging) {
-        console.debug(JSON.stringify(spots, null, 2))
-      }
-      return spots
-    } catch(err) {
-      console.error({ display: err })
-      errorMsg = (err as Error).message
-    }
-  }
-
-    function soleDisplayable(reps?: Array<Representation>) {
+  function soleDisplayable(reps?: Array<Representation>) {
     console.debug({ reps })
     if(!Array.isArray(reps)) throw new Error('`reps` is not an array.')
     reps = reps.filter(
@@ -298,30 +260,6 @@
     if(reps.length !== 1) return false
     const [rep] = reps
     return rep
-  }
-
-  async function reps() {
-    try {
-      // return await repsPromise() as Array<Representation>
-      return await representations({ path }) as Array<Representation>
-    } catch(err) {
-      console.error({ reps: err })
-      errorMsg = (err as Error).message
-      if(isHttpError(err)) {
-        errorMsg = `HTTP Error: ${err.status}: ${err.body.message}`
-      }
-      return []
-    }
-  }
-
-  async function id() {
-    try {
-      // return await idPromise() as number
-      return await spotId({ path }) as number
-    } catch(err) {
-      console.error({ id: err })
-      errorMsg = (err as Error).message
-    }
   }
 </script>
 
@@ -440,31 +378,34 @@
     </nav>
     <nav id="details">
       <ul>
-        {#each await searchFor({ path }) as { name, type, cid } (cid || name)}
-          <li>
-            <a
-              href={resolve(
-                `${
-                  path.length > 0 ? '/' : ''
-                }${
-                  path.join('/')
-                }/${
-                  name
-                }` as '/'
-              )}
-              title={name}
-            >
-              {#if cid}
-                <img src={toHTTP({ cid })} alt={name}/>
-              {:else if type === 'spot'}
-                <img src={Folder} class="folder"alt="📁"/>
-              {:else}
-                <aside>Unknown Type: {type}</aside>
-              {/if}
-              <span>{name}</span>
-            </a>
-          </li>
-        {/each}
+        <!-- {#each await searchFor({ path }) as { name, type, cid } (cid || name)} -->
+        {#await searchFor({ path }) then results}
+          {#each results as { name, type, cid } (`${cid}:${name}`)}
+            <li>
+              <a
+                href={resolve(
+                  `${
+                    path.length > 0 ? '/' : ''
+                  }${
+                    path.join('/')
+                  }/${
+                    name
+                  }` as '/'
+                )}
+                title={name}
+              >
+                {#if cid}
+                  <img src={toHTTP({ cid })} alt={name}/>
+                {:else if type === 'spot'}
+                  <img src={Folder} class="folder"alt="📁"/>
+                {:else}
+                  <aside>Unknown Type: {type}</aside>
+                {/if}
+                <span>{name}</span>
+              </a>
+            </li>
+          {/each}
+        {/await}
       </ul>
       {#await representations({ path }) then rs}
         {@const sole = soleDisplayable(rs)}
@@ -473,10 +414,18 @@
             {#if sole.type.startsWith('image/')}
               <img src={toHTTP({ cid: sole.cid })} alt={path.at(-1) ?? ''}/>
             {:else if sole.type.startsWith('video/')}
+              <!-- svelte-ignore a11y_media_has_caption -->
               <video src={toHTTP({ cid: sole.cid })} controls></video>
             {:else}
-              <object data={toHTTP({ cid: sole.cid })} type={sole.type}>
-                <a href={toHTTP({ cid: sole.cid })} target="_blank">
+              <object
+                data={toHTTP({ cid: sole.cid })}
+                type={sole.type}
+                title={path.at(-1) ?? 'file'}>
+                <a
+                  href={toHTTP({ cid: sole.cid })}
+                  rel="external"
+                  target="_blank"
+                >
                   View {path.at(-1) ?? 'file'}
                 </a>
               </object>
@@ -542,7 +491,7 @@
   </dialog>
   <ImportDirectoryDialog
     bind:self={importDirectoryDialog}
-    containerId={await id()}
+    {path}
   />
   <ConfigDialog bind:self={configDialog}/>
   <ErrorDialog bind:error={errorMsg}/>
