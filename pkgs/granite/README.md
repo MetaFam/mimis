@@ -43,9 +43,13 @@ $ granite resolve /books/dune --mount 0x… --mount bafy…
 $ granite history 0x…
 $ granite follow
 $ granite hydrate --mount 0x… [--name alias]
+$ granite spider ./docs [--out docs.car] [--include p]… [--exclude p]… [--yes]
+$ granite load docs.car
 ```
 
 Sources are Update CIDs or publisher addresses (⇒ their whole chain, newest shadowing oldest). `--json` emits machine-readable output; absence is success (`null`, exit 0).
+
+`spider` walks a directory, offers an interactive tree selection (hidden and gitignored entries deselected by default; `--yes` skips the UI and takes the gitignore-syntax pattern selection as-is), imports the chosen files into Kubo, and writes a single CAR containing one complete unpublished update. `load` imports such an archive, validates the update and everything it references offline — failing loudly with the offender named — and never publishes, registers, or announces anything. Contracts: [specs/002-spider-car/contracts/](specs/002-spider-car/contracts/).
 
 ## Library
 

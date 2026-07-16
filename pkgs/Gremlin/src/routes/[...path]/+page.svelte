@@ -68,31 +68,6 @@
   //   }
   // })
 
-  function soleDisplayable(reps?: Array<Representation>) {
-    console.debug({ reps })
-    if(!Array.isArray(reps)) throw new Error('`reps` is not an array.')
-    reps = reps.filter(
-      (rep) => rep.type.startsWith('image/') || rep.type.startsWith('video/')
-    )
-    if(reps.length !== 1) return false
-    const [rep] = reps
-    return rep
-  }
-
-  async function reps() {
-    try {
-      // return await repsPromise() as Array<Representation>
-      return await representations({ path }) as Array<Representation>
-    } catch(err) {
-      console.error({ reps: err })
-      errorMsg = (err as Error).message
-      if(isHttpError(err)) {
-        errorMsg = `HTTP Error: ${err.status}: ${err.body.message}`
-      }
-      return []
-    }
-  }
-
   logHeader()
 
   // If loaded on the server, fails with "`HTMLElement` not found."
@@ -205,18 +180,17 @@
       evt.preventDefault()
       if(!addSpotDialog) throw new Error('¿How was this directory submitted?')
 
-      const formData = new FormData(evt.currentTarget as HTMLFormElement)
+      const form = evt.currentTarget as HTMLFormElement
+      const formData = new FormData(form)
       if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
-        // const containerId = await idPromise()
         const containerId = await spotId({ path })
         const terminal = formData.getAll('path') as Array<string>
-        const create = [...path, ...terminal]
-        console.debug({ containerId, create })
-        await upsertSpot({
-          containerId, path: create,
-        })
+        console.debug({ containerId, terminal })
+        await upsertSpot({ containerId, path: terminal })
       }
       addSpotDialog.requestClose()
+      form.reset()
+      await searchFor({ path }).refresh()
     } catch(err) {
       errorMsg = (err as Error).message
       if(isHttpError(err)) {
@@ -255,8 +229,9 @@
           files: entries,
         })
       }
-      form.reset()
       addFilesDialog.requestClose()
+      form.reset()
+      await representations({ path }).refresh()
     } catch(err) {
       console.error({ 'addFiles func': err })
       errorMsg = (err as Error).message
@@ -311,6 +286,31 @@
     } catch(err) {
       console.error({ display: err })
       errorMsg = (err as Error).message
+    }
+  }
+
+    function soleDisplayable(reps?: Array<Representation>) {
+    console.debug({ reps })
+    if(!Array.isArray(reps)) throw new Error('`reps` is not an array.')
+    reps = reps.filter(
+      (rep) => rep.type.startsWith('image/') || rep.type.startsWith('video/')
+    )
+    if(reps.length !== 1) return false
+    const [rep] = reps
+    return rep
+  }
+
+  async function reps() {
+    try {
+      // return await repsPromise() as Array<Representation>
+      return await representations({ path }) as Array<Representation>
+    } catch(err) {
+      console.error({ reps: err })
+      errorMsg = (err as Error).message
+      if(isHttpError(err)) {
+        errorMsg = `HTTP Error: ${err.status}: ${err.body.message}`
+      }
+      return []
     }
   }
 
@@ -440,7 +440,7 @@
     </nav>
     <nav id="details">
       <ul>
-        {#each await display() as { name, type, cid } (cid || name)}
+        {#each await searchFor({ path }) as { name, type, cid } (cid || name)}
           <li>
             <a
               href={resolve(
@@ -466,7 +466,7 @@
           </li>
         {/each}
       </ul>
-      {#await reps() then rs}
+      {#await representations({ path }) then rs}
         {@const sole = soleDisplayable(rs)}
         {#if sole}
           <figure id="media">

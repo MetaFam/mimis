@@ -62,15 +62,18 @@ export const writeTree = async (store: Blockstore, tree: Tree): Promise<CID> => 
   return await writeValidated(store, document, asNode)
 }
 
-export const publishTree = async (
-  { store, registry, announcer, key }: PublishPorts,
-  tree: Tree,
-): Promise<Published> => {
-  const publisher: Address = addressOf(key)
-  const prev = await registry.latest(publisher)
-  const root = await writeTree(store, tree)
-  const at = Math.floor(Date.now() / 1000)
-  const update = await writeValidated(
+export type UpdateFields = {
+  publisher: Address,
+  root: CID,
+  prev?: CID,
+  at: number,
+}
+
+export const writeUpdate = async (
+  store: Blockstore,
+  { publisher, root, prev, at }: UpdateFields,
+): Promise<CID> => (
+  writeValidated(
     store,
     {
       granite: 1,
@@ -81,6 +84,22 @@ export const publishTree = async (
     },
     asUpdate,
   )
+)
+
+export const publishTree = async (
+  { store, registry, announcer, key }: PublishPorts,
+  tree: Tree,
+): Promise<Published> => {
+  const publisher: Address = addressOf(key)
+  const prev = await registry.latest(publisher)
+  const root = await writeTree(store, tree)
+  const at = Math.floor(Date.now() / 1000)
+  const update = await writeUpdate(store, {
+    publisher,
+    root,
+    ...(prev ? { prev } : {}),
+    at,
+  })
   await registry.publish(update)
   const announcement = {
     publisher,

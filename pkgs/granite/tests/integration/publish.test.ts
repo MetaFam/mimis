@@ -10,7 +10,7 @@ import { generateKey } from '#lib/keys.ts'
 import { deployRegistry } from '../../scripts/deploy-registry.ts'
 import { anvilUp, fundedKeys, kuboUp, kuboUrl, rpcUrl } from './env.ts'
 
-const cli = fileURLToPath(new URL('#lib/cli.ts', import.meta.url))
+const cli = fileURLToPath(import.meta.resolve('#lib/cli.ts'))
 
 const runCli = (
   args: string[], env: Record<string, string> = {}, input?: string,

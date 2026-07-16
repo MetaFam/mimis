@@ -7,7 +7,9 @@ export type Blockstore = {
   get(cid: CID): Promise<Uint8Array>,
 }
 
-export const kuboStore = (url: string): Blockstore => {
+// pin: false suits bulk writers that take one recursive pin on their
+// root afterwards — per-block pinning is a pinset commit each time.
+export const kuboStore = (url: string, { pin = true } = {}): Blockstore => {
   const kubo = createKubo({ url })
   return {
     put: async (bytes) => {
@@ -16,7 +18,7 @@ export const kuboStore = (url: string): Blockstore => {
         format: 'dag-cbor',
         mhtype: 'sha2-256',
         version: 1,
-        pin: true,
+        pin,
       }))
       if(stored !== expected.toString()) {
         throw new Error(`kubo stored ${stored} where ${expected.toString()} was expected`)
