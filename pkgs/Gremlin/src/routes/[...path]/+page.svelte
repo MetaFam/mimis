@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { isHttpError, error } from '@sveltejs/kit';
+  import { isHttpError, error } from '@sveltejs/kit'
   import type { AppKit } from '@reown/appkit'
   import { onMount } from 'svelte'
   import { page } from '$app/state'
@@ -9,7 +9,6 @@
   import { searchFor } from '$lib/remotes/searchFor.remote'
   import { representations, type Representation } from '$lib/remotes/representations.remote'
   import { upsertSpot } from '$lib/remotes/upsertSpot.remote'
-  import { addFiles as filesToSpot } from '$lib/remotes/addFiles.remote'
   import { spotId } from '$lib/remotes/spotId.remote'
   import ConfigDialog from '$lib/ConfigDialog.svelte'
   import ErrorDialog from '$lib/ErrorDialog.svelte'
@@ -19,8 +18,8 @@
   import ImportDirectoryDialog from '$lib/ImportDirectoryDialog.svelte'
   import { janusToDAG } from '$lib/janus2DAG'
   import { graphToCSV } from '$lib/janus2CSV'
-  import { kuboUpload, type Spot } from '$lib/ipfs'
-  import { toHTTP, logHeader } from '$lib'
+  import { addFiles } from '$lib/ipfs'
+  import { toHTTP, logHeader, within, dropTargetGenerator } from '$lib'
   import { getConnection, signMessage } from '@wagmi/core'
   import { createSiweMessage } from 'viem/siwe'
   import Folder from '$lib/assets/folder.svg'
@@ -87,14 +86,25 @@
     })
   })
 
+  $effect(() => {
+    const dialogs = document.querySelectorAll('dialog')
+    dialogs.forEach((dialog) => {
+      dialog.addEventListener('click', (evt) => {
+        if(evt.target === dialog && !within(dialog, evt)) {
+          dialog.close()
+        }
+      })
+    })
+  })
+
   async function siweSignIn() {
     if(!wagmiConfig) return
     const account = getConnection(wagmiConfig)
     if(settings.debugging) {
-      console.debug('SIWE attempt:', {
+      console.debug({ 'SIWE Attempt': {
         address: account.address,
         status: account.status,
-      })
+      } })
     }
     if(!account.address) return
 
@@ -142,6 +152,8 @@
     }
   }
 
+  const dropTarget = $derived(dropTargetGenerator({ path }))
+
   afterNavigate(async ({ to }) => {
     path = (
       to?.url.pathname
@@ -162,12 +174,11 @@
       if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
         const containerId = await spotId({ path })
         const terminal = formData.getAll('path') as Array<string>
-        console.debug({ containerId, terminal })
         await upsertSpot({ containerId, path: terminal })
+        await searchFor({ path }).refresh()
       }
       addSpotDialog.requestClose()
       form.reset()
-      await searchFor({ path }).refresh()
     } catch(err) {
       errorMsg = (err as Error).message
       if(isHttpError(err)) {
@@ -177,38 +188,19 @@
     }
   }
 
-  async function addFiles(evt: SubmitEvent) {
+  async function filesAdded(evt: SubmitEvent) {
     try {
       evt.preventDefault()
       if(!addFilesDialog) throw new Error('¿How were these files submitted?')
       const form = evt.currentTarget as HTMLFormElement
       const formData = new FormData(form)
       if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
-        const containerId = await spotId({ path })
-        if(containerId == null) {
-          throw new Error('No Container Specified: ¡I don’t know where I am!')
-        }
-
         const files = formData.getAll('files') as Array<File>
-        const cids = await kuboUpload({ files }) as Array<Spot>
-        const entries = cids.map((entry, idx) => {
-          if(entry.cid == null) throw new Error('No CID.')
-          return {
-            ...entry,
-            cid: entry.cid,
-            name: files[idx].name,
-            size: files[idx].size,
-          }
-        })
-        if(settings.debugging) console.debug({ entries, containerId } )
-        await filesToSpot({
-          containerId,
-          files: entries,
-        })
+        await addFiles({ files, path })
+        await representations({ path }).refresh()
       }
       addFilesDialog.requestClose()
       form.reset()
-      await representations({ path }).refresh()
     } catch(err) {
       console.error({ 'addFiles func': err })
       errorMsg = (err as Error).message
@@ -272,20 +264,23 @@
   <menu id="actions" class:open={menued}>
     <ul>
       <li><button
-        aria-disabled={!whoAmI}
-        onclick={() => whoAmI ? addSpotDialog?.showModal() : appKit?.open()}
+        disabled={!whoAmI}
+        commandfor="add-spot"
+        command="show-modal"
       >
         Add Directory
       </button></li>
       <li><button
-        aria-disabled={!whoAmI}
-        onclick={() => whoAmI ? addFilesDialog?.showModal() : appKit?.open()}
+        disabled={!whoAmI}
+        commandfor="add-files"
+        command="show-modal"
       >
         Import Files
       </button></li>
       <li><button
-        aria-disabled={!whoAmI}
-        onclick={() => whoAmI ? importDirectoryDialog?.showModal() : appKit?.open()}
+        disabled={!whoAmI}
+        commandfor="begin-dir"
+        command="show-modal"
       >
         Import Directory
       </button></li>
@@ -298,7 +293,8 @@
       <li><a class="button" href={resolve('/graph')}>Force Graph</a></li>
       <li><button
         class="menu-open"
-        onclick={() => configDialog?.showModal()}
+        commandfor="config"
+        command="show-modal"
       >
         Settings
       </button></li>
@@ -310,7 +306,7 @@
         />
       </li>
       <li id="bg">
-        <img class="icon" src={Background}/>
+        <img class="icon" src={Background} alt="background"/>
         <input
           type="color"
           oninput={(evt) => {
@@ -376,11 +372,11 @@
     <nav id="crumbs">
       <Breadcrumbs {path} address={whoAmI}/>
     </nav>
-    <nav id="details">
+    <nav id="details" use:dropTarget>
       <ul>
         <!-- {#each await searchFor({ path }) as { name, type, cid } (cid || name)} -->
         {#await searchFor({ path }) then results}
-          {#each results as { name, type, cid } (`${cid}:${name}`)}
+          {#each results as { name, type, cid, id } (`${cid}:${name}`)}
             <li>
               <a
                 href={resolve(
@@ -395,9 +391,23 @@
                 title={name}
               >
                 {#if cid}
-                  <img src={toHTTP({ cid })} alt={name}/>
+                  <img
+                    src={toHTTP({ cid })}
+                    alt={name}
+                    data-id={id}
+                    class:folder={type === 'spot'}
+                    use:dropTarget
+                    draggable="true"
+                  />
                 {:else if type === 'spot'}
-                  <img src={Folder} class="folder"alt="📁"/>
+                  <img
+                    src={Folder}
+                    class="folder"
+                    alt="📁"
+                    data-id={id}
+                    use:dropTarget
+                    draggable="true"
+                  />
                 {:else}
                   <aside>Unknown Type: {type}</aside>
                 {/if}
@@ -449,13 +459,17 @@
             value="add"
             disabled={pathInput?.trim() === ''}
           >Add</button>
-          <button name="action" value="cancel">Cancel</button>
+          <button
+            type="button"
+            command="close"
+            commandfor="add-spot"
+          >Cancel</button>
         </menu>
       </fieldset>
     </form>
   </dialog>
   <dialog id="add-files" bind:this={addFilesDialog}>
-    <form onsubmit={addFiles} class="adder">
+    <form onsubmit={filesAdded} class="adder">
       <fieldset>
         <legend>Files to Add</legend>
         <input
@@ -470,7 +484,11 @@
             value="add"
             disabled={(filesInput ?? []).length < 1}
           >Add</button>
-          <button name="action" value="cancel">Cancel</button>
+          <button
+            type="button"
+            command="close"
+            commandfor="add-files"
+          >Cancel</button>
         </menu>
       </fieldset>
     </form>
@@ -484,7 +502,11 @@
         {/each}
       </ol>
       <menu>
-        <button onclick={() => logDialog?.close()}>Close</button>
+        <button
+          type="button"
+          command="close"
+          commandfor="logs"
+        >Close</button>
         <span class="spacer"></span>
       </menu>
     </form>
@@ -615,7 +637,7 @@
   }
 
   #details {
-    flex-grow: 1;
+    display: flex;
     background-color: var(--display-color, #2223);
 
     &, & a {
@@ -623,8 +645,14 @@
     }
     a:hover {
       color: color-mix(
-        in oklab, contrast-color(var(--display-color, #222)) 75%, coral 25%
+        in oklab,
+        contrast-color(var(--display-color, #222)) 75%,
+        coral 25%
       );
+    }
+
+    & ul {
+      align-items: start;
     }
   }
 
@@ -658,20 +686,14 @@
     padding: 0.25em 0.5em;
   }
 
-  #begin-dir fieldset {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75em;
-  }
-
-  #files, #crumbs {
+  #files, #details {
     display: flex;
     flex-grow: 1;
   }
 
   #files {
+    display: flex;
     flex-direction: column;
-    align-self: start;
   }
 
   #crumbs {

@@ -1,8 +1,11 @@
 import type { Version } from 'multiformats'
 import { create as ipfsFactory } from 'kubo-rpc-client'
 import { CAREncoderStream } from 'ipfs-car'
-import settings from '$lib/settings.svelte.ts'
+import { addFiles as filesToSpot } from '$lib/remotes/addFiles.remote'
+import settings from '$lib/settings.svelte'
+import { spotId } from '$lib/remotes/spotId.remote';
 import type { Logger } from "../types.ts";
+import { upsertSpot } from './remotes/upsertSpot.remote.ts'
 
 export interface Spot {
   cid: string
@@ -90,4 +93,22 @@ export async function blocksToCAR(
     url: URL.createObjectURL(new Blob(chunks)),
     cid: rootBlock.cid,
   }
+}
+
+export async function addFiles(
+  { files, path }: {
+  files: Array<File>,
+  path: Array<string>,
+}) {
+  const cids = await kuboUpload({ files }) as Array<Spot>
+  const entries = cids.map((entry, idx) => {
+    if(entry.cid == null) throw new Error('No CID.')
+    const { name, size } = files[idx]
+    return { ...entry, cid: entry.cid, name, size }
+  })
+  if(settings.debugging) console.debug({ entries, path } )
+  return await filesToSpot({
+    containerId: await upsertSpot({ path }),
+    files: entries,
+  })
 }

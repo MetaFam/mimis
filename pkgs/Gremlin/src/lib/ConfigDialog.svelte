@@ -36,7 +36,7 @@
   }
 </script>
 
-<dialog bind:this={self}>
+<dialog bind:this={self} id="config">
   <form onsubmit={submit}>
     <fieldset>
       <legend>General Settings</legend>

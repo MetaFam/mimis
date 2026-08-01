@@ -1,6 +1,7 @@
 import gremlin from 'gremlin'
+import { v7 as uuidV7 } from 'uuid'
 import { error } from '@sveltejs/kit'
-import settings from '$lib/settings.svelte.ts'
+import settings from '$lib/settings.svelte'
 import { getSessionAddress } from "./auth.ts";
 
 const { driver, process } = gremlin
@@ -68,7 +69,7 @@ export async function mergeSpotRoot({ traversal, address, now: createdAt, create
     (create ? (
       traversal
       .mergeV(new Map([[T.label, 'SpotRoot'], ['signer', address]]))
-      .option(Merge.onCreate, { createdAt })
+      .option(Merge.onCreate, { createdAt, uuid: uuidV7() })
     ) : (
       traversal
       .V()
@@ -122,10 +123,10 @@ export async function mergePath({
           ),
           (
             __.addV('Spot')
-            .property(new Map(Object.entries({ createdAt })))
+            .property(new Map(Object.entries({ createdAt, uuid: uuidV7() })))
             .addE('CONTAINS')
             .from_('parent')
-            .property(new Map(Object.entries({ path: elem, createdAt })))
+            .property(new Map(Object.entries({ path: elem, createdAt, uuid: uuidV7() })))
             .inV()
           ),
         )

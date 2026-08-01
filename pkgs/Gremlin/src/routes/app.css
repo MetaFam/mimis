@@ -7,6 +7,37 @@
   font-family: Bastavar, Arial, Helvetica, sans-serif;
 }
 
+dialog {
+  transition: display, opacity, overlay, translate;
+  transition-behavior: allow-discrete;
+  transition-duration: 0.5s;
+  translate: 0 3rem;
+  opacity: 0;
+
+  &::backdrop {
+    backdrop-filter: blur(3px);
+    opacity: 0;
+  }
+
+  &[open] {
+    opacity: 1;
+    translate: 0 0;
+
+    &::backdrop {
+      opacity: 1;
+    }
+
+    @starting-style {
+      opacity: 0;
+      translate: 0 -3rem;
+
+      &::backdrop {
+        opacity: 0;
+      }
+    }
+  }
+}
+
 dialog.wide {
   width: min(100%, calc(max-content + 10%));
 }

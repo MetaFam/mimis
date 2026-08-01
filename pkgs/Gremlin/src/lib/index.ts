@@ -1,7 +1,11 @@
 import { CID } from 'multiformats'
-import { settings } from '$lib/settings.svelte.ts'
-import type { TreeNode, Walker } from "$lib/fileTree2CIDTree.ts";
+import { settings } from '$lib/settings.svelte'
+import type { TreeNode, Walker } from '$lib/fileTree2CIDTree'
+import { moveSpot } from '$lib/remotes/moveSpot.remote'
+import { searchFor } from '$lib/remotes/searchFor.remote'
+import { spotId } from '$lib/remotes/spotId.remote'
 import type { Node, DirNode } from '../types.ts'
+import { addFiles } from './ipfs.ts'
 
 export function viewable(extension?: string) {
   return (
@@ -10,9 +14,7 @@ export function viewable(extension?: string) {
   )
 }
 
-export function toHTTP({
-  url, cid,
-}: {
+export function toHTTP({ url, cid }: {
   url?: string | null; cid?: string | CID | null;
 }) {
   if((!url && !cid) || (url && cid)) {
@@ -162,7 +164,7 @@ export function filter(
       children: (
         tree.children
         .filter(fn)
-        .map((child) => filter({ tree: child, fn }))
+        .map((child: TreeNode) => filter({ tree: child, fn }))
       )
     })
   }
@@ -174,14 +176,19 @@ export function isDirNode(node?: Node | null): node is DirNode {
   return node.type === 'directory'
 }
 
-export function map2Obj(input: unknown) {
-  if(!(input instanceof Map) && (typeof input !== 'object' || input == null)) {
-    return input ?? null
+export function map2Obj(
+  input: unknown
+): Record<string, unknown> | Array<unknown> | unknown {
+  if (Array.isArray(input)) {
+    return input.map(map2Obj)
   }
 
-  if (input instanceof Map) {
-    const obj = {}
-    for (const [key, value] of input) {
+  if (input instanceof Map || (typeof input === 'object')) {
+    const obj: Record<string, unknown> = {}
+    const entries = (
+      input instanceof Map ? input.entries() : Object.entries(input ?? {})
+    )
+    for (const [key, value] of entries) {
       const stringKey = (
         typeof key === 'object'
       ) ? (
@@ -189,15 +196,103 @@ export function map2Obj(input: unknown) {
       ) : (
         String(key)
       )
-      obj[stringKey] = map2Obj(value);
+      obj[stringKey] = map2Obj(value)
     }
-    return obj;
+    return obj
   }
 
-  // If it's an Array, recurse through elements
-  if (Array.isArray(input)) {
-    return input.map(map2Obj);
-  }
+  return input ?? null
+}
 
-  return input;
+export function within(elem: HTMLElement, evt: MouseEvent) {
+  const rect = elem.getBoundingClientRect()
+  return (
+    evt.clientX >= rect.left
+    && evt.clientX <= rect.right
+    && evt.clientY >= rect.top
+    && evt.clientY <= rect.bottom
+  )
+}
+
+let dragging: HTMLElement | null = null
+export function dropTargetGenerator(
+  { path }: { path: Array<string> }
+) {
+  return function dropTarget(node: HTMLElement) {
+    const onDragOver = (
+      // required for drop to fire
+      (evt: DragEvent) => evt.preventDefault()
+    )
+    const onDrop = async (evt: DragEvent) => {
+      evt.preventDefault()
+      const [what, to] = [dragging, node].map((n) => n?.dataset.id)
+      if(evt.dataTransfer?.files && evt.dataTransfer.files.length > 0) {
+        const dispatch = (
+          async (entry: FileSystemEntry | null, path: Array<string>) => {
+            if(!entry) return
+
+            if(entry.isDirectory) {
+              await readDir(
+                entry as FileSystemDirectoryEntry,
+                [...path, entry.name],
+              )
+            } else {
+              await (entry as FileSystemFileEntry).file(
+                async (file) => {
+                  if(settings.debugging) {
+                    console.debug({ Adding: { file, path } })
+                  }
+                  await addFiles({ files: [file], path })
+                }
+              )
+            }
+          }
+        )
+
+        async function readDir(
+          dir: FileSystemDirectoryEntry,
+          path: Array<string>,
+        ) {
+          const reader = dir.createReader()
+
+          const readBatch = async () => await reader.readEntries(
+            async (entries) => {
+              if(entries.length === 0) return
+              for(const entry of entries) {
+                await dispatch(entry, [...path, entry.name])
+              }
+              await readBatch()
+            }
+          )
+          await readBatch()
+        }
+
+        for (const item of evt.dataTransfer.items) {
+          await dispatch(item.webkitGetAsEntry(), path)
+        }
+      } else {
+        await moveSpot({
+          what: Number(what),
+          from: await spotId({ path }),
+          to: Number(to),
+        })
+      }
+      await searchFor({ path }).refresh()
+    }
+
+    const onDragStart = (evt: DragEvent) => {
+      dragging = evt.target as HTMLElement
+    }
+
+    node.addEventListener('dragover', onDragOver)
+    node.addEventListener('drop', onDrop)
+    node.addEventListener('dragstart', onDragStart)
+    return {
+      destroy() {
+        node.removeEventListener('dragover', onDragOver)
+        node.removeEventListener('drop', onDrop)
+        node.removeEventListener('dragstart', onDragStart)
+      },
+    }
+  }
 }

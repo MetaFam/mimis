@@ -1,13 +1,15 @@
 <script lang="ts">
   import { resolve } from '$app/paths'
-  import { throwError } from '$lib'
+  import { dropTargetGenerator } from '$lib'
   import root from '$lib/assets/root.svg'
-  import { searchFor, type Entry } from '$lib/remotes/searchFor.remote.ts'
+  import { spotId } from './remotes/spotId.remote'
 
   let { path = [], address = null }: {
     path: string[]
     address: string | null
   } = $props()
+
+  const dropTarget = $derived(dropTargetGenerator({ path }))
 </script>
 
 <ol>
@@ -20,6 +22,8 @@
       <a
         href={resolve(whole as '/')}
         title={idx === 0 ? (address ?? '𝙍𝙤𝙤𝙩') : decoded}
+        use:dropTarget
+        data-id={await spotId({ path })}
       >
         {#if idx === 0}
           <img src={root} alt="🪾"/>

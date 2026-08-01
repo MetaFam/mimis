@@ -1,12 +1,11 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
-import { error } from '@sveltejs/kit'
+import { isHttpError, error } from '@sveltejs/kit'
 import { command } from '$app/server'
 import {
   connect as connectJanusGraph, connectToG, mergeSpotRoot, mergePath,
-} from '$lib/server/janusgraph.ts'
-import { getSessionAddress } from '$lib/server/auth.ts'
-import { isHttpError } from "@sveltejs/kit";
+} from '$lib/server/janusgraph'
+import { getSessionAddress } from '$lib/server/auth'
 
 const { statics: __ } = gremlin.process
 

@@ -1,4 +1,4 @@
-import { parseArgs } from 'jsr:@std/cli@1.0.27'
+import { parseArgs } from 'jsr:@std/cli'
 import { ensureDirSync, existsSync } from 'jsr:@std/fs'
 
 type Entry = {
@@ -76,14 +76,13 @@ async function pass(
 
 const args = parseArgs(Deno.args, {
   boolean: ['dry-run'],
-  string: ['base'],
-  number: ['passes'],
+  string: ['base', 'passes'],
   alias: { n: 'dry-run', b: 'base', p: 'passes' },
-  default: { 'dry-run': false, passes: 50 },
+  default: { 'dry-run': false, passes: '50' },
 })
 const dryRun: boolean = args['dry-run']
-const dir: string | undefined = args.base ?? args._ [0] as string
-let passes = args.passes
+const dir: string | undefined = args.base ?? args._[0] as string
+let passes = Number(args.passes)
 
 if(!dir) {
   console.error("Usage: deno rename.ts [-n] [-p <max passes>] [--base] <directory>")

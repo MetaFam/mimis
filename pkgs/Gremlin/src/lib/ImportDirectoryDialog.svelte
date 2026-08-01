@@ -116,6 +116,7 @@
         </label>
         <button type="button" onclick={async () => {
           working = true
+          // @ts-expect-error: showDirectoryPicker can take an argument
           dir = await window.showDirectoryPicker({ mode: 'read' })
           working = false
         }}>
@@ -148,6 +149,12 @@
   button img {
     width: 1em;
     max-height: 1em;
+  }
+
+  #begin-dir fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75em;
   }
 
   .logs {

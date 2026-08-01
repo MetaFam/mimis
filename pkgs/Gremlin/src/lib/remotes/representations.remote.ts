@@ -4,9 +4,9 @@ import { query } from '$app/server'
 import { error, isHttpError } from '@sveltejs/kit'
 import {
   connect as connectJanusGraph, connectToG, mergePath, mergeSpotRoot,
-} from '$lib/server/janusgraph.ts'
-import settings from '$lib/settings.svelte.ts'
-import { getSessionAddress } from '$lib/server/auth.ts'
+} from '$lib/server/janusgraph'
+import settings from '$lib/settings.svelte'
+import { getSessionAddress } from '$lib/server/auth'
 
 const { statics: __, t: T } = gremlin.process
 

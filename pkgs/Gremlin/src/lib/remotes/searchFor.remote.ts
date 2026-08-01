@@ -4,9 +4,9 @@ import { query } from '$app/server'
 import { error, isHttpError } from '@sveltejs/kit'
 import {
   connect as connectJanusGraph, connectToG, mergeSpotRoot,
-} from '$lib/server/janusgraph.ts'
-import settings from '$lib/settings.svelte.ts'
-import { getSessionAddress } from '$lib/server/auth.ts'
+} from '$lib/server/janusgraph'
+import settings from '$lib/settings.svelte'
+import { getSessionAddress } from '$lib/server/auth'
 
 const { statics: __, scope: Scope } = gremlin.process
 type GraphTraversal = InstanceType<typeof gremlin.process.GraphTraversal>
@@ -105,7 +105,7 @@ export const searchFor = query(
         .as('contains')
         .values('path').as('name')
         .select('contains')
-        .inV()
+        .inV().as('vertex')
         .coalesce(
           singleDisplayable(
             'spot',
@@ -132,10 +132,11 @@ export const searchFor = query(
           ),
         )
         .as('result')
-        .project('name', 'type', 'cid')
+        .project('name', 'type', 'cid', 'id')
         .by(__.select('name'))
         .by(__.select('result').select('type'))
         .by(__.select('result').select('cid'))
+        .by(__.select('vertex').id())
         .dedup()
         .toList()
       ) as Array<Map<keyof Entry, string | null>>

@@ -2,11 +2,10 @@ import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { command } from '$app/server'
 import { error } from '@sveltejs/kit'
-import settings from '$lib/settings.svelte.ts'
+import settings from '$lib/settings.svelte'
 import {
   connect as connectJanusGraph, connectToG, mergePath,
-  mergeSpotRoot,
-} from '$lib/server/janusgraph.ts'
+} from '$lib/server/janusgraph'
 
 const { process } = gremlin
 const { t: T, statics: __ } = process

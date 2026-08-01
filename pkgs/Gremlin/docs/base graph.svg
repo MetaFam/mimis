@@ -1,72 +1,326 @@
-<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 947.596 453.56">
-    <defs>
-        <marker id="e" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" refX="0" refY="0" style="overflow:visible" viewBox="0 0 1 1">
-            <path d="M6 0C3 1-1 3-3 5c0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt" transform="scale(.5)"/>
-        </marker>
-        <marker id="f" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" refX="0" refY="0" style="overflow:visible" viewBox="0 0 1 1">
-            <path d="M6 0C3 1-1 3-3 5c0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt" transform="scale(.5)"/>
-        </marker>
-        <marker id="g" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" refX="0" refY="0" style="overflow:visible" viewBox="0 0 1 1">
-            <path d="M6 0C3 1-1 3-3 5c0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt" transform="scale(.5)"/>
-        </marker>
-        <marker id="h" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" refX="0" refY="0" style="overflow:visible" viewBox="0 0 1 1">
-            <path d="M6 0C3 1-1 3-3 5c0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt" transform="scale(.5)"/>
-        </marker>
-        <marker id="d" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" refX="0" refY="0" style="overflow:visible" viewBox="0 0 1 1">
-            <path d="M6 0C3 1-1 3-3 5c0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt" transform="scale(.5)"/>
-        </marker>
-        <marker id="c" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" refX="0" refY="0" style="overflow:visible" viewBox="0 0 1 1">
-            <path d="M6 0C3 1-1 3-3 5c0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt" transform="scale(.5)"/>
-        </marker>
-        <marker id="b" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" refX="0" refY="0" style="overflow:visible" viewBox="0 0 1 1">
-            <path d="M6 0C3 1-1 3-3 5c0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt" transform="scale(.5)"/>
-        </marker>
-        <marker id="a" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" refX="0" refY="0" style="overflow:visible" viewBox="0 0 1 1">
-            <path d="M6 0C3 1-1 3-3 5c0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt" transform="scale(.5)"/>
-        </marker>
-    </defs>
-    <path d="m490.279 52.259 368.287-1.045" style="fill:none;fill-opacity:1;stroke:#ffafce;stroke-width:5.66929;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#a);paint-order:stroke fill markers" transform="translate(67.578 -15.678)"/>
-    <path d="m465.279 137.736 268.537 252.04" style="fill:none;fill-opacity:1;stroke:#ffafce;stroke-width:5.66929;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#b);paint-order:stroke fill markers" transform="translate(67.578 -15.678)"/>
-    <path d="m254.826 134.78 234.467 284.01" style="fill:none;fill-opacity:1;stroke:#ffafce;stroke-width:5.66929;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#c);paint-order:stroke fill markers" transform="translate(67.578 -15.678)"/>
-    <path d="m180.546 116.508-234.467 284.01" style="fill:none;fill-opacity:1;stroke:#ffafce;stroke-width:5.66929;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#d);paint-order:stroke fill markers" transform="translate(67.578 -15.678)"/>
-    <path d="m490.279 52.259 368.287-1.045" style="opacity:1;fill:#7d4901;fill-opacity:1;stroke:#001528;stroke-width:2.64567;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#e);paint-order:stroke fill markers" transform="translate(67.578 -15.678)"/>
-    <g transform="translate(87.578 -21.678)">
-        <rect width="240" height="92" x="544" y="89" rx="28.702" ry="27.87" style="opacity:1;fill:#f61b02;fill-opacity:1;stroke:#ff46f0;stroke-width:2.13165;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"/>
-        <text xml:space="preserve" x="663.236" y="121.265" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:49.1473px;line-height:1;font-family:&quot;Amplitude BRK&quot;;-inkscape-font-specification:&quot;Amplitude BRK, Normal&quot;;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0;word-spacing:-5.65061px;writing-mode:lr-tb;direction:ltr;text-anchor:middle;opacity:1;fill:#7d0046;fill-opacity:1;stroke:#46ff4d;stroke-width:.954447;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"><tspan x="663.236" y="121.265" dx="-1.38" dy="12.54" style="fill:#7d0046;fill-opacity:1;stroke-width:.954447">Author:</tspan><tspan x="663.236" y="170.412" style="font-style:italic;font-variant:normal;font-weight:400;font-stretch:normal;font-size:49.1473px;font-family:&quot;Baskervald ADF Std&quot;;-inkscape-font-specification:&quot;Baskervald ADF Std, Italic&quot;;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#7d0046;fill-opacity:1;stroke-width:.954447">Eth Address</tspan></text>
+<svg version="1.1" viewBox="0 0 2454.6 2257.8" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <marker id="bn" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="ay" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="ax" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="ap" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bp" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bq" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="br" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="cg" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="cf" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bm" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bv" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bf" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bo" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="ao" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="ce" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="be" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="cc" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bd" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="cb" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bh" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="by" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="az" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="cd" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bl" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bx" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bg" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bz" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bi" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bu" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bc" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bt" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bb" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bw" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="ba" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="ca" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bj" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bs" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+    <marker id="bk" style="overflow:visible" markerHeight="2" markerWidth="2" orient="auto-start-reverse" preserveAspectRatio="xMidYMid" viewBox="0 0 1 1">
+      <path transform="scale(.5)" d="m6 0c-3 1-7 3-9 5 0 0 0-4 2-5-2-1-2-5-2-5 2 2 6 4 9 5z" style="fill-rule:evenodd;fill:context-stroke;stroke-width:1pt;stroke:context-stroke"/>
+    </marker>
+  </defs>
+  <path d="m1397.5 157.03 300.49 313.67" style="fill:none;marker-end:url(#br);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+  <path d="m1187 154.07 234.47 284.01" style="fill:none;marker-end:url(#bq);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+  <g transform="translate(864.62 34.968)">
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:none;marker-end:url(#cg);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:#7d4901;marker-end:url(#bn);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  </g>
+  <g transform="rotate(91.886 723.08 714.64)">
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:none;marker-end:url(#cf);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:#7d4901;marker-end:url(#bm);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  </g>
+  <g transform="rotate(17.548 -3363.5 -337.61)">
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:none;marker-end:url(#bs);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:#7d4901;marker-end:url(#bk);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  </g>
+  <g transform="rotate(135.19 473.1 263.34)">
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:none;marker-end:url(#ca);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:#7d4901;marker-end:url(#bj);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  </g>
+  <g transform="rotate(91.886 390.37 1489.8)">
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:none;marker-end:url(#bw);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:#7d4901;marker-end:url(#ba);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  </g>
+  <g transform="rotate(91.886 280.32 1068.9)">
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:none;marker-end:url(#bx);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:#7d4901;marker-end:url(#bg);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  </g>
+  <g transform="rotate(41.004 -855.48 1910.8)">
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:none;marker-end:url(#cd);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:#7d4901;marker-end:url(#bl);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  </g>
+  <g transform="rotate(121.47 606.56 650.1)">
+    <path transform="translate(67.578,-15.678)" d="m572.14 57.022 286.42-5.8084" style="fill:none;marker-end:url(#by);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+    <path transform="translate(67.578,-15.678)" d="m575.66 56.209 282.91-4.9946" style="fill:#7d4901;marker-end:url(#az);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  </g>
+  <g transform="rotate(52.224 40.204 1459.3)">
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:none;marker-end:url(#cb);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:#7d4901;marker-end:url(#bh);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  </g>
+  <g transform="rotate(32.841 -1075.1 2915)">
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:none;marker-end:url(#cc);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:#7d4901;marker-end:url(#bd);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  </g>
+  <g id="at" transform="rotate(91.886 494.9 863.06)">
+    <path transform="translate(67.578,-15.678)" d="m564.43 49.818 294.14 1.3961" style="fill:none;marker-end:url(#ce);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+    <path transform="translate(67.578,-15.678)" d="m546.17 50.419 312.39 0.79523" style="fill:#7d4901;marker-end:url(#be);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  </g>
+  <g transform="rotate(45.25 373.08 1484.2)">
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:none;marker-end:url(#bv);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:#7d4901;marker-end:url(#bf);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  </g>
+  <g id="av" transform="translate(864.62 34.968)">
+    <rect x="574.33" y="-.42867" width="313.09" height="74.496" rx="17.289" ry="15.315" style="fill:#02a9d8;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+    <text x="730.75739" y="57.645046" style="fill:#010a7d;font-family:'Amplitude BRK';font-size:57.108px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;letter-spacing:0;line-height:1;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.1316;stroke:#46ff4d;text-align:center;text-anchor:middle;word-spacing:-6.5659px" xml:space="preserve"><tspan x="730.75739" y="57.645046" style="fill:#010a7d;stroke-width:2.1316;stroke:#46ff4d;text-align:center;text-anchor:middle">INCLUDES</tspan></text>
+  </g>
+  <g transform="translate(864.62 34.968)">
+    <rect id="al" x="982.69" y="-27.392" width="273.92" height="122.12" style="fill:#d07a01;paint-order:stroke fill markers;stroke-dasharray:15.151, 30.302;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:.1;stroke-width:15.151;stroke:#264625"/>
+    <text id="ai" x="999.92755" y="71.501968" style="fill:#0150d0;font-family:Amiri;font-size:118.94px;font-weight:bold;letter-spacing:1.2316px;line-height:1;paint-order:stroke fill markers;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:.1;stroke-width:11.961;stroke:#094608;word-spacing:-2.5657px" xml:space="preserve"><tspan x="999.92755" y="71.501968" style="stroke-width:11.961">User</tspan></text>
+  </g>
+  <g id="as" transform="translate(-102.22 929.17)">
+    <rect x="1701.2" y="-32.565" width="462.77" height="122.12" style="fill:#d0598d;paint-order:fill markers stroke;stroke-dasharray:60.604, 15.151;stroke-linejoin:round;stroke-miterlimit:.1;stroke-width:15.151;stroke:#264625"/>
+    <text x="1932.3035" y="66.328606" style="fill:#0150d0;font-family:Amiri;font-size:118.94px;font-weight:bold;letter-spacing:1.2316px;line-height:1;paint-order:stroke fill markers;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:.1;stroke-width:11.961;stroke:#094608;word-spacing:-2.5657px" xml:space="preserve"><tspan x="1932.9192" y="66.328606" style="fill:#01d01b;stroke-width:11.961;text-align:center;text-anchor:middle">Instance</tspan></text>
+  </g>
+  <g transform="translate(418.16 1023.1)">
+    <g id="aq" transform="translate(-90.166 618.6)">
+      <rect x="1773.1" y="-32.565" width="317.82" height="134.68" style="fill:#595ed0;paint-order:stroke fill markers;stroke-dasharray:60.604, 30.302, 15.151, 30.302;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:.1;stroke-width:15.151;stroke:#2d2546"/>
+      <text x="1932.3035" y="66.328606" style="fill:#0150d0;font-family:Aerosal;font-size:118.94px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;letter-spacing:1.2316px;line-height:1;paint-order:stroke fill markers;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:.1;stroke-width:11.961;stroke:#094608;word-spacing:-2.5657px" xml:space="preserve"><tspan x="1932.9192" y="66.328606" style="fill:#01d01b;font-family:Aerosal;font-size:118.94px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;stroke-width:11.961;text-align:center;text-anchor:middle">Blob</tspan></text>
     </g>
-    <g transform="translate(9.733 94.875)">
-        <rect width="202.764" height="71.072" x="610.383" y="-93.021" rx="28.702" ry="27.87" style="opacity:1;fill:#02a9d8;fill-opacity:1;stroke:#001528;stroke-width:2.64567;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"/>
-        <text xml:space="preserve" x="713.761" y="-38.037" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:57.1081px;line-height:1;font-family:&quot;Amplitude BRK&quot;;-inkscape-font-specification:&quot;Amplitude BRK, Normal&quot;;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0;word-spacing:-6.56588px;writing-mode:lr-tb;direction:ltr;text-anchor:middle;opacity:1;fill:#010a7d;fill-opacity:1;stroke:#46ff4d;stroke-width:2.13165;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"><tspan x="713.761" y="-38.037" style="text-align:center;text-anchor:middle;fill:#010a7d;fill-opacity:1;stroke:#46ff4d;stroke-width:2.13165;stroke-dasharray:none;stroke-opacity:1">Volume</tspan></text>
+    <use id="p" transform="translate(-1204.1 416.59)" xlink:href="#aq"/>
+    <use transform="translate(-703.06 -12.555)" xlink:href="#p"/>
+  </g>
+  <path d="m1397.5 157.03 301.63 312.53" style="fill:#7d4901;marker-end:url(#ay);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  <g id="aw" transform="translate(965.89 12.148)">
+    <rect x="544" y="89" width="269.67" height="109.12" rx="28.702" ry="27.87" style="fill:#f61b02;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.1316;stroke:#ff46f0"/>
+    <text x="431.53601" y="133.81969" style="fill:#7d0046;font-family:'Amplitude BRK';font-size:49.147px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;letter-spacing:0;line-height:1;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:.95445;stroke:#46ff4d;text-align:center;text-anchor:middle;word-spacing:-5.6506px" xml:space="preserve"><tspan x="553.66779" y="133.81969"><tspan x="553.66779" y="133.81969" style="fill:#7d0046;stroke-width:.95445;text-align:start;text-anchor:start"/></tspan><tspan x="553.66779" y="133.81969"><tspan x="553.66779" y="133.81969" style="fill:#7d0046;stroke-width:.95445;text-align:start;text-anchor:start">author:</tspan><tspan x="553.66779" y="182.96669" style="fill:#7d0046;font-family:'Baskervald ADF Std';font-size:49.147px;font-style:italic;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;stroke-width:.95445;text-align:start;text-anchor:start"/></tspan><tspan x="553.66779" y="182.96669"><tspan x="553.66779" y="182.96669" style="fill:#7d0046;font-family:'Baskervald ADF Std';font-size:49.147px;font-style:italic;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;stroke-width:.95445;text-align:start;text-anchor:start">         Address</tspan></tspan></text>
+  </g>
+  <path d="m1187 154.07 234.47 284.01" style="fill:#7d4901;marker-end:url(#ax);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  <g transform="translate(864.62 34.968)">
+    <path transform="translate(67.578,-15.678)" d="m180.55 116.51-458.64 173.25 17.876 61.682" style="fill:none;marker-end:url(#bp);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+    <path transform="translate(67.578,-15.678)" d="m180.55 116.51-455.51 173.13 14.389 59.765" style="fill:none;marker-end:url(#ap);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  </g>
+  <g transform="translate(1058.1 411.32)">
+    <path transform="translate(67.578,-15.678)" d="m180.55 116.51-458.64 173.25 17.876 61.682" style="fill:none;marker-end:url(#bo);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+    <path transform="translate(67.578,-15.678)" d="m180.55 116.51-455.51 173.13 14.389 59.765" style="fill:none;marker-end:url(#ao);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  </g>
+  <g transform="translate(629.09 -14.155)">
+    <rect x="394.03" y="49.123" width="399.35" height="122.29" rx="28.702" ry="27.87" style="fill:#7d4901"/>
+    <text x="595.01599" y="145.05701" style="fill:#d07a01;font-family:'Amplitude BRK';font-size:109.76px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;stroke-width:2.6457;stroke:#86c4ff" xml:space="preserve"><tspan x="595.01599" y="145.05701" style="fill:#d07a01;font-family:'Amplitude BRK';font-size:109.76px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;stroke-width:2.6457;stroke:#86c4ff;text-align:center;text-anchor:middle">Users</tspan></text>
+  </g>
+  <g transform="rotate(158.01 723.79 794.76)">
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:none;marker-end:url(#bz);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:#7d4901;marker-end:url(#bi);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  </g>
+  <g id="m" transform="translate(785.42 1365.1)">
+    <g transform="translate(-94.731 -52.501)">
+      <rect x="452.24" y="49.123" width="302.33" height="139.41" rx="28.702" ry="27.87" style="fill:#016f7d"/>
+      <text x="595.01599" y="147.33969" style="fill:#d0ac79;font-family:'Amplitude BRK';font-size:109.76px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;stroke-width:2.6457;stroke:#f3c5ff" xml:space="preserve"><tspan x="595.01599" y="147.33969" style="fill:#d0ac79;font-family:'Amplitude BRK';font-size:109.76px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;stroke-width:2.6457;stroke:#f3c5ff;text-align:center;text-anchor:middle">Spot</tspan></text>
     </g>
-    <path d="m490.279 52.259 368.287-1.045" style="opacity:1;fill:#7d4901;fill-opacity:1;stroke:#001528;stroke-width:2.64567;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#f);paint-order:stroke fill markers" transform="rotate(43.348 423.752 140.727)"/>
-    <g transform="rotate(43.348 421.3 168.89)">
-        <rect width="240" height="92" x="544" y="89" rx="28.702" ry="27.87" style="opacity:1;fill:#f61b02;fill-opacity:1;stroke:#ff46f0;stroke-width:2.13165;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"/>
-        <text xml:space="preserve" x="663.236" y="121.265" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:49.1473px;line-height:1;font-family:&quot;Amplitude BRK&quot;;-inkscape-font-specification:&quot;Amplitude BRK, Normal&quot;;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0;word-spacing:-5.65061px;writing-mode:lr-tb;direction:ltr;text-anchor:middle;opacity:1;fill:#7d0046;fill-opacity:1;stroke:#46ff4d;stroke-width:.954447;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"><tspan x="663.236" y="121.265" dx="-1.38" dy="12.54" style="fill:#7d0046;fill-opacity:1;stroke-width:.954447">Author:</tspan><tspan x="663.236" y="170.412" style="font-style:italic;font-variant:normal;font-weight:400;font-stretch:normal;font-size:49.1473px;font-family:&quot;Baskervald ADF Std&quot;;-inkscape-font-specification:&quot;Baskervald ADF Std, Italic&quot;;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#7d0046;fill-opacity:1;stroke-width:.954447">Eth Address</tspan></text>
+  </g>
+  <use id="ag" transform="translate(-14.857 191.74)" xlink:href="#av"/>
+  <use id="ah" transform="translate(-78.752 191.74)" xlink:href="#aw"/>
+  <use id="af" transform="translate(-361.58 -44.512)" xlink:href="#ag"/>
+  <use id="ae" transform="translate(-390.34 -44.512)" xlink:href="#ah"/>
+  <use transform="translate(-347.63 -30.816)" xlink:href="#af"/>
+  <use transform="translate(-349.25 -30.816)" xlink:href="#ae"/>
+  <g transform="translate(953.39 -47.351)">
+    <use id="ad" transform="translate(-196.31 502.19)" xlink:href="#al"/>
+    <use id="ac" transform="translate(-196.31 502.19)" xlink:href="#ai"/>
+  </g>
+  <use id="ab" transform="translate(511.94 8.7169)" xlink:href="#ad"/>
+  <use id="aa" transform="translate(511.94 8.7169)" xlink:href="#ac"/>
+  <use transform="translate(-765.84 -82.176)" xlink:href="#ab"/>
+  <use transform="translate(-765.84 -82.176)" xlink:href="#aa"/>
+  <g id="g6" transform="matrix(.10998 0 0 .10998 1549.2 150.35)">
+    <polygon points="125.17 9.5 125.17 285.17 127.96 287.96 255.92 212.32 127.96 0" fill="#343434"/>
+    <polygon points="127.96 0 0 212.32 127.96 287.96 127.96 154.16" fill="#8c8c8c"/>
+    <polygon points="126.39 314.11 126.39 412.31 127.96 416.91 256 236.59 127.96 312.19" fill="#3c3c3b"/>
+    <polygon points="127.96 312.19 0 236.59 127.96 416.91" fill="#8c8c8c"/>
+    <polygon points="255.92 212.32 127.96 154.16 127.96 287.96" fill="#141414"/>
+    <polygon points="127.96 287.96 127.96 154.16 9e-4 212.32" fill="#393939"/>
+  </g>
+  <use id="z" transform="translate(-76.669 191.27)" xlink:href="#g6"/>
+  <use id="y" transform="translate(-392.22 -44.388)" xlink:href="#z"/>
+  <use id="x" transform="translate(-349.45 -29.861)" xlink:href="#y"/>
+  <g id="l" transform="translate(-47.345 662.85)">
+    <g transform="translate(671.97 -18.931)">
+      <rect x="609.84" y="-.42867" width="226.73" height="74.496" rx="17.289" ry="15.315" style="fill:#d8d502;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+      <text x="723.49396" y="56.838001" style="fill:#0287ff;font-family:'Amplitude BRK';font-size:57.108px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;letter-spacing:0;line-height:1;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.1316;stroke:#46ff4d;text-align:center;text-anchor:middle;word-spacing:-6.5659px" xml:space="preserve"><tspan x="723.49396" y="56.838001" style="fill:#0287ff;stroke-width:2.1316;stroke:#46ff4d;text-align:center;text-anchor:middle">USES</tspan></text>
     </g>
-    <g transform="rotate(43.348 313.586 12.674)">
-        <rect width="202.764" height="71.072" x="610.383" y="-93.021" rx="28.702" ry="27.87" style="opacity:1;fill:#02a9d8;fill-opacity:1;stroke:#001528;stroke-width:2.64567;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"/>
-        <text xml:space="preserve" x="713.761" y="-38.037" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:57.1081px;line-height:1;font-family:&quot;Amplitude BRK&quot;;-inkscape-font-specification:&quot;Amplitude BRK, Normal&quot;;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0;word-spacing:-6.56588px;writing-mode:lr-tb;direction:ltr;text-anchor:middle;opacity:1;fill:#010a7d;fill-opacity:1;stroke:#46ff4d;stroke-width:2.13165;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"><tspan x="713.761" y="-38.037" style="text-align:center;text-anchor:middle;fill:#010a7d;fill-opacity:1;stroke:#46ff4d;stroke-width:2.13165;stroke-dasharray:none;stroke-opacity:1">Volume</tspan></text>
+    <g transform="translate(773.24 -41.751)">
+      <rect x="544" y="89" width="267.39" height="109.12" rx="28.702" ry="27.87" style="fill:#8d1101;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.1316;stroke:#ff46f0"/>
+      <text x="431.53601" y="133.81969" style="fill:#ffc5be;font-family:'Amplitude BRK';font-size:49.147px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;letter-spacing:0;line-height:1;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:.95445;stroke:#46ff4d;text-align:center;text-anchor:middle;word-spacing:-5.6506px" xml:space="preserve"><tspan x="0" y="0"><tspan x="553.66779" y="133.81969" style="fill:#ffc5be;stroke-width:.95445;text-align:start;text-anchor:start"/></tspan><tspan x="553.66779" y="133.81969"><tspan x="553.66779" y="133.81969" style="fill:#ffc5be;stroke-width:.95445;text-align:start;text-anchor:start">key:</tspan><tspan x="553.66779" y="182.96669" style="fill:#ffc5be;font-family:'Baskervald ADF Std';font-size:49.147px;font-style:italic;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;stroke-width:.95445;text-align:start;text-anchor:start"/></tspan><tspan x="553.66779" y="182.96669"><tspan x="553.66779" y="182.96669" style="fill:#ffc5be;font-family:'Baskervald ADF Std';font-size:49.147px;font-style:italic;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;stroke-width:.95445;text-align:start;text-anchor:start">         Address</tspan></tspan></text>
     </g>
-    <path d="m490.279 52.259 368.287-1.045" style="opacity:1;fill:#7d4901;fill-opacity:1;stroke:#001528;stroke-width:2.64567;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#g);paint-order:stroke fill markers" transform="rotate(50.621 335.67 -91.806)"/>
-    <g transform="rotate(50.621 332.014 -67.661)">
-        <rect width="240" height="92" x="544" y="89" rx="28.702" ry="27.87" style="opacity:1;fill:#f61b02;fill-opacity:1;stroke:#ff46f0;stroke-width:2.13165;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"/>
-        <text xml:space="preserve" x="663.236" y="121.265" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:49.1473px;line-height:1;font-family:&quot;Amplitude BRK&quot;;-inkscape-font-specification:&quot;Amplitude BRK, Normal&quot;;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0;word-spacing:-5.65061px;writing-mode:lr-tb;direction:ltr;text-anchor:middle;opacity:1;fill:#7d0046;fill-opacity:1;stroke:#46ff4d;stroke-width:.954447;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"><tspan x="663.236" y="121.265" dx="-1.38" dy="12.54" style="fill:#7d0046;fill-opacity:1;stroke-width:.954447">Author:</tspan><tspan x="663.236" y="170.412" style="font-style:italic;font-variant:normal;font-weight:400;font-stretch:normal;font-size:49.1473px;font-family:&quot;Baskervald ADF Std&quot;;-inkscape-font-specification:&quot;Baskervald ADF Std, Italic&quot;;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#7d0046;fill-opacity:1;stroke-width:.954447">Eth Address</tspan></text>
+    <use transform="translate(629.23 -169.74)" xlink:href="#x"/>
+  </g>
+  <g id="i" transform="translate(-133.49 1162)">
+    <g transform="translate(671.97 -18.931)">
+      <rect x="568.76" y="-.42867" width="307.77" height="74.496" rx="17.289" ry="15.315" style="fill:#d702d8;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+      <text x="723.49396" y="56.838001" style="fill:#00213e;font-family:'Amplitude BRK';font-size:57.108px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;letter-spacing:0;line-height:1;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.1316;stroke:#691d1f;text-align:center;text-anchor:middle;word-spacing:-6.5659px" xml:space="preserve"><tspan x="723.49396" y="56.838001" style="fill:#00213e;stroke-width:2.1316;stroke:#691d1f;text-align:center;text-anchor:middle">CONTAINS</tspan></text>
     </g>
-    <g transform="rotate(50.621 247.71 -208.24)">
-        <rect width="202.764" height="71.072" x="610.383" y="-93.021" rx="28.702" ry="27.87" style="opacity:1;fill:#02a9d8;fill-opacity:1;stroke:#001528;stroke-width:2.64567;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"/>
-        <text xml:space="preserve" x="713.761" y="-38.037" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:57.1081px;line-height:1;font-family:&quot;Amplitude BRK&quot;;-inkscape-font-specification:&quot;Amplitude BRK, Normal&quot;;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0;word-spacing:-6.56588px;writing-mode:lr-tb;direction:ltr;text-anchor:middle;opacity:1;fill:#010a7d;fill-opacity:1;stroke:#46ff4d;stroke-width:2.13165;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"><tspan x="713.761" y="-38.037" style="text-align:center;text-anchor:middle;fill:#010a7d;fill-opacity:1;stroke:#46ff4d;stroke-width:2.13165;stroke-dasharray:none;stroke-opacity:1">Volume</tspan></text>
+    <g transform="translate(773.24 -41.751)">
+      <rect x="534.87" y="89" width="290.22" height="70.315" rx="28.702" ry="25.456" style="fill:#8d1101;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.1316;stroke:#ff46f0"/>
+      <text x="431.53601" y="133.81969" style="fill:#ffc5be;font-family:'Amplitude BRK';font-size:49.147px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;letter-spacing:0;line-height:1;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:.95445;stroke:#46ff4d;text-align:center;text-anchor:middle;word-spacing:-5.6506px" xml:space="preserve"><tspan x="431.53601" y="133.81969"/><tspan x="553.66779" y="133.81969"><tspan x="553.66779" y="133.81969" style="fill:#ffc5be;stroke-width:.95445;text-align:start;text-anchor:start">path: <tspan style="font-style:italic">string</tspan></tspan></tspan></text>
     </g>
-    <path d="m180.546 116.508-234.467 284.01" style="fill:#7d4901;fill-opacity:1;stroke:#001528;stroke-width:2.64567;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#h);paint-order:stroke fill markers" transform="translate(67.578 -15.678)"/>
-    <g transform="rotate(-50.952 625.225 775.192)">
-        <rect width="240" height="92" x="544" y="89" rx="28.702" ry="27.87" style="opacity:1;fill:#f61b02;fill-opacity:1;stroke:#ff46f0;stroke-width:2.13165;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"/>
-        <text xml:space="preserve" x="663.236" y="121.265" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:49.1473px;line-height:1;font-family:&quot;Amplitude BRK&quot;;-inkscape-font-specification:&quot;Amplitude BRK, Normal&quot;;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0;word-spacing:-5.65061px;writing-mode:lr-tb;direction:ltr;text-anchor:middle;opacity:1;fill:#7d0046;fill-opacity:1;stroke:#46ff4d;stroke-width:.954447;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"><tspan x="663.236" y="121.265" dx="-1.38" dy="12.54" style="fill:#7d0046;fill-opacity:1;stroke-width:.954447">Author:</tspan><tspan x="663.236" y="170.412" style="font-style:italic;font-variant:normal;font-weight:400;font-stretch:normal;font-size:49.1473px;font-family:&quot;Baskervald ADF Std&quot;;-inkscape-font-specification:&quot;Baskervald ADF Std, Italic&quot;;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#7d0046;fill-opacity:1;stroke-width:.954447">Eth Address</tspan></text>
+  </g>
+  <g transform="translate(1202.7 1321.8)">
+    <g transform="translate(-94.731 -52.501)">
+      <rect x="452.24" y="49.123" width="302.33" height="139.41" rx="28.702" ry="27.87" style="fill:#016f7d"/>
+      <text x="595.01599" y="147.33969" style="fill:#d0ac79;font-family:'Amplitude BRK';font-size:109.76px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;stroke-width:2.6457;stroke:#f3c5ff" xml:space="preserve"><tspan x="595.01599" y="147.33969" style="fill:#d0ac79;font-family:'Amplitude BRK';font-size:109.76px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;stroke-width:2.6457;stroke:#f3c5ff;text-align:center;text-anchor:middle">Spot</tspan></text>
     </g>
-    <g transform="rotate(-49.898 750.832 730.712)">
-        <rect width="202.764" height="71.072" x="610.383" y="-93.021" rx="28.702" ry="27.87" style="opacity:1;fill:#02a9d8;fill-opacity:1;stroke:#001528;stroke-width:2.64567;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"/>
-        <text xml:space="preserve" x="713.761" y="-38.037" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:57.1081px;line-height:1;font-family:&quot;Amplitude BRK&quot;;-inkscape-font-specification:&quot;Amplitude BRK, Normal&quot;;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;letter-spacing:0;word-spacing:-6.56588px;writing-mode:lr-tb;direction:ltr;text-anchor:middle;opacity:1;fill:#010a7d;fill-opacity:1;stroke:#46ff4d;stroke-width:2.13165;stroke-linecap:round;stroke-miterlimit:5.8;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"><tspan x="713.761" y="-38.037" style="text-align:center;text-anchor:middle;fill:#010a7d;fill-opacity:1;stroke:#46ff4d;stroke-width:2.13165;stroke-dasharray:none;stroke-opacity:1">Volume</tspan></text>
+  </g>
+  <g transform="translate(1151.1 316.88)">
+    <g id="au" transform="translate(250.95 1077.3)">
+      <rect x="474.02" y="-.42867" width="499.51" height="74.496" rx="17.289" ry="15.315" style="fill:#02d8ba;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+      <text x="723.49396" y="56.838001" style="fill:#00213e;font-family:'Amplitude BRK';font-size:57.108px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;letter-spacing:0;line-height:1;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.1316;stroke:#691d1f;text-align:center;text-anchor:middle;word-spacing:-6.5659px" xml:space="preserve"><tspan x="723.49396" y="56.838001" style="fill:#00213e;stroke-width:2.1316;stroke:#691d1f;text-align:center;text-anchor:middle">REPRESENTATION</tspan></text>
     </g>
-    <g transform="translate(-235.523 -49.123)">
-        <rect width="399.348" height="122.286" x="394.032" y="49.123" rx="28.702" ry="27.87" style="fill:#7d4901;fill-opacity:1"/>
-        <text xml:space="preserve" x="595.016" y="145.057" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:109.765px;font-family:&quot;Amplitude BRK&quot;;-inkscape-font-specification:&quot;Amplitude BRK, Normal&quot;;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#d07a01;fill-opacity:1;stroke:#86c4ff;stroke-width:2.64567;stroke-dasharray:none;stroke-opacity:1"><tspan x="595.016" y="145.057" style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:109.765px;font-family:&quot;Amplitude BRK&quot;;-inkscape-font-specification:&quot;Amplitude BRK, Normal&quot;;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;fill:#d07a01;fill-opacity:1;stroke:#86c4ff;stroke-width:2.64567;stroke-dasharray:none;stroke-opacity:1">Storage</tspan></text>
+    <g transform="translate(-1256.9 817.28)">
+      <g transform="translate(-97.581 69.296)">
+        <rect x="602.72" y="-.42867" width="244.95" height="74.496" rx="17.289" ry="15.315" style="fill:#015a09;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+        <text x="723.49396" y="56.838001" style="fill:#b8d5f1;font-family:'Amplitude BRK';font-size:57.108px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;letter-spacing:0;line-height:1;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.1316;stroke:#695d5d;text-align:center;text-anchor:middle;word-spacing:-6.5659px" xml:space="preserve"><tspan x="723.49396" y="56.838001" style="fill:#b8d5f1;stroke-width:2.1316;stroke:#695d5d;text-align:center;text-anchor:middle">EQUALS</tspan></text>
+      </g>
     </g>
+    <rect id="an" x="794.65" y="1143.5" width="406.64" height="70.315" rx="28.702" ry="25.456" style="fill:#018d43;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.1316;stroke:#ff46f0"/>
+    <text id="ak" x="686.67505" y="1188.3491" style="fill:#97ebff;font-family:'Amplitude BRK';font-size:49.147px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;letter-spacing:0;line-height:1;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:.95445;stroke:#46ff4d;text-align:center;text-anchor:middle;word-spacing:-5.6506px" xml:space="preserve"><tspan x="686.67505" y="1188.3491"/><tspan x="996.05859" y="1188.3491" style="fill:#97ebff;text-align:center;text-anchor:middle"><tspan x="996.05859" y="1188.3491" style="fill:#97ebff;stroke-width:.95445;text-align:center;text-anchor:middle">mimetype: <tspan style="fill:#97ebff;font-style:italic;text-align:center;text-anchor:middle">string</tspan></tspan></tspan></text>
+    <g transform="translate(19.403 -101.58)">
+      <rect id="am" x="1030.5" y="1507.2" width="252.55" height="70.315" rx="28.702" ry="25.456" style="fill:#54018d;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.1316;stroke:#ff46f0"/>
+      <text id="aj" x="842.61914" y="1551.9755" style="fill:#c9ff97;font-family:'Amplitude BRK';font-size:49.147px;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-weight:400;letter-spacing:0;line-height:1;paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:.95445;stroke:#46ff4d;text-align:center;text-anchor:middle;word-spacing:-5.6506px" xml:space="preserve"><tspan x="1152.0027" y="1551.9755" style="fill:#c9ff97;text-align:center;text-anchor:middle"><tspan x="1152.0027" y="1551.9755" style="fill:#c9ff97;stroke-width:.95445;text-align:center;text-anchor:middle">cid: <tspan style="fill:#c9ff97;font-style:italic;text-align:center;text-anchor:middle">string</tspan></tspan></tspan></text>
+      <use id="o" transform="translate(-1191.6 417.73)" xlink:href="#am"/>
+      <use id="n" transform="translate(-1191.6 417.73)" xlink:href="#aj"/>
+      <use transform="translate(-715.62 -13.696)" xlink:href="#o"/>
+      <use transform="translate(-715.62 -13.696)" xlink:href="#n"/>
+    </g>
+  </g>
+  <g transform="rotate(114.55 28.718 823.44)">
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:none;marker-end:url(#bu);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+    <path transform="translate(67.578,-15.678)" d="m490.28 52.259 368.29-1.045" style="fill:#7d4901;marker-end:url(#bc);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+  </g>
+  <g transform="matrix(.41551 .90959 .90959 -.41551 445.05 1130.2)">
+    <g transform="rotate(15.11 546.98 42.705)">
+      <path transform="translate(67.578,-15.678)" d="m490.28 52.259 475.79 6.3097" style="fill:none;marker-end:url(#bt);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:5.6693;stroke:#ffafce"/>
+      <path transform="translate(67.578,-15.678)" d="m490.28 52.259 477.87 5.3612" style="fill:#7d4901;marker-end:url(#bb);paint-order:stroke fill markers;stroke-linecap:round;stroke-miterlimit:5.8;stroke-width:2.6457;stroke:#001528"/>
+    </g>
+  </g>
+  <g id="ar" transform="translate(914.84 461.83)">
+    <use transform="translate(-1444.9 181.47)" xlink:href="#an"/>
+    <use transform="translate(-1444.9 181.47)" xlink:href="#ak"/>
+    <use transform="translate(-1444.9 181.47)" xlink:href="#au"/>
+  </g>
+  <use transform="translate(343.8 -11.299)" xlink:href="#l"/>
+  <use id="w" transform="translate(-506.83 87.161)" xlink:href="#as"/>
+  <use id="v" transform="translate(-382.54 -114.6)" xlink:href="#l"/>
+  <use id="u" transform="translate(-454.25 -188.32)" xlink:href="#w"/>
+  <use id="t" transform="translate(-664.26 189.46)" xlink:href="#m"/>
+  <use id="s" transform="translate(-352.67 284.19)" xlink:href="#i"/>
+  <use id="k" transform="translate(1207.5 142.67)" xlink:href="#t"/>
+  <use id="j" transform="translate(689.37 68.48)" xlink:href="#s"/>
+  <use id="r" transform="translate(-446.26 103.86)" xlink:href="#k"/>
+  <use id="q" transform="translate(-325.28 68.48)" xlink:href="#j"/>
+  <use transform="translate(-587.79 -535.29)" xlink:href="#r"/>
+  <use transform="translate(-376.64 -513.6)" xlink:href="#q"/>
+  <use transform="translate(424.58 -20.544)" xlink:href="#i"/>
+  <use transform="translate(499.91 73.045)" xlink:href="#ar"/>
+  <use transform="translate(198.59 377.78)" xlink:href="#j"/>
+  <use transform="translate(-21.685 424.58)" xlink:href="#k"/>
+  <use transform="translate(-558.61 1.4142)" xlink:href="#v"/>
+  <use transform="translate(-1105.9 -190.92)" xlink:href="#at"/>
+  <use transform="translate(-545.89 -12.728)" xlink:href="#u"/>
+  <use transform="translate(-1073.4 -189.5)" xlink:href="#m"/>
+  <use transform="translate(-1105.9 -190.92)" xlink:href="#i"/>
 </svg>
