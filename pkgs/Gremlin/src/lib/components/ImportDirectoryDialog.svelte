@@ -1,14 +1,16 @@
 <script lang="ts">
-  import { fileTreeToCIDTree as treeToCIDs, type TreeNode } from '$lib/fileTree2CIDTree'
+  import { searchFor } from '$lib/remotes/searchFor.remote'
+  import { spotId } from '$lib/remotes/spotId.remote'
+  import {
+    fileTreeToCIDTree as treeToCIDs, type TreeNode,
+  } from '$lib/fileTree2CIDTree'
   import settings from '$lib/settings.svelte'
   import { spiderDirHandles } from '$lib/dirHandles2JSTree'
   import { expandLevels, selectAll } from '$lib'
-  import Spinner from '$lib/assets/spinner.svg'
   import { cidTreeToJanus } from '$lib/cidTree2Janus'
-  import FileTree from '$lib/FileTree.svelte'
-  import { searchFor } from '$lib/remotes/searchFor.remote'
-  import { spotId } from '$lib/remotes/spotId.remote'
-  import { type DirNode } from '../types'
+  import FileTree from './FileTree.svelte'
+  import Spinner from '$lib/assets/spinner.svg'
+  import { type DirNode } from '../../types'
 
   let { self = $bindable(), path } = $props()
   let tree = $state<DirNode>()

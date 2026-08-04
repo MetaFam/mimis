@@ -6,33 +6,41 @@ import settings from '$lib/settings.svelte'
 import {
   connect as connectJanusGraph, connectToG, mergePath,
 } from '$lib/server/janusgraph'
+import { representations } from './representations.remote'
+import { spotId } from './spotId.remote'
+import { searchFor } from './searchFor.remote'
 
 const { process } = gremlin
-const { t: T, statics: __ } = process
+const { statics: __ } = process
 
 const NewSpotsSchema = v.object({
-  containerId: v.number(),
+  path: v.array(v.string()),
   files: v.array(v.object({
     cid: v.string(),
     type: v.string(),
     name: v.string(),
     size: v.number(),
-  }))
+  })),
 })
 
 export const addFiles = command(
   NewSpotsSchema,
-  async ({ containerId, files }) => {
+  async ({ path, files }) => {
     const connection = connectJanusGraph()
     const now = new Date().toISOString()
 
-    console.debug({ addFiles: { containerId, files } })
+    console.debug({ addFiles: { path, files } })
 
     try {
+      const { value: containerId } = await spotId({ path })
+
       // ToDo: Switch to AbortController fired on first error
-      const retStaisi = await Promise.allSettled(
+      const retStaisi = await Promise.allSettled<Array<
+        { status: 'fulfilled', value: unknown }
+        | { status: 'rejected', reason: string | Error }
+      >>(
         files.map(async ({ cid, name, type, size }) => {
-          const [_, title, ext] = (
+          const [, title, ext] = (
             name.match(/^(.+)\.([^.]+)$/) ?? [null, name, null]
           )
 
@@ -44,10 +52,9 @@ export const addFiles = command(
             path.push(title)
           }
 
-          const genTraversal = async ({ create = false } = { create: false }) => {
-            // const traversal = await (
-            //   mergeSpotRoot({ traversal: connectToG(connection), create })
-            // )
+          const genTraversal = async (
+            { create = false }: { create: boolean } = { create: false }
+          ) => {
             return (
               mergePath({
                 traversal: connectToG(connection), containerId, path, create,
@@ -74,8 +81,6 @@ export const addFiles = command(
             .by('cid')
             .next()
           )
-
-          console.debug({ existing, type })
 
           if(existing && existing.get('cid') === cid) {
             return existing.get('id')
@@ -108,18 +113,22 @@ export const addFiles = command(
           const { value: fileId } = await (
             traversal.select('file').id().next()
           )
+          searchFor({ path }).refresh()
           return fileId
         })
       )
-      console.debug({ retStaisi })
-      return retStaisi.map(({ status, value, reason }) => {
-        if(status === 'rejected') {
-          const error = (reason as Error)?.message ?? null
-          console.debug({ status, error })
+      const values = retStaisi.map((result) => {
+        if(result.status === 'rejected') {
+          const error = (result.reason as Error)?.message ?? result.reason ?? null
+          console.debug({ status: result.status, error })
           return { error }
         }
-        return value
+        return result.value
       })
+
+      representations({ path }).refresh()
+
+      return values
     } catch(err) {
       console.error({ addFiles: err })
       throw error(500, (err as Error).message)

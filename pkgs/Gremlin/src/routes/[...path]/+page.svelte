@@ -1,32 +1,24 @@
 <script lang="ts">
-  import { isHttpError, error } from '@sveltejs/kit'
-  import type { AppKit } from '@reown/appkit'
-  import { onMount } from 'svelte'
+  import { isHttpError } from '@sveltejs/kit'
   import { page } from '$app/state'
-  import { browser } from '$app/environment'
   import { afterNavigate } from '$app/navigation'
   import { resolve } from '$app/paths'
-  import { searchFor } from '$lib/remotes/searchFor.remote'
-  import { representations, type Representation } from '$lib/remotes/representations.remote'
-  import { upsertSpot } from '$lib/remotes/upsertSpot.remote'
-  import { spotId } from '$lib/remotes/spotId.remote'
-  import ConfigDialog from '$lib/ConfigDialog.svelte'
-  import ErrorDialog from '$lib/ErrorDialog.svelte'
-  import CSSRange from '$lib/CSSRange.svelte'
-  import Breadcrumbs from '$lib/Breadcrumbs.svelte'
+  import ConfigDialog from '$lib/components/ConfigDialog.svelte'
+  import ErrorDialog from '$lib/components/ErrorDialog.svelte'
+  import CSSRange from '$lib/components/CSSRange.svelte'
+  import Breadcrumbs from '$lib/components/Breadcrumbs.svelte'
+  import SIWE from '$lib/components/SIWE.svelte'
   import settings from '$lib/settings.svelte'
-  import ImportDirectoryDialog from '$lib/ImportDirectoryDialog.svelte'
+  import ImportDirectoryDialog, {
+  } from '$lib/components/ImportDirectoryDialog.svelte'
+  import FileBrowser from '$lib/components/FileBrowser.svelte'
   import { janusToDAG } from '$lib/janus2DAG'
   import { graphToCSV } from '$lib/janus2CSV'
   import { addFiles } from '$lib/ipfs'
-  import { toHTTP, logHeader, within, dropTargetGenerator } from '$lib'
-  import { getConnection, signMessage } from '@wagmi/core'
-  import { createSiweMessage } from 'viem/siwe'
-  import Folder from '$lib/assets/folder.svg'
+  import { upsertSpot } from '$lib/remotes/upsertSpot.remote'
+  import { toHTTP, logHeader, within } from '$lib'
   import Eyes from '$lib/assets/infinity eyes.svg'
   import Background from '$lib/assets/background.svg'
-  import { whoami } from '$lib/remotes/whoami.remote'
-  import { logout } from '$lib/remotes/logout.remote'
 
   let errorMsg = $state<string | null>(null)
   let path = $state(
@@ -41,50 +33,9 @@
   let filesInput = $state<FileList>()
   let pathInput = $state<string>('')
   let logs = $state<Array<string>>([])
-  let walletConnected = $state(false)
   let whoAmI = $state<string | null>(null)
-  let signingIn = false
 
   logHeader()
-
-  // If loaded on the server, fails with "`HTMLElement` not found."
-  let appKit: AppKit | null = null
-  let wagmiConfig: ReturnType<
-    typeof import('$lib/appkit').getWagmiAdapter
-  >['wagmiConfig'] | null = null
-  onMount(async () => {
-    const { getAppKit, getWagmiAdapter } = await import('$lib/appkit')
-    appKit = getAppKit()
-    ;({ wagmiConfig } = getWagmiAdapter())
-
-    walletConnected = !!appKit.getIsConnectedState()
-    appKit.subscribeEvents(async () => {
-      walletConnected = !!appKit?.getIsConnectedState()
-      if(!walletConnected) {
-        if(whoAmI) { // was previously authenticated
-          await logout()
-        }
-        whoAmI = null
-      } else if(!whoAmI) {
-        if(!wagmiConfig) throw new Error('WAGMI Config Not Available')
-        const { address: localAddr = null, isConnected } = (
-          getConnection(wagmiConfig)
-        )
-        if(isConnected) {
-          const remoteAddr = await whoami()
-          if(remoteAddr?.toLowerCase() === localAddr?.toLowerCase()) {
-            whoAmI = localAddr ?? null
-          } else {
-            whoAmI = null
-          }
-          console.debug({ whoAmI, remoteAddr, localAddr })
-        }
-      }
-      if(walletConnected && !whoAmI && !signingIn) {
-        await siweSignIn()
-      }
-    })
-  })
 
   $effect(() => {
     const dialogs = document.querySelectorAll('dialog')
@@ -96,63 +47,6 @@
       })
     })
   })
-
-  async function siweSignIn() {
-    if(!wagmiConfig) return
-    const account = getConnection(wagmiConfig)
-    if(settings.debugging) {
-      console.debug({ 'SIWE Attempt': {
-        address: account.address,
-        status: account.status,
-      } })
-    }
-    if(!account.address) return
-
-    signingIn = true
-    try {
-      const nonceRes = await fetch('/api/auth/nonce', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: account.address }),
-      })
-      const { nonce } = await nonceRes.json() as { nonce: string }
-
-      const message = createSiweMessage({
-        domain: window.location.host,
-        address: account.address,
-        statement: 'Sign in to Mïmis.',
-        uri: window.location.origin,
-        version: '1',
-        chainId: account.chainId ?? 1,
-        nonce,
-      })
-
-      const signature = await signMessage(wagmiConfig, { message })
-
-      const verifyRes = await fetch('/api/auth/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, signature }),
-      })
-      if(verifyRes.ok) {
-        whoAmI = account.address
-      } else {
-        const msg = (
-          verifyRes.statusText
-          || 'Unknown error during SIWE verification.'
-        )
-        console.error({ 'SIWE Verification Failed': msg })
-        throw error(500, `Sign-in failed: "${msg}"`)
-      }
-    } catch(err) {
-      console.error({ 'SIWE Sign-In Error': err })
-      throw error(500, `'SIWE Sign-In Error:': "${(err as Error).message}"`)
-    } finally {
-      signingIn = false
-    }
-  }
-
-  const dropTarget = $derived(dropTargetGenerator({ path }))
 
   afterNavigate(async ({ to }) => {
     path = (
@@ -172,10 +66,8 @@
       const form = evt.currentTarget as HTMLFormElement
       const formData = new FormData(form)
       if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
-        const containerId = await spotId({ path })
         const terminal = formData.getAll('path') as Array<string>
-        await upsertSpot({ containerId, path: terminal })
-        await searchFor({ path }).refresh()
+        await upsertSpot({ container: path, subdirectory: terminal })
       }
       addSpotDialog.requestClose()
       form.reset()
@@ -197,7 +89,6 @@
       if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
         const files = formData.getAll('files') as Array<File>
         await addFiles({ files, path })
-        await representations({ path }).refresh()
       }
       addFilesDialog.requestClose()
       form.reset()
@@ -241,17 +132,6 @@
     }
     const result = await janusToDAG({ log, ...opts })
     return { ...result, log }
-  }
-
-  function soleDisplayable(reps?: Array<Representation>) {
-    console.debug({ reps })
-    if(!Array.isArray(reps)) throw new Error('`reps` is not an array.')
-    reps = reps.filter(
-      (rep) => rep.type.startsWith('image/') || rep.type.startsWith('video/')
-    )
-    if(reps.length !== 1) return false
-    const [rep] = reps
-    return rep
   }
 </script>
 
@@ -316,12 +196,7 @@
           }}
         />
       </li>
-      <li>
-        {#if browser && walletConnected}
-          <appkit-button network="eip155"></appkit-button>
-        {:else}
-          <button onclick={() => appKit?.open()}>Connect Wallet</button>
-        {/if}
+      <li><SIWE/>
       </li>
     </ul>
   </menu>
@@ -372,78 +247,7 @@
     <nav id="crumbs">
       <Breadcrumbs {path} address={whoAmI}/>
     </nav>
-    <nav id="details" use:dropTarget>
-      <ul>
-        <!-- {#each await searchFor({ path }) as { name, type, cid } (cid || name)} -->
-        {#await searchFor({ path }) then results}
-          {#each results as { name, type, cid, id } (`${cid}:${name}`)}
-            <li>
-              <a
-                href={resolve(
-                  `${
-                    path.length > 0 ? '/' : ''
-                  }${
-                    path.join('/')
-                  }/${
-                    name
-                  }` as '/'
-                )}
-                title={name}
-              >
-                {#if cid}
-                  <img
-                    src={toHTTP({ cid })}
-                    alt={name}
-                    data-id={id}
-                    class:folder={type === 'spot'}
-                    use:dropTarget
-                    draggable="true"
-                  />
-                {:else if type === 'spot'}
-                  <img
-                    src={Folder}
-                    class="folder"
-                    alt="📁"
-                    data-id={id}
-                    use:dropTarget
-                    draggable="true"
-                  />
-                {:else}
-                  <aside>Unknown Type: {type}</aside>
-                {/if}
-                <span>{name}</span>
-              </a>
-            </li>
-          {/each}
-        {/await}
-      </ul>
-      {#await representations({ path }) then rs}
-        {@const sole = soleDisplayable(rs)}
-        {#if sole}
-          <figure id="media">
-            {#if sole.type.startsWith('image/')}
-              <img src={toHTTP({ cid: sole.cid })} alt={path.at(-1) ?? ''}/>
-            {:else if sole.type.startsWith('video/')}
-              <!-- svelte-ignore a11y_media_has_caption -->
-              <video src={toHTTP({ cid: sole.cid })} controls></video>
-            {:else}
-              <object
-                data={toHTTP({ cid: sole.cid })}
-                type={sole.type}
-                title={path.at(-1) ?? 'file'}>
-                <a
-                  href={toHTTP({ cid: sole.cid })}
-                  rel="external"
-                  target="_blank"
-                >
-                  View {path.at(-1) ?? 'file'}
-                </a>
-              </object>
-            {/if}
-          </figure>
-        {/if}
-      {/await}
-    </nav>
+    <FileBrowser {path}/>
   </section>
   <dialog id="add-spot" bind:this={addSpotDialog}>
     <form onsubmit={addSpot} class="adder">
@@ -636,26 +440,6 @@
     }
   }
 
-  #details {
-    display: flex;
-    background-color: var(--display-color, #2223);
-
-    &, & a {
-      color: contrast-color(var(--display-color, #222));
-    }
-    a:hover {
-      color: color-mix(
-        in oklab,
-        contrast-color(var(--display-color, #222)) 75%,
-        coral 25%
-      );
-    }
-
-    & ul {
-      align-items: start;
-    }
-  }
-
   .general.tools {
     display: flex;
 
@@ -698,67 +482,6 @@
 
   #crumbs {
     border: 2px dashed #999;
-  }
-
-  #details {
-    flex-grow: 1;
-
-    & > ul {
-      display: flex;
-      justify-content: space-around;
-      flex-wrap: wrap;
-      gap: 1em;
-    }
-
-    & a {
-      display: flex;
-      flex-direction: column;
-      text-decoration: none;
-      align-items: center;
-      height: 100%;
-      place-content: space-evenly;
-
-      &:hover {
-        color: lch(
-          from LinkText calc(l + 10) calc(c - 10) calc(h + 180)
-        );
-      }
-    }
-
-    & img {
-      max-width: calc(var(--zoom, 1) * 15em);
-      height: calc(var(--zoom, 1) * 10em);
-
-      &.folder {
-        width: calc(var(--zoom, 1) * 15em);
-      }
-    }
-
-    & #media {
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-
-      & img, & video, & object {
-        width: auto;
-        height: auto;
-        max-width: 100%;
-        max-height: 90dvh;
-        object-fit: contain;
-      }
-    }
-
-    & span {
-      display: inline-block;
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      line-clamp: 3;
-      -webkit-line-clamp: 3;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      text-align: center;
-    }
   }
 
   #logs {

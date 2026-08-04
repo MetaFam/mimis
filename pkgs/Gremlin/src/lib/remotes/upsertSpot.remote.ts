@@ -6,21 +6,23 @@ import {
   connect as connectJanusGraph, connectToG, mergeSpotRoot, mergePath,
 } from '$lib/server/janusgraph'
 import { getSessionAddress } from '$lib/server/auth'
+import { searchFor } from './searchFor.remote'
 
 const { statics: __ } = gremlin.process
 
 const NewSpotSchema = v.object({
-  containerId: v.optional(v.nullable(v.number())),
-  path: v.array(v.pipe(v.string(), v.nonEmpty())),
+  container: v.optional(v.nullable(v.array(v.string()))),
+  subdirectory: v.array(v.string()),
 })
 
 export const upsertSpot = command(
   NewSpotSchema,
-  async ({ containerId, path }) => {
+  async ({ container, subdirectory }) => {
     const connection = connectJanusGraph()
     const now = new Date().toISOString()
 
     try {
+      const containerId = await searchFor({ path: container ?? [] })
       let traversal = await (
         mergeSpotRoot({ traversal: connectToG(connection), now, create: true })
       )
@@ -38,12 +40,14 @@ export const upsertSpot = command(
         traversal = traversal.V(containerId)
       }
 
-      return (
-        (await (
-          (await mergePath({ traversal, path, now, create: true }))
-          .id().next()
-        )).value
-      )
+      const id = (await (
+        (await mergePath({ traversal, path: subdirectory, now, create: true }))
+        .id().next()
+      )).value
+
+      searchFor({ path: subdirectory }).refresh()
+
+      return id
     } catch(err) {
       console.error({ upsertSpot: err })
       if(isHttpError(err)) {

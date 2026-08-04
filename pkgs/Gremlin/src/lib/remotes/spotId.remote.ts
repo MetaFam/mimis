@@ -35,7 +35,7 @@ export const spotId = query(
       if(!address) return null
 
       const g = connectToG(connection)
-      let traversal = await mergeSpotRoot({ traversal: g, address })
+      let traversal = await mergeSpotRoot({ traversal: g, address, create: false })
 
       for (const element of path) {
         if (!allowCycles) {
@@ -61,6 +61,7 @@ export const spotId = query(
       }
 
       const result = await traversal.id().next()
+      console.debug({ spotId: { path, result } })
       return result.value
     } catch(err) {
       console.error({ spotId: err })

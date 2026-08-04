@@ -39,6 +39,7 @@
 
   function labelFor(node: GraphNode) {
     const { properties: p } = node
+    const idRow = `<tr><th>id</th><td>${escapeHTML(node.id)}</td></tr>`
     // File nodes get a full property listing; everything else a one-line summary.
     if(node.label === 'File') {
       const rows = (
@@ -51,13 +52,16 @@
       )
       return (
         `<strong>${node.label}</strong>`
-        + (rows ? `<table>${rows}</table>` : '')
+        + `<table>${idRow}${rows}</table>`
       )
     }
     const named = (
       p.path ?? p.name ?? p.signer ?? p.cid ?? p.createdAt
     )
-    return named != null ? `${node.label}: ${named}` : node.label
+    return (
+      `<strong>${node.label}${named != null ? `: ${named}` : ''}</strong>`
+      + `<table>${idRow}</table>`
+    )
   }
 
   function labelForLink(link: GraphLink) {
@@ -220,6 +224,10 @@
 </main>
 
 <style>
+  :global(:root) {
+    color-scheme: light dark;
+  }
+
   /* force-graph renders node tooltips as HTML in a body-level .graph-tooltip. */
   :global(.graph-tooltip table) {
     border-collapse: collapse;

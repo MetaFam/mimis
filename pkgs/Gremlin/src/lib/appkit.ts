@@ -26,7 +26,11 @@ const initializeAppKit = () => {
       metadata: {
         name: 'SvelteKit Example',
         description: 'SvelteKit Example using Wagmi adapter',
-        url: import.meta.env.DEV ? 'http://localhost:5173' : 'https://mimis.dhappy.org',
+        url: import.meta.env.DEV ? (
+          'http://localhost:5173'
+        ) : (
+          'https://mimis.dhappy.org'
+        ),
         icons: ['https://avatars.githubusercontent.com/u/179229932?s=200&v=4'],
       },
     })

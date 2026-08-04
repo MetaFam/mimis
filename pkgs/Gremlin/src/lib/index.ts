@@ -4,8 +4,9 @@ import type { TreeNode, Walker } from '$lib/fileTree2CIDTree'
 import { moveSpot } from '$lib/remotes/moveSpot.remote'
 import { searchFor } from '$lib/remotes/searchFor.remote'
 import { spotId } from '$lib/remotes/spotId.remote'
-import type { Node, DirNode } from '../types.ts'
-import { addFiles } from './ipfs.ts'
+import { representations } from '$lib/remotes/representations.remote'
+import { addFiles } from '$lib/ipfs'
+import type { Node, DirNode } from '../types'
 
 export function viewable(extension?: string) {
   return (
@@ -220,13 +221,39 @@ export function dropTargetGenerator(
 ) {
   return function dropTarget(node: HTMLElement) {
     const onDragOver = (
-      // required for drop to fire
-      (evt: DragEvent) => evt.preventDefault()
+      (evt: MouseEvent) => {
+        // required for drop to fire
+        (evt as DragEvent).preventDefault()
+        ;(evt.target as HTMLElement)?.classList.add(
+          'dragover', evt.ctrlKey ? 'cp' : 'mv',
+        )
+      }
     )
-    const onDrop = async (evt: DragEvent) => {
+    const onDragLeave = (
+      (evt: MouseEvent) => {
+        (evt.target as HTMLElement)?.classList.remove(
+          'dragover', 'cp', 'mv',
+        )
+      }
+    )
+    const onDrop = async (evt: Event) => {
+      const de = evt as DragEvent
       evt.preventDefault()
-      const [what, to] = [dragging, node].map((n) => n?.dataset.id)
-      if(evt.dataTransfer?.files && evt.dataTransfer.files.length > 0) {
+      evt.stopPropagation()
+      const [what, to] = (
+        [dragging, node].map((n) => n?.dataset.id).map((id) => Number(id))
+      )
+      let from = await spotId({ path })
+      if(what === to) {
+        throw new Error('Can’t add an item to itself.')
+      }
+      if(what === from && path.length > 0) {
+        from = await spotId({ path: path.slice(0, -1) })
+      }
+      console.debug({ drop: { from, what, to, path, len: path.length } })
+      if(from === to) return
+      if(de.dataTransfer?.files && de.dataTransfer.files.length > 0) {
+        console.debug({ adding: { files: de.dataTransfer.files } })
         const dispatch = (
           async (entry: FileSystemEntry | null, path: Array<string>) => {
             if(!entry) return
@@ -267,31 +294,39 @@ export function dropTargetGenerator(
           await readBatch()
         }
 
-        for (const item of evt.dataTransfer.items) {
-          await dispatch(item.webkitGetAsEntry(), path)
+        for (const item of de.dataTransfer!.items) {
+          await dispatch(
+            (item as DataTransferItem).webkitGetAsEntry(), path,
+          )
         }
       } else {
-        await moveSpot({
-          what: Number(what),
-          from: await spotId({ path }),
-          to: Number(to),
-        })
+        console.debug({ moving: { what, from, to, path } })
+        await moveSpot({ what, from, to })
       }
       await searchFor({ path }).refresh()
+      await representations({ path }).refresh()
     }
 
-    const onDragStart = (evt: DragEvent) => {
+    const onDragStart = (evt: Event) => {
       dragging = evt.target as HTMLElement
+      console.debug({ dragging: dragging?.dataset.id })
+    }
+    const onDragEnd = () => {
+      dragging = null
     }
 
     node.addEventListener('dragover', onDragOver)
+    node.addEventListener('dragleave', onDragLeave)
     node.addEventListener('drop', onDrop)
     node.addEventListener('dragstart', onDragStart)
+    node.addEventListener('dragend', onDragEnd)
     return {
       destroy() {
         node.removeEventListener('dragover', onDragOver)
+        node.removeEventListener('dragleave', onDragLeave)
         node.removeEventListener('drop', onDrop)
         node.removeEventListener('dragstart', onDragStart)
+        node.removeEventListener('dragend', onDragEnd)
       },
     }
   }

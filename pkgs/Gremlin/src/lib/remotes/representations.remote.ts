@@ -13,6 +13,7 @@ const { statics: __, t: T } = gremlin.process
 export interface Representation {
   type: string
   cid: string
+  id: number
 }
 
 const SearchSchema = v.object({
@@ -57,9 +58,10 @@ export const representations = query(
         .outE('REPRESENTATION')
         .inV()
         .not(__.inE('PREVIOUS'))
-        .project('type', 'cid')
+        .project('type', 'cid', 'id')
         .by(__.values('type'))
         .by(__.values('cid'))
+        .by(__.id())
         .toList()
       ) as Array<Map<keyof Representation, string>>
       console.debug({ representations: results, path })

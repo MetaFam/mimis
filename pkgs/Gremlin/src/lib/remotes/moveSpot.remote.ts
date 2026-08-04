@@ -21,6 +21,8 @@ export const moveSpot = command(
     const connection = connectJanusGraph()
     const now = new Date().toISOString()
 
+    console.debug({ moveSpotStart: { what, from, to, now } })
+
     try {
       await Promise.all(Object.entries({ what, from, to }).map(
         async ([type, id]) => {
@@ -52,6 +54,8 @@ export const moveSpot = command(
           `No “CONTAINS” edge exists between ${from} & ${what}.`,
         )
       }
+
+      console.debug({ moveSpot: { what, from, to, path } })
 
       await (
         traversal
