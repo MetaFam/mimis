@@ -19,6 +19,7 @@
   import { toHTTP, logHeader, within } from '$lib'
   import Eyes from '$lib/assets/infinity eyes.svg'
   import Background from '$lib/assets/background.svg'
+    import FileView from '$lib/components/FileView.svelte';
 
   let errorMsg = $state<string | null>(null)
   let path = $state(
@@ -196,8 +197,7 @@
           }}
         />
       </li>
-      <li><SIWE/>
-      </li>
+      <li><SIWE/></li>
     </ul>
   </menu>
   <section id="locations">
@@ -243,12 +243,8 @@
       </ul>
     </nav>
   </section>
-  <section id="files">
-    <nav id="crumbs">
-      <Breadcrumbs {path} address={whoAmI}/>
-    </nav>
-    <FileBrowser {path}/>
-  </section>
+  <FileView {path}/>
+  <FileView path={[...path]}/>
   <dialog id="add-spot" bind:this={addSpotDialog}>
     <form onsubmit={addSpot} class="adder">
       <fieldset>
@@ -468,20 +464,6 @@
     field-sizing: content;
     min-width: 15ch;
     padding: 0.25em 0.5em;
-  }
-
-  #files, #details {
-    display: flex;
-    flex-grow: 1;
-  }
-
-  #files {
-    display: flex;
-    flex-direction: column;
-  }
-
-  #crumbs {
-    border: 2px dashed #999;
   }
 
   #logs {

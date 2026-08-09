@@ -27,7 +27,9 @@ export const moveSpot = command(
       await Promise.all(Object.entries({ what, from, to }).map(
         async ([type, id]) => {
           if(!await (
-            (await mergeSpotRoot({ traversal: connectToG(connection), create: false }))
+            (await mergeSpotRoot(
+              { traversal: connectToG(connection), create: false }
+            ))
             .until(__.hasId(id))
             .repeat(__.out())
             .hasNext()
@@ -66,7 +68,7 @@ export const moveSpot = command(
         .iterate()
       )
 
-      const moved = await (
+      await (
         traversal
         .V(to)
         .addE('CONTAINS')

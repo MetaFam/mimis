@@ -1,18 +1,19 @@
 <script lang="ts">
   import { resolve } from '$app/paths'
-  import { spotId } from '$lib/remotes/spotId.remote'
   import {
     representations, type Representation,
   } from '$lib/remotes/representations.remote'
   import { searchFor } from '$lib/remotes/searchFor.remote'
-  import { dropTargetGenerator, toHTTP } from '$lib'
+  import { dropGenerator, toHTTP } from '$lib'
   import Folder from '$lib/assets/folder.svg'
 
   let { path = $bindable([]) }: {
     path: Array<string>
   } = $props()
 
-  let dropTarget = dropTargetGenerator({ path })
+  const { source: dropSource, target: dropTarget } = (
+    dropGenerator({ path })
+  )
 
   function soleDisplayable(reps?: Array<Representation>) {
     if(!Array.isArray(reps)) throw new Error('`reps` is not an array.')
@@ -25,12 +26,12 @@
   }
 </script>
 
-<nav class="details" use:dropTarget data-id={await spotId({ path })}>
+<nav class="details" use:dropTarget use:dropSource>
   <ul>
     <!-- {#each await searchFor({ path }) as { name, type, cid } (cid || name)} -->
     {#await searchFor({ path }) then results}
       {#each results as { name, type, cid, id } (`${cid}:${name}`)}
-        <li use:dropTarget data-id={id}>
+        <li use:dropTarget use:dropSource>
           <a
             href={resolve(
               `${
@@ -47,7 +48,7 @@
               <img
                 src={toHTTP({ cid })}
                 alt={name}
-                data-id={id}
+                use:dropSource
                 class:folder={type === 'spot'}
                 draggable="true"
               />
@@ -56,7 +57,7 @@
                 src={Folder}
                 class="folder"
                 alt="📁"
-                data-id={id}
+                use:dropSource
                 draggable="true"
               />
             {:else}
@@ -79,8 +80,7 @@
             src={toHTTP({ cid })}
             alt={path.at(-1) ?? ''}
             draggable="true"
-            data-id={await spotId({ path })}
-            data-path={path.join('/')}
+            use:dropSource
           />
         {:else if sole.type.startsWith('video/')}
           <!-- svelte-ignore a11y_media_has_caption -->
@@ -110,11 +110,13 @@
     display: flex;
     flex-grow: 1;
     background-color: var(--display-color, #2223);
+    border: 2px dashed #9994;
 
-  & ul {
-    padding: 0;
-    list-style: none;
-  }
+
+    & ul {
+      padding: 0;
+      list-style: none;
+    }
 
     &, & a {
       color: contrast-color(var(--display-color, #222));

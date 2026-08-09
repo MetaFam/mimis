@@ -1,6 +1,6 @@
 <script lang="ts">
   import { resolve } from '$app/paths'
-  import { dropTargetGenerator } from '$lib'
+  import { dropGenerator } from '$lib'
   import root from '$lib/assets/root.svg'
   import { spotId } from '$lib/remotes/spotId.remote'
 
@@ -16,13 +16,13 @@
     {@const toHere = path.slice(0, idx)}
     {@const destinationId = await spotId({ path: toHere })}
     {@const whole = `/${toHere.join('/')}${idx > 0 ? '/' : ''}`}
-    {@const target = dropTargetGenerator({ path })}
+    {@const { source, target } = dropGenerator({ path })}
     {@const elem = `${toHere.at(-1)}`}
     {@const decoded = decodeURI(elem)}
     <li
       class:expanded={selected === idx}
       use:target
-      data-id={destinationId}
+      use:source
     >
       <button onclick={() => {
         selected = selected === idx ? null : idx
@@ -30,7 +30,7 @@
       <a
         href={resolve(whole as '/')}
         title={idx === 0 ? (address ?? '𝙍𝙤𝙤𝙩') : decoded}
-        data-id={destinationId}
+        use:source
       >
         {#if idx === 0}
           <img
@@ -40,7 +40,7 @@
         {:else}
           <span
             draggable="true"
-            data-id={destinationId}
+            use:source
           >{decoded}/</span>
         {/if}
       </a>

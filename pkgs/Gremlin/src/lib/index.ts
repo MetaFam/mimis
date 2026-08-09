@@ -215,11 +215,12 @@ export function within(elem: HTMLElement, evt: MouseEvent) {
   )
 }
 
-let dragging: HTMLElement | null = null
-export function dropTargetGenerator(
+type DropableElement = HTMLElement & { dropSource?: Array<string> }
+
+export function dropGenerator(
   { path }: { path: Array<string> }
 ) {
-  return function dropTarget(node: HTMLElement) {
+  function target(node: HTMLElement) {
     const onDragOver = (
       (evt: MouseEvent) => {
         // required for drop to fire
@@ -236,12 +237,12 @@ export function dropTargetGenerator(
         )
       }
     )
-    const onDrop = async (evt: Event) => {
-      const de = evt as DragEvent
+    const onDrop = async (evt: DragEvent) => {
       evt.preventDefault()
       evt.stopPropagation()
-      const [what, to] = (
-        [dragging, node].map((n) => n?.dataset.id).map((id) => Number(id))
+      const what = Number(dragging?.dataset.id)
+      const to = await spotId(
+        { path: (node as DropableElement).dropSource ?? [] }
       )
       let from = await spotId({ path })
       if(what === to) {
@@ -250,7 +251,7 @@ export function dropTargetGenerator(
       if(what === from && path.length > 0) {
         from = await spotId({ path: path.slice(0, -1) })
       }
-      console.debug({ drop: { from, what, to, path, len: path.length } })
+      console.debug({ drop: { from, what, to, path } })
       if(from === to) return
       if(de.dataTransfer?.files && de.dataTransfer.files.length > 0) {
         console.debug({ adding: { files: de.dataTransfer.files } })
@@ -307,27 +308,36 @@ export function dropTargetGenerator(
       await representations({ path }).refresh()
     }
 
-    const onDragStart = (evt: Event) => {
-      dragging = evt.target as HTMLElement
-      console.debug({ dragging: dragging?.dataset.id })
-    }
-    const onDragEnd = () => {
-      dragging = null
-    }
-
     node.addEventListener('dragover', onDragOver)
     node.addEventListener('dragleave', onDragLeave)
     node.addEventListener('drop', onDrop)
-    node.addEventListener('dragstart', onDragStart)
-    node.addEventListener('dragend', onDragEnd)
     return {
       destroy() {
         node.removeEventListener('dragover', onDragOver)
         node.removeEventListener('dragleave', onDragLeave)
         node.removeEventListener('drop', onDrop)
+      },
+    }
+  }
+
+  function source(node: HTMLElement) {
+    const onDragStart = (evt: Event) => {
+      (evt.target as DropableElement).dropSource = path
+    }
+    const onDragEnd = (evt: Event) => {
+      (evt.target as DropableElement).dropSource = undefined
+    }
+
+    node.addEventListener('dragstart', onDragStart)
+    node.addEventListener('dragend', onDragEnd)
+
+    return {
+      destroy() {
         node.removeEventListener('dragstart', onDragStart)
         node.removeEventListener('dragend', onDragEnd)
       },
     }
   }
+
+  return { target, source }
 }

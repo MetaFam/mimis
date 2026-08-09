@@ -6,10 +6,10 @@ import { getSessionAddress } from "./auth.ts";
 
 const { driver, process } = gremlin
 const {
-  statics: __, merge: Merge, t: T, GraphTraversal,
+  statics: __, merge: Merge, t: T,
 } = process
 
-type GraphTraversalSource = InstanceType<typeof process.GraphTraversalSource>
+export type GraphTraversal = InstanceType<typeof process.GraphTraversal>
 
 const {
   DriverRemoteConnection,
@@ -45,12 +45,12 @@ export function connectToG(
   return (
     process
     .traversal()
-    .withRemote(connection) as unknown as InstanceType<typeof GraphTraversal>
+    .withRemote(connection) as unknown as GraphTraversal
   )
 }
 
 export async function mergeRoot({ traversal, now }: {
-  traversal: GraphTraversalSource
+  traversal: GraphTraversal
   now?: string
 }) {
   return (
@@ -62,7 +62,7 @@ export async function mergeRoot({ traversal, now }: {
 
 export async function mergeSpotRoot(
   { traversal, address, now: createdAt, create }: {
-    traversal: GraphTraversalSource
+    traversal: GraphTraversal
     address?: string | null
     now?: string | null
     create?: boolean
@@ -88,7 +88,7 @@ export async function mergeSpotRoot(
 export async function mergePath({
   traversal, containerId, path, now: createdAt, create,
 }: {
-  traversal: GraphTraversalSource
+  traversal: GraphTraversal
   containerId?: number
   path: Array<string>
   now?: string
