@@ -1,6 +1,6 @@
 import { query } from '$app/server'
 import { error } from '@sveltejs/kit'
-import { clearSessionCookie } from '$lib/server/auth.ts'
+import { clearSessionCookie } from '$lib/server/auth'
 
 export const logout = query(
   async () => {

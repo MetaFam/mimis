@@ -1,16 +1,16 @@
 <script lang="ts">
-    import Breadcrumbs from "./Breadcrumbs.svelte";
-    import FileBrowser from "./FileBrowser.svelte";
+  import Breadcrumbs from './Breadcrumbs.svelte'
+  import FileBrowser from './FileBrowser.svelte'
 
-  const { path = $bindable([]), me } = $props()
+  let { path = $bindable([]), me } = $props()
 </script>
 
 <section id="browse">
   <nav id="crumbs">
-    <Breadcrumbs {path} address={me}/>
+    <Breadcrumbs bind:path address={me}/>
   </nav>
   <section id="files">
-    <FileBrowser {path}/>
+    <FileBrowser bind:path/>
   </section>
 </section>
 

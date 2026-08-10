@@ -205,6 +205,25 @@ export function map2Obj(
   return input ?? null
 }
 
+/**
+ * Turns a click into a local `path` update instead of a full navigation,
+ * while leaving modified clicks (new tab, etc.) to the browser.
+ */
+export function navigateOnClick(
+  { target, set }: {
+    target: Array<string>
+    set: (path: Array<string>) => void
+  }
+) {
+  return (evt: MouseEvent) => {
+    if(evt.defaultPrevented) return
+    if(evt.button !== 0) return
+    if(evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.altKey) return
+    evt.preventDefault()
+    set(target)
+  }
+}
+
 export function within(elem: HTMLElement, evt: MouseEvent) {
   const rect = elem.getBoundingClientRect()
   return (
@@ -215,16 +234,18 @@ export function within(elem: HTMLElement, evt: MouseEvent) {
   )
 }
 
-type DropableElement = HTMLElement & { dropSource?: Array<string> }
+type DroppableElement = HTMLElement & { dropSource?: Array<string> }
+
+let drug: DroppableElement | null = null
+let dropSource: Array<string> | null = null
 
 export function dropGenerator(
-  { path }: { path: Array<string> }
+  { path: currentPath }: { path: () => Array<string> }
 ) {
   function target(node: HTMLElement) {
     const onDragOver = (
       (evt: MouseEvent) => {
-        // required for drop to fire
-        (evt as DragEvent).preventDefault()
+        evt.preventDefault() // required for drop to fire
         ;(evt.target as HTMLElement)?.classList.add(
           'dragover', evt.ctrlKey ? 'cp' : 'mv',
         )
@@ -240,23 +261,21 @@ export function dropGenerator(
     const onDrop = async (evt: DragEvent) => {
       evt.preventDefault()
       evt.stopPropagation()
-      const what = Number(dragging?.dataset.id)
-      const to = await spotId(
-        { path: (node as DropableElement).dropSource ?? [] }
-      )
-      let from = await spotId({ path })
-      if(what === to) {
-        throw new Error('Can’t add an item to itself.')
+      const drop = {
+        source: dropSource ? Array.from(dropSource) : null,
+        destination: currentPath(),
+        files: evt.dataTransfer?.files ?? [],
+        types: evt.dataTransfer?.types ?? [],
+        items: Array.from(evt.dataTransfer?.items ?? []),
       }
-      if(what === from && path.length > 0) {
-        from = await spotId({ path: path.slice(0, -1) })
-      }
-      console.debug({ drop: { from, what, to, path } })
-      if(from === to) return
-      if(de.dataTransfer?.files && de.dataTransfer.files.length > 0) {
-        console.debug({ adding: { files: de.dataTransfer.files } })
+      const to = await spotId({ path: drop.destination })
+      console.debug({ drop: { drop, to } })
+
+      if(drop.items.length > 0) {
+        console.debug({ adding: { files: drop.items } })
         const dispatch = (
           async (entry: FileSystemEntry | null, path: Array<string>) => {
+            console.debug({ dispatch: { entry, path } })
             if(!entry) return
 
             if(entry.isDirectory) {
@@ -295,17 +314,48 @@ export function dropGenerator(
           await readBatch()
         }
 
-        for (const item of de.dataTransfer!.items) {
-          await dispatch(
-            (item as DataTransferItem).webkitGetAsEntry(), path,
+        type NewDataTransferItem = (
+          DataTransferItem & { getAsEntry?: () => FileSystemEntry }
+        )
+
+        for(const item of drop.items as Array<NewDataTransferItem>) {
+          const entry = (
+            item.getAsFileSystemHandle ? (
+              await item.getAsFileSystemHandle()
+            ) : (
+              item.getAsEntry ? (
+                item.getAsEntry()
+              ) : (
+                item.webkitGetAsEntry ? (
+                  item.webkitGetAsEntry()
+                ) : null
+              )
+            )
           )
+          console.debug({ entry })
+          await dispatch(entry, drop.destination)
         }
+        void representations({ path: drop.destination }).refresh()
       } else {
-        console.debug({ moving: { what, from, to, path } })
+        const what = Number(drug?.dataset.id)
+        if(what === to) {
+          throw new Error('Can’t add an item to itself.')
+        }
+        if(!drop.source) {
+          throw new Error('No source path for drop.')
+        }
+        let from = await spotId({ path: drop.source })
+        if(what === from && drop.source.length > 0) {
+          from = await spotId({ path: drop.source.slice(0, -1) })
+        }
+        if(from === to) {
+          throw new Error('Can’t move an item into itself.')
+        }
+        console.debug({ moving: { what, from, to, drop } })
         await moveSpot({ what, from, to })
+        void searchFor({ path: drop.source }).refresh()
       }
-      await searchFor({ path }).refresh()
-      await representations({ path }).refresh()
+      void searchFor({ path: drop.destination }).refresh()
     }
 
     node.addEventListener('dragover', onDragOver)
@@ -322,10 +372,12 @@ export function dropGenerator(
 
   function source(node: HTMLElement) {
     const onDragStart = (evt: Event) => {
-      (evt.target as DropableElement).dropSource = path
+      drug = evt.target as DroppableElement
+      dropSource = currentPath()
     }
-    const onDragEnd = (evt: Event) => {
-      (evt.target as DropableElement).dropSource = undefined
+    const onDragEnd = () => {
+      dropSource = null
+      drug = null
     }
 
     node.addEventListener('dragstart', onDragStart)

@@ -74,7 +74,9 @@ export const searchFor = query(
       if(!address) return null
 
       const g = connectToG(connection)
-      let traversal = await mergeSpotRoot({ traversal: g, address, create: false })
+      let traversal = await mergeSpotRoot(
+        { traversal: g, address, create: false }
+      )
 
       for(const element of path) {
         if(!allowCycles) {

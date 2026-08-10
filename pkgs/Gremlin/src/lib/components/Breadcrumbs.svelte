@@ -1,8 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths'
-  import { dropGenerator } from '$lib'
+  import { dropGenerator, navigateOnClick } from '$lib'
   import root from '$lib/assets/root.svg'
-  import { spotId } from '$lib/remotes/spotId.remote'
 
   let { path = $bindable([]), address = null }: {
     path: string[]
@@ -14,11 +13,9 @@
 <ol>
   {#each { length: path.length + 1 }, idx}
     {@const toHere = path.slice(0, idx)}
-    {@const destinationId = await spotId({ path: toHere })}
     {@const whole = `/${toHere.join('/')}${idx > 0 ? '/' : ''}`}
-    {@const { source, target } = dropGenerator({ path })}
-    {@const elem = `${toHere.at(-1)}`}
-    {@const decoded = decodeURI(elem)}
+    {@const { source, target } = dropGenerator({ path: () => toHere })}
+    {@const decoded = decodeURI(toHere.at(-1) ?? '¡ℍ𝕖𝕣𝕖!')}
     <li
       class:expanded={selected === idx}
       use:target
@@ -30,7 +27,9 @@
       <a
         href={resolve(whole as '/')}
         title={idx === 0 ? (address ?? '𝙍𝙤𝙤𝙩') : decoded}
-        use:source
+        onclick={navigateOnClick(
+          { target: toHere, set: (next) => path = next }
+        )}
       >
         {#if idx === 0}
           <img
@@ -57,7 +56,7 @@
       padding: 0.1em;
     }
 
-    &, li, a {
+    &, li {
       display: flex;
       list-style: none;
       align-items: center;
@@ -80,12 +79,11 @@
   }
 
 
-  :global(.dragover.cp a::after) {
+  :global(.dragover.cp > a::after) {
     content: ' +';
   }
 
-  :global(.dragover.mv a::after) {
+  :global(.dragover.mv > a::after) {
     content: ' ⬇️';
   }
-
 </style>

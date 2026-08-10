@@ -4,7 +4,7 @@
     representations, type Representation,
   } from '$lib/remotes/representations.remote'
   import { searchFor } from '$lib/remotes/searchFor.remote'
-  import { dropGenerator, toHTTP } from '$lib'
+  import { dropGenerator, navigateOnClick, toHTTP } from '$lib'
   import Folder from '$lib/assets/folder.svg'
 
   let { path = $bindable([]) }: {
@@ -12,7 +12,7 @@
   } = $props()
 
   const { source: dropSource, target: dropTarget } = (
-    dropGenerator({ path })
+    dropGenerator({ path: () => path })
   )
 
   function soleDisplayable(reps?: Array<Representation>) {
@@ -26,12 +26,15 @@
   }
 </script>
 
-<nav class="details" use:dropTarget use:dropSource>
+<nav class="details" use:dropTarget>
   <ul>
     <!-- {#each await searchFor({ path }) as { name, type, cid } (cid || name)} -->
     {#await searchFor({ path }) then results}
       {#each results as { name, type, cid, id } (`${cid}:${name}`)}
-        <li use:dropTarget use:dropSource>
+        {@const { target } = dropGenerator(
+          { path: () => [...path, name] }
+        )}
+        <li use:target>
           <a
             href={resolve(
               `${
@@ -43,12 +46,17 @@
               }` as '/'
             )}
             title={name}
+            onclick={navigateOnClick({
+              target: [...path, name],
+              set: (next) => path = next,
+            })}
           >
             {#if cid}
               <img
                 src={toHTTP({ cid })}
                 alt={name}
                 use:dropSource
+                data-id={id}
                 class:folder={type === 'spot'}
                 draggable="true"
               />
@@ -58,6 +66,7 @@
                 class="folder"
                 alt="📁"
                 use:dropSource
+                data-id={id}
                 draggable="true"
               />
             {:else}

@@ -1,17 +1,17 @@
 <script lang="ts">
+  import { untrack } from 'svelte'
   import { isHttpError } from '@sveltejs/kit'
   import { page } from '$app/state'
-  import { afterNavigate } from '$app/navigation'
+  import { afterNavigate, goto } from '$app/navigation'
   import { resolve } from '$app/paths'
   import ConfigDialog from '$lib/components/ConfigDialog.svelte'
   import ErrorDialog from '$lib/components/ErrorDialog.svelte'
   import CSSRange from '$lib/components/CSSRange.svelte'
-  import Breadcrumbs from '$lib/components/Breadcrumbs.svelte'
   import SIWE from '$lib/components/SIWE.svelte'
-  import settings from '$lib/settings.svelte'
   import ImportDirectoryDialog, {
   } from '$lib/components/ImportDirectoryDialog.svelte'
-  import FileBrowser from '$lib/components/FileBrowser.svelte'
+  import FileView from '$lib/components/FileView.svelte'
+  import settings from '$lib/settings.svelte'
   import { janusToDAG } from '$lib/janus2DAG'
   import { graphToCSV } from '$lib/janus2CSV'
   import { addFiles } from '$lib/ipfs'
@@ -19,7 +19,6 @@
   import { toHTTP, logHeader, within } from '$lib'
   import Eyes from '$lib/assets/infinity eyes.svg'
   import Background from '$lib/assets/background.svg'
-    import FileView from '$lib/components/FileView.svelte';
 
   let errorMsg = $state<string | null>(null)
   let path = $state(
@@ -56,6 +55,17 @@
       .map(decodeURI)
       .filter(Boolean)
       ?? []
+    )
+  })
+
+  $effect(() => {
+    const current = (
+      page.url.pathname.split('/').map(decodeURI).filter(Boolean)
+    )
+    if(current.join('/') === path.join('/')) return
+    goto(
+      resolve((path.length > 0 ? `/${path.join('/')}/` : '/') as '/'),
+      { replaceState: false, noScroll: true, keepFocus: true },
     )
   })
 
@@ -197,7 +207,7 @@
           }}
         />
       </li>
-      <li><SIWE/></li>
+      <li><SIWE bind:me={whoAmI}/></li>
     </ul>
   </menu>
   <section id="locations">
@@ -243,8 +253,8 @@
       </ul>
     </nav>
   </section>
-  <FileView {path}/>
-  <FileView path={[...path]}/>
+  <FileView bind:path me={whoAmI}/>
+  <FileView path={untrack(() => [...path])} me={whoAmI}/>
   <dialog id="add-spot" bind:this={addSpotDialog}>
     <form onsubmit={addSpot} class="adder">
       <fieldset>
@@ -363,27 +373,28 @@
     }
   }
 
+  button[disabled], button[aria-disabled="true"] {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
   ul {
     padding: 0;
     list-style: none;
+  }
 
-    #actions & button[aria-disabled="true"] {
-      opacity: 0.5;
-    }
+  #actions button, #actions a.button {
+    display: block;
+    color: inherit;
+    background-color: buttonface;
+    padding: 0.5rem 1rem;
+    border: 1px solid #333;
+    border-radius: 0.5rem;
+    margin-bottom: 0.25rem;
+    margin-inline : auto;
 
-    #locations & li, #actions & button, #actions & a.button {
-      display: block;
-      text-decoration: none;
-      color: inherit;
-      padding: 0.5rem 1rem;
-      border: 1px solid #333;
-      border-radius: 0.5rem;
-      margin-bottom: 0.25rem;
-      margin-inline : auto;
-
-      &:hover {
-        background-color: #9999;
-      }
+    &:hover {
+      background-color: #999C;
     }
   }
 
@@ -410,8 +421,8 @@
     }
 
     & li {
-      display: inline-block;
-      place-items: center;
+      display: flex;
+      justify-content: center;
     }
 
     &.open {
@@ -455,9 +466,18 @@
       }
 
       & input {
-        padding-inline-start: 1.5em;
+        padding-inline: 1.5em 0em;
+        field-sizing: content;
+
+        &::-webkit-search-cancel-button {
+          margin-inline-start: 0.5em;
+        }
       }
     }
+  }
+
+  a {
+    text-decoration: none;
   }
 
   #add-spot input {

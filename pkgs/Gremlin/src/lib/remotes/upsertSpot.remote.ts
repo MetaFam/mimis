@@ -5,8 +5,9 @@ import { command } from '$app/server'
 import {
   connect as connectJanusGraph, connectToG, mergeSpotRoot, mergePath,
 } from '$lib/server/janusgraph'
-import { getSessionAddress } from '$lib/server/auth'
 import { searchFor } from './searchFor.remote'
+import { spotId } from './spotId.remote'
+import { getSessionAddress } from '$lib/server/auth'
 
 const { statics: __ } = gremlin.process
 
@@ -22,7 +23,8 @@ export const upsertSpot = command(
     const now = new Date().toISOString()
 
     try {
-      const containerId = await searchFor({ path: container ?? [] })
+      const containerId = await spotId({ path: container ?? [] })
+      console.debug({ containerId, container, subdirectory })
       let traversal = await (
         mergeSpotRoot({ traversal: connectToG(connection), now, create: true })
       )
@@ -45,7 +47,7 @@ export const upsertSpot = command(
         .id().next()
       )).value
 
-      searchFor({ path: subdirectory }).refresh()
+      void searchFor({ path: subdirectory }).refresh()
 
       return id
     } catch(err) {

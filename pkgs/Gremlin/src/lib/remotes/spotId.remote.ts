@@ -1,32 +1,31 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
-import { query } from '$app/server'
+import { command } from '$app/server'
 import { error } from '@sveltejs/kit'
 import {
   connect as connectJanusGraph, connectToG, mergeSpotRoot,
 } from '$lib/server/janusgraph'
 import { getSessionAddress } from '$lib/server/auth'
+import { upsertSpot } from './upsertSpot.remote'
+import { searchFor } from './searchFor.remote'
 
 const { statics: __ } = gremlin.process
 
 const SearchSchema = v.object({
   path: v.array(v.string()),
-  options: v.optional(v.object({
-    maxMountDepth: v.optional(v.number(), 10),
-    allowCycles: v.optional(v.boolean(), false),
-  })),
+  maxMountDepth: v.optional(v.number(), 10),
+  allowCycles: v.optional(v.boolean(), false),
+  create: v.optional(v.boolean(), false),
 })
 
-export const spotId = query(
+export const spotId = command(
   SearchSchema,
   async ({
     path = [],
-    options = {
-      maxMountDepth: 10,
-      allowCycles: false,
-    },
+    maxMountDepth: maxDepth = 10,
+    allowCycles = false,
+    create = false,
   }) => {
-    const { maxMountDepth: maxDepth, allowCycles } = options
     const connection = connectJanusGraph()
     try {
       path = path.filter(Boolean)
@@ -62,9 +61,13 @@ export const spotId = query(
         )
       }
 
-      const result = await traversal.id().next()
-      console.debug({ spotId: { path, result } })
-      return result.value
+      let { value = null } = await traversal.id().next()
+      if(value == null && create) {
+        value = await upsertSpot({ subdirectory: path })
+      }
+      void searchFor({ path }).refresh()
+      console.debug({ spotId: { path, value } })
+      return value
     } catch(err) {
       console.error({ spotId: err })
       throw error(500, `Spot ID: "${(err as Error).message}"`)

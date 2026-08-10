@@ -32,7 +32,7 @@ export const addFiles = command(
     console.debug({ addFiles: { path, files } })
 
     try {
-      const { value: containerId } = await spotId({ path })
+      const containerId = await spotId({ path, create: true })
 
       // ToDo: Switch to AbortController fired on first error
       const retStaisi = await Promise.allSettled<Array<
@@ -113,7 +113,7 @@ export const addFiles = command(
           const { value: fileId } = await (
             traversal.select('file').id().next()
           )
-          searchFor({ path }).refresh()
+          void searchFor({ path }).refresh()
           return fileId
         })
       )
@@ -126,7 +126,7 @@ export const addFiles = command(
         return result.value
       })
 
-      representations({ path }).refresh()
+      void representations({ path }).refresh()
 
       return values
     } catch(err) {

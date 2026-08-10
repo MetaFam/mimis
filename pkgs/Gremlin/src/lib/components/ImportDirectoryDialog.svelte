@@ -64,7 +64,7 @@
       }
       log?.('Import complete.')
       form.reset()
-      await searchFor({ path }).refresh()
+      void searchFor({ path }).refresh()
     } catch(err) {
       let msg = (err as Error).message
       if(msg === 'Failed to fetch') {
