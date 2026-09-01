@@ -1,14 +1,14 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
-import { command } from '$app/server'
 import { error } from '@sveltejs/kit'
+import { command } from '$app/server'
+import { representations } from './representations.remote'
+import { spotId } from './spotId.remote'
+import { searchFor } from './searchFor.remote'
 import settings from '$lib/settings.svelte'
 import {
   connect as connectJanusGraph, connectToG, mergePath,
 } from '$lib/server/janusgraph'
-import { representations } from './representations.remote'
-import { spotId } from './spotId.remote'
-import { searchFor } from './searchFor.remote'
 
 const { process } = gremlin
 const { statics: __ } = process

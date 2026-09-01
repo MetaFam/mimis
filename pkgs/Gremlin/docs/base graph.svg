@@ -31,8 +31,12 @@
      inkscape:current-layer="g25"
      showgrid="false" />
   <title>Mïmis Base Graph</title>
-  <defs
-     id="defs8">
+  <defs>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+    </style>
     <marker
        id="e"
        markerHeight="2"

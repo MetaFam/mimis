@@ -8,13 +8,6 @@ import { representations } from '$lib/remotes/representations.remote'
 import { addFiles } from '$lib/ipfs'
 import type { Node, DirNode } from '../types'
 
-export function viewable(extension?: string) {
-  return (
-    ['svg', 'png', 'jpg', 'jpeg', 'webp', 'avif', 'mp4']
-    .includes(extension ?? '')
-  )
-}
-
 export function toHTTP({ url, cid }: {
   url?: string | null; cid?: string | CID | null;
 }) {
@@ -53,11 +46,11 @@ export function logHeader(str = 'Mïmis', style: string | null = null) {
   console.log(`%c${str}`, style)
 }
 
-export function throwError(test: unknown) {
+export function throwError<T>(test: T) {
   if(isError(test)) {
     throw new Error(test.error || '¡Unknown Error!')
   }
-  return test
+  return test as Exclude<T, { error: string }>
 }
 
 export function isError(
@@ -234,7 +227,25 @@ export function within(elem: HTMLElement, evt: MouseEvent) {
   )
 }
 
+export const fileOf = (entry: FileSystemFileEntry) => (
+  new Promise<File>((res, rej) => entry.file(res, rej))
+)
+export const entriesOf = (reader: FileSystemDirectoryReader) => (
+  new Promise<Array<FileSystemEntry>>((res, rej) => (
+    reader.readEntries(res, rej)
+  ))
+)
+
 type DroppableElement = HTMLElement & { dropSource?: Array<string> }
+type FileSystemIntrospection = (
+  FileSystemEntry | FileSystemHandle
+)
+type NewDataTransferItem = (
+  DataTransferItem & {
+    getAsEntry?: () => FileSystemEntry
+    getAsFileSystemHandle?: () => Promise<FileSystemHandle>
+  }
+)
 
 let drug: DroppableElement | null = null
 let dropSource: Array<string> | null = null
@@ -242,10 +253,66 @@ let dropSource: Array<string> | null = null
 export function dropGenerator(
   { path: currentPath }: { path: () => Array<string> }
 ) {
+  async function process(
+    entries: Array<FileSystemIntrospection> | null = null,
+    destination: Array<string> = [],
+  ) {
+    const dispatch = (
+      async (
+        entry: FileSystemIntrospection | null,
+        path: Array<string>,
+      ) => {
+        if(!entry) return
+
+        const newPath = [...path, entry.name]
+        // ToDo: Replace with filter functions that certify type
+        if((entry as FileSystemEntry).isDirectory) {
+          await readDirEntry(entry as FileSystemDirectoryEntry, newPath)
+        } else if((entry as FileSystemHandle).kind === 'directory') {
+          await readDirHandle(entry as FileSystemDirectoryHandle, newPath)
+        } else {
+          const file = await fileOf(entry as FileSystemFileEntry)
+          if(settings.debugging) {
+            console.debug({ Adding: { file, path } })
+          }
+          await addFiles({ files: [file], path })
+        }
+      }
+    )
+
+    async function readDirEntry(
+      dir: FileSystemDirectoryEntry,
+      path: Array<string>,
+    ) {
+      const reader = dir.createReader()
+
+      const readBatch = async () => {
+        const entries = await entriesOf(reader)
+        if(entries.length === 0) return
+        for(const entry of entries) {
+          await dispatch(entry, path)
+        }
+        await readBatch()
+      }
+      await readBatch()
+    }
+
+    async function readDirHandle(
+      dir: FileSystemDirectoryHandle,
+      path: Array<string>,
+    ) {
+      console.warn({ 'Unimplmented readDirHandle': { dir, path } })
+    }
+
+    for(const entry of entries ?? []) {
+      await dispatch(entry, destination)
+    }
+  }
+
   function target(node: HTMLElement) {
     const onDragOver = (
       (evt: MouseEvent) => {
-        evt.preventDefault() // required for drop to fire
+        evt.preventDefault() // required for drop to a file
         ;(evt.target as HTMLElement)?.classList.add(
           'dragover', evt.ctrlKey ? 'cp' : 'mv',
         )
@@ -261,83 +328,32 @@ export function dropGenerator(
     const onDrop = async (evt: DragEvent) => {
       evt.preventDefault()
       evt.stopPropagation()
+      const items = (
+        Array.from(evt.dataTransfer?.items ?? []) as Array<NewDataTransferItem>
+      )
       const drop = {
         source: dropSource ? Array.from(dropSource) : null,
         destination: currentPath(),
-        files: evt.dataTransfer?.files ?? [],
-        types: evt.dataTransfer?.types ?? [],
-        items: Array.from(evt.dataTransfer?.items ?? []),
+        entries: await Promise.all(
+          items
+          .filter(({ kind }) => kind === 'file')
+          .map(async (item) => (
+            item.getAsEntry?.()
+            ?? item.webkitGetAsEntry?.()
+            ?? item.getAsFileSystemHandle?.()
+            ?? null
+          ))
+          .filter(Boolean)
+        ) as Array<FileSystemIntrospection>
+,
       }
-      const to = await spotId({ path: drop.destination })
-      console.debug({ drop: { drop, to } })
 
-      if(drop.items.length > 0) {
-        console.debug({ adding: { files: drop.items } })
-        const dispatch = (
-          async (entry: FileSystemEntry | null, path: Array<string>) => {
-            console.debug({ dispatch: { entry, path } })
-            if(!entry) return
-
-            if(entry.isDirectory) {
-              await readDir(
-                entry as FileSystemDirectoryEntry,
-                [...path, entry.name],
-              )
-            } else {
-              await (entry as FileSystemFileEntry).file(
-                async (file) => {
-                  if(settings.debugging) {
-                    console.debug({ Adding: { file, path } })
-                  }
-                  await addFiles({ files: [file], path })
-                }
-              )
-            }
-          }
-        )
-
-        async function readDir(
-          dir: FileSystemDirectoryEntry,
-          path: Array<string>,
-        ) {
-          const reader = dir.createReader()
-
-          const readBatch = async () => await reader.readEntries(
-            async (entries) => {
-              if(entries.length === 0) return
-              for(const entry of entries) {
-                await dispatch(entry, [...path, entry.name])
-              }
-              await readBatch()
-            }
-          )
-          await readBatch()
-        }
-
-        type NewDataTransferItem = (
-          DataTransferItem & { getAsEntry?: () => FileSystemEntry }
-        )
-
-        for(const item of drop.items as Array<NewDataTransferItem>) {
-          const entry = (
-            item.getAsFileSystemHandle ? (
-              await item.getAsFileSystemHandle()
-            ) : (
-              item.getAsEntry ? (
-                item.getAsEntry()
-              ) : (
-                item.webkitGetAsEntry ? (
-                  item.webkitGetAsEntry()
-                ) : null
-              )
-            )
-          )
-          console.debug({ entry })
-          await dispatch(entry, drop.destination)
-        }
-        void representations({ path: drop.destination }).refresh()
+      if(drop.entries.length > 0) {
+        await process(drop.entries, drop.destination)
+        representations({ path: drop.destination }).refresh()
       } else {
         const what = Number(drug?.dataset.id)
+        const to = await spotId({ path: drop.destination })
         if(what === to) {
           throw new Error('Can’t add an item to itself.')
         }
@@ -351,11 +367,12 @@ export function dropGenerator(
         if(from === to) {
           throw new Error('Can’t move an item into itself.')
         }
-        console.debug({ moving: { what, from, to, drop } })
+        console.debug({ moving: { drug, what, from, to, drop } })
         await moveSpot({ what, from, to })
-        void searchFor({ path: drop.source }).refresh()
+        searchFor({ path: drop.source }).refresh()
       }
-      void searchFor({ path: drop.destination }).refresh()
+      console.debug({ refreshing: drop.destination })
+      searchFor({ path: drop.destination }).refresh()
     }
 
     node.addEventListener('dragover', onDragOver)

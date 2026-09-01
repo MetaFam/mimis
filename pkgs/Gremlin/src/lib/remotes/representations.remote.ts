@@ -8,7 +8,7 @@ import {
 import settings from '$lib/settings.svelte'
 import { getSessionAddress } from '$lib/server/auth'
 
-const { statics: __, t: T } = gremlin.process
+const { statics: __ } = gremlin.process
 
 export interface Representation {
   type: string
@@ -26,13 +26,7 @@ const SearchSchema = v.object({
 
 export const representations = query(
   SearchSchema,
-  async ({
-    path = [],
-    options = {
-      maxMountDepth: 10,
-      allowCycles: false,
-    },
-  }) => {
+  async ({ path = [] }) => {
     const connection = connectJanusGraph()
 
     try {
