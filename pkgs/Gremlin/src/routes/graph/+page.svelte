@@ -4,6 +4,7 @@
   import type ForceGraph from 'force-graph'
   import { graphData, type GraphData, type GraphNode, type GraphLink } from '$lib/remotes/graphData.remote'
   import Eyes from '$lib/assets/infinity eyes.svg'
+  import { metricize, toHTTP } from '$lib'
 
   let container = $state<HTMLDivElement>()
   let graph: ForceGraph<GraphNode, GraphLink> | null = null
@@ -15,6 +16,7 @@
     '#e6194b', '#3cb44b', '#4363d8', '#f58231', '#911eb4',
     '#42d4f4', '#f032e6', '#bfef45', '#fabed4', '#469990',
   ]
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity
   const colors = new Map<string, string>()
   function colorFor(label: string) {
     let color = colors.get(label)
@@ -27,7 +29,10 @@
 
   // `valueMap()` wraps each property value in an array, so unwrap singletons.
   function prop(properties: Record<string, unknown>, key: string) {
-    const value = properties[key]
+    let value = properties[key]
+    if(key === 'size') {
+      value = metricize(Number(value))
+    }
     return Array.isArray(value) ? value[0] : value
   }
 
@@ -43,8 +48,8 @@
     // File nodes get a full property listing; everything else a one-line summary.
     if(node.label === 'File') {
       const rows = (
-        Object.entries(p)
-        .map(([key, value]) => (
+        Object.keys(p)
+        .map((key) => (
           `<tr><th>${escapeHTML(key)}</th>`
           + `<td>${escapeHTML(prop(p, key))}</td></tr>`
         ))
@@ -69,14 +74,14 @@
     return path != null ? `${link.label}: ${path}` : link.label
   }
 
-  onMount(async () => {
-    try {
-      data = await graphData({ limit: 1000 })
-    } catch(err) {
-      console.error({ graphPage: err })
-      errorMsg = (err as Error).message
-      return
+  function resize() {
+    if(container && graph) {
+      graph.width(container.clientWidth).height(container.clientHeight)
     }
+  }
+
+  async function draw() {
+    data = await graphData({ limit: 1000 })
 
     const { default: ForceGraph } = await import('force-graph')
     if(!container) throw new Error('Graph container not mounted.')
@@ -89,7 +94,8 @@
       a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0
     )
 
-    graph = new ForceGraph<GraphNode, GraphLink>(container)
+    graph = (
+      new ForceGraph<GraphNode, GraphLink>(container)
       .graphData(data)
       .nodeId('id')
       .nodeLabel((node) => labelFor(node))
@@ -166,17 +172,31 @@
         ctx.fillText(text, cx, cy)
       })
       .onNodeClick((node) => {
-        graph?.centerAt(node.x, node.y, 600).zoom(4, 600)
+        const zoomFactor = 4
+        if(graph?.zoom() === zoomFactor) {
+          // Zoomed in already: a second click opens the node's content.
+          const cid = prop(node.properties, 'cid')
+          if(cid != null) {
+            window.open(
+              toHTTP({ cid: String(cid) }), '_blank', 'noopener,noreferrer',
+            )
+          }
+        } else {
+          graph?.centerAt(node.x, node.y, 600).zoom(zoomFactor, 600)
+        }
       })
+    )
 
-    const resize = () => {
-      if(container && graph) {
-        graph.width(container.clientWidth).height(container.clientHeight)
-      }
-    }
     resize()
+  }
+
+  onMount(() => {
+    draw().catch((err) => {
+      console.error({ graphPage: err })
+      errorMsg = (err as Error).message
+    })
     window.addEventListener('resize', resize)
-    onDestroy(() => window.removeEventListener('resize', resize))
+    return () => window.removeEventListener('resize', resize)
   })
 
   onDestroy(() => {
@@ -195,7 +215,7 @@
 
 <main>
   <header>
-    <a class="home" href={resolve('/')} title="Back to files">🢗 Files</a>
+    <a class="home" href={resolve('/')} title="Back to files">🢗 Files 🢗</a>
     <h1>Force Graph</h1>
     {#if data}
       <span class="stats">

@@ -24,7 +24,7 @@
   let path = $state(
     page.params.path?.split('/').filter(Boolean) ?? []
   )
-  let menued = $state(false)
+  let dualPanes = $state(false)
   let addSpotDialog = $state<HTMLDialogElement>()
   let addFilesDialog = $state<HTMLDialogElement>()
   let importDirectoryDialog = $state<HTMLDialogElement>()
@@ -152,7 +152,7 @@
 </svelte:head>
 
 <main>
-  <menu id="actions" class:open={menued}>
+  <menu id="actions" popover>
     <ul>
       <li><button
         disabled={!whoAmI}
@@ -181,6 +181,20 @@
       >Export to CAR</button></li>
       <li><button onclick={buildDAG}>Export to CBOR-DAG</button></li>
       <li><button onclick={graphToCSV}>Export to CSV</button></li>
+      <li class="search">
+        <form onsubmit={(evt) => { evt.preventDefault() }}>
+          <input type="search"/>
+          <button>🔎</button>
+        </form>
+      </li>
+      <li>
+        <form onsubmit={(evt) => { evt.preventDefault() }}>
+          <label>
+            <input type="checkbox" bind:checked={dualPanes}/>
+            Dual Panes
+          </label>
+        </form>
+      </li>
       <li><a class="button" href={resolve('/graph')}>Force Graph</a></li>
       <li><button
         class="menu-open"
@@ -213,15 +227,12 @@
   <section id="locations">
     <section class="general tools">
       <button
-        onclick={() => menued = !menued}
-        class:actions-open={menued}
-        title="{menued ? 'Close' : 'Open'} Actions"
+        id="hamburger"
+        popovertarget="actions"
+        title="Actions"
       >
         <span>🢗</span><span>☰</span><span>🢗</span>
       </button>
-      <section class="search">
-        <input type="search"/>
-      </section>
     </section>
     <nav class="system locations">
       <ul>
@@ -254,7 +265,9 @@
     </nav>
   </section>
   <FileView bind:path me={whoAmI}/>
-  <FileView path={untrack(() => [...path])} me={whoAmI}/>
+  {#if dualPanes}
+    <FileView path={untrack(() => [...path])} me={whoAmI}/>
+  {/if}
   <dialog id="add-spot" bind:this={addSpotDialog}>
     <form onsubmit={addSpot} class="adder">
       <fieldset>
@@ -358,21 +371,6 @@
     }
   }
 
-  .general.tools > button.actions-open {
-    margin-inline-start: -25%;
-
-    & > span {
-      rotate: 90deg;
-
-      &:nth-of-type(1) {
-        translate: -0.85em 0em;
-      }
-      &:nth-of-type(3) {
-        translate: -0.2em 0em;
-      }
-    }
-  }
-
   button[disabled], button[aria-disabled="true"] {
     opacity: 0.5;
     pointer-events: none;
@@ -387,49 +385,63 @@
     display: block;
     color: inherit;
     background-color: buttonface;
-    padding: 0.5rem 1rem;
-    border: 1px solid #333;
-    border-radius: 0.5rem;
-    margin-bottom: 0.25rem;
+    padding: 0.15rem 0.5rem;
+    border: 2px solid transparent;
+    border-radius: 0.25rem;
+    corner-shape: scoop;
     margin-inline : auto;
 
     &:hover {
       background-color: #999C;
+      border: 2px solid light-dark(#333, #CCC);
     }
   }
 
   main {
     display: flex;
-    height: 100dvh;
+    min-height: 100dvh;
+  }
+
+  #hamburger {
+    anchor-name: --hamburger;
+    transition: rotate 0.5s;
+
+    :global(body:has(#actions:popover-open) &) {
+      & > span {
+        rotate: -90deg;
+
+        &:nth-of-type(1) {
+          translate: 0.5em -0.1em;
+        }
+        &:nth-of-type(3) {
+          translate: 0.5em -0.1em;
+        }
+      }
+    }
+
   }
 
   #actions {
-    width: 0;
-    overflow-x: hidden;
-    transition: width 0.75s cubic-bezier(0.4, 0.0, 0.2, 1);
+    position-anchor: --hamburger;
+    top: anchor(bottom);
+    left: anchor(left);
+    position: absolute;
+    margin: 0;
     interpolate-size: allow-keywords;
     white-space: nowrap;
     padding-inline: 0;
     margin-inline: 0;
-    margin-block-start: 3em;
-    border-inline-end: 2px solid #3330;
+    border-style:dotted;
 
     & ul {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.2rem;
     }
 
     & li {
       display: flex;
       justify-content: center;
-    }
-
-    &.open {
-      width: max-content;
-      padding-inline-end: 0.5rem;
-      margin-inline-end: 0.5rem;
-      border-inline-end: 2px solid #333;
     }
 
     & #bg {
@@ -447,32 +459,29 @@
     }
   }
 
+  .search form {
+    position: relative;
+    display: flex;
+    flex-grow: 1;
+
+    & input {
+      flex-grow: 1;
+      field-sizing: content;
+      max-width: min(calc(100dvw - 1ch - 2em - 2ch), auto);
+
+      &::-webkit-search-cancel-button {
+        margin-inline-start: 0.5em;
+      }
+    }
+  }
+
+
+
   .general.tools {
     display: flex;
 
     & button {
       min-width: 4em;
-    }
-
-    .search {
-      position: relative;
-      display: flex;
-
-      &::before {
-        content: '🔎';
-        position: absolute;
-        top: calc(50% - 1ex);
-        left: 0.25em;
-      }
-
-      & input {
-        padding-inline: 1.5em 0em;
-        field-sizing: content;
-
-        &::-webkit-search-cancel-button {
-          margin-inline-start: 0.5em;
-        }
-      }
     }
   }
 

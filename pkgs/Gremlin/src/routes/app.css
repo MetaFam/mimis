@@ -7,6 +7,10 @@
   font-family: Bastavar, Arial, Helvetica, sans-serif;
 }
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 dialog {
   transition: display, opacity, overlay, translate;
   transition-behavior: allow-discrete;
@@ -66,6 +70,24 @@ form {
     gap: 0.5em;
     margin: 0;
     margin-block-start: 1rem;
+  }
+}
+
+[popover] {
+  display: none;
+  opacity: 0;
+  transition:
+    opacity 500ms,
+    display 500ms allow-discrete,
+    overlay 500ms allow-discrete;
+
+  &:popover-open {
+    display: block;
+    opacity: 1;
+
+    @starting-style {
+      opacity: 0;
+    }
   }
 }
 

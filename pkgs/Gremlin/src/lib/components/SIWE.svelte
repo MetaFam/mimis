@@ -18,7 +18,13 @@
   >['wagmiConfig'] | null = null
   let appKit: AppKit | null = null
 
-  onMount(async () => {
+  onMount(() => {
+    connect().catch((err) => {
+      console.error({ 'AppKit Connection Error': err })
+    })
+  })
+
+  async function connect() {
     const { getAppKit, getWagmiAdapter } = await import('$lib/appkit')
     appKit = getAppKit()
     ;({ wagmiConfig } = getWagmiAdapter())
@@ -53,9 +59,7 @@
         signingIn = false
       }
     })
-
-    return { appKit }
-  })
+  }
 
   async function siweSignIn() {
     if(!wagmiConfig) throw new Error('WAGMI config not available.')

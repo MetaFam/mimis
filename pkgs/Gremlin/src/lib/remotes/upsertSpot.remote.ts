@@ -2,11 +2,11 @@ import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { isHttpError, error } from '@sveltejs/kit'
 import { command } from '$app/server'
+import { searchFor } from './searchFor.remote'
+import { spotId } from './spotId.remote'
 import {
   connect as connectJanusGraph, connectToG, mergeSpotRoot, mergePath,
 } from '$lib/server/janusgraph'
-import { searchFor } from './searchFor.remote'
-import { spotId } from './spotId.remote'
 import { getSessionAddress } from '$lib/server/auth'
 
 const { statics: __ } = gremlin.process

@@ -1,5 +1,6 @@
 import gremlin from 'gremlin'
 import * as v from 'valibot'
+import { v7 as uuidV7 } from 'uuid'
 import { error } from '@sveltejs/kit'
 import { command } from '$app/server'
 import { representations } from './representations.remote'
@@ -94,10 +95,12 @@ export const addFiles = command(
             .property('cid', cid)
             .property('type', type)
             .property('size', size)
+            .property('uuid', uuidV7())
             .as('file')
             .addE('REPRESENTATION')
             .from_('spot')
             .property('createdAt', now)
+            .property('uuid', uuidV7())
           )
 
           if(existing) {
