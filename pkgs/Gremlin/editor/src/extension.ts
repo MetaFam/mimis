@@ -11,7 +11,13 @@ interface StagedEntry {
   mtime: number
 }
 
-/** Keyed by URI path, e.g. `/a/b/README.md`. */
+/**
+ * Keyed by URI path, e.g. `/a/b/README.md`. Kept in `globalState`
+ * rather than `workspaceState` because a folder opened with a
+ * pairing code is, to VS Code, a different workspace than the same
+ * folder opened without one — & these paths are absolute in the
+ * Mïmis tree, so they don’t collide between workspaces anyway.
+ */
 type StagedMap = Record<string, StagedEntry>
 
 interface APIEntry {
@@ -44,15 +50,16 @@ const decoded = (str: string) => {
 }
 
 /**
- * Trades the single-use code the app leaves in the folder URI for
- * a session token, stores it, & reopens the folder without it.
- * The query is the only part of the opening URL a web extension
- * can see, & the credential shouldn’t outlive the handoff.
+ * Trades the single-use code the app leaves in the folder URI’s
+ * query — the only part of the opening URL a web extension can
+ * read — for a session token. Reloading such a URL replays a spent
+ * code, so a failure is only worth reporting when it leaves us
+ * with no token at all.
  */
-async function redeem(context: vscode.ExtensionContext) {
+async function redeem({ quiet }: { quiet: boolean }) {
   const folder = vscode.workspace.workspaceFolders?.[0]?.uri
   const code = folder?.query.match(/(?:^|&)code=(.*)$/)?.[1]
-  if(!folder || code == null) return null
+  if(code == null) return null
 
   try {
     const res = await fetch(`${apiRoot()}/api/auth/token`, {
@@ -68,20 +75,15 @@ async function redeem(context: vscode.ExtensionContext) {
       )
     }
     const { token } = await res.json() as { token: string }
-    await context.secrets.store(TOKEN_KEY, token)
-
-    // The query is part of the workspace’s identity, so dropping
-    // it also settles staged state under the URI it will keep.
-    void vscode.commands.executeCommand(
-      'vscode.openFolder', folder.with({ query: '' }),
-    )
     return token
   } catch(err) {
-    vscode.window.showErrorMessage(
-      `Mïmis pairing failed — ${
-        (err as Error).message
-      }. Run “Mïmis: Set Token” to pair by hand.`
-    )
+    if(!quiet) {
+      vscode.window.showErrorMessage(
+        `Mïmis pairing failed — ${
+          (err as Error).message
+        }. Run “Mïmis: Set Token” to pair by hand.`
+      )
+    }
     return null
   }
 }
@@ -94,6 +96,8 @@ async function redeem(context: vscode.ExtensionContext) {
  */
 export class MimisFS implements vscode.FileSystemProvider {
   token: string | null = null
+  /** Held while pairing, so early reads don’t race it to a 401. */
+  pairing: Promise<unknown> | null = null
   onStagedChange: (() => void) | null = null
 
   private emitter = new vscode.EventEmitter<Array<vscode.FileChangeEvent>>()
@@ -102,11 +106,11 @@ export class MimisFS implements vscode.FileSystemProvider {
   constructor(private context: vscode.ExtensionContext) {}
 
   get staged(): StagedMap {
-    return this.context.workspaceState.get<StagedMap>(STAGED_KEY) ?? {}
+    return this.context.globalState.get<StagedMap>(STAGED_KEY) ?? {}
   }
 
   private async setStaged(map: StagedMap) {
-    await this.context.workspaceState.update(STAGED_KEY, map)
+    await this.context.globalState.update(STAGED_KEY, map)
     this.onStagedChange?.()
   }
 
@@ -119,6 +123,7 @@ export class MimisFS implements vscode.FileSystemProvider {
       headers?: Record<string, string>
     } = {},
   ) {
+    if(this.pairing) await this.pairing
     const segments = (
       path.split('/').filter(Boolean).map(encodeURIComponent)
     )
@@ -335,11 +340,20 @@ export async function activate(context: vscode.ExtensionContext) {
     ),
   )
 
-  fs.token = (
-    (await redeem(context))
-    ?? (await context.secrets.get(TOKEN_KEY))
-    ?? null
-  )
+  // VS Code for the Web keeps `context.secrets` in memory only —
+  // nothing survives a reload without a `secretStorageProvider` —
+  // so the token lives in `globalState` instead.
+  const stored = context.globalState.get<string>(TOKEN_KEY) ?? null
+  fs.token = stored
+  fs.pairing = (async () => {
+    const token = await redeem({ quiet: stored != null })
+    if(token != null) {
+      await context.globalState.update(TOKEN_KEY, token)
+      fs.token = token
+    }
+    fs.pairing = null
+  })()
+  await fs.pairing
 
   const scm = vscode.scm.createSourceControl('mimis', 'Mïmis')
   const group = scm.createResourceGroup('staged', 'Staged Changes')
@@ -409,7 +423,7 @@ export async function activate(context: vscode.ExtensionContext) {
         ignoreFocusOut: true,
       })
       if(!token) return
-      await context.secrets.store(TOKEN_KEY, token)
+      await context.globalState.update(TOKEN_KEY, token)
       fs.token = token
       vscode.window.showInformationMessage('Mïmis: token stored.')
     }),
