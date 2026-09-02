@@ -81,7 +81,8 @@ async function redeem({ quiet }: { quiet: boolean }) {
       vscode.window.showErrorMessage(
         `Mïmis pairing failed — ${
           (err as Error).message
-        }. Run “Mïmis: Set Token” to pair by hand.`
+        }. Open the folder afresh from the app for a new code, or run`
+        + ' “Mïmis: Set Token” to pair by hand.'
       )
     }
     return null

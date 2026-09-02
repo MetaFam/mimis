@@ -11,6 +11,8 @@ docker compose up openvscode
 
 The extension directory is bind-mounted into the container’s extension folder, & the editor serves at http://localhost:33333.
 
+**After every `editor:build`, hard-reload the editor tab** (⇧⌘R / Ctrl+Shift+R). openvscode-server serves extension assets as `Cache-Control: public, max-age=31536000` with no `ETag` or `Last-Modified`, & the URL carries the *server’s* commit rather than the bundle’s hash — so a browser that has loaded `dist/extension.js` once will keep running that copy for a year, however often you rebuild. An ordinary reload is not enough; a browser that has never seen it (a fresh profile, a private window) picks it up on its own.
+
 ## Opening a tree
 
 Right-click (or long-press) an item in the app’s file browser → “Edit … in VS Code”. Signed in, that opens `http://localhost:33333/?folder=mimis:/<path>?code=<code>`, & pairing happens on its own: `code` is a single-use, minute-long credential from `/api/auth/code`, which the extension trades at `POST /api/auth/token` for a session token.
@@ -39,7 +41,9 @@ In the web that means the browser’s IndexedDB for the editor’s origin: per-b
 
 ## “Workspace does not exist”
 
-That dialog means VS Code called `stat` on the workspace folder & the extension couldn’t answer — it is unpaired, or its token has expired. It fires from a startup check that runs before any extension loads, so it reflects authorization, not a missing path. Pair (or re-pair) & reload.
+That dialog means VS Code called `stat` on the workspace folder & the extension couldn’t answer — it is unpaired, or its token has expired. It fires from a startup check (`workbench.contrib.remoteInvalidWorkspaceDetector`, which only runs when there is a remote authority, as there always is here), so it reflects authorization, not a missing path.
+
+Cancel it & pair again from the app — a fresh right-click → “Edit … in VS Code”, since a code already in the URL has been spent. If a rebuild is meant to have fixed it, hard-reload first: see the caching note under *Running*.
 
 ## Settings
 
