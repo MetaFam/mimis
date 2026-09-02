@@ -35,6 +35,57 @@ const uriFor = (path: string) => (
   vscode.Uri.from({ scheme: SCHEME, path })
 )
 
+const decoded = (str: string) => {
+  try {
+    return decodeURIComponent(str)
+  } catch {
+    return str // already decoded on the way through `Uri.parse`
+  }
+}
+
+/**
+ * Trades the single-use code the app leaves in the folder URI for
+ * a session token, stores it, & reopens the folder without it.
+ * The query is the only part of the opening URL a web extension
+ * can see, & the credential shouldn’t outlive the handoff.
+ */
+async function redeem(context: vscode.ExtensionContext) {
+  const folder = vscode.workspace.workspaceFolders?.[0]?.uri
+  const code = folder?.query.match(/(?:^|&)code=(.*)$/)?.[1]
+  if(!folder || code == null) return null
+
+  try {
+    const res = await fetch(`${apiRoot()}/api/auth/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: decoded(code) }),
+    })
+    if(!res.ok) {
+      throw new Error(
+        res.status === 401
+        ? 'the code was expired or already spent'
+        : `HTTP ${res.status}`
+      )
+    }
+    const { token } = await res.json() as { token: string }
+    await context.secrets.store(TOKEN_KEY, token)
+
+    // The query is part of the workspace’s identity, so dropping
+    // it also settles staged state under the URI it will keep.
+    void vscode.commands.executeCommand(
+      'vscode.openFolder', folder.with({ query: '' }),
+    )
+    return token
+  } catch(err) {
+    vscode.window.showErrorMessage(
+      `Mïmis pairing failed — ${
+        (err as Error).message
+      }. Run “Mïmis: Set Token” to pair by hand.`
+    )
+    return null
+  }
+}
+
 /**
  * A Mïmis tree as a filesystem: Spots are directories & their
  * current representations are files. Writes stage in IPFS (the
@@ -277,12 +328,17 @@ export class MimisFS implements vscode.FileSystemProvider {
 
 export async function activate(context: vscode.ExtensionContext) {
   const fs = new MimisFS(context)
-  fs.token = (await context.secrets.get(TOKEN_KEY)) ?? null
 
   context.subscriptions.push(
     vscode.workspace.registerFileSystemProvider(
       SCHEME, fs, { isCaseSensitive: true }
     ),
+  )
+
+  fs.token = (
+    (await redeem(context))
+    ?? (await context.secrets.get(TOKEN_KEY))
+    ?? null
   )
 
   const scm = vscode.scm.createSourceControl('mimis', 'Mïmis')

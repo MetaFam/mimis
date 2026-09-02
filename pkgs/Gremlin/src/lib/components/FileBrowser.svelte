@@ -45,13 +45,35 @@
     pressTimer = null
   }
 
-  function editInVSCode() {
+  /**
+   * The code rides in the folder URI’s query because that is the
+   * only part of the URL a web extension can read; it is spent
+   * for a token & dropped the moment the editor starts.
+   */
+  async function editInVSCode() {
     const editor = settings.editorURL.replace(/\/+$/, '')
-    const folder = `mimis:/${contextPath.join('/')}`
-    window.open(
-      `${editor}/?folder=${encodeURIComponent(folder)}`, '_blank',
-    )
+    // Claimed while the click is still live, so fetching the code
+    // below doesn’t cost us the popup.
+    const opened = window.open('', '_blank')
     contextMenu?.hidePopover()
+
+    let code: string | null = null
+    try {
+      const res = await fetch('/api/auth/code')
+      if(res.ok) ({ code } = await res.json() as { code: string })
+    } catch { /* unpaired: “Mïmis: Set Token” still works */ }
+
+    const folder = (
+      `mimis:/${contextPath.join('/')}${
+        code == null ? '' : `?code=${encodeURIComponent(code)}`
+      }`
+    )
+    const url = `${editor}/?folder=${encodeURIComponent(folder)}`
+    if(opened) {
+      opened.location.href = url
+    } else {
+      window.open(url, '_blank')
+    }
   }
 
   function soleDisplayable(reps?: Array<Representation>) {

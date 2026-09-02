@@ -4,6 +4,7 @@ import { env } from '$env/dynamic/private'
 
 const SESSION_COOKIE = 'mimis_session'
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
+const EXCHANGE_MAX_AGE = 60 // seconds
 
 async function getKey(): Promise<CryptoKey> {
   const secret = env.SESSION_SECRET
@@ -63,6 +64,9 @@ export async function parseToken(token: string) {
 
   try {
     const session = JSON.parse(payload)
+    // Exchange codes are signed with the same key: they buy a
+    // token, but are not one.
+    if(session.kind != null) return null
     if(Date.now() > session.expires) return null
     return session as { address: string, expires: number }
   } catch {
@@ -92,6 +96,54 @@ export async function createSessionToken(address: string) {
     address: address.toLowerCase(), expires,
   })
   return { token: await sign(payload), expires }
+}
+
+/**
+ * Nonces already redeemed. Single use is only enforced for as long
+ * as the process lives; the minute-long expiry is the guarantee
+ * that survives a restart or a second instance.
+ */
+const spent = new Map<string, number>()
+
+function spend({ nonce, expires }: { nonce: string, expires: number }) {
+  const now = Date.now()
+  for(const [used, expiry] of spent) {
+    if(expiry < now) spent.delete(used) // expired: replay barred anyway
+  }
+  if(spent.has(nonce)) return false
+  spent.set(nonce, expires)
+  return true
+}
+
+/**
+ * A short-lived, single-use code, safe to hand off somewhere as
+ * leaky as a URL: all it buys is one session token.
+ */
+export async function createExchangeCode(address: string) {
+  const expires = Date.now() + EXCHANGE_MAX_AGE * 1000
+  const payload = JSON.stringify({
+    kind: 'code',
+    address: address.toLowerCase(),
+    expires,
+    nonce: crypto.randomUUID(),
+  })
+  return { code: await sign(payload), expires }
+}
+
+/** The address the code was issued to, & only once. */
+export async function redeemExchangeCode(code: string) {
+  const payload = await verify(code)
+  if(!payload) return null
+
+  try {
+    const { kind, address, expires, nonce } = JSON.parse(payload)
+    if(kind !== 'code') return null
+    if(Date.now() > expires) return null
+    if(!spend({ nonce, expires })) return null
+    return address as string
+  } catch {
+    return null
+  }
 }
 
 export function clearSessionCookie(): string {

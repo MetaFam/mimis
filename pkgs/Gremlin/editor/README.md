@@ -11,16 +11,22 @@ docker compose up openvscode
 
 The extension directory is bind-mounted into the container’s extension folder, & the editor serves at http://localhost:33333.
 
-## Pairing
+## Opening a tree
+
+Right-click (or long-press) an item in the app’s file browser → “Edit … in VS Code”. Signed in, that opens `http://localhost:33333/?folder=mimis:/<path>?code=<code>`, & pairing happens on its own: `code` is a single-use, minute-long credential from `/api/auth/code`, & the extension trades it at `POST /api/auth/token` for a session token, stores that in VS Code’s secret storage, & reopens the folder at the bare `mimis:/<path>` so the code doesn’t linger in the URL bar or the recents list.
+
+The query is the only part of the opening URL a web extension can read — the extension host is a worker with no `window.location` — which is why the code rides on the folder URI rather than beside it.
+
+If the `folder` parameter doesn’t take (it depends on openvscode-server accepting custom-scheme workspace URIs), run “Mïmis: Open Path” inside the editor instead.
+
+## Pairing by hand
+
+When the automatic handoff doesn’t happen — “Mïmis: Open Path”, or a code that expired before the editor loaded:
 
 1. In the Mïmis app, sign in & choose “Copy Editor Token” from the actions menu.
 2. In VS Code, run “Mïmis: Set Token” & paste.
 
-The token is the same HMAC-signed session the cookie carries, sent as `Authorization: Bearer` to `/api/fs` (CORS-allowed for `PUBLIC_EDITOR_URL`, default `http://localhost:33333`).
-
-## Opening a tree
-
-Right-click (or long-press) an item in the app’s file browser → “Edit … in VS Code”, which opens `http://localhost:33333/?folder=mimis:/<path>`. If the `folder` query parameter doesn’t take (it depends on openvscode-server accepting custom-scheme workspace URIs), run “Mïmis: Open Path” inside the editor instead.
+Either way the token is the same HMAC-signed, week-long session the cookie carries, sent as `Authorization: Bearer` to `/api/fs` (CORS-allowed for `PUBLIC_EDITOR_URL`, default `http://localhost:33333`).
 
 ## Settings
 
