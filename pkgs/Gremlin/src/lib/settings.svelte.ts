@@ -6,6 +6,7 @@ export class Settings {
   static keys = {
     ipfsURLPattern: 'mimis-setting-ipfs-url-pattern',
     ipfsAPI: 'mimis-setting-ipfs-api',
+    ipfsTimeout: 'mimis-setting-ipfs-timeout',
     neo4jURL: 'mimis-setting-neo4j-url',
     neo4jUser: 'mimis-setting-neo4j-user',
     neo4jPass: 'mimis-setting-neo4j-pass',
@@ -22,6 +23,7 @@ export class Settings {
     janusGraphUsername: 'mimis-setting-janusgraph-username',
     janusGraphPassword: 'mimis-setting-janusgraph-password',
     publicJanusGraphURL: 'mimis-setting-public-janusgraph-url',
+    editorURL: 'mimis-setting-editor-url',
   } as const
   static defaults = {
     [Settings.keys.ipfsURLPattern]: (
@@ -29,6 +31,9 @@ export class Settings {
     ),
     [Settings.keys.ipfsAPI]: (
       env.PUBLIC_IPFS_API || 'http://localhost:5001/api/v0'
+    ),
+    [Settings.keys.ipfsTimeout]: (
+      env.PUBLIC_IPFS_TIMEOUT ? Number(env.PUBLIC_IPFS_TIMEOUT) : 45_000
     ),
     [Settings.keys.neo4jURL]: env.PUBLIC_NEO4J_URI || 'bolt://localhost:7687',
     [Settings.keys.neo4jUser]: env.PUBLIC_NEO4J_USER || 'neo4j',
@@ -66,6 +71,9 @@ export class Settings {
     [Settings.keys.publicJanusGraphURL]: (
       env.PUBLIC_PUBLIC_JANUSGRAPH_URL || 'wss://janus.mimis.dhappy.org/gremlin'
     ),
+    [Settings.keys.editorURL]: (
+      env.PUBLIC_EDITOR_URL || 'http://localhost:33333'
+    ),
   }
 
   constructor(args?: Record<keyof typeof Settings.keys, unknown>) {
@@ -97,7 +105,7 @@ export class Settings {
   }
 
   valueOf(key: Omit<keyof typeof Settings.keys, 'limit' | 'debugging' | 'useStoracha' | 'useKubo'>): string
-  valueOf(key: 'limit' | 'detailsZoom'): number
+  valueOf(key: 'limit' | 'detailsZoom' | 'ipfsTimeout'): number
   valueOf(key: 'debugging' | 'useStoracha' | 'useKubo'): boolean
   valueOf(key: keyof typeof Settings.keys) {
     const defaultVal = Settings.defaults[Settings.keys[key]]
@@ -131,6 +139,7 @@ export class Settings {
 
   ipfsAPI = $state(this.valueOf('ipfsAPI'))
   ipfsURLPattern = $state(this.valueOf('ipfsURLPattern'))
+  ipfsTimeout = $state(this.valueOf('ipfsTimeout'))
   neo4jURL = $state(this.valueOf('neo4jURL'))
   neo4jUser = $state(this.valueOf('neo4jUser'))
   neo4jPass = $state(this.valueOf('neo4jPass'))
@@ -147,6 +156,7 @@ export class Settings {
   janusGraphUsername = $state(this.valueOf('janusGraphUsername'))
   janusGraphPassword = $state(this.valueOf('janusGraphPassword'))
   publicJanusGraphURL = $state(this.valueOf('publicJanusGraphURL'))
+  editorURL = $state(this.valueOf('editorURL'))
 
   save(key?: keyof typeof Settings.keys) {
     if(typeof localStorage !== 'undefined') {

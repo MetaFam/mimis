@@ -1,0 +1,89 @@
+{
+	"name": "mimis-fs",
+	"displayName": "Mïmis",
+	"description": "Mounts a Mïmis IPFS ⨯ JanusGraph tree as an editable workspace.",
+	"publisher": "mimis",
+	"version": "0.1.0",
+	"private": true,
+	"engines": {
+		"vscode": "^1.90.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"browser": "./dist/extension.js",
+	"activationEvents": [
+		"onFileSystem:mimis"
+	],
+	"capabilities": {
+		"virtualWorkspaces": true,
+		"untrustedWorkspaces": {
+			"supported": true
+		}
+	},
+	"contributes": {
+		"commands": [
+			{
+				"command": "mimis.open",
+				"title": "Mïmis: Open Path"
+			},
+			{
+				"command": "mimis.setToken",
+				"title": "Mïmis: Set Token"
+			},
+			{
+				"command": "mimis.commit",
+				"title": "Mïmis: Commit Staged Changes",
+				"icon": "$(check)"
+			},
+			{
+				"command": "mimis.discard",
+				"title": "Mïmis: Discard Staged Change",
+				"icon": "$(discard)"
+			}
+		],
+		"menus": {
+			"scm/title": [
+				{
+					"command": "mimis.commit",
+					"when": "scmProvider == mimis",
+					"group": "navigation"
+				}
+			],
+			"scm/resourceState/context": [
+				{
+					"command": "mimis.discard",
+					"when": "scmProvider == mimis"
+				}
+			]
+		},
+		"configuration": {
+			"title": "Mïmis",
+			"properties": {
+				"mimis.apiURL": {
+					"type": "string",
+					"default": "http://localhost:5173",
+					"description": "Base URL of the Mïmis app serving /api/fs."
+				},
+				"mimis.commitMode": {
+					"type": "string",
+					"enum": [
+						"explicit",
+						"onSave"
+					],
+					"default": "explicit",
+					"description": "Whether saves stage until an explicit commit, or update the graph immediately."
+				}
+			}
+		}
+	},
+	"scripts": {
+		"build": "esbuild src/extension.ts --bundle --external:vscode --format=cjs --platform=browser --outfile=dist/extension.js",
+		"check": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@types/vscode": "^1.90.0",
+		"esbuild": "^0.25.0",
+		"typescript": "^5.9.3"
+	}
+}

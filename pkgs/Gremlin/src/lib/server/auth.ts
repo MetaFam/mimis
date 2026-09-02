@@ -57,19 +57,7 @@ export async function createSessionCookie(address: string): Promise<string> {
   )
 }
 
-export async function parseSession(
-  cookieHeader: string | null,
-) {
-  if(!cookieHeader) return null
-
-  const match = (
-    cookieHeader.split(';')
-    .map((c) => c.trim())
-    .find((c) => c.startsWith(`${SESSION_COOKIE}=`))
-  )
-  if(!match) return null
-
-  const token = match.slice(SESSION_COOKIE.length + 1)
+export async function parseToken(token: string) {
   const payload = await verify(token)
   if(!payload) return null
 
@@ -82,6 +70,30 @@ export async function parseSession(
   }
 }
 
+export async function parseSession(
+  cookieHeader: string | null,
+) {
+  if(!cookieHeader) return null
+
+  const match = (
+    cookieHeader.split(';')
+    .map((c) => c.trim())
+    .find((c) => c.startsWith(`${SESSION_COOKIE}=`))
+  )
+  if(!match) return null
+
+  return parseToken(match.slice(SESSION_COOKIE.length + 1))
+}
+
+/** Issue a bare session token, e.g. for `Authorization: Bearer` use. */
+export async function createSessionToken(address: string) {
+  const expires = Date.now() + SESSION_MAX_AGE * 1000
+  const payload = JSON.stringify({
+    address: address.toLowerCase(), expires,
+  })
+  return { token: await sign(payload), expires }
+}
+
 export function clearSessionCookie(): string {
   return (
     `${SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`
@@ -90,11 +102,16 @@ export function clearSessionCookie(): string {
 
 export async function getSessionAddress(opts: { throw?: boolean } = {}) {
   const { request } = getRequestEvent()
+  const bearer = (
+    request.headers.get('authorization')?.match(/^Bearer\s+(.+)$/i)?.[1]
+  )
   const { address } = (
-    (await parseSession(request.headers.get('cookie'))) ?? {}
+    (bearer ? await parseToken(bearer) : null)
+    ?? (await parseSession(request.headers.get('cookie')))
+    ?? {}
   )
   if(opts.throw && !address) {
-    throw error(401, 'Unauthorized: No valid session cookie found.')
+    throw error(401, 'Unauthorized: No valid session cookie or bearer token found.')
   }
   return address ?? null
 }

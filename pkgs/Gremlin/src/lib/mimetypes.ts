@@ -25,6 +25,44 @@ export function mimeFor(extension?: string | null) {
   return mimetypes[extension.toLowerCase()] ?? null
 }
 
+/** First extension listed for each MIME type wins (e.g. jpg over jpeg). */
+const extensions: Record<string, string> = {}
+for(const [ext, type] of Object.entries(mimetypes)) {
+  extensions[type] ??= ext
+}
+
+export function extFor(type?: string | null) {
+  if(type == null) return null
+  return (
+    extensions[type]
+    ?? type.match(/;extension=([^;]+)/)?.[1]
+    ?? null
+  )
+}
+
+/**
+ * Split a filename the way `addFiles` does: `title.ext`, with
+ * extensionless names yielding a `null` extension.
+ */
+export function splitName(name: string) {
+  const [, title, ext] = (
+    name.match(/^(.+)\.([^.]+)$/) ?? [null, name, null]
+  )
+  return { title, ext }
+}
+
+/** The MIME type `addFiles` records for a filename with no declared type. */
+export function typeForName(name: string) {
+  const { ext } = splitName(name)
+  return mimeFor(ext) ?? `application/octet-stream;extension=${ext ?? '𝘶𝘯𝘬𝘯𝘰𝘸𝘯'}`
+}
+
+/** Reassemble a filename from a Spot title & representation MIME type. */
+export function nameFor({ title, type }: { title: string, type: string }) {
+  const ext = extFor(type)
+  return ext == null ? title : `${title}.${ext}`
+}
+
 const displayable = new Set([
   'image/svg+xml',
   'image/png',

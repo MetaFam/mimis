@@ -5,6 +5,7 @@
   } from '$lib/remotes/representations.remote'
   import { searchFor } from '$lib/remotes/searchFor.remote'
   import { dropGenerator, navigateOnClick, toHTTP } from '$lib'
+  import settings from '$lib/settings.svelte'
   import Folder from '$lib/assets/folder.svg'
 
   let { path = $bindable([]) }: {
@@ -14,6 +15,44 @@
   const { source: dropSource, target: dropTarget } = (
     dropGenerator({ path: () => path })
   )
+
+  let contextMenu = $state<HTMLElement>()
+  let contextPath = $state<Array<string>>([])
+  let pressTimer: ReturnType<typeof setTimeout> | null = null
+
+  function openMenu(
+    evt: MouseEvent, { target }: { target: Array<string> }
+  ) {
+    evt.preventDefault()
+    evt.stopPropagation()
+    contextPath = target
+    if(!contextMenu) return
+    contextMenu.style.left = `${evt.clientX}px`
+    contextMenu.style.top = `${evt.clientY}px`
+    contextMenu.showPopover()
+  }
+
+  /** iOS Safari never fires `contextmenu`, so long-press by hand. */
+  function pressStart(
+    evt: PointerEvent, entry: { target: Array<string> }
+  ) {
+    if(evt.pointerType === 'mouse') return
+    pressTimer = setTimeout(() => openMenu(evt, entry), 600)
+  }
+
+  function pressEnd() {
+    if(pressTimer != null) clearTimeout(pressTimer)
+    pressTimer = null
+  }
+
+  function editInVSCode() {
+    const editor = settings.editorURL.replace(/\/+$/, '')
+    const folder = `mimis:/${contextPath.join('/')}`
+    window.open(
+      `${editor}/?folder=${encodeURIComponent(folder)}`, '_blank',
+    )
+    contextMenu?.hidePopover()
+  }
 
   function soleDisplayable(reps?: Array<Representation>) {
     if(!Array.isArray(reps)) throw new Error('`reps` is not an array.')
@@ -26,7 +65,11 @@
   }
 </script>
 
-<nav class="details" use:dropTarget>
+<nav
+  class="details"
+  use:dropTarget
+  oncontextmenu={(evt) => openMenu(evt, { target: path })}
+>
   <ul>
     <!-- {#each await searchFor({ path }) as { name, type, cid } (cid || name)} -->
     {#await searchFor({ path }) then results}
@@ -34,7 +77,16 @@
         {@const { target } = dropGenerator(
           { path: () => [...path, name] }
         )}
-        <li use:target>
+        {@const editable = {
+          target: type === 'spot' ? [...path, name] : path,
+        }}
+        <li
+          use:target
+          oncontextmenu={(evt) => openMenu(evt, editable)}
+          onpointerdown={(evt) => pressStart(evt, editable)}
+          onpointerup={pressEnd}
+          onpointercancel={pressEnd}
+        >
           <a
             href={resolve(
               `${
@@ -112,6 +164,11 @@
       </figure>
     {/if}
   {/await}
+  <menu class="context" popover bind:this={contextMenu}>
+    <li><button onclick={editInVSCode}>
+      Edit /{contextPath.join('/')} in VS Code
+    </button></li>
+  </menu>
 </nav>
 
 <style>
@@ -200,6 +257,31 @@
         max-width: 100%;
         max-height: 90dvh;
         object-fit: contain;
+      }
+    }
+
+    & menu.context {
+      position: fixed;
+      inset: auto;
+      margin: 0;
+      padding: 0.25rem;
+      list-style: none;
+      border: 1px solid #9994;
+      border-radius: 0.25rem;
+
+      & button {
+        font-size: 1em;
+        display: block;
+        width: 100%;
+        text-align: start;
+        background: none;
+        border: none;
+        padding: 0.25rem 0.5rem;
+        cursor: pointer;
+
+        &:hover {
+          background-color: #9996;
+        }
       }
     }
 

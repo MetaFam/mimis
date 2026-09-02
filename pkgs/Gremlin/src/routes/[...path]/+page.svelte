@@ -109,6 +109,19 @@
     }
   }
 
+  async function copyEditorToken() {
+    try {
+      const res = await fetch('/api/auth/token')
+      if(!res.ok) {
+        throw new Error(`Token request failed: HTTP ${res.status}.`)
+      }
+      const { token } = await res.json() as { token: string }
+      await navigator.clipboard.writeText(token)
+    } catch(err) {
+      errorMsg = (err as Error).message
+    }
+  }
+
   async function buildDAG() {
     const { cid, log } = await build(
       { generateCAR: false, insertInIPFS: true }
@@ -174,6 +187,13 @@
         command="show-modal"
       >
         Import Directory
+      </button></li>
+      <li><button
+        disabled={!whoAmI}
+        onclick={copyEditorToken}
+        title="For the editor’s “Mïmis: Set Token” command"
+      >
+        Copy Editor Token
       </button></li>
       <li><button
         aria-disabled={!whoAmI}
