@@ -41,9 +41,9 @@ In the web that means the browser’s IndexedDB for the editor’s origin: per-b
 
 ## “Workspace does not exist”
 
-That dialog means VS Code called `stat` on the workspace folder & the extension couldn’t answer — it is unpaired, or its token has expired. It fires from a startup check (`workbench.contrib.remoteInvalidWorkspaceDetector`, which only runs when there is a remote authority, as there always is here), so it reflects authorization, not a missing path.
+A startup check (`workbench.contrib.remoteInvalidWorkspaceDetector`, which runs whenever there’s a remote authority, as there always is here) `stat`s the workspace folder & reads any refusal as a missing workspace. So that dialog never meant the path was gone — it meant the extension wasn’t authorized to answer for it. Unpaired, `stat` on the workspace root now claims a directory rather than refusing, & the authorization error surfaces in the explorer instead, where it says what to do.
 
-Cancel it & pair again from the app — a fresh right-click → “Edit … in VS Code”, since a code already in the URL has been spent. If a rebuild is meant to have fixed it, hard-reload first: see the caching note under *Running*.
+If you see it anyway, the extension isn’t answering at all: check that the bundle in the browser is current (the caching note under *Running*) & that `mimis.apiURL` points at a running app.
 
 ## Settings
 

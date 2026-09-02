@@ -4,7 +4,9 @@ import { env } from '$env/dynamic/private'
 
 const SESSION_COOKIE = 'mimis_session'
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
-const EXCHANGE_MAX_AGE = 60 // seconds
+// Long enough for a cold editor to boot & get its extension host
+// running; single use, not the clock, is what makes a code safe.
+const EXCHANGE_MAX_AGE = 60 * 5 // seconds
 
 async function getKey(): Promise<CryptoKey> {
   const secret = env.SESSION_SECRET

@@ -41,6 +41,14 @@ const uriFor = (path: string) => (
   vscode.Uri.from({ scheme: SCHEME, path })
 )
 
+const isWorkspaceRoot = (uri: vscode.Uri) => (
+  vscode.workspace.workspaceFolders?.some(
+    ({ uri: folder }) => (
+      folder.scheme === uri.scheme && folder.path === uri.path
+    )
+  ) ?? false
+)
+
 const decoded = (str: string) => {
   try {
     return decodeURIComponent(str)
@@ -186,7 +194,20 @@ export class MimisFS implements vscode.FileSystemProvider {
         mtime: entry.mtime,
       }
     }
-    const res = await this.request(uri.path, { query: { op: 'stat' } })
+    let res
+    try {
+      res = await this.request(uri.path, { query: { op: 'stat' } })
+    } catch(err) {
+      // Unpaired, VS Code’s startup check reads a refusal on the
+      // workspace folder as “Workspace does not exist” & throws up a
+      // modal. Claiming the root is a directory keeps the workspace
+      // open & lets the real complaint surface in the explorer,
+      // where it says what’s actually wrong.
+      if(this.token == null && isWorkspaceRoot(uri)) {
+        return { type: vscode.FileType.Directory, size: 0, ctime: 0, mtime: 0 }
+      }
+      throw err
+    }
     const info = await res.json() as APIEntry
     return {
       type: (
