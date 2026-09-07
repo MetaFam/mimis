@@ -32,6 +32,10 @@
 				"title": "Mïmis: Set Token"
 			},
 			{
+				"command": "mimis.showLog",
+				"title": "Mïmis: Show Log"
+			},
+			{
 				"command": "mimis.commit",
 				"title": "Mïmis: Commit Staged Changes",
 				"icon": "$(check)"
@@ -78,7 +82,7 @@
 		}
 	},
 	"scripts": {
-		"build": "esbuild src/extension.ts --bundle --external:vscode --format=cjs --platform=browser --outfile=dist/extension.js",
+		"build": "esbuild src/extension.ts --bundle --external:vscode --format=cjs --platform=browser --define:__BUILD__=\"'$(date -u +%FT%TZ)'\" --outfile=dist/extension.js",
 		"check": "tsc --noEmit"
 	},
 	"devDependencies": {

@@ -1,5 +1,8 @@
 import * as vscode from 'vscode'
 
+/** Stamped in by the build, to tell a stale bundle from a fresh one. */
+declare const __BUILD__: string
+
 const SCHEME = 'mimis'
 const STAGED_KEY = 'mimis.staged'
 const TOKEN_KEY = 'mimis.token'
@@ -393,6 +396,7 @@ export async function activate(context: vscode.ExtensionContext) {
   // so the token lives in `globalState` instead.
   const stored = context.globalState.get<string>(TOKEN_KEY) ?? null
   fs.token = stored
+  note(`Bundle built ${__BUILD__}.`)
   note(`Stored token: ${stored == null ? 'none' : 'present'}.`)
   fs.pairing = (async () => {
     const token = await redeem({ quiet: stored != null })
@@ -404,11 +408,12 @@ export async function activate(context: vscode.ExtensionContext) {
       token != null ? 'exchange' : stored != null ? 'stored token' : 'nothing'
     }.`)
     if(fs.token == null) {
-      vscode.window.showWarningMessage(
+      const shown = await vscode.window.showWarningMessage(
         'Mïmis is unpaired. Open the folder from the app’s file browser for'
-        + ' a fresh code, or run “Mïmis: Set Token”. See the Mïmis output'
-        + ' channel for why.'
+        + ' a fresh code, or run “Mïmis: Set Token”.',
+        'Show Log',
       )
+      if(shown === 'Show Log') log.show()
     }
     fs.pairing = null
   })()
@@ -486,6 +491,7 @@ export async function activate(context: vscode.ExtensionContext) {
       fs.token = token
       vscode.window.showInformationMessage('Mïmis: token stored.')
     }),
+    vscode.commands.registerCommand('mimis.showLog', () => log.show()),
     vscode.commands.registerCommand('mimis.open', async () => {
       const path = await vscode.window.showInputBox({
         prompt: 'Mïmis path to open, e.g. media/book/by',
