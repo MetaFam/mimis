@@ -1,2 +1,8 @@
-onlyBuiltDependencies:
-  - esbuild
+allowBuilds:
+  '@reown/appkit': true
+  bufferutil: true
+  esbuild: true
+  protobufjs: true
+  sharp: true
+  utf-8-validate: true
+  workerd: true
