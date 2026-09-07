@@ -90,7 +90,11 @@
 <nav
   class="details"
   use:dropTarget
-  oncontextmenu={(evt) => openMenu(evt, { target: path })}
+  oncontextmenu={(evt) => {
+    if(evt.ctrlKey) {
+      openMenu(evt, { target: path })
+    }
+  }}
 >
   <ul>
     <!-- {#each await searchFor({ path }) as { name, type, cid } (cid || name)} -->
@@ -104,7 +108,12 @@
         }}
         <li
           use:target
-          oncontextmenu={(evt) => openMenu(evt, editable)}
+          oncontextmenu={(evt) => {
+            console.debug({ editable, type })
+            if(evt.ctrlKey) {
+              openMenu(evt, editable)
+            }
+          }}
           onpointerdown={(evt) => pressStart(evt, editable)}
           onpointerup={pressEnd}
           onpointercancel={pressEnd}

@@ -41,6 +41,13 @@ const uriFor = (path: string) => (
   vscode.Uri.from({ scheme: SCHEME, path })
 )
 
+/** “Mïmis” in the Output panel: where pairing explains itself. */
+const log = vscode.window.createOutputChannel('Mïmis')
+
+const note = (message: string) => {
+  log.appendLine(`${new Date().toISOString()} ${message}`)
+}
+
 const isWorkspaceRoot = (uri: vscode.Uri) => (
   vscode.workspace.workspaceFolders?.some(
     ({ uri: folder }) => (
@@ -66,15 +73,27 @@ const decoded = (str: string) => {
  */
 async function redeem({ quiet }: { quiet: boolean }) {
   const folder = vscode.workspace.workspaceFolders?.[0]?.uri
+  note(`Folder: ${folder?.toString() ?? '‹none›'}`)
+  note(`API: ${apiRoot()}`)
+
   const code = folder?.query.match(/(?:^|&)code=(.*)$/)?.[1]
-  if(code == null) return null
+  if(code == null) {
+    note(
+      folder?.query
+      ? `No \`code\` in the folder query: ${folder.query}`
+      : 'No query on the folder URI — opened without a pairing code.'
+    )
+    return null
+  }
 
   try {
+    note(`Redeeming a ${code.length}-character code…`)
     const res = await fetch(`${apiRoot()}/api/auth/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code: decoded(code) }),
     })
+    note(`Exchange responded ${res.status}.`)
     if(!res.ok) {
       throw new Error(
         res.status === 401
@@ -85,6 +104,7 @@ async function redeem({ quiet }: { quiet: boolean }) {
     const { token } = await res.json() as { token: string }
     return token
   } catch(err) {
+    note(`Exchange failed: ${(err as Error).message}`)
     if(!quiet) {
       vscode.window.showErrorMessage(
         `Mïmis pairing failed — ${
@@ -198,12 +218,18 @@ export class MimisFS implements vscode.FileSystemProvider {
     try {
       res = await this.request(uri.path, { query: { op: 'stat' } })
     } catch(err) {
-      // Unpaired, VS Code’s startup check reads a refusal on the
-      // workspace folder as “Workspace does not exist” & throws up a
-      // modal. Claiming the root is a directory keeps the workspace
-      // open & lets the real complaint surface in the explorer,
-      // where it says what’s actually wrong.
-      if(this.token == null && isWorkspaceRoot(uri)) {
+      // VS Code’s startup check reads a refusal on the workspace
+      // folder as “Workspace does not exist” & throws up a modal —
+      // misleading whether we hold no token or a stale one. Claiming
+      // the root is a directory keeps the workspace open & lets the
+      // real complaint surface in the explorer, which says what’s
+      // actually wrong.
+      const denied = (
+        err instanceof vscode.FileSystemError
+        && err.code === 'NoPermissions'
+      )
+      if(denied && isWorkspaceRoot(uri)) {
+        note(`Unauthorized for the workspace root ${uri.path}.`)
         return { type: vscode.FileType.Directory, size: 0, ctime: 0, mtime: 0 }
       }
       throw err
@@ -367,11 +393,22 @@ export async function activate(context: vscode.ExtensionContext) {
   // so the token lives in `globalState` instead.
   const stored = context.globalState.get<string>(TOKEN_KEY) ?? null
   fs.token = stored
+  note(`Stored token: ${stored == null ? 'none' : 'present'}.`)
   fs.pairing = (async () => {
     const token = await redeem({ quiet: stored != null })
     if(token != null) {
       await context.globalState.update(TOKEN_KEY, token)
       fs.token = token
+    }
+    note(`Paired by: ${
+      token != null ? 'exchange' : stored != null ? 'stored token' : 'nothing'
+    }.`)
+    if(fs.token == null) {
+      vscode.window.showWarningMessage(
+        'Mïmis is unpaired. Open the folder from the app’s file browser for'
+        + ' a fresh code, or run “Mïmis: Set Token”. See the Mïmis output'
+        + ' channel for why.'
+      )
     }
     fs.pairing = null
   })()
@@ -387,7 +424,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.StatusBarAlignment.Left
   )
   status.command = 'mimis.commit'
-  context.subscriptions.push(scm, status)
+  context.subscriptions.push(scm, status, log)
 
   const refresh = () => {
     const keys = Object.keys(fs.staged)
