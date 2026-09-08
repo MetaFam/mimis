@@ -109,7 +109,6 @@
         <li
           use:target
           oncontextmenu={(evt) => {
-            console.debug({ editable, type })
             if(evt.ctrlKey) {
               openMenu(evt, editable)
             }

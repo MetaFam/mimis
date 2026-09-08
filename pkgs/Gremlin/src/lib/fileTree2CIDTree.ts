@@ -1,6 +1,6 @@
 import type { MaybePromise } from 'viem'
 import { kuboUpload } from '$lib/ipfs'
-import settings from '$lib/settings.svelte.ts'
+import settings from '$lib/settings.svelte'
 import { isDirNode, walk, type WalkOut } from '$lib'
 import type { Node } from '../types.ts'
 

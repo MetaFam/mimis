@@ -21,10 +21,10 @@ export async function kuboUpload(
   { files: Array<File>, progress?: (bytes: number) => void }
 ) {
   const options = {
-    chunker: 'rabin',
+    chunker: 'buzhash',
     cidVersion: 1 as Version,
     progress,
-    timeout: 60_000,
+    timeout: settings.ipfsTimeout,
   }
   const total = (
     files.reduce((acc: number, { size }: File) => acc + size, 0)

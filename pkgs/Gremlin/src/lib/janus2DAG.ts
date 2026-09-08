@@ -169,6 +169,11 @@ export async function signCID(cid: string) {
   const adapter = getWagmiAdapter()
 
   const sig = await signTypedData(adapter.wagmiConfig, {
+    domain: {
+      name: 'Mïmis Graph',
+      version: '1',
+      chainId: 1,
+    },
     types: { Root: [{ name: 'cid', type: 'string' }] },
     primaryType: 'Root',
     message: { cid },
