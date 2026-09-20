@@ -75,20 +75,33 @@ Mounts do allow cycles to exist within the graph, but those will mainly be an is
 
 ### Deletions
 
-When `Spot`s or `Blob`s are removed, they are replaced with a `Tombstone` node in the copy-on-write layer which is then codified in an update.
+When a `Spot` or `REPRESENTATION` is removed, an analogous node is created in the `Write Layer` graph, with at attribute of `deleted` valued with the timestamp when the deletion occurred.
 
 ### Overrides
 
 When a user wants to override a resource in another user's graph, they create a node with that same path under `program → Mïmis → overrides → `*`ETH Address`*.
 
-### Resolution
+### Resource Resolution
 
-So, the resolution process for a resource is:
+So, the resolution process for a resource operates as such:
+
+Matching is done through two mechanisms:
+
+On the one hand, the `Accept` header is used. On the other, the resource path can include an `ext` or `type` parameter specifying a file extension *(which is dereferenced in a table of extensions before use)* or mimetype respectively. The presence of one of these is the same as an `Accept` list with a single entry.
+
+If the walk, at a point where the entire path has been consumed, ends on a `Spot` with a `REPRESENTATION` edge with a `mimetytpe` matching the first element of the `Accept` list, that `Blob` is returned.
+
+If the walk examines all possible viable `Spot`s without finding the first element of the `Accept` list, each subsequent element is attempted until a resource is found or the list is exhausted.
+
+If the list is exhausted, if the graph didn't ever allow the complete traversal of the path, then a HTTP 404 is returned. Otherwise a HTTP 406 is returned.
+
+The walk process is a depth-first traversal of a set of layered and linked graphs like:
 
 1. Check the `Write Layer` to see if it has the requested path by following `CONTAINS` edges. Each time a `Stub` is encountered, retrieve the associated `cid` & replace the `Stub` with a `Spot`.
 2. Do a depth-first search of the `Write Layer` root traversing any `MOUNT` edges in the path in least first `order`ing.
-3. Progress through the `MOUNT` edges in `Layers` and repeat 1 & 2.
-4. If the resource isn't found or if a `Tombstone` is encountered before a value in the search, return 404.
+3. If, at any time, a `Spot` has a `deleted` property then traversal terminates with a HTTP 410.
+4. If a `REPRESENTATION` with a `deleted` attribute is encountered, then that entry is not considered, and the `mimetype` is added to a list to not be considered anywhere further in the walk.
+5. After the `Write Layer`, progress through the `MOUNT` edges in `Layers` and repeat 1 & 2.
 
 When accessing files that are from other users' graphs, search the override graph for that user before searching their `Layers`.
 
