@@ -42,9 +42,9 @@ title: Base Graph
 ---
 graph TD
   US["Users"]
-  US -->|INCLUDES<br/>author: <i>&lt;ETH address&gt;</i>| U[User]
-  U -->|USES<br/>device: <i>&lt;UUID&gt;</i>| D[Device]
-  U -->|CONSTRUCTS| SP[Spot]
+  US -->|INCLUDES<br/>author: <i>0xB0B…</i>| U[User]
+  U -->|USES<br/>device: <i>D01…</i>| D[Device]
+  U -->|CONSTRUCTS| SP[Spot<br/>uuid: <i>001…</i>]
 
   classDef base fill:#e8954a,stroke:#8a4a12,color:#000
   classDef user fill:#d9c2ec,stroke:#6a3d8f,color:#000
@@ -58,6 +58,37 @@ graph TD
 
 ### Adding Info
 
+When information is added to the graph, it first appears as `dot`less nodes. For example, if a user added an image at `/icon/hat/top`, the graph would look like:
+
+```mermaid
+---
+title: Base Graph
+---
+graph TD
+  US["Users"]
+  US -->|INCLUDES<br/>author: <i>0xB0B…</i>| U[User]
+  U -->|USES<br/>device: <i>D01…</i>| D[Device]
+  SP0[Spot<br/>uuid: <i>000…</i>]
+  SP1[Spot<br/>uuid: <i>001…</i>]
+  SP2[Spot<br/>uuid: <i>002…</i>]
+  SP3[Spot<br/>uuid: <i>003…</i>]
+  SP3[Spot<br/>uuid: <i>004…</i>]
+  CT1[Content<br/>uuid: <i>C01…</i>]
+  BL1[Blob<br/>cid: <i>bafy001…</i>]
+  CT1-->|REPRESENTATION<br/>mimetype: <i>image/svg+xml</i>| BL1
+  SP0-->|CONTAINS<br/>path: <i>icon</i>| SP1-->|CONTAINS<br/>path: <i>hat</i>| SP2-->|CONTAINS<br/>path: <i>top</i>| SP3 -->|IS| CT1
+  U -->|CONSTRUCTS| SP0
+  classDef base fill:#e8954a,stroke:#8a4a12,color:#000
+  classDef user fill:#E441E6,stroke:#6a3d8f,color:#000
+  classDef spot fill:#b6e3b6,stroke:#3a7d3a,color:#000
+  classDef device fill:#F1737B,stroke:#3d6e9e,color:#000
+  classDef content fill:#868EFA,stroke:#3d6e9e,color:#000
+  class US base
+  class U user
+  class SP0,SP1,SP2,SP3 spot
+  class D device
+  class CT1 content
+```
 
 
 * **Structure:** `Spot`s, each found by UUID through a table. A `Spot` links to its children either by UUID, following them as they change, or by CID, freezing them at a particular version. Because parents usually link children by UUID, changing a `Spot` never requires changing the `Spot`s above it, & a `Spot` can have any number of parents. Each `Spot` version is stored as a delta against its previous version, & chains of deltas are periodically consolidated into a `Rollup`, so unchanged information isn't copied over & over.
