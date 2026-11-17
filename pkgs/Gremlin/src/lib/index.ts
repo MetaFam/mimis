@@ -2,6 +2,7 @@ import { CID } from 'multiformats'
 import { settings } from '$lib/settings.svelte'
 import type { TreeNode, Walker } from '$lib/fileTree2CIDTree'
 import { moveSpot } from '$lib/remotes/moveSpot.remote'
+import { moveContent } from '$lib/remotes/moveContent.remote'
 import { listing } from '$lib/remotes/listing.remote'
 import { spotId } from '$lib/remotes/spotId.remote'
 import { addFiles } from '$lib/ipfs'
@@ -351,23 +352,32 @@ export function dropGenerator(
         await process(drop.entries, drop.destination)
         listing({ path: drop.destination }).refresh()
       } else {
-        const what = Number(drug?.dataset.id)
-        const to = await spotId({ path: drop.destination })
-        if(what === to) {
-          throw new Error('Can’t add an item to itself.')
+        // Drag sources carry what they are, its id, & the Spot it
+        // hangs from, as `data-kind`, `data-id`, & `data-from`.
+        const { kind, id, from: parent } = drug?.dataset ?? {}
+        const what = Number(id)
+        const from = Number(parent)
+        if(
+          !['content', 'spot'].includes(kind ?? '')
+          || Number.isNaN(what) || Number.isNaN(from)
+        ) {
+          throw new Error(
+            `The dragged ${kind ?? 'item'} doesn’t say what it is`
+            + ' or where it’s from.'
+          )
         }
         if(!drop.source) {
           throw new Error('No source path for drop.')
         }
-        let from = await spotId({ path: drop.source })
-        if(what === from && drop.source.length > 0) {
-          from = await spotId({ path: drop.source.slice(0, -1) })
+        const to = await spotId({ path: drop.destination })
+        if(to == null) {
+          throw new Error(
+            `No Spot at /${drop.destination.join('/')} to drop into.`
+          )
         }
-        if(from === to) {
-          throw new Error('Can’t move an item into itself.')
-        }
-        console.debug({ moving: { drug, what, from, to, drop } })
-        await moveSpot({ what, from, to })
+        console.debug({ moving: { kind, what, from, to, drop } })
+        const move = kind === 'content' ? moveContent : moveSpot
+        await move({ what, from, to })
         listing({ path: drop.source }).refresh()
       }
       console.debug({ refreshing: drop.destination })

@@ -86,11 +86,14 @@
   }
 
   /** A child as a tile: a folder, or the thumbnail of its content. */
-  function tileFor({ name, ids: [id], contents, container }: Child) {
+  function tileFor(
+    { name, ids: [id], parents: [from], contents, container }: Child
+  ) {
     const thumb = soleDisplayable(contents)
     return {
       name,
       id,
+      from,
       cid: thumb ? thumb.cid : null,
       type: (container || contents.length === 0) ? 'spot' : 'image',
       types: contents.map(({ type }) => type),
@@ -109,7 +112,9 @@
 >
   {#await listing({ path }) then { contents, children }}
     <ul>
-      {#each children.map(tileFor) as { name, type, cid, id, types } (name)}
+      {#each children.map(tileFor) as {
+        name, type, cid, id, from, types,
+      } (name)}
         {@const { target } = dropGenerator(
           { path: () => [...path, name] }
         )}
@@ -148,7 +153,9 @@
                 src={toHTTP({ cid })}
                 alt={name}
                 use:dropSource
+                data-kind="spot"
                 data-id={id}
+                data-from={from}
                 class:folder={type === 'spot'}
                 draggable="true"
               />
@@ -158,7 +165,9 @@
                 class="folder"
                 alt="📁"
                 use:dropSource
+                data-kind="spot"
                 data-id={id}
+                data-from={from}
                 draggable="true"
               />
             {:else}
@@ -172,7 +181,7 @@
     {@const sole = soleDisplayable(contents)}
     {@const title = path.at(-1) ?? 'file'}
     {#if sole}
-      {@const { cid, type } = sole}
+      {@const { cid, type, id, spot } = sole}
       <figure id="media">
         {#if sole.type.startsWith('image/')}
           <img
@@ -180,6 +189,9 @@
             alt={path.at(-1) ?? ''}
             draggable="true"
             use:dropSource
+            data-kind="content"
+            data-id={id}
+            data-from={spot}
           />
         {:else if sole.type.startsWith('video/')}
           <!-- svelte-ignore a11y_media_has_caption -->

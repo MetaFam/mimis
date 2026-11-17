@@ -18,6 +18,8 @@ export interface Child {
   name: string
   /** Every Spot with this name, highest precedence first. */
   ids: Array<Id>
+  /** The layer whose `CONTAINS` edge leads to each of `ids`. */
+  parents: Array<Id>
   /** Its own `Content`s, merged across same-named Spots. */
   contents: Array<Content>
   /** Has `CONTAINS` or `MOUNT` edges, so it can be browsed into. */
@@ -151,7 +153,7 @@ interface Layer {
   id: Id
   key: Key
   contents: Array<Row<Content>>
-  children: Array<Row<Omit<Child, 'ids'> & { id: Id }>>
+  children: Array<Row<Omit<Child, 'ids' | 'parents'> & { id: Id }>>
 }
 
 const fromRow = <T>(row: Row<T>) => (
@@ -197,11 +199,14 @@ export function assembleListing(rows: Array<Row<Layer>>): Listing {
       const { name, id, container, contents: own } = fromRow(row)
       let child = children.get(name)
       if(!child) {
-        child = { name, ids: [], contents: [], container: false }
+        child = {
+          name, ids: [], parents: [], contents: [], container: false,
+        }
         children.set(name, child)
       }
       if(child.ids.includes(id)) continue
       child.ids.push(id)
+      child.parents.push(layer.id)
       child.container ||= Number(container) > 0
       merge({
         into: child.contents,

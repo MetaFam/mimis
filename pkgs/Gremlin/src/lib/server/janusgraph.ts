@@ -147,6 +147,37 @@ export async function writeLayer() {
   )
 }
 
+/**
+ * Throws unless every named Spot is in the session user’s own tree,
+ * as opposed to reached through a mount of someone else’s.
+ */
+export async function assertOwned(
+  { ids, address }:
+  { ids: Record<string, unknown>, address?: string | null }
+) {
+  address ??= await getSessionAddress({ throw: true })
+  await Promise.all(Object.entries(ids).map(async ([role, id]) => {
+    if(!['number', 'string'].includes(typeof id)) {
+      throw error(400, `The ${role} id, “${id}”, isn’t a vertex id.`)
+    }
+    const owned = await (
+      g().V(id)
+      .hasLabel('Spot')
+      .repeat(__.in_('CONTAINS', 'WRITES').simplePath())
+      .until(__.hasLabel('User'))
+      .has('address', address)
+      .limit(1)
+      .hasNext()
+    )
+    if(!owned) {
+      throw error(
+        403,
+        `The ${role}, Spot #${id}, doesn’t belong to the user ${address}.`
+      )
+    }
+  }))
+}
+
 export async function mergePath({
   containerId, path, now: createdAt, traversal,
 }: {
@@ -162,21 +193,7 @@ export async function mergePath({
   console.debug({ Path: { address, containerId } })
 
   if(containerId != null) {
-    const owned = await (
-      g().V(containerId)
-      .repeat(__.in_('CONTAINS', 'WRITES').simplePath())
-      .until(__.hasLabel('User'))
-      .has('address', address)
-      .limit(1)
-      .hasNext()
-    )
-    if(!owned) {
-      throw error(
-        400,
-        `Container id, "${containerId}",`
-        + ` does not belong to the user ${address}.`
-      )
-    }
+    await assertOwned({ ids: { container: containerId }, address })
     traversal = g().V(containerId)
   }
 
