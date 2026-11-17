@@ -5,11 +5,20 @@
 
 :root {
   font-family: Bastavar, Arial, Helvetica, sans-serif;
+  interpolate-size: allow-keywords;
 }
 
 *, *::before, *::after {
   box-sizing: border-box;
 }
+
+button.add {
+  background-color: light-dark(#5aff91, #377f42);
+}
+button.cancel {
+  background-color: light-dark(#ff5a5a, #7f3737);
+}
+
 
 dialog {
   transition: display, opacity, overlay, translate;

@@ -1,6 +1,5 @@
 <script lang="ts">
   import { untrack } from 'svelte'
-  import { isHttpError } from '@sveltejs/kit'
   import { page } from '$app/state'
   import { afterNavigate, goto } from '$app/navigation'
   import { resolve } from '$app/paths'
@@ -8,17 +7,17 @@
   import ErrorDialog from '$lib/components/ErrorDialog.svelte'
   import CSSRange from '$lib/components/CSSRange.svelte'
   import SIWE from '$lib/components/SIWE.svelte'
+  import NewSpot from '$lib/components/NewSpot.svelte'
   import ImportDirectoryDialog, {
   } from '$lib/components/ImportDirectoryDialog.svelte'
   import FileView from '$lib/components/FileView.svelte'
   import settings from '$lib/settings.svelte'
   import { janusToDAG } from '$lib/janus2DAG'
   import { graphToCSV } from '$lib/janus2CSV'
-  import { addFiles } from '$lib/ipfs'
-  import { upsertSpot } from '$lib/remotes/upsertSpot.remote'
   import { toHTTP, logHeader, within } from '$lib'
   import Eyes from '$lib/assets/infinity eyes.svg'
   import Background from '$lib/assets/background.svg'
+    import NewFiles from '$lib/components/NewFiles.svelte';
 
   let errorMsg = $state<string | null>(null)
   let path = $state(
@@ -30,10 +29,8 @@
   let importDirectoryDialog = $state<HTMLDialogElement>()
   let logDialog = $state<HTMLDialogElement>()
   let configDialog = $state<HTMLDialogElement>()
-  let filesInput = $state<FileList>()
-  let pathInput = $state<string>('')
   let logs = $state<Array<string>>([])
-  let whoAmI = $state<string | null>(null)
+  let whoAmI = $state<string | null>('0x0')
 
   logHeader()
 
@@ -68,46 +65,6 @@
       { replaceState: false, noScroll: true, keepFocus: true },
     )
   })
-
-  async function addSpot(evt: SubmitEvent) {
-    try {
-      evt.preventDefault()
-      if(!addSpotDialog) throw new Error('¿How was this directory submitted?')
-
-      const form = evt.currentTarget as HTMLFormElement
-      const formData = new FormData(form)
-      if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
-        const terminal = formData.getAll('path') as Array<string>
-        await upsertSpot({ container: path, subdirectory: terminal })
-      }
-      addSpotDialog.requestClose()
-      form.reset()
-    } catch(err) {
-      errorMsg = (err as Error).message
-      if(isHttpError(err)) {
-        errorMsg = `HTTP Error: ${err.status}: ${err.body.message}`
-      }
-      console.error({ 'addSpot func': err, errorMsg })
-    }
-  }
-
-  async function filesAdded(evt: SubmitEvent) {
-    try {
-      evt.preventDefault()
-      if(!addFilesDialog) throw new Error('¿How were these files submitted?')
-      const form = evt.currentTarget as HTMLFormElement
-      const formData = new FormData(form)
-      if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
-        const files = formData.getAll('files') as Array<File>
-        await addFiles({ files, path })
-      }
-      addFilesDialog.requestClose()
-      form.reset()
-    } catch(err) {
-      console.error({ 'addFiles func': err })
-      errorMsg = (err as Error).message
-    }
-  }
 
   async function copyEditorToken() {
     try {
@@ -165,7 +122,7 @@
 </svelte:head>
 
 <main>
-  <menu id="actions" popover>
+  <menu id="actions" class="popover" popover>
     <ul>
       <li><button
         disabled={!whoAmI}
@@ -173,7 +130,7 @@
         command="show-modal"
       >
         Add Directory
-      </button></li>
+        </button></li>
       <li><button
         disabled={!whoAmI}
         commandfor="add-files"
@@ -237,105 +194,74 @@
           oninput={(evt) => {
             document.documentElement.style.setProperty(
               '--display-color', (evt.target as HTMLInputElement)?.value
-          )
+            )
           }}
         />
       </li>
       <li><SIWE bind:me={whoAmI}/></li>
     </ul>
   </menu>
-  <section id="locations">
-    <section class="general tools">
-      <button
-        id="hamburger"
-        popovertarget="actions"
-        title="Actions"
+  <nav id="locations" class="popover" popover>
+    <ul id="system">
+      <li><a href={resolve('/')}>Root</a></li>
+      <li>Recent</li>
+      <li>Categories</li>
+      <li>Volumes</li>
+    </ul>
+    <ul id="user">
+      <li><a href={resolve('/media/book/by/')}>Books</a></li>
+      <li><a href={resolve('/media/movies/entitled/')}>
+        Movies
+      </a></li>
+      <!--
+      <li><a
+        href={resolve('/television/episodes/ordered/by/internet release/')}
       >
-        <span>🢗</span><span>☰</span><span>🢗</span>
-      </button>
-    </section>
-    <nav class="system locations">
-      <ul>
-        <li><a href={resolve('/')}>Root</a></li>
-        <li>Recent</li>
-        <li>Categories</li>
-        <li>Volumes</li>
-      </ul>
-    </nav>
-    <nav class="user locations">
-      <ul>
-        <li><a href={resolve('/media/book/by/')}>Books</a></li>
-        <li><a href={resolve('/media/movies/entitled/')}>
-          Movies
-        </a></li>
-        <!--
-        <li><a
-          href={resolve('/television/episodes/ordered/by/internet release/')}
-        >
-          Latest TV
-        </a></li>
-        -->
-        <li><a href={
-          resolve('/science/biology/papers/ordered/by/publication date/')
-        }>
-          Biology Papers
-        </a></li>
-        <li><button type="button">➕</button></li>
-      </ul>
-    </nav>
-  </section>
+        Latest TV
+      </a></li>
+      -->
+      <li><a href={
+        resolve('/science/biology/papers/ordered/by/publication date/')
+      }>
+        Biology Papers
+      </a></li>
+      <li><button type="button">➕</button></li>
+    </ul>
+  </nav>
   <FileView bind:path me={whoAmI}/>
   {#if dualPanes}
     <FileView path={untrack(() => [...path])} me={whoAmI}/>
   {/if}
-  <dialog id="add-spot" bind:this={addSpotDialog}>
-    <form onsubmit={addSpot} class="adder">
-      <fieldset>
-        <legend>Path to New Spot</legend>
-        <input
-          name="path"
-          bind:value={pathInput}
-        />
-        <menu>
-          <button
-            name="action"
-            value="add"
-            disabled={pathInput?.trim() === ''}
-          >Add</button>
-          <button
-            type="button"
-            command="close"
-            commandfor="add-spot"
-          >Cancel</button>
-        </menu>
-      </fieldset>
-    </form>
-  </dialog>
-  <dialog id="add-files" bind:this={addFilesDialog}>
-    <form onsubmit={filesAdded} class="adder">
-      <fieldset>
-        <legend>Files to Add</legend>
-        <input
-          bind:files={filesInput}
-          name="files"
-          type="file"
-          multiple
-        />
-        <menu>
-          <button
-            name="action"
-            value="add"
-            disabled={(filesInput ?? []).length < 1}
-          >Add</button>
-          <button
-            type="button"
-            command="close"
-            commandfor="add-files"
-          >Cancel</button>
-        </menu>
-      </fieldset>
-    </form>
-  </dialog>
+  <nav>
+    <menu id="tools">
+      <button
+        id="hamburger"
+        class="tool"
+        popovertarget="actions"
+        title="Actions"
+      >
+        <span>🢗</span><span>
+          {#if !whoAmI}
+            🔒
+          {:else}
+            ☰
+          {/if}
+        </span><span>🢗</span>
+      </button>
+      <button
+        id="flag"
+        class="tool"
+        popovertarget="locations"
+        title="Locations"
+      >
+        <span>🢗</span><span></span><span>🢗</span>
+      </button>
+    </menu>
+  </nav>
+
+  <NewSpot bind:self={addSpotDialog} {path}/>
+  <NewFiles bind:self={addFilesDialog} {path}/>
+
   <dialog id="logs" bind:this={logDialog}>
     <form>
       <ol reversed>
@@ -354,6 +280,7 @@
       </menu>
     </form>
   </dialog>
+
   <ImportDirectoryDialog
     bind:self={importDirectoryDialog}
     {path}
@@ -377,7 +304,7 @@
     font-size: 1em;
   }
 
-  .general.tools > button {
+  button.tool {
     margin-inline-start: 0;
     transition: all 0.5s;
 
@@ -424,34 +351,41 @@
 
   #hamburger {
     anchor-name: --hamburger;
-    transition: rotate 0.5s;
 
-    :global(body:has(#actions:popover-open) &) {
-      & > span {
-        rotate: -90deg;
+    & > span {
+      transition: rotate 0.5s, translate 0.5s;
+      transform-box: fill-box;
+      transform-origin: center;
 
-        &:nth-of-type(1) {
-          translate: 0.5em -0.1em;
-        }
-        &:nth-of-type(3) {
-          translate: 0.5em -0.1em;
-        }
+      &:nth-of-type(1) {
+        rotate: 180deg;
+        translate: -0.2em -0.6em;
+      }
+      &:nth-of-type(3) {
+        rotate: -180deg;
+        translate: 0.2em -0.6em;
       }
     }
 
+    :global(body:has(#actions:popover-open) &) {
+      & > span {
+        &:nth-of-type(1) {
+          rotate: 0deg;
+          translate: -0.2em 0.75em;
+        }
+        &:nth-of-type(3) {
+          rotate: 0deg;
+          translate: 0.2em 0.75em;
+        }
+      }
+    }
   }
 
   #actions {
     position-anchor: --hamburger;
-    top: anchor(bottom);
-    left: anchor(left);
-    position: absolute;
-    margin: 0;
-    interpolate-size: allow-keywords;
     white-space: nowrap;
-    padding-inline: 0;
+    border-style: dotted;
     margin-inline: 0;
-    border-style:dotted;
 
     & ul {
       display: flex;
@@ -479,6 +413,74 @@
     }
   }
 
+  #flag {
+    anchor-name: --flag;
+
+    & > span {
+      transition: rotate 0.5s, translate 0.5s;
+      transform-box: fill-box;
+      transform-origin: center;
+
+      &:nth-of-type(2)::after {
+        content: '⚐';
+      }
+      &:nth-of-type(1) {
+        rotate: 180deg;
+        translate: -0.2em -0.6em;
+      }
+      &:nth-of-type(3) {
+        rotate: -180deg;
+        translate: 0.2em -0.6em;
+      }
+    }
+
+    :global(body:has(#locations:popover-open) &) {
+      & > span {
+        opacity: 1;
+
+        &:nth-of-type(1) {
+          rotate: 0deg;
+          translate: -0.2em 0.75em;
+        }
+        &:nth-of-type(2)::after {
+          content: '⚑';
+        }
+        &:nth-of-type(3) {
+          rotate: 0deg;
+          translate: 0.2em 0.75em;
+        }
+      }
+    }
+  }
+
+  .popover {
+    inset: auto;
+    top: anchor(bottom);
+    right: anchor(right);
+    position: absolute;
+    margin: 0;
+    interpolate-size: allow-keywords;
+    padding: 0.25em;
+  }
+
+  #locations {
+    position-anchor: --flag;
+    white-space: nowrap;
+    margin-inline: 0;
+    border-style:dotted;
+
+    & ul {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    & li {
+      display: flex;
+      justify-content: center;
+    }
+  }
+
   .search form {
     position: relative;
     display: flex;
@@ -495,10 +497,14 @@
     }
   }
 
+  nav:has(#tools) {
+    position: absolute;
+    right: 0;
+  }
 
-
-  .general.tools {
+  #tools {
     display: flex;
+    margin: 0;
 
     & button {
       min-width: 4em;

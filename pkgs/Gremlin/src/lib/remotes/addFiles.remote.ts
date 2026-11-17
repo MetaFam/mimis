@@ -3,13 +3,10 @@ import * as v from 'valibot'
 import { v7 as uuidV7 } from 'uuid'
 import { error } from '@sveltejs/kit'
 import { command } from '$app/server'
-import { representations } from './representations.remote'
-import { spotId } from './spotId.remote'
-import { searchFor } from './searchFor.remote'
+import { listing } from './listing.remote'
 import settings from '$lib/settings.svelte'
-import {
-  connect as connectJanusGraph, connectToG, mergePath,
-} from '$lib/server/janusgraph'
+import { splitName } from '$lib/mimetypes'
+import { g, mergePath } from '$lib/server/janusgraph'
 
 const { process } = gremlin
 const { statics: __ } = process
@@ -27,13 +24,44 @@ const NewSpotsSchema = v.object({
 export const addFiles = command(
   NewSpotsSchema,
   async ({ path, files }) => {
-    const connection = connectJanusGraph()
     const now = new Date().toISOString()
 
     console.debug({ addFiles: { path, files } })
 
     try {
-      const containerId = await spotId({ path, create: true })
+      const { value: containerId = null } = (
+        await (await mergePath({ path })).id().next()
+      )
+
+      // A file’s title, its name sans extension, is a Spot in the
+      // container, except for `ext.ext`, which names no Spot & so
+      // attaches to the container itself.
+      const subpathFor = (name: string) => {
+        const { title, ext } = splitName(name)
+        return title === ext ? [] : [title]
+      }
+
+      // Resolved one at a time so files sharing a title, like
+      // `a.png` & `a.svg`, share one Spot rather than racing to
+      // create two.
+      const spotIds = new Map<string, unknown>()
+      for(const { name } of files) {
+        const [title] = subpathFor(name)
+        if(title == null || spotIds.has(title)) continue
+        const { value: id = null } = await (
+          (await mergePath({
+            traversal: g().V(containerId),
+            path: [title],
+            now,
+          }))
+          .id()
+          .next()
+        )
+        if(id == null) {
+          throw new Error(`Couldn’t create a Spot for “${title}”.`)
+        }
+        spotIds.set(title, id)
+      }
 
       // ToDo: Switch to AbortController fired on first error
       const retStaisi = await Promise.allSettled<Array<
@@ -41,106 +69,96 @@ export const addFiles = command(
         | { status: 'rejected', reason: string | Error }
       >>(
         files.map(async ({ cid, name, type, size }) => {
-          const [, title, ext] = (
-            name.match(/^(.+)\.([^.]+)$/) ?? [null, name, null]
+          const { ext } = splitName(name)
+          const [title] = subpathFor(name)
+          const spotId = (
+            title == null ? containerId : spotIds.get(title)
           )
 
-          const path: Array<string> = []
-
-          // Files are named ext.ext so there's no
-          // context information in the file name
-          if(title !== ext) {
-            path.push(title)
-          }
-
-          const genTraversal = async (
-            { create = false }: { create: boolean } = { create: false }
-          ) => {
-            return (
-              mergePath({
-                traversal: connectToG(connection), containerId, path, create,
-              })
-            )
-          }
+          const genTraversal = () => g().V(spotId)
 
           type ||= `application/octet-stream;extension=${ext ?? '𝘶𝘯𝘬𝘯𝘰𝘸𝘯'}`
 
           if(settings.debugging) {
             console.debug({
-              Add: `${path.join(' → ')}: ${cid} @ ${containerId} (${type})`
+              Add: (
+                `${[...path, title ?? ''].join(' → ')}:`
+                + ` ${cid} @ ${spotId} (${type})`
+              ),
             })
           }
 
           const { value: existing } = await (
-            (await genTraversal())
-            .outE('REPRESENTATION')
+            genTraversal()
+            .outE('AS')
             .inV()
+            .hasLabel('Content')
             .has('type', type)
             .not(__.inE('PREVIOUS'))
             .project('id', 'cid')
             .by(__.id())
-            .by('cid')
+            .by(__.coalesce(
+              __.out('IS').hasLabel('Blob').values('cid'),
+              __.constant(null),
+            ))
             .next()
           )
 
-          if(existing && existing.get('cid') === cid) {
-            return existing.get('id')
-          }
+          const exists = existing && existing.get('cid') === cid
+          const existingId = existing?.get('id') ?? null
+          let id = existingId
 
-          let traversal = (
-            (await genTraversal({ create: true }))
-            .as('spot')
-            .addV('File')
-            .property('createdAt', now)
-            .property('cid', cid)
-            .property('type', type)
-            .property('size', size)
-            .property('uuid', uuidV7())
-            .as('file')
-            .addE('REPRESENTATION')
-            .from_('spot')
-            .property('createdAt', now)
-            .property('uuid', uuidV7())
-          )
+          console.debug({ Path: { exists } })
 
-          if(existing) {
-            traversal = (
-              traversal
-              .V(existing.get('id'))
-              .addE('PREVIOUS')
-              .from_('file')
+          if(!exists) {
+            id = (await (
+              genTraversal()
+              .as('spot')
+              .addV('Content')
               .property('createdAt', now)
-            )
-          }
+              .property('type', type)
+              .property('uuid', uuidV7())
+              .property('order', -1)
+              .as('file')
+              .addE('AS')
+              .property('order', '-1')
+              .from_('spot').to('file')
+              .property('createdAt', now)
+              .addV('Blob')
+              .property('createdAt', now)
+              .property('cid', cid)
+              .property('size', size)
+              .as('blob')
+              .addE('IS')
+              .from_('file').to('blob')
+              .select('file').id()
+              .next()
+            )).value
 
-          const { value: fileId } = await (
-            traversal.select('file').id().next()
-          )
-          void searchFor({ path }).refresh()
-          return fileId
+            // if(existingId != null) {
+            //   g().mergeE('PREVIOUS').from_(id).to(existingId)
+            // }
+          }
+          return id
         })
       )
       const values = retStaisi.map((result) => {
         if(result.status === 'rejected') {
-          const error = (result.reason as Error)?.message ?? result.reason ?? null
-          console.debug({ status: result.status, error })
+          const error = (
+            (result.reason as Error)?.message ?? result.reason ?? null
+          )
+          console.debug({ Error: error })
           return { error }
         }
         return result.value
       })
 
-      void representations({ path }).refresh()
+      void listing({ path }).refresh()
 
       return values
     } catch(err) {
       console.error({ addFiles: err })
       throw error(500, (err as Error).message)
-    } finally {
-      try {
-        await connection.close()
-      } catch(error) {
-        console.error({ 'addFiles Close Failed': error })
-      }
     }
   }
 )

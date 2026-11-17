@@ -3,11 +3,10 @@ import * as v from 'valibot'
 import { command } from '$app/server'
 import { error } from '@sveltejs/kit'
 import {
-  connect as connectJanusGraph, connectToG, mergeSpotRoot,
+  writeLayer,
 } from '$lib/server/janusgraph'
-import { getSessionAddress } from '$lib/server/auth'
 import { upsertSpot } from './upsertSpot.remote'
-import { searchFor } from './searchFor.remote'
+import { listing } from './listing.remote'
 
 const { statics: __ } = gremlin.process
 
@@ -23,26 +22,14 @@ export const spotId = command(
   async ({
     path = [],
     maxMountDepth: maxDepth = 10,
-    allowCycles = false,
     create = false,
   }) => {
-    const connection = connectJanusGraph()
     try {
       path = path.filter(Boolean)
 
-      const address = await getSessionAddress()
-      if(!address) return null
-
-      const g = connectToG(connection)
-      let traversal = await mergeSpotRoot(
-        { traversal: g, address, create: false }
-      )
+      let traversal = await writeLayer()
 
       for (const element of path) {
-        if (!allowCycles) {
-          traversal = traversal.simplePath()
-        }
-
         traversal = (
           traversal
           .until(
@@ -55,28 +42,19 @@ export const spotId = command(
             .by('order')
             .inV()
           )
-          .outE('CONTAINS')
-          .has('path', element)
-          .inV()
+          .outE('CONTAINS').has('path', element).inV()
         )
       }
 
-      let { value = null } = await traversal.id().next()
-      if(value == null && create) {
-        value = await upsertSpot({ subdirectory: path })
+      let { value: id = null } = await traversal.id().next()
+      if(id == null && create) {
+        id = await upsertSpot({ subdirectory: path })
       }
-      void searchFor({ path }).refresh()
-      console.debug({ spotId: { path, value } })
-      return value
+      void listing({ path }).refresh()
+      return id
     } catch(err) {
       console.error({ spotId: err })
       throw error(500, `Spot ID: "${(err as Error).message}"`)
-    } finally {
-      try {
-        await connection.close()
-      } catch(error) {
-        console.error({ 'spotId Close Failed': error })
-      }
     }
   }
 )

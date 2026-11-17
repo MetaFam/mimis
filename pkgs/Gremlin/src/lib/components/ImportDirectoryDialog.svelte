@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { searchFor } from '$lib/remotes/searchFor.remote'
+  import { listing } from '$lib/remotes/listing.remote'
   import { spotId } from '$lib/remotes/spotId.remote'
   import {
     fileTreeToCIDTree as treeToCIDs, type TreeNode,
@@ -64,7 +64,7 @@
       }
       log?.('Import complete.')
       form.reset()
-      void searchFor({ path }).refresh()
+      void listing({ path }).refresh()
     } catch(err) {
       let msg = (err as Error).message
       if(msg === 'Failed to fetch') {

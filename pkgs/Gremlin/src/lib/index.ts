@@ -2,9 +2,8 @@ import { CID } from 'multiformats'
 import { settings } from '$lib/settings.svelte'
 import type { TreeNode, Walker } from '$lib/fileTree2CIDTree'
 import { moveSpot } from '$lib/remotes/moveSpot.remote'
-import { searchFor } from '$lib/remotes/searchFor.remote'
+import { listing } from '$lib/remotes/listing.remote'
 import { spotId } from '$lib/remotes/spotId.remote'
-import { representations } from '$lib/remotes/representations.remote'
 import { addFiles } from '$lib/ipfs'
 import type { Node, DirNode } from '../types'
 
@@ -350,7 +349,7 @@ export function dropGenerator(
 
       if(drop.entries.length > 0) {
         await process(drop.entries, drop.destination)
-        representations({ path: drop.destination }).refresh()
+        listing({ path: drop.destination }).refresh()
       } else {
         const what = Number(drug?.dataset.id)
         const to = await spotId({ path: drop.destination })
@@ -369,10 +368,10 @@ export function dropGenerator(
         }
         console.debug({ moving: { drug, what, from, to, drop } })
         await moveSpot({ what, from, to })
-        searchFor({ path: drop.source }).refresh()
+        listing({ path: drop.source }).refresh()
       }
       console.debug({ refreshing: drop.destination })
-      searchFor({ path: drop.destination }).refresh()
+      listing({ path: drop.destination }).refresh()
     }
 
     node.addEventListener('dragover', onDragOver)

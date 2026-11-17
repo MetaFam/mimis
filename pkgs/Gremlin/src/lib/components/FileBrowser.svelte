@@ -1,9 +1,8 @@
 <script lang="ts">
   import { resolve } from '$app/paths'
   import {
-    representations, type Representation,
-  } from '$lib/remotes/representations.remote'
-  import { searchFor } from '$lib/remotes/searchFor.remote'
+    listing, type Child, type Content,
+  } from '$lib/remotes/listing.remote'
   import { dropGenerator, navigateOnClick, toHTTP } from '$lib'
   import settings from '$lib/settings.svelte'
   import Folder from '$lib/assets/folder.svg'
@@ -76,7 +75,7 @@
     }
   }
 
-  function soleDisplayable(reps?: Array<Representation>) {
+  function soleDisplayable(reps?: Array<Content>) {
     if(!Array.isArray(reps)) throw new Error('`reps` is not an array.')
     reps = reps.filter(
       (rep) => rep.type.startsWith('image/') || rep.type.startsWith('video/')
@@ -84,6 +83,18 @@
     if(reps.length !== 1) return false
     const [rep] = reps
     return rep
+  }
+
+  /** A child as a tile: a folder, or the thumbnail of its content. */
+  function tileFor({ name, ids: [id], contents, container }: Child) {
+    const thumb = soleDisplayable(contents)
+    return {
+      name,
+      id,
+      cid: thumb ? thumb.cid : null,
+      type: (container || contents.length === 0) ? 'spot' : 'image',
+      types: contents.map(({ type }) => type),
+    }
   }
 </script>
 
@@ -96,10 +107,9 @@
     }
   }}
 >
-  <ul>
-    <!-- {#each await searchFor({ path }) as { name, type, cid } (cid || name)} -->
-    {#await searchFor({ path }) then results}
-      {#each results as { name, type, cid, id } (`${cid}:${name}`)}
+  {#await listing({ path }) then { contents, children }}
+    <ul>
+      {#each children.map(tileFor) as { name, type, cid, id, types } (name)}
         {@const { target } = dropGenerator(
           { path: () => [...path, name] }
         )}
@@ -152,16 +162,14 @@
                 draggable="true"
               />
             {:else}
-              <aside>Unknown Type: {type}</aside>
+              <aside>{types.join(', ')}</aside>
             {/if}
             <span>{name}</span>
           </a>
         </li>
       {/each}
-    {/await}
-  </ul>
-  {#await representations({ path }) then rs}
-    {@const sole = soleDisplayable(rs)}
+    </ul>
+    {@const sole = soleDisplayable(contents)}
     {@const title = path.at(-1) ?? 'file'}
     {#if sole}
       {@const { cid, type } = sole}

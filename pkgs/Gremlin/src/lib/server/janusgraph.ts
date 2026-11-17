@@ -6,10 +6,10 @@ import { getSessionAddress } from "./auth.ts";
 
 const { driver, process } = gremlin
 const {
-  statics: __, merge: Merge, t: T,
+  statics: __, merge: Merge, t: T, direction: Direction,
 } = process
-
-export type GraphTraversal = InstanceType<typeof process.GraphTraversal>
+type GraphTraversalSource = InstanceType<typeof process.GraphTraversalSource>
+type GraphTraversal = InstanceType<typeof process.GraphTraversal>
 
 const {
   DriverRemoteConnection,
@@ -20,11 +20,14 @@ export function connect() {
   if(settings.debugging) {
     console.debug({ Connecting: settings.janusGraphURL })
   }
-  const opts: { authenticator?: InstanceType<typeof PlainTextSaslAuthenticator> } = {}
+  const opts: {
+    authenticator?: InstanceType<typeof PlainTextSaslAuthenticator>
+  } = {}
   if(settings.janusGraphUsername) {
     if(settings.debugging) {
       console.debug(
-        `Connecting to Janus (${settings.janusGraphURL}) as ${settings.janusGraphUsername}`
+        `Connecting to Janus (${settings.janusGraphURL})`
+        + ` as ${settings.janusGraphUsername}.`
       )
     }
     opts.authenticator = (
@@ -39,109 +42,171 @@ export function connect() {
   )
 }
 
-export function connectToG(
-  connection: ReturnType<typeof connect>
-) {
-  return (
-    process
-    .traversal()
-    .withRemote(connection) as unknown as GraphTraversal
-  )
-}
-
-export async function mergeRoot({ traversal, now }: {
-  traversal: GraphTraversal
-  now?: string
-}) {
-  return (
-    traversal
-    .mergeV(new Map([[T.label, 'Root']]))
-    .option(Merge.onCreate, { createdAt: now ?? new Date().toISOString() })
-  )
-}
-
-export async function mergeSpotRoot(
-  { traversal, address, now: createdAt, create }: {
-    traversal: GraphTraversal
-    address?: string | null
-    now?: string | null
-    create?: boolean
+let traversalSource: GraphTraversalSource | null | undefined
+export function g() {
+  if(!traversalSource) {
+    const connection = connect()
+    traversalSource = process.traversal().withRemote(connection)
   }
-) {
-  address ??= await getSessionAddress({ throw: true })
-  createdAt ??= new Date().toISOString()
-  create ??= true
+  return traversalSource
+}
+
+export async function base() {
+  const createdAt = new Date().toISOString()
+  const address = await getSessionAddress({ throw: true })
+  const spotUUID = uuidV7()
+  const deviceUUID = uuidV7()
+
+  const source = g()
+  const base = (
+    source
+    .mergeV(new Map([[T.label, 'Users']]))
+    .option(Merge.onCreate, { createdAt })
+    .as('users')
+
+    .mergeV(new Map([[T.label, 'User'], ['address', address]]))
+    .option(Merge.onCreate, { createdAt })
+    .as('user')
+
+    .mergeE(new Map([
+      [T.label, 'INCLUDES'],
+      [Direction.out, Merge.outV],
+      [Direction.in, Merge.inV],
+    ]))
+    .option(Merge.outV, __.select('users'))
+    .option(Merge.inV, __.select('user'))
+    .option(Merge.onCreate, { createdAt })
+
+    .coalesce(
+      __.select('user').outE('USES').inV().hasLabel('Device'),
+      (
+        __.addV('Device')
+        .property('uuid', deviceUUID)
+        .property('createdAt', createdAt)
+      ),
+    ).as('device')
+
+    .mergeE(new Map([
+      [T.label, 'USES'],
+      [Direction.out, Merge.outV],
+      [Direction.in, Merge.inV],
+    ]))
+    .option(Merge.outV, __.select('user'))
+    .option(Merge.inV, __.select('device'))
+    .option(Merge.onCreate, { createdAt })
+
+    .coalesce(
+      __.select('device').outE('COMMITS').inV().hasLabel('Updates'),
+      __.addV('Updates').property('createdAt', createdAt),
+    ).as('updates')
+
+    .mergeE(new Map([
+      [T.label, 'COMMITS'],
+      [Direction.out, Merge.outV],
+      [Direction.in, Merge.inV],
+    ]))
+    .option(Merge.outV, __.select('device'))
+    .option(Merge.inV, __.select('updates'))
+    .option(Merge.onCreate, { createdAt })
+
+    .coalesce(
+      __.select('user').outE('WRITES').inV().hasLabel('Spot'),
+      (
+        __.addV('Spot').as('write_spot')
+        .property('createdAt', createdAt)
+        .property('uuid', spotUUID)
+        .addE('WRITES')
+        .from_('user').to('write_spot')
+      ),
+    )
+
+    .select('users')
+  )
+  checkedBase = true
+  return base
+}
+
+let checkedBase = false
+export async function verifyBase() {
+  if(!checkedBase) {
+    await (await base()).next()
+    checkedBase = true
+  }
+}
+
+
+export async function writeLayer() {
+  const [, address] = await Promise.all([
+    await verifyBase(),
+    await getSessionAddress({ throw: true }),
+  ])
+
   return (
-    (create ? (
-      traversal
-      .mergeV(new Map([[T.label, 'SpotRoot'], ['signer', address]]))
-      .option(Merge.onCreate, { createdAt, uuid: uuidV7() })
-    ) : (
-      traversal
-      .V()
-      .hasLabel('SpotRoot')
-      .has('signer', address)
-    ))
+    g().V().hasLabel('User').has('address', address)
+    .outE('WRITES').inV().hasLabel('Spot')
   )
 }
 
 export async function mergePath({
-  traversal, containerId, path, now: createdAt, create,
+  containerId, path, now: createdAt, traversal,
 }: {
-  traversal: GraphTraversal
-  containerId?: number
+  containerId?: number | null
   path: Array<string>
   now?: string
-  create?: boolean
+  traversal?: GraphTraversal
 }) {
   createdAt ??= new Date().toISOString()
-  create ??= true
+  const address = await getSessionAddress({ throw: true })
+  if(traversal == null) traversal = await writeLayer()
+
+  console.debug({ Path: { address, containerId } })
 
   if(containerId != null) {
-    if(!await (
-      (await mergeSpotRoot({ traversal, now: createdAt, create: false }))
-      .repeat(__.out())
-      .until(
-        __.hasId(containerId)
-        .or()
-        .count().is(0)
-      )
-      .hasId(containerId)
+    const owned = await (
+      g().V(containerId)
+      .repeat(__.in_('CONTAINS', 'WRITES').simplePath())
+      .until(__.hasLabel('User'))
+      .has('address', address)
+      .limit(1)
       .hasNext()
-    )) {
-      throw error(400, `Container id, "${containerId}", does not belong to the user.`)
+    )
+    if(!owned) {
+      throw error(
+        400,
+        `Container id, "${containerId}",`
+        + ` does not belong to the user ${address}.`
+      )
     }
-    console.debug({ mergePath: `Starting at ${containerId}.` })
-    traversal = traversal.V(containerId)
+    traversal = g().V(containerId)
   }
 
+  console.debug({ Path: { containerId } })
+
   for(const elem of path) {
-    console.debug({ mergePath: elem, create })
     traversal = (
-      (create ? (
-        traversal
-        .as('parent')
-        .coalesce(
-          (
-            __.outE('CONTAINS')
-            .has('path', elem)
-            .inV()
-          ),
-          (
-            __.addV('Spot')
-            .property(new Map(Object.entries({ createdAt, uuid: uuidV7() })))
-            .addE('CONTAINS')
-            .from_('parent')
-            .property(new Map(Object.entries({ path: elem, createdAt, uuid: uuidV7() })))
-            .inV()
-          ),
-        )
-      ) : (
-        traversal.outE('CONTAINS')
-        .has('path', elem)
-        .inV()
-      ))
+      traversal
+      .as('parent')
+      .coalesce(
+        (
+          __.outE('CONTAINS')
+          .has('path', elem)
+          .inV()
+        ),
+        (
+          __.addV('Spot')
+          .property(new Map(Object.entries(
+            { createdAt, uuid: uuidV7() }
+          )))
+          .addE('CONTAINS')
+          .from_('parent')
+          .property(new Map(Object.entries(
+            { path: elem, createdAt, uuid: uuidV7() }
+          )))
+          .inV()
+        ),
+      )
     )
   }
+
   return traversal
 }

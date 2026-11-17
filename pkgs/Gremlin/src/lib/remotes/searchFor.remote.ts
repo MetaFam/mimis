@@ -3,10 +3,10 @@ import * as v from 'valibot'
 import { query } from '$app/server'
 import { error, isHttpError } from '@sveltejs/kit'
 import {
-  connect as connectJanusGraph, connectToG, mergeSpotRoot,
+  connect as connectJanusGraph, connectToG, g, mergeSpotRoot,
+  writeLayer,
 } from '$lib/server/janusgraph'
 import settings from '$lib/settings.svelte'
-import { getSessionAddress } from '$lib/server/auth'
 
 const { statics: __, scope: Scope } = gremlin.process
 type GraphTraversal = InstanceType<typeof gremlin.process.GraphTraversal>
@@ -58,31 +58,18 @@ export const searchFor = query(
   SearchSchema,
   async ({
     path = [],
-    address,
     options = {
       maxMountDepth: 10,
       allowCycles: false,
     },
   }) => {
-    const { maxMountDepth: maxDepth, allowCycles } = options
-    const connection = await connectJanusGraph()
+    const { maxMountDepth: maxDepth } = options
 
     try {
       path = path.filter(Boolean)
-
-      address ??= await getSessionAddress()
-      if(!address) return null
-
-      const g = connectToG(connection)
-      let traversal = await mergeSpotRoot(
-        { traversal: g, address, create: false }
-      )
+      let traversal = await writeLayer()
 
       for(const element of path) {
-        if(!allowCycles) {
-          traversal = traversal.simplePath()
-        }
-
         traversal = (
           traversal
           .until(
@@ -158,14 +145,6 @@ export const searchFor = query(
       }
       console.error({ searchFor: error })
       throw error(500, `Spot Search: "${msg}"`)
-    } finally {
-      try {
-        if(connection) {
-          await connection.close()
-        }
-      } catch (error) {
-        console.error({ 'searchFor Close Failed': error })
-      }
     }
   }
 )
