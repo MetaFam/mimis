@@ -1,3 +1,4 @@
+engineStrict: true
 allowBuilds:
   '@reown/appkit': true
   bufferutil: true
