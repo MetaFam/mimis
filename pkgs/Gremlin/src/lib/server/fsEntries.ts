@@ -1,9 +1,6 @@
 import gremlin from 'gremlin'
 import { error } from '@sveltejs/kit'
-import {
-  connect as connectJanusGraph, connectToG, mergeSpotRoot,
-  type GraphTraversal,
-} from './janusgraph'
+import { layerOf, type GraphTraversal } from './janusgraph'
 import { extFor, nameFor, splitName, typeForName } from '$lib/mimetypes'
 
 const { statics: __ } = gremlin.process
@@ -77,18 +74,11 @@ const times = (createdAt?: string) => {
   return { ctime: time, mtime: time }
 }
 
-async function spotTraversal(
-  { connection, address, path }: {
-    connection: ReturnType<typeof connectJanusGraph>
-    address: string
-    path: Array<string>
-  }
-) {
-  const traversal = await mergeSpotRoot({
-    traversal: connectToG(connection), address, create: false,
-  })
-  return walkMounts({ traversal, path })
-}
+const spotTraversal = (
+  { address, path }: { address: string, path: Array<string> }
+) => (
+  walkMounts({ traversal: layerOf(address), path })
+)
 
 /**
  * The Spot & representation type a filename resolves to, following
@@ -115,80 +105,52 @@ export async function findRep(
   { address, path }: { address: string, path: Array<string> }
 ) {
   const { spotPath, type } = fileTarget(path)
-  const connection = connectJanusGraph()
-  try {
-    const traversal = await spotTraversal({ connection, address, path: spotPath })
-    const reps = (
-      (await traversal.flatMap(currentReps()).toList()) as
-      Array<Map<keyof Rep, unknown>>
-    ).map(repFromMap)
-    return (
-      reps.find((rep) => rep.type === type)
-      ?? (reps.length === 1 ? reps[0] : null)
-    )
-  } finally {
-    await connection.close()
-  }
+  const reps = (
+    (await spotTraversal({ address, path: spotPath })
+    .flatMap(currentReps()).toList()) as
+    Array<Map<keyof Rep, unknown>>
+  ).map(repFromMap)
+  return (
+    reps.find((rep) => rep.type === type)
+    ?? (reps.length === 1 ? reps[0] : null)
+  )
 }
 
 export async function listEntries(
   { address, path }: { address: string, path: Array<string> }
 ) {
-  const connection = connectJanusGraph()
-  try {
-    interface Row {
-      name: string
-      children: number
-      created: string
-      reps: Array<Map<keyof Rep, unknown>>
-    }
-    const children = await spotTraversal({ connection, address, path })
-    const rows = (
-      (await children
-      .outE('CONTAINS')
-      .as('contains')
-      .values('path').as('name')
-      .select('contains')
-      .inV().as('child')
-      .project('name', 'children', 'created', 'reps')
-      .by(__.select('name'))
-      .by(__.select('child').outE('CONTAINS', 'MOUNT').count())
-      .by(__.select('child').coalesce(__.values('createdAt'), __.constant('')))
-      .by(__.select('child').flatMap(currentReps()).fold())
-      .dedup()
-      .toList()) as Array<Map<keyof Row, unknown>>
-    ).map((row) => Object.fromEntries(row) as unknown as Row)
+  interface Row {
+    name: string
+    children: number
+    created: string
+    reps: Array<Map<keyof Rep, unknown>>
+  }
+  const children = spotTraversal({ address, path })
+  const rows = (
+    (await children
+    .outE('CONTAINS')
+    .as('contains')
+    .values('path').as('name')
+    .select('contains')
+    .inV().as('child')
+    .project('name', 'children', 'created', 'reps')
+    .by(__.select('name'))
+    .by(__.select('child').outE('CONTAINS', 'MOUNT').count())
+    .by(__.select('child').coalesce(__.values('createdAt'), __.constant('')))
+    .by(__.select('child').flatMap(currentReps()).fold())
+    .dedup()
+    .toList()) as Array<Map<keyof Row, unknown>>
+  ).map((row) => Object.fromEntries(row) as unknown as Row)
 
-    const entries: Array<FSEntry> = []
-    for(const { name, children, created, reps } of rows) {
-      const files = reps.map(repFromMap)
-      if(Number(children) > 0 || files.length === 0) {
-        entries.push({ name, kind: 'directory', ...times(created) })
-      }
-      for(const rep of files) {
-        entries.push({
-          name: nameFor({ title: name, type: rep.type }),
-          kind: 'file',
-          size: Number(rep.size),
-          type: rep.type,
-          cid: rep.cid,
-          ...times(rep.createdAt),
-        })
-      }
+  const entries: Array<FSEntry> = []
+  for(const { name, children, created, reps } of rows) {
+    const files = reps.map(repFromMap)
+    if(Number(children) > 0 || files.length === 0) {
+      entries.push({ name, kind: 'directory', ...times(created) })
     }
-
-    // Representations on the listed Spot itself appear as `ext.ext`
-    // files, mirroring how `addFiles` handles context-free names.
-    const own = await spotTraversal({ connection, address, path })
-    const ownReps = (
-      (await own.flatMap(currentReps()).toList()) as
-      Array<Map<keyof Rep, unknown>>
-    ).map(repFromMap)
-    for(const rep of ownReps) {
-      const ext = extFor(rep.type)
-      if(ext == null) continue
+    for(const rep of files) {
       entries.push({
-        name: `${ext}.${ext}`,
+        name: nameFor({ title: name, type: rep.type }),
         kind: 'file',
         size: Number(rep.size),
         type: rep.type,
@@ -196,17 +158,35 @@ export async function listEntries(
         ...times(rep.createdAt),
       })
     }
-
-    const seen = new Set<string>()
-    return entries.filter(({ name, kind }) => {
-      const key = `${kind}:${name}`
-      if(seen.has(key)) return false
-      seen.add(key)
-      return true
-    })
-  } finally {
-    await connection.close()
   }
+
+  // Representations on the listed Spot itself appear as `ext.ext`
+  // files, mirroring how `addFiles` handles context-free names.
+  const own = spotTraversal({ address, path })
+  const ownReps = (
+    (await own.flatMap(currentReps()).toList()) as
+    Array<Map<keyof Rep, unknown>>
+  ).map(repFromMap)
+  for(const rep of ownReps) {
+    const ext = extFor(rep.type)
+    if(ext == null) continue
+    entries.push({
+      name: `${ext}.${ext}`,
+      kind: 'file',
+      size: Number(rep.size),
+      type: rep.type,
+      cid: rep.cid,
+      ...times(rep.createdAt),
+    })
+  }
+
+  const seen = new Set<string>()
+  return entries.filter(({ name, kind }) => {
+    const key = `${kind}:${name}`
+    if(seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 }
 
 export async function statEntry(
@@ -216,23 +196,17 @@ export async function statEntry(
     return { name: '', kind: 'directory' } as FSEntry
   }
 
-  const connection = connectJanusGraph()
-  try {
-    const traversal = await spotTraversal({ connection, address, path })
-    const { value: created } = await (
-      traversal
-      .coalesce(__.values('createdAt'), __.constant(''))
-      .next()
-    )
-    if(created != null) {
-      return {
-        name: path.at(-1)!,
-        kind: 'directory',
-        ...times(created as string),
-      } as FSEntry
-    }
-  } finally {
-    await connection.close()
+  const { value: created } = await (
+    spotTraversal({ address, path })
+    .coalesce(__.values('createdAt'), __.constant(''))
+    .next()
+  )
+  if(created != null) {
+    return {
+      name: path.at(-1)!,
+      kind: 'directory',
+      ...times(created as string),
+    } as FSEntry
   }
 
   const rep = await findRep({ address, path })
@@ -276,23 +250,15 @@ export async function renameEntry(
     ;[edgeFrom, edgeTo] = [splitFrom.title!, splitTo.title!]
   }
 
-  const connection = connectJanusGraph()
-  try {
-    const parent = await spotTraversal({
-      connection, address, path: from.slice(0, -1),
-    })
-    const { value } = await (
-      parent
-      .outE('CONTAINS')
-      .has('path', edgeFrom)
-      .property('path', edgeTo)
-      .id()
-      .next()
-    )
-    if(value == null) {
-      throw error(404, `No entry named “${source}” to rename.`)
-    }
-  } finally {
-    await connection.close()
+  const { value } = await (
+    spotTraversal({ address, path: from.slice(0, -1) })
+    .outE('CONTAINS')
+    .has('path', edgeFrom)
+    .property('path', edgeTo)
+    .id()
+    .next()
+  )
+  if(value == null) {
+    throw error(404, `No entry named “${source}” to rename.`)
   }
 }

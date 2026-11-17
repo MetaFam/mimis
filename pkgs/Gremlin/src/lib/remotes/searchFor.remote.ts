@@ -2,10 +2,7 @@ import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { query } from '$app/server'
 import { error, isHttpError } from '@sveltejs/kit'
-import {
-  connect as connectJanusGraph, connectToG, g, mergeSpotRoot,
-  writeLayer,
-} from '$lib/server/janusgraph'
+import { writeLayer } from '$lib/server/janusgraph'
 import settings from '$lib/settings.svelte'
 
 const { statics: __, scope: Scope } = gremlin.process

@@ -9,7 +9,7 @@ const {
   statics: __, merge: Merge, t: T, direction: Direction,
 } = process
 type GraphTraversalSource = InstanceType<typeof process.GraphTraversalSource>
-type GraphTraversal = InstanceType<typeof process.GraphTraversal>
+export type GraphTraversal = InstanceType<typeof process.GraphTraversal>
 
 const {
   DriverRemoteConnection,
@@ -141,11 +141,13 @@ export async function writeLayer() {
     await getSessionAddress({ throw: true }),
   ])
 
-  return (
-    g().V().hasLabel('User').has('address', address)
-    .outE('WRITES').inV().hasLabel('Spot')
-  )
+  return layerOf(address!)
 }
+
+export const layerOf = (address: string) => (
+  g().V().hasLabel('User').has('address', address)
+  .out('WRITES').hasLabel('Spot')
+)
 
 /**
  * Throws unless every named Spot is in the session user’s own tree,

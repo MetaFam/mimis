@@ -1,8 +1,6 @@
 import gremlin from 'gremlin'
 import { spotId } from '$lib/remotes/spotId.remote'
-import {
-  connect as connectJanusGraph, connectToG,
-} from '$lib/server/janusgraph'
+import { g } from '$lib/server/janusgraph'
 import { throwError } from '$lib'
 import { mimeFor, viewable } from '$lib/mimetypes'
 
@@ -14,23 +12,16 @@ export async function resourceAt({
   containerId: number
   type: string
 }) {
-  const connection = connectJanusGraph()
-
-  try {
-    const g = connectToG(connection)
-    const traversal = (
-      g.V(containerId)
-      .outE('REPRESENTATION')
-      .inV()
-      .has('type', type)
-      .not(__.inE('PREVIOUS'))
-      .values('cid')
-    )
-    const { value = null } = await traversal.next()
-    return value as string | null
-  } finally {
-    connection.close()
-  }
+  const { value = null } = await (
+    g().V(containerId)
+    .outE('REPRESENTATION')
+    .inV()
+    .has('type', type)
+    .not(__.inE('PREVIOUS'))
+    .values('cid')
+    .next()
+  )
+  return value as string | null
 }
 
 export async function resourceFor(

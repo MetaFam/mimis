@@ -3,9 +3,7 @@ import * as v from 'valibot'
 import { error, isHttpError } from '@sveltejs/kit'
 import { query } from '$app/server'
 import settings from '$lib/settings.svelte'
-import {
-  connect as connectJanusGraph, connectToG,
-} from '$lib/server/janusgraph'
+import { g } from '$lib/server/janusgraph'
 
 const { statics: __, t: T } = gremlin.process
 
@@ -42,13 +40,9 @@ const toId = (value: unknown) => String(value)
 export const graphData = query(
   GraphSchema,
   async ({ limit = 1000 } = {}): Promise<GraphData> => {
-    const connection = connectJanusGraph()
-
     try {
-      const g = connectToG(connection)
-
       const vertexMaps = (
-        await g.V().limit(limit).elementMap().toList()
+        await g().V().limit(limit).elementMap().toList()
       ) as Array<Map<unknown, unknown>>
 
       const nodes = vertexMaps.map((vertex) => {
@@ -61,7 +55,7 @@ export const graphData = query(
       const nodeIds = new Set(nodes.map(({ id }) => id))
 
       const edgeMaps = (
-        await g.E()
+        await g().E()
         .limit(limit * 4)
         .project('id', 'label', 'source', 'target', 'properties')
         .by(T.id)
@@ -110,14 +104,6 @@ export const graphData = query(
       }
       console.error({ graphData: err })
       throw error(500, `Graph Export: "${msg}"`)
-    } finally {
-      try {
-        if(connection) {
-          await connection.close()
-        }
-      } catch(err) {
-        console.error({ 'graphData Close Failed': err })
-      }
     }
   },
 )

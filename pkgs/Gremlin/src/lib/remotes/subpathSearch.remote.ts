@@ -2,9 +2,7 @@ import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { query } from '$app/server'
 import { error, isHttpError } from '@sveltejs/kit'
-import {
-  connect as connectJanusGraph, connectToG, mergeSpotRoot,
-} from '$lib/server/janusgraph'
+import { g, layerOf } from '$lib/server/janusgraph'
 import settings from '$lib/settings.svelte'
 import { getSessionAddress } from '$lib/server/auth'
 
@@ -29,22 +27,17 @@ export const subpathSearch = query(
     terms = [],
     containerId = null,
   }) => {
-    const connection = await connectJanusGraph()
-
     try {
       if(terms.length === 0) return null
 
-      const g = connectToG(connection)
       let traversal = null
 
       if(containerId != null) {
-        traversal = g.V(containerId)
+        traversal = g().V(containerId)
       } else {
         const address = await getSessionAddress()
         if(!address) return null
-        traversal = await mergeSpotRoot({
-          traversal: g, address, create: false
-        })
+        traversal = layerOf(address)
       }
 
       for(const term of terms) {
@@ -75,14 +68,6 @@ export const subpathSearch = query(
       }
       console.error({ searchFor: error })
       throw error(500, `Spot Search: "${msg}"`)
-    } finally {
-      try {
-        if(connection) {
-          await connection.close()
-        }
-      } catch (error) {
-        console.error({ 'searchFor Close Failed': error })
-      }
     }
   }
 )
