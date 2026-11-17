@@ -1,0 +1,130 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { render } from 'vitest-browser-svelte'
+import { userEvent } from 'vitest/browser'
+import { flushSync } from 'svelte'
+
+const { listing, searchSpots } = vi.hoisted(() => ({
+  listing: vi.fn(() => Object.assign(
+    Promise.resolve({ layers: [1], contents: [], children: [] }),
+    { refresh: vi.fn() },
+  )),
+  searchSpots: vi.fn(() => Promise.resolve({
+    results: [
+      { id: 2, names: ['b', 'emma'], thumb: null, types: [] },
+      { id: 3, names: ['b', 'c', 'gemma'], thumb: null, types: [] },
+    ],
+    more: false,
+  })),
+}))
+
+vi.mock('#lib/components/SIWE.svelte', () => import('./SIWE.stub.svelte'))
+vi.mock('#lib/remotes/listing.remote.js', () => ({ listing }))
+vi.mock('#lib/remotes/searchSpots.remote.js', () => ({ searchSpots }))
+vi.mock('#lib/janus2DAG.js', () => ({ janusToDAG: vi.fn() }))
+vi.mock('#lib/janus2CSV.js', () => ({ graphToCSV: vi.fn() }))
+vi.mock('#lib/ipfs.js', () => ({ addFiles: vi.fn(), kuboUpload: vi.fn() }))
+vi.mock('$app/navigation', () => ({ goto: vi.fn(), afterNavigate: vi.fn() }))
+vi.mock('$app/state', () => ({
+  page: { params: { path: 'a' }, url: new URL('http://localhost/a/') },
+}))
+
+const Page = (await import('./+page.svelte')).default
+
+const field = () => (
+  document.querySelector<HTMLInputElement>('#actions input[type="search"]')!
+)
+const panes = () => [...document.querySelectorAll<HTMLElement>('section#browse')]
+const crumbs = (pane: HTMLElement) => pane.querySelectorAll('#crumbs ol > li').length
+const results = () => document.querySelector('#search-results')
+const dualPanes = () => [...document.querySelectorAll<HTMLInputElement>(
+  '#actions input[type="checkbox"]',
+)].find((box) => box.parentElement?.textContent?.includes('Dual Panes'))!
+
+const type = (text: string) => {
+  field().value = text
+  field().dispatchEvent(new Event('input', { bubbles: true }))
+  flushSync()
+}
+
+const toggleDualPanes = () => {
+  dualPanes().click()
+  flushSync()
+}
+
+/** Moves the second pane to the root through its own breadcrumbs. */
+const moveSecondPaneToRoot = async () => {
+  panes()[1].querySelector<HTMLAnchorElement>('#crumbs ol > li a')!.click()
+  flushSync()
+  await vi.waitFor(() => expect(crumbs(panes()[1])).toBe(1))
+}
+
+beforeEach(async () => {
+  await render(Page)
+})
+
+afterEach(() => {
+  document.body.innerHTML = ''
+})
+
+describe('searching from the actions menu', () => {
+  it('shows results in the first pane as you type, without submitting', async () => {
+    type('emm')
+    await vi.waitFor(() => expect(panes()[0].querySelector('#search-results')).not.toBeNull())
+  })
+
+  it('keeps the results when the actions menu closes', async () => {
+    const actions = document.getElementById('actions')!
+    actions.showPopover()
+    type('emm')
+    actions.hidePopover()
+    flushSync()
+    await vi.waitFor(() => expect(results()).not.toBeNull())
+  })
+
+  it('suspends the split while searching, then restores both panes', async () => {
+    toggleDualPanes()
+    await vi.waitFor(() => expect(panes()).toHaveLength(2))
+    await moveSecondPaneToRoot()
+    type('emm')
+    expect(panes()[1].hidden).toBe(true)
+    expect(getComputedStyle(panes()[1]).display).toBe('none')
+    type('')
+    expect(panes()[1].hidden).toBe(false)
+    expect(crumbs(panes()[1])).toBe(1)
+    expect(crumbs(panes()[0])).toBe(2)
+  })
+
+  it('applies a Dual Panes change made while searching once the search ends', async () => {
+    toggleDualPanes()
+    await vi.waitFor(() => expect(panes()).toHaveLength(2))
+    type('emm')
+    toggleDualPanes()
+    type('')
+    expect(panes()).toHaveLength(1)
+  })
+})
+
+describe('going to a result from the keyboard', () => {
+  it('reaches the results from the search field & opens one with Enter', async () => {
+    toggleDualPanes()
+    await vi.waitFor(() => expect(panes()).toHaveLength(2))
+    await moveSecondPaneToRoot()
+    const actions = document.getElementById('actions')!
+    actions.showPopover()
+    field().focus()
+    type('emm')
+    await vi.waitFor(() => (
+      expect(document.querySelector('#search-results a')).not.toBeNull()
+    ))
+    await userEvent.keyboard('{ArrowDown}')
+    expect(document.activeElement)
+    .toBe(document.querySelector('#search-results a'))
+    await userEvent.keyboard('{Enter}')
+    flushSync()
+    expect(actions.matches(':popover-open')).toBe(false)
+    expect(field().value).toBe('')
+    await vi.waitFor(() => expect(crumbs(panes()[0])).toBe(4))
+    expect(panes()[1].hidden).toBe(false)
+    expect(crumbs(panes()[1])).toBe(1)
+  })
+})

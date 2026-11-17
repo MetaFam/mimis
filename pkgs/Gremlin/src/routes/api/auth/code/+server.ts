@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
-import { createExchangeCode, getSessionAddress } from '$lib/server/auth'
+import { createExchangeCode, getSessionAddress } from '#lib/server/auth.js'
 
 /**
  * Returns a single-use, minute-long code for the logged-in user.

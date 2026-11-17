@@ -1,13 +1,13 @@
 import * as v from 'valibot'
 import { error, json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
-import { getSessionAddress } from '$lib/server/auth'
+import { getSessionAddress } from '#lib/server/auth.js'
 import {
   fileTarget, findRep, listEntries, renameEntry, statEntry,
-} from '$lib/server/fsEntries'
-import { addBytes, catBytes, pin } from '$lib/server/ipfs'
-import { addFiles } from '$lib/remotes/addFiles.remote'
-import { spotId } from '$lib/remotes/spotId.remote'
+} from '#lib/server/fsEntries.js'
+import { addBytes, catBytes, pin } from '#lib/server/ipfs.js'
+import { addFiles } from '#lib/remotes/addFiles.remote.js'
+import { spotId } from '#lib/remotes/spotId.remote.js'
 
 const segments = (path: string) => (
   path.split('/').filter(Boolean)

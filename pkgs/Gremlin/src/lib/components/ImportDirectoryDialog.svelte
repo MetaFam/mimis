@@ -1,15 +1,12 @@
 <script lang="ts">
-  import { listing } from '$lib/remotes/listing.remote'
-  import { spotId } from '$lib/remotes/spotId.remote'
-  import {
-    fileTreeToCIDTree as treeToCIDs, type TreeNode,
-  } from '$lib/fileTree2CIDTree'
-  import settings from '$lib/settings.svelte'
-  import { spiderDirHandles } from '$lib/dirHandles2JSTree'
-  import { expandLevels, selectAll } from '$lib'
-  import { cidTreeToJanus } from '$lib/cidTree2Janus'
+  import { listing } from '#lib/remotes/listing.remote.js'
+  import { fileTreeToCIDTree as treeToCIDs } from '#lib/fileTree2CIDTree.js'
+  import settings from '#lib/settings.svelte.js'
+  import { spiderDirHandles } from '#lib/dirHandles2JSTree.js'
+  import { expandLevels, selectAll } from '#lib'
+  import { cidTreeToJanus } from '#lib/cidTree2Janus.js'
   import FileTree from './FileTree.svelte'
-  import Spinner from '$lib/assets/spinner.svg'
+  import Spinner from '#lib/assets/spinner.svg'
   import { type DirNode } from '../../types'
 
   let { self = $bindable(), path } = $props()
@@ -51,16 +48,9 @@
       if(!tree) throw new Error('No tree to import.')
       const form = evt.currentTarget as HTMLFormElement
       if((evt.submitter as HTMLInputElement)?.value !== 'cancel') {
-        const {
-          descendingTo: cidTree
-        } = await treeToCIDs(tree, { log }) as {
-          descendingTo: TreeNode
-        }
-        await cidTreeToJanus({
-          tree: cidTree,
-          containerId: await spotId({ path }),
-          log,
-        })
+        const cidTree = await treeToCIDs(tree, { log })
+        if(!cidTree) throw new Error('Nothing is selected to import.')
+        await cidTreeToJanus({ tree: cidTree, path, log })
       }
       log?.('Import complete.')
       form.reset()
@@ -131,14 +121,14 @@
           {/if}
         </button>
         <menu>
-          <button name="action" value="spider" disabled={!dir}>
+          <button name="action" value="spider" disabled={!dir} class="add">
             {#if working}
               <img src={Spinner} alt="spin"/>
             {:else}
               Spider
             {/if}
           </button>
-          <button name="action" value="cancel">Cancel</button>
+          <button name="action" value="cancel" class="cancel">Cancel</button>
         </menu>
       </fieldset>
     </form>

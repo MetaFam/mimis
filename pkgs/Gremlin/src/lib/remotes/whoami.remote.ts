@@ -1,6 +1,6 @@
 import { query } from '$app/server'
 import { error } from '@sveltejs/kit'
-import { getSessionAddress } from '$lib/server/auth.ts'
+import { getSessionAddress } from '#lib/server/auth.js'
 
 export const whoami = query(
   async () => {

@@ -17,6 +17,13 @@ declare global {
 
 	interface Window {
 		showDirectoryPicker: () => Promise<FileSystemDirectoryHandle>
+		showSaveFilePicker: (options?: {
+			suggestedName?: string
+			types?: Array<{
+				description?: string
+				accept: Record<string, Array<string>>
+			}>
+		}) => Promise<FileSystemFileHandle>
 	}
 }
 

@@ -1,6 +1,23 @@
-import { browser } from '$app/environment'
+import { browser } from '$app/env'
 import { page } from '$app/state'
-import { env } from '$env/dynamic/public'
+import {
+  PUBLIC_IPFS_URL_PATTERN,
+  PUBLIC_IPFS_API,
+  PUBLIC_IPFS_TIMEOUT,
+  PUBLIC_NEO4J_URI,
+  PUBLIC_NEO4J_USER,
+  PUBLIC_NEO4J_PASS,
+  PUBLIC_LIMIT,
+  PUBLIC_DEBUGGING,
+  PUBLIC_USE_KUBO,
+  PUBLIC_USE_STORACHA,
+  PUBLIC_DETAILS_ZOOM,
+  PUBLIC_JANUSGRAPH_URL,
+  PUBLIC_JANUSGRAPH_USERNAME,
+  PUBLIC_JANUSGRAPH_PASSWORD,
+  PUBLIC_PUBLIC_JANUSGRAPH_URL,
+  PUBLIC_EDITOR_URL,
+} from '$app/env/public'
 
 export class Settings {
   static keys = {
@@ -27,52 +44,52 @@ export class Settings {
   } as const
   static defaults = {
     [Settings.keys.ipfsURLPattern]: (
-      env.PUBLIC_IPFS_URL_PATTERN || 'http://{cid}.ipfs.localhost:8080{path}'
+      PUBLIC_IPFS_URL_PATTERN || 'http://{cid}.ipfs.localhost:8080{path}'
     ),
     [Settings.keys.ipfsAPI]: (
-      env.PUBLIC_IPFS_API || 'http://localhost:5001/api/v0'
+      PUBLIC_IPFS_API || 'http://localhost:5001/api/v0'
     ),
     [Settings.keys.ipfsTimeout]: (
-      env.PUBLIC_IPFS_TIMEOUT ? Number(env.PUBLIC_IPFS_TIMEOUT) : 45_000
+      PUBLIC_IPFS_TIMEOUT ? Number(PUBLIC_IPFS_TIMEOUT) : 45_000
     ),
-    [Settings.keys.neo4jURL]: env.PUBLIC_NEO4J_URI || 'bolt://localhost:7687',
-    [Settings.keys.neo4jUser]: env.PUBLIC_NEO4J_USER || 'neo4j',
-    [Settings.keys.neo4jPass]: env.PUBLIC_NEO4J_PASS || 'neo4j',
-    [Settings.keys.limit]: env.PUBLIC_LIMIT ? Number(env.PUBLIC_LIMIT) : 125,
+    [Settings.keys.neo4jURL]: PUBLIC_NEO4J_URI || 'bolt://localhost:7687',
+    [Settings.keys.neo4jUser]: PUBLIC_NEO4J_USER || 'neo4j',
+    [Settings.keys.neo4jPass]: PUBLIC_NEO4J_PASS || 'neo4j',
+    [Settings.keys.limit]: PUBLIC_LIMIT ? Number(PUBLIC_LIMIT) : 125,
     [Settings.keys.debugging]: (
       browser && page.url.searchParams.has('debug') ? (
         true
       ) : (
-        env.PUBLIC_DEBUGGING ? Boolean(env.PUBLIC_DEBUGGING) : false
+        PUBLIC_DEBUGGING ? Boolean(PUBLIC_DEBUGGING) : false
       )
     ),
     [Settings.keys.useKubo]: (
-      env.PUBLIC_USE_KUBO ? Boolean(env.PUBLIC_USE_KUBO) : true
+      PUBLIC_USE_KUBO ? Boolean(PUBLIC_USE_KUBO) : true
     ),
     [Settings.keys.kuboUsername]: '',
     [Settings.keys.kuboPassword]: '',
     [Settings.keys.useStoracha]: (
-      env.PUBLIC_USE_STORACHA ? Boolean(env.PUBLIC_USE_STORACHA) : false
+      PUBLIC_USE_STORACHA ? Boolean(PUBLIC_USE_STORACHA) : false
     ),
     [Settings.keys.storachaEmail]: '',
     [Settings.keys.storachaSpace]: 'Mïmis',
     [Settings.keys.detailsZoom]: (
-      env.PUBLIC_DETAILS_ZOOM ? Number(env.PUBLIC_DETAILS_ZOOM) : 1
+      PUBLIC_DETAILS_ZOOM ? Number(PUBLIC_DETAILS_ZOOM) : 1
     ),
     [Settings.keys.janusGraphURL]: (
-      env.PUBLIC_JANUSGRAPH_URL || 'wss://janus.mimis.dhappy.org/gremlin'
+      PUBLIC_JANUSGRAPH_URL || 'wss://janus.mimis.dhappy.org/gremlin'
     ),
     [Settings.keys.janusGraphUsername]: (
-      env.PUBLIC_JANUSGRAPH_USERNAME || 'mimis'
+      PUBLIC_JANUSGRAPH_USERNAME || 'mimis'
     ),
     [Settings.keys.janusGraphPassword]: (
-      env.PUBLIC_JANUSGRAPH_PASSWORD || 'This is the JanusGraph password for mimis.'
+      PUBLIC_JANUSGRAPH_PASSWORD || 'This is the JanusGraph password for mimis.'
     ),
     [Settings.keys.publicJanusGraphURL]: (
-      env.PUBLIC_PUBLIC_JANUSGRAPH_URL || 'wss://janus.mimis.dhappy.org/gremlin'
+      PUBLIC_PUBLIC_JANUSGRAPH_URL || 'wss://janus.mimis.dhappy.org/gremlin'
     ),
     [Settings.keys.editorURL]: (
-      env.PUBLIC_EDITOR_URL || 'http://localhost:33333'
+      PUBLIC_EDITOR_URL || 'http://localhost:33333'
     ),
   }
 

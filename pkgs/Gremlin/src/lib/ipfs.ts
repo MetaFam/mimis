@@ -1,8 +1,8 @@
 import type { CID, Version } from 'multiformats'
 import { create as ipfsFactory } from 'kubo-rpc-client'
 import { CAREncoderStream } from 'ipfs-car'
-import { addFiles as filesToSpot } from '$lib/remotes/addFiles.remote'
-import settings from '$lib/settings.svelte'
+import { addFiles as filesToSpot } from '#lib/remotes/addFiles.remote.js'
+import settings from '#lib/settings.svelte.js'
 import type { Logger } from "../types.ts";
 
 export interface Spot {

@@ -2,8 +2,8 @@ import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { error } from '@sveltejs/kit'
 import { query } from '$app/server'
-import { g, writeLayer } from '$lib/server/janusgraph'
-import { getSessionAddress } from '$lib/server/auth'
+import { g, writeLayer } from '#lib/server/janusgraph.js'
+import { getSessionAddress } from '#lib/server/auth.js'
 
 const { t: T } = gremlin.process
 

@@ -2,7 +2,7 @@ import { error, json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import {
   createSessionToken, getSessionAddress, redeemExchangeCode,
-} from '$lib/server/auth'
+} from '#lib/server/auth.js'
 
 /**
  * Returns a bearer token for the logged-in user, for use by

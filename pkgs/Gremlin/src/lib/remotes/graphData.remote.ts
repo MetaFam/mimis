@@ -2,8 +2,8 @@ import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { error, isHttpError } from '@sveltejs/kit'
 import { query } from '$app/server'
-import settings from '$lib/settings.svelte'
-import { g } from '$lib/server/janusgraph'
+import settings from '#lib/settings.svelte.js'
+import { g } from '#lib/server/janusgraph.js'
 
 const { statics: __, t: T } = gremlin.process
 

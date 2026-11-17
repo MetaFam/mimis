@@ -2,8 +2,8 @@ import { json, error } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import { verifyMessage } from 'viem'
 import { parseSiweMessage, validateSiweMessage } from 'viem/siwe'
-import { createSessionCookie } from '$lib/server/auth'
-import { getNonceStore } from '$lib/server/nonces'
+import { createSessionCookie } from '#lib/server/auth.js'
+import { getNonceStore } from '#lib/server/nonces.js'
 
 export const POST: RequestHandler = async ({ request, platform }) => {
   const { message, signature } = await request.json() as {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { addFiles } from "$lib/ipfs";
+  import { addFiles } from "#lib/ipfs.js";
 
   let {
     self = $bindable(),

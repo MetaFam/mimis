@@ -4,7 +4,7 @@ import { command } from '$app/server'
 import { error } from '@sveltejs/kit'
 import {
   writeLayer,
-} from '$lib/server/janusgraph'
+} from '#lib/server/janusgraph.js'
 import { upsertSpot } from './upsertSpot.remote'
 import { listing } from './listing.remote'
 

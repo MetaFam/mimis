@@ -1,8 +1,8 @@
-import type { HandleClientError } from '@sveltejs/kit'
+import type { HandleClientError } from '@sveltejs/kit/hooks'
 
 export const handleError: HandleClientError = (
-  async ({ error, event, status, message }) => {
-	  console.debug({ error, event, status, message })
-  	return error
+  async ({ kind, error, event }) => {
+    console.debug({ kind, error, event })
+    return error
   }
 )

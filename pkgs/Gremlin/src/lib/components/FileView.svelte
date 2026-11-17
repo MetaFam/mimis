@@ -2,15 +2,20 @@
   import Breadcrumbs from './Breadcrumbs.svelte'
   import FileBrowser from './FileBrowser.svelte'
 
-  let { path = $bindable([]), me } = $props()
+  let {
+    path = $bindable([]),
+    query = $bindable(''),
+    me,
+    hidden = false,
+  } = $props()
 </script>
 
-<section id="browse">
+<section id="browse" {hidden}>
   <nav id="crumbs">
     <Breadcrumbs bind:path address={me}/>
   </nav>
   <section id="files">
-    <FileBrowser bind:path/>
+    <FileBrowser bind:path bind:query/>
   </section>
 </section>
 
@@ -22,6 +27,10 @@
 
   #browse {
     flex-direction: column;
+
+    &[hidden] {
+      display: none;
+    }
   }
 
   #crumbs {

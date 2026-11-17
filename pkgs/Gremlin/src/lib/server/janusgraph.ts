@@ -1,7 +1,7 @@
 import gremlin from 'gremlin'
 import { v7 as uuidV7 } from 'uuid'
 import { error } from '@sveltejs/kit'
-import settings from '$lib/settings.svelte'
+import settings from '#lib/settings.svelte.js'
 import { getSessionAddress } from "./auth.ts";
 
 const { driver, process } = gremlin

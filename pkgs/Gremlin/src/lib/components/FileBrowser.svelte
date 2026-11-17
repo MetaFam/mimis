@@ -2,13 +2,16 @@
   import { resolve } from '$app/paths'
   import {
     listing, type Child, type Content,
-  } from '$lib/remotes/listing.remote'
-  import { dropGenerator, navigateOnClick, toHTTP } from '$lib'
-  import settings from '$lib/settings.svelte'
-  import Folder from '$lib/assets/folder.svg'
+  } from '#lib/remotes/listing.remote.js'
+  import { dropGenerator, navigateOnClick, toHTTP } from '#lib'
+  import settings from '#lib/settings.svelte.js'
+  import { partsOf } from '#lib/search.js'
+  import Folder from '#lib/assets/folder.svg'
+  import SearchResults from './SearchResults.svelte'
 
-  let { path = $bindable([]) }: {
+  let { path = $bindable([]), query = $bindable('') }: {
     path: Array<string>
+    query?: string
   } = $props()
 
   const { source: dropSource, target: dropTarget } = (
@@ -110,110 +113,106 @@
     }
   }}
 >
-  {#await listing({ path }) then { contents, children }}
-    <ul>
-      {#each children.map(tileFor) as {
-        name, type, cid, id, from, types,
-      } (name)}
-        {@const { target } = dropGenerator(
-          { path: () => [...path, name] }
-        )}
-        {@const editable = {
-          target: type === 'spot' ? [...path, name] : path,
-        }}
-        <li
-          use:target
-          oncontextmenu={(evt) => {
-            if(evt.ctrlKey) {
-              openMenu(evt, editable)
-            }
+  {#if partsOf(query).length > 0}
+    <SearchResults bind:path bind:query/>
+  {:else}
+    {#await listing({ path }) then { contents, children }}
+      <ul>
+        {#each children.map(tileFor) as {
+          name, type, cid, id, from, types,
+        } (name)}
+          {@const { target } = dropGenerator(
+            { path: () => [...path, name] }
+          )}
+          {@const editable = {
+            target: type === 'spot' ? [...path, name] : path,
           }}
-          onpointerdown={(evt) => pressStart(evt, editable)}
-          onpointerup={pressEnd}
-          onpointercancel={pressEnd}
-        >
-          <a
-            href={resolve(
-              `${
-                path.length > 0 ? '/' : ''
-              }${
-                path.join('/')
-              }/${
-                name
-              }` as '/'
-            )}
-            title={name}
-            onclick={navigateOnClick({
-              target: [...path, name],
-              set: (next) => path = next,
-            })}
-          >
-            {#if cid}
-              <img
-                src={toHTTP({ cid })}
-                alt={name}
-                use:dropSource
-                data-kind="spot"
-                data-id={id}
-                data-from={from}
-                class:folder={type === 'spot'}
-                draggable="true"
-              />
-            {:else if type === 'spot'}
-              <img
-                src={Folder}
-                class="folder"
-                alt="📁"
-                use:dropSource
-                data-kind="spot"
-                data-id={id}
-                data-from={from}
-                draggable="true"
-              />
-            {:else}
-              <aside>{types.join(', ')}</aside>
-            {/if}
-            <span>{name}</span>
-          </a>
-        </li>
-      {/each}
-    </ul>
-    {@const sole = soleDisplayable(contents)}
-    {@const title = path.at(-1) ?? 'file'}
-    {#if sole}
-      {@const { cid, type, id, spot } = sole}
-      <figure id="media">
-        {#if sole.type.startsWith('image/')}
-          <img
-            src={toHTTP({ cid })}
-            alt={path.at(-1) ?? ''}
-            draggable="true"
-            use:dropSource
-            data-kind="content"
-            data-id={id}
-            data-from={spot}
-          />
-        {:else if sole.type.startsWith('video/')}
-          <!-- svelte-ignore a11y_media_has_caption -->
-          <video src={toHTTP({ cid })} controls></video>
-        {:else}
-          <object
-            data={toHTTP({ cid })}
-            {type}
-            {title}
+          <li
+            use:target
+            oncontextmenu={(evt) => {
+              if(evt.ctrlKey) {
+                openMenu(evt, editable)
+              }
+            }}
+            onpointerdown={(evt) => pressStart(evt, editable)}
+            onpointerup={pressEnd}
+            onpointercancel={pressEnd}
           >
             <a
-              href={toHTTP({ cid })}
-              rel="external"
-              target="_blank"
+              href={resolve([...path, name].join('/'))}
+              title={name}
+              onclick={navigateOnClick({
+                target: [...path, name],
+                set: (next) => path = next,
+              })}
             >
-              View {title}
+              {#if cid}
+                <img
+                  src={toHTTP({ cid })}
+                  alt={name}
+                  use:dropSource
+                  data-kind="spot"
+                  data-id={id}
+                  data-from={from}
+                  class:folder={type === 'spot'}
+                  draggable="true"
+                />
+              {:else if type === 'spot'}
+                <img
+                  src={Folder}
+                  class="folder"
+                  alt="📁"
+                  use:dropSource
+                  data-kind="spot"
+                  data-id={id}
+                  data-from={from}
+                  draggable="true"
+                />
+              {:else}
+                <aside>{types.join(', ')}</aside>
+              {/if}
+              <span>{name}</span>
             </a>
-          </object>
-        {/if}
-      </figure>
-    {/if}
-  {/await}
+          </li>
+        {/each}
+      </ul>
+      {@const sole = soleDisplayable(contents)}
+      {@const title = path.at(-1) ?? 'file'}
+      {#if sole}
+        {@const { cid, type, id, spot } = sole}
+        <figure id="media">
+          {#if sole.type.startsWith('image/')}
+            <img
+              src={toHTTP({ cid })}
+              alt={path.at(-1) ?? ''}
+              draggable="true"
+              use:dropSource
+              data-kind="content"
+              data-id={id}
+              data-from={spot}
+            />
+          {:else if sole.type.startsWith('video/')}
+            <!-- svelte-ignore a11y_media_has_caption -->
+            <video src={toHTTP({ cid })} controls></video>
+          {:else}
+            <object
+              data={toHTTP({ cid })}
+              {type}
+              {title}
+            >
+              <a
+                href={toHTTP({ cid })}
+                rel="external"
+                target="_blank"
+              >
+                View {title}
+              </a>
+            </object>
+          {/if}
+        </figure>
+      {/if}
+    {/await}
+  {/if}
   <menu class="context" popover bind:this={contextMenu}>
     <li><button onclick={editInVSCode}>
       Edit /{contextPath.join('/')} in VS Code

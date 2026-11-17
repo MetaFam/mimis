@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { browser } from "$app/environment"
+  import { browser } from "$app/env"
 
   let {
     min = 0, max = 100, step = 1, property,

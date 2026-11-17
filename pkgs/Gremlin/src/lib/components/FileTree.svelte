@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { filter, isDirNode, metricize, walk } from '$lib'
-  import type { DirNode, Node } from '../types'
-  import Eraser from '$lib/assets/erase.svg'
-  import Filter from '$lib/assets/filter.svg'
+  import { filter, isDirNode, metricize, walk } from '#lib'
+  import type { DirNode, Node } from '../../types'
+  import Eraser from '#lib/assets/erase.svg'
+  import Filter from '#lib/assets/filter.svg'
 
   let { tree = $bindable(), onsubmit, oncancel } = $props()
   let regexDialog = $state<HTMLDialogElement>()
@@ -51,9 +51,6 @@
 </script>
 
 {#snippet renderNode(node: Node)}
-  {@const file = (node.handle instanceof FileSystemFileHandle ? (
-    await node.handle?.getFile()
-   ) : ( null ))}
   <dl>
     <dt>Selected?</dt>
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -79,11 +76,16 @@
     <dd data-for="size">{metricize(node.size, { precision: 1 })}</dd>
     <dt id="view">View</dt>
     <dd data-for="view">
-      {#if !!file && node.type === 'file'}
-        <object
-          data={URL.createObjectURL(file)}
-          aria-label={node.title}
-        ></object>
+      {#if (
+        node.type === 'file'
+        && node.handle instanceof FileSystemFileHandle
+      )}
+        {#await node.handle.getFile() then file}
+          <object
+            data={URL.createObjectURL(file)}
+            aria-label={node.title}
+          ></object>
+        {/await}
       {:else if node.type !== 'directory'}
         {node.type}
       {/if}
@@ -102,8 +104,8 @@
       <details open={node.expanded}>
         <summary>{@render renderNode(node)}</summary>
         <ol>
-          {#each node.children as child, idx}
-            {@render fileItem(child as DirNode, depth + 1)}
+          {#each node.children as child (child.title)}
+            {@render fileItem(child, depth + 1)}
           {/each}
         </ol>
       </details>
@@ -124,11 +126,12 @@
     <legend>Files to Import</legend>
     {@render listFiles({ tree, id: 'files' })}
     <menu>
-      <button name="action" value="import">Import</button>
+      <button name="action" value="import" class="add">Import</button>
       <button
         type="button"
         name="action" value="cancel"
         onclick={oncancel}
+        class="cancel"
       >
         Cancel
       </button>
@@ -157,8 +160,8 @@
       <legend>Regex to Unselect</legend>
       <input name="regex" required/>
       <menu>
-        <button name="action" value="import">Unselect</button>
-        <button name="action" value="cancel">Cancel</button>
+        <button name="action" value="import" class="add">Unselect</button>
+        <button name="action" value="cancel" class="cancel">Cancel</button>
       </menu>
     </fieldset>
   </form>
@@ -177,7 +180,7 @@
 </dialog>
 
 <style>
-    #files {
+  #files {
     display: grid;
     grid-template-columns: repeat(3, min-content) repeat(2, 1fr);
     gap: 0.5em;
@@ -253,7 +256,7 @@
 
     & .directory > details > summary > dl > dd[data-for="view"]::before {
       content: '';
-      background-image: url('$lib/assets/folder.svg');
+      background-image: url('../assets/folder.svg');
       background-repeat: no-repeat;
       background-size: contain;
       display: inline-block;
@@ -263,7 +266,7 @@
     }
 
     & .directory > details:open > summary > dl > dd[data-for="view"]::before {
-      background-image: url('$lib/assets/folder.open.svg');
+      background-image: url('../assets/folder.open.svg');
     }
   }
 

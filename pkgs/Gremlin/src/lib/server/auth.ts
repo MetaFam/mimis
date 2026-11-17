@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit'
 import { getRequestEvent } from '$app/server'
-import { env } from '$env/dynamic/private'
+import { SESSION_SECRET } from '$app/env/private'
 
 const SESSION_COOKIE = 'mimis_session'
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
@@ -9,8 +9,8 @@ const SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
 const EXCHANGE_MAX_AGE = 60 * 5 // seconds
 
 async function getKey(): Promise<CryptoKey> {
-  const secret = env.SESSION_SECRET
-  if(!secret) throw new Error('SESSION_SECRET is not set')
+  const secret = SESSION_SECRET
+  if(!secret) throw new Error('`$SESSION_SECRET` is not set.')
   return crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(secret),

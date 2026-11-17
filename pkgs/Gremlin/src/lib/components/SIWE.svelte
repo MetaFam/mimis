@@ -4,17 +4,17 @@
   import { onMount } from 'svelte'
   import { error } from '@sveltejs/kit'
   import type { AppKit } from '@reown/appkit'
-  import { browser } from '$app/environment'
-  import { logout } from '$lib/remotes/logout.remote'
-  import { whoami } from '$lib/remotes/whoami.remote'
-  import settings from '$lib/settings.svelte'
+  import { browser } from '$app/env'
+  import { logout } from '#lib/remotes/logout.remote.js'
+  import { whoami } from '#lib/remotes/whoami.remote.js'
+  import settings from '#lib/settings.svelte.js'
 
   let {
     walletConnected = $bindable(false),
     me = $bindable<string | null>(null)
   } = $props()
   let wagmiConfig: ReturnType<
-    typeof import('$lib/appkit').getWagmiAdapter
+    typeof import('#lib/appkit.js').getWagmiAdapter
   >['wagmiConfig'] | null = null
   let appKit: AppKit | null = null
 
@@ -25,7 +25,7 @@
   })
 
   async function connect() {
-    const { getAppKit, getWagmiAdapter } = await import('$lib/appkit')
+    const { getAppKit, getWagmiAdapter } = await import('#lib/appkit.js')
     appKit = getAppKit()
     ;({ wagmiConfig } = getWagmiAdapter())
     let signingIn = false

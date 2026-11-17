@@ -1,11 +1,10 @@
 import { CID } from 'multiformats'
-import { settings } from '$lib/settings.svelte'
-import type { TreeNode, Walker } from '$lib/fileTree2CIDTree'
-import { moveSpot } from '$lib/remotes/moveSpot.remote'
-import { moveContent } from '$lib/remotes/moveContent.remote'
-import { listing } from '$lib/remotes/listing.remote'
-import { spotId } from '$lib/remotes/spotId.remote'
-import { addFiles } from '$lib/ipfs'
+import { settings } from '#lib/settings.svelte.js'
+import { moveSpot } from '#lib/remotes/moveSpot.remote.js'
+import { moveContent } from '#lib/remotes/moveContent.remote.js'
+import { listing } from '#lib/remotes/listing.remote.js'
+import { spotId } from '#lib/remotes/spotId.remote.js'
+import { addFiles } from '#lib/ipfs.js'
 import type { Node, DirNode } from '../types'
 
 export function toHTTP({ url, cid }: {
@@ -113,19 +112,48 @@ export function expandLevels(
   expand(tree, levels)
 }
 
-export interface WalkOut {
-  descendingTo: unknown
+type MaybePromise<T> = T | Promise<T>
+
+/** `R` is what `descendingTo` makes of each node. */
+export interface WalkOut<R = unknown> {
+  descendingTo: R | undefined
   descendingFrom: unknown
   ascendingFrom: unknown
   ascendingTo: unknown
-  walk: unknown
+  walk: WalkOut<R> | null
 }
 
-export async function walk(
-  { tree, walker }: { tree: TreeNode, walker: Walker }
+type AtNode<T, R> = {
+  root: T
+  walker: Walker<T, R>
+  out: WalkOut<R>
+}
+type BetweenNodes<T, R> = {
+  from: T
+  to: T
+  walker: Walker<T, R>
+  out: WalkOut<R>
+}
+
+export interface Walker<T, R = unknown> {
+  descendingTo?: (at: AtNode<T, R>) => MaybePromise<R | undefined>
+  descendingFrom?: (between: BetweenNodes<T, R>) => unknown
+  ascendingTo?: (between: BetweenNodes<T, R>) => unknown
+  ascendingFrom?: (at: AtNode<T, R>) => unknown
+  count?: number
+}
+
+// Leaves carry no `children` at all, so `T` can’t be constrained to
+// `{ children?: Array<T> }` without TypeScript rejecting them.
+const childrenOf = <T>(node: T) => (
+  (node as { children?: Array<T> }).children
+)
+
+export async function walk<T extends object, R = unknown>(
+  { tree, walker }: { tree: T, walker: Walker<T, R> }
 ) {
-  const out: WalkOut = {
-    descendingTo: null,
+  const out: WalkOut<R> = {
+    descendingTo: undefined,
     descendingFrom: null,
     ascendingFrom: null,
     ascendingTo: null,
@@ -133,7 +161,7 @@ export async function walk(
   }
 
   out.descendingTo = await walker.descendingTo?.({ root: tree, walker, out })
-  for(const child of tree.children ?? []) {
+  for(const child of childrenOf(tree) ?? []) {
     out.descendingFrom = await walker.descendingFrom?.(
       { from: tree, to: child, walker, out }
     )
@@ -149,20 +177,19 @@ export async function walk(
   return out
 }
 
-export function filter(
-  { tree, fn }: { tree: TreeNode, fn: (node: TreeNode) => boolean }
-): TreeNode {
-  if(tree.children != null) {
-    return ({
-      ...tree,
-      children: (
-        tree.children
-        .filter(fn)
-        .map((child: TreeNode) => filter({ tree: child, fn }))
-      )
-    })
+export function filter<T extends object>(
+  { tree, fn }: { tree: T, fn: (node: T) => boolean }
+): T {
+  const children = childrenOf(tree)
+  if(children == null) return tree
+  return {
+    ...tree,
+    children: (
+      children
+      .filter(fn)
+      .map((child) => filter({ tree: child, fn }))
+    ),
   }
-  return tree
 }
 
 export function isDirNode(node?: Node | null): node is DirNode {

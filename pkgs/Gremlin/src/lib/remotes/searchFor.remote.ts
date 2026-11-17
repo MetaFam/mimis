@@ -2,8 +2,8 @@ import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { query } from '$app/server'
 import { error, isHttpError } from '@sveltejs/kit'
-import { writeLayer } from '$lib/server/janusgraph'
-import settings from '$lib/settings.svelte'
+import { writeLayer } from '#lib/server/janusgraph.js'
+import settings from '#lib/settings.svelte.js'
 
 const { statics: __, scope: Scope } = gremlin.process
 type GraphTraversal = InstanceType<typeof gremlin.process.GraphTraversal>

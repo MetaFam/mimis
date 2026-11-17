@@ -3,7 +3,8 @@ import * as v from 'valibot'
 import { isHttpError, error } from '@sveltejs/kit'
 import { command } from '$app/server'
 import { spotId } from './spotId.remote'
-import { mergePath, writeLayer } from '$lib/server/janusgraph'
+import { mergePath, writeLayer } from '#lib/server/janusgraph.js'
+import { listing } from './listing.remote'
 
 const { statics: __ } = gremlin.process
 
@@ -26,6 +27,8 @@ export const upsertSpot = command(
         (await mergePath({ containerId, path: subdirectory, now }))
         .id().next()
       )).value
+
+      void listing({ path: subdirectory }).refresh()
 
       return id
     } catch(err) {

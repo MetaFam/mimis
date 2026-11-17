@@ -1,6 +1,6 @@
 import { create as ipfsFactory } from 'kubo-rpc-client'
 import type { Version } from 'multiformats'
-import settings from '$lib/settings.svelte'
+import settings from '#lib/settings.svelte.js'
 
 export function getIPFS() {
   const url = settings.ipfsAPI.replace(/\/+$/, '')

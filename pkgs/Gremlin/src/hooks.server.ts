@@ -1,8 +1,10 @@
-import { type Handle } from '@sveltejs/kit'
-import { env } from '$env/dynamic/public'
+import { type Handle } from '@sveltejs/kit/hooks'
+import {
+  PUBLIC_EDITOR_URL as editorOnline
+} from '$app/env/public'
 
 const editorOrigin = (
-  (env.PUBLIC_EDITOR_URL || 'http://localhost:33333').replace(/\/+$/, '')
+  (editorOnline || 'http://localhost:33333').replace(/\/+$/, '')
 )
 
 /** Routes the VS Code editor extension calls cross-origin. */
@@ -11,7 +13,7 @@ const corsPaths = /^\/api\/(fs|auth\/token)(\/|$)/
 function corsHeaders(origin: string) {
   return {
     'Access-Control-Allow-Origin': origin,
-    'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS, QUERY',
     'Access-Control-Allow-Headers': 'Authorization, Content-Type',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',

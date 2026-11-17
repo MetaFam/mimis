@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Settings, settings } from '$lib/settings.svelte'
+  import { Settings, settings } from '#lib/settings.svelte.js'
 
   let {
     self = $bindable(),
@@ -115,11 +115,11 @@
       </label>
     </fieldset>
     <menu>
-      <button type="button" onclick={() => {
+      <button class="add">Save</button>
+      <button type="button" class="cancel" onclick={() => {
         values.values = settings
         self.close()
       }}>Cancel</button>
-      <button>Save</button>
     </menu>
   </form>
 </dialog>

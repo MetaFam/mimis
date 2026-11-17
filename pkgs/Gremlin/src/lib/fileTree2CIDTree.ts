@@ -1,95 +1,67 @@
-import type { MaybePromise } from 'viem'
-import { kuboUpload } from '$lib/ipfs'
-import settings from '$lib/settings.svelte'
-import { isDirNode, walk, type WalkOut } from '$lib'
-import type { Node } from '../types.ts'
+import { kuboUpload } from '#lib/ipfs.js'
+import settings from '#lib/settings.svelte.js'
+import { isDirNode, walk } from '#lib'
+import type { Node } from '../types'
 
-export type TreeNode = {
-  children?: Array<TreeNode>
-}
-
-export type OneTimeWalkFunction = (
-  ({ root, walker, out }:
-    { root: TreeNode, walker: Walker, out: WalkOut }) => (
-    MaybePromise<unknown>
-  )
-)
-export type LoopedWalkFunction = (
-  (
-    { from, to, walker, out }:
-    { from: TreeNode, to: TreeNode, walker: Walker, out: WalkOut }
-  ) => MaybePromise<unknown>
+export type CIDNode = (
+  | {
+    type: 'file'
+    title: string
+    size: number
+    cid: string
+    mimetype: string
+  }
+  | {
+    type: 'directory'
+    title: string
+    children: Array<CIDNode>
+  }
 )
 
-export interface Walker {
-  descendingTo?: OneTimeWalkFunction
-  descendingFrom?: LoopedWalkFunction
-  ascendingTo?: LoopedWalkFunction
-  ascendingFrom?: OneTimeWalkFunction
-  count?: number
-}
-
-export interface FileWalker extends Walker {
-  rootAt: Record<string, Node>
-  path?: string
-}
-
+/**
+ * Uploads every selected file to IPFS. The selected tree with each
+ * file’s CID, or nothing if the root isn’t selected.
+ */
 export async function fileTreeToCIDTree(
-  tree: Node, { log }: { log?: (msg: unknown) => void | null } = {},
+  tree: Node, { log }: { log?: (msg: unknown) => void } = {},
 ) {
-  return (
-    await walk({
-      tree,
-      walker: {
-        async descendingTo({ root, walker, out }) {
-          if(settings.debugging) {
-            log?.(`DescendingTo: ${root.title}`)
-          }
-          walker.count ??= 0
-          walker.count++
-          const { handle, file, children, selected, ...rest } = root
-          if(selected !== false) {
-            if(
-              handle instanceof FileSystemFileHandle
-              || file instanceof File
-            ) {
-              if(!(handle ?? file)) {
-                throw new Error('No handle found to leverage.')
-              }
-              const input = (handle ? (
-                await (handle as FileSystemFileHandle).getFile()
-              ) : file)
-              const [{ cid }] = await kuboUpload({ files: [input] })
-              return (
-                { ...rest, mimetype: input.type, cid: cid.toString() }
-              )
-            } else if(isDirNode(root)) {
-              if(out.descendingTo) {
-                console.warn('`descendingTo` already set.')
-              }
-              return { ...rest, children: [] }
-            } else {
-              console.warn(
-                `¿What are you? Well: ${typeof handle} / ${typeof file}`
-              )
-            }
-          }
-        },
-        async ascendingTo({ to, from, out }) {
-          if(settings.debugging) {
-            log?.(`AscendingTo: ${to.title}, from: ${from.title}`)
-          }
-          if(to.selected !== false) {
-            if(Array.isArray(out.descendingTo?.children)) {
-              if(out.walk?.descendingTo != null) {
-                out.descendingTo.children.push(out.walk?.descendingTo)
-              }
-            } else {
-              console.warn('`out.descendingTo.children` is not an array.')
-            }
-          }
-        },
+  const { descendingTo: cidTree } = await walk<Node, CIDNode>({
+    tree,
+    walker: {
+      async descendingTo({ root, walker }) {
+        if(settings.debugging) {
+          log?.(`DescendingTo: ${root.title}`)
+        }
+        walker.count ??= 0
+        walker.count++
+        if(root.selected === false) return
+        if(isDirNode(root)) {
+          return { type: 'directory', title: root.title, children: [] }
+        }
+        const input = await root.handle?.getFile() ?? root.file
+        if(!input) {
+          throw new Error(`“${root.title}” has neither a handle nor a file.`)
+        }
+        const [{ cid }] = await kuboUpload({ files: [input] })
+        return {
+          type: 'file',
+          title: root.title,
+          size: root.size,
+          cid: cid.toString(),
+          mimetype: input.type,
+        }
       },
-    })
-  )
+      async ascendingTo({ to, from, out }) {
+        if(settings.debugging) {
+          log?.(`AscendingTo: ${to.title}, from: ${from.title}`)
+        }
+        const parent = out.descendingTo
+        const child = out.walk?.descendingTo
+        if(parent?.type === 'directory' && child != null) {
+          parent.children.push(child)
+        }
+      },
+    },
+  })
+  return cidTree
 }

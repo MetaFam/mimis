@@ -2,9 +2,9 @@
   import { onMount, onDestroy } from 'svelte'
   import { resolve } from '$app/paths'
   import type ForceGraph from 'force-graph'
-  import { graphData, type GraphData, type GraphNode, type GraphLink } from '$lib/remotes/graphData.remote'
-  import Eyes from '$lib/assets/infinity eyes.svg'
-  import { metricize, toHTTP } from '$lib'
+  import { graphData, type GraphData, type GraphNode, type GraphLink } from '#lib/remotes/graphData.remote.js'
+  import Eyes from '#lib/assets/infinity eyes.svg'
+  import { metricize, toHTTP } from '#lib'
 
   let container = $state<HTMLDivElement>()
   let graph: ForceGraph<GraphNode, GraphLink> | null = null
@@ -215,7 +215,7 @@
 
 <main>
   <header>
-    <a class="home" href={resolve('/')} title="Back to files">🢗 Files 🢗</a>
+    <a class="home" href={resolve('')} title="Back to files">🢗 Files 🢗</a>
     <h1>Force Graph</h1>
     {#if data}
       <span class="stats">

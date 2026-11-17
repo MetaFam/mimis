@@ -1,7 +1,7 @@
 import gremlin from 'gremlin'
 import { error } from '@sveltejs/kit'
 import { layerOf, type GraphTraversal } from './janusgraph'
-import { extFor, nameFor, splitName, typeForName } from '$lib/mimetypes'
+import { extFor, nameFor, splitName, typeForName } from '#lib/mimetypes.js'
 
 const { statics: __ } = gremlin.process
 

@@ -1,8 +1,10 @@
+import {
+  PUBLIC_APPKIT_PROJECT_ID as projectId
+} from '$app/env/public'
 import { AppKit, createAppKit } from '@reown/appkit'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { mainnet } from '@reown/appkit/networks'
-import { browser } from '$app/environment'
-import { env } from '$env/dynamic/public'
+import { browser } from '$app/env'
 
 let appKit: AppKit | null | undefined = undefined
 let wagmiAdapter: WagmiAdapter | null | undefined = undefined
@@ -11,7 +13,6 @@ const initializeAppKit = () => {
   if(!browser) {
     appKit = wagmiAdapter = null
   } else {
-    const projectId = env.PUBLIC_APPKIT_PROJECT_ID
     if(!projectId) {
       throw new Error('$PUBLIC_APPKIT_PROJECT_ID is not set.')
     }

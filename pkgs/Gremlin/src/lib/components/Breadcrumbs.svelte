@@ -1,7 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths'
-  import { dropGenerator, navigateOnClick } from '$lib'
-  import root from '$lib/assets/root.svg'
+  import { dropGenerator, navigateOnClick } from '#lib'
+  import root from '#lib/assets/root.svg'
 
   let { path = $bindable([]), address = null }: {
     path: string[]
@@ -13,7 +13,7 @@
 <ol>
   {#each { length: path.length + 1 }, idx}
     {@const toHere = path.slice(0, idx)}
-    {@const whole = `/${toHere.join('/')}${idx > 0 ? '/' : ''}`}
+    {@const whole = `${toHere.join('/')}${idx > 0 ? '/' : ''}`}
     {@const { source, target } = dropGenerator({ path: () => toHere })}
     {@const decoded = decodeURI(toHere.at(-1) ?? '¡ℍ𝕖𝕣𝕖!')}
     <li
@@ -25,7 +25,7 @@
         selected = selected === idx ? null : idx
       }}>⇨</button>
       <a
-        href={resolve(whole as '/')}
+        href={resolve(whole)}
         title={idx === 0 ? (address ?? '𝙍𝙤𝙤𝙩') : decoded}
         onclick={navigateOnClick(
           { target: toHere, set: (next) => path = next }

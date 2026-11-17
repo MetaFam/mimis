@@ -3,34 +3,36 @@
   import { page } from '$app/state'
   import { afterNavigate, goto } from '$app/navigation'
   import { resolve } from '$app/paths'
-  import ConfigDialog from '$lib/components/ConfigDialog.svelte'
-  import ErrorDialog from '$lib/components/ErrorDialog.svelte'
-  import CSSRange from '$lib/components/CSSRange.svelte'
-  import SIWE from '$lib/components/SIWE.svelte'
-  import NewSpot from '$lib/components/NewSpot.svelte'
+  import ConfigDialog from '#lib/components/ConfigDialog.svelte'
+  import ErrorDialog from '#lib/components/ErrorDialog.svelte'
+  import CSSRange from '#lib/components/CSSRange.svelte'
+  import SIWE from '#lib/components/SIWE.svelte'
+  import NewSpot from '#lib/components/NewSpot.svelte'
   import ImportDirectoryDialog, {
-  } from '$lib/components/ImportDirectoryDialog.svelte'
-  import FileView from '$lib/components/FileView.svelte'
-  import settings from '$lib/settings.svelte'
-  import { janusToDAG } from '$lib/janus2DAG'
-  import { graphToCSV } from '$lib/janus2CSV'
-  import { toHTTP, logHeader, within } from '$lib'
-  import Eyes from '$lib/assets/infinity eyes.svg'
-  import Background from '$lib/assets/background.svg'
-    import NewFiles from '$lib/components/NewFiles.svelte';
+  } from '#lib/components/ImportDirectoryDialog.svelte'
+  import FileView from '#lib/components/FileView.svelte'
+  import settings from '#lib/settings.svelte.js'
+  import { janusToDAG } from '#lib/janus2DAG.js'
+  import { graphToCSV } from '#lib/janus2CSV.js'
+  import { toHTTP, logHeader, within } from '#lib'
+  import { partsOf } from '#lib/search.js'
+  import Eyes from '#lib/assets/infinity eyes.svg'
+  import Background from '#lib/assets/background.svg'
+    import NewFiles from '#lib/components/NewFiles.svelte';
 
   let errorMsg = $state<string | null>(null)
   let path = $state(
     page.params.path?.split('/').filter(Boolean) ?? []
   )
   let dualPanes = $state(false)
+  let query = $state('')
   let addSpotDialog = $state<HTMLDialogElement>()
   let addFilesDialog = $state<HTMLDialogElement>()
   let importDirectoryDialog = $state<HTMLDialogElement>()
   let logDialog = $state<HTMLDialogElement>()
   let configDialog = $state<HTMLDialogElement>()
   let logs = $state<Array<string>>([])
-  let whoAmI = $state<string | null>('0x0')
+  let whoAmI = $state<string | null>(null)
 
   logHeader()
 
@@ -61,8 +63,8 @@
     )
     if(current.join('/') === path.join('/')) return
     goto(
-      resolve((path.length > 0 ? `/${path.join('/')}/` : '/') as '/'),
-      { replaceState: false, noScroll: true, keepFocus: true },
+      resolve(path.length > 0 ? `${path.join('/')}/` : ''),
+      { reset: false },
     )
   })
 
@@ -160,7 +162,16 @@
       <li><button onclick={graphToCSV}>Export to CSV</button></li>
       <li class="search">
         <form onsubmit={(evt) => { evt.preventDefault() }}>
-          <input type="search"/>
+          <input
+            type="search"
+            bind:value={query}
+            onkeydown={(evt) => {
+              if(evt.key !== 'ArrowDown') return
+              evt.preventDefault()
+              document.querySelector<HTMLAnchorElement>('#search-results a')
+              ?.focus()
+            }}
+          />
           <button>🔎</button>
         </form>
       </li>
@@ -203,34 +214,39 @@
   </menu>
   <nav id="locations" class="popover" popover>
     <ul id="system">
-      <li><a href={resolve('/')}>Root</a></li>
+      <li><a href={resolve('')}>Root</a></li>
       <li>Recent</li>
       <li>Categories</li>
       <li>Volumes</li>
     </ul>
     <ul id="user">
-      <li><a href={resolve('/media/book/by/')}>Books</a></li>
-      <li><a href={resolve('/media/movies/entitled/')}>
+      <li><a href={resolve('media/book/by/')}>Books</a></li>
+      <li><a href={resolve('media/movies/entitled/')}>
         Movies
       </a></li>
       <!--
       <li><a
-        href={resolve('/television/episodes/ordered/by/internet release/')}
+        href={resolve('television/episodes/ordered/by/internet release/')}
       >
         Latest TV
       </a></li>
       -->
       <li><a href={
-        resolve('/science/biology/papers/ordered/by/publication date/')
+        resolve('science/biology/papers/ordered/by/publication date/')
       }>
         Biology Papers
       </a></li>
       <li><button type="button">➕</button></li>
     </ul>
   </nav>
-  <FileView bind:path me={whoAmI}/>
+  <FileView bind:path bind:query me={whoAmI}/>
   {#if dualPanes}
-    <FileView path={untrack(() => [...path])} me={whoAmI}/>
+    <!-- Hidden, not unmounted, so it keeps its own position. -->
+    <FileView
+      path={untrack(() => [...path])}
+      me={whoAmI}
+      hidden={partsOf(query).length > 0}
+    />
   {/if}
   <nav>
     <menu id="tools">
@@ -259,8 +275,20 @@
     </menu>
   </nav>
 
-  <NewSpot bind:self={addSpotDialog} {path}/>
-  <NewFiles bind:self={addFilesDialog} {path}/>
+  <NewSpot
+    bind:self={addSpotDialog}
+    {path}
+    onerror={(msg: string) => (
+      errorMsg = msg
+    )}
+  />
+  <NewFiles
+    bind:self={addFilesDialog}
+    {path}
+    onerror={(msg: string) => (
+      errorMsg = msg
+    )}
+  />
 
   <dialog id="logs" bind:this={logDialog}>
     <form>

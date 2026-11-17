@@ -42,9 +42,9 @@ export interface Listing {
  * `repeat()` doesn’t give, since it runs breadth-first.
  */
 const SEGMENT = '/'
-type Key = Array<number | typeof SEGMENT>
+export type Key = Array<number | typeof SEGMENT>
 
-const precedence = () => (
+export const precedence = () => (
   __.path()
   .unfold()
   .hasLabel('MOUNT', 'CONTAINS')
@@ -56,7 +56,7 @@ const precedence = () => (
   .fold()
 )
 
-const compareKeys = (a: Key, b: Key) => {
+export const compareKeys = (a: Key, b: Key) => {
   const rank = (elem?: number | typeof SEGMENT) => (
     elem === SEGMENT ? -Infinity : Number(elem ?? -Infinity)
   )
@@ -88,7 +88,7 @@ const withMounts = (
  * Current (unsuperseded) `Content`s with their `Blob`s, newest first
  * within each `order`.
  */
-const contentsOf = () => (
+export const contentsOf = () => (
   __.outE('AS')
   .inV()
   .hasLabel('Content')
@@ -120,12 +120,11 @@ const childrenOf = () => (
 )
 
 /**
- * Every Spot a path could resolve to, each expanded into its mounted
- * layers, with each layer’s own `Content`s & `CONTAINS` children.
- * Since resolution backtracks, a path names the ordered set of Spots
- * it reaches, not just the first.
+ * Every Spot a path could resolve to, following the mounts along the
+ * way but not those of the Spots it ends at. Since resolution
+ * backtracks, a path names a set of Spots, ranked by `precedence()`.
  */
-export function listingTraversal(
+export function resolvePath(
   { from, path, maxDepth = 10 }:
   { from: GraphTraversal, path: Array<string>, maxDepth?: number }
 ) {
@@ -138,8 +137,23 @@ export function listingTraversal(
       .inV()
     )
   }
+  return traversal
+}
+
+/**
+ * Every Spot a path could resolve to, each expanded into its mounted
+ * layers, with each layer’s own `Content`s & `CONTAINS` children.
+ */
+export function listingTraversal(
+  { from, path, maxDepth = 10 }:
+  { from: GraphTraversal, path: Array<string>, maxDepth?: number }
+) {
   return (
-    withMounts({ traversal, label: 'cursor', maxDepth })
+    withMounts({
+      traversal: resolvePath({ from, path, maxDepth }),
+      label: 'cursor',
+      maxDepth,
+    })
     .project('id', 'key', 'contents', 'children')
     .by(__.id())
     .by(precedence())

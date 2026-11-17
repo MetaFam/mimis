@@ -1,5 +1,5 @@
 <script lang="ts">
-  import settings from '$lib/settings.svelte'
+  import settings from '#lib/settings.svelte.js'
 
   let { error = $bindable() } = $props()
   let janusGraphURL = $state(settings.publicJanusGraphURL)

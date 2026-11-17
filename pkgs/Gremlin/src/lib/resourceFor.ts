@@ -1,8 +1,8 @@
 import gremlin from 'gremlin'
-import { spotId } from '$lib/remotes/spotId.remote'
-import { g } from '$lib/server/janusgraph'
-import { throwError } from '$lib'
-import { mimeFor, viewable } from '$lib/mimetypes'
+import { spotId } from '#lib/remotes/spotId.remote.js'
+import { g } from '#lib/server/janusgraph.js'
+import { throwError } from '#lib'
+import { mimeFor, viewable } from '#lib/mimetypes.js'
 
 const { statics: __ } = gremlin.process
 

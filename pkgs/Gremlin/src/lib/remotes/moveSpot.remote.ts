@@ -2,10 +2,10 @@ import * as v from 'valibot'
 import { v7 as uuidV7 } from 'uuid'
 import { error, isHttpError } from '@sveltejs/kit'
 import { command } from '$app/server'
-import { assertOwned, g } from '$lib/server/janusgraph'
+import { assertOwned, g } from '#lib/server/janusgraph.js'
 import {
   moveSpotTraversal, nameClash, wouldCycle,
-} from '$lib/server/moves'
+} from '#lib/server/moves.js'
 
 const MoveSpotSchema = v.object({
   what: v.number(),

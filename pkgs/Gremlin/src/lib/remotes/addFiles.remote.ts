@@ -4,9 +4,9 @@ import { v7 as uuidV7 } from 'uuid'
 import { error } from '@sveltejs/kit'
 import { command } from '$app/server'
 import { listing } from './listing.remote'
-import settings from '$lib/settings.svelte'
-import { splitName } from '$lib/mimetypes'
-import { g, mergePath } from '$lib/server/janusgraph'
+import settings from '#lib/settings.svelte.js'
+import { splitName } from '#lib/mimetypes.js'
+import { g, mergePath } from '#lib/server/janusgraph.js'
 
 const { process } = gremlin
 const { statics: __ } = process

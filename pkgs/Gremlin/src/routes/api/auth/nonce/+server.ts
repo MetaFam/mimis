@@ -1,7 +1,7 @@
 import { json, error  } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import { v7 as uuidV7 } from 'uuid'
-import { getNonceStore } from '$lib/server/nonces'
+import { getNonceStore } from '#lib/server/nonces.js'
 
 export const POST: RequestHandler = async ({ request, platform }) => {
   const { address } = await request.json() as { address: string }

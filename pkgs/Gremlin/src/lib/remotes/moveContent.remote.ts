@@ -1,8 +1,8 @@
 import * as v from 'valibot'
 import { error, isHttpError } from '@sveltejs/kit'
 import { command } from '$app/server'
-import { assertOwned, g } from '$lib/server/janusgraph'
-import { moveContentTraversal, typeClash } from '$lib/server/moves'
+import { assertOwned, g } from '#lib/server/janusgraph.js'
+import { moveContentTraversal, typeClash } from '#lib/server/moves.js'
 
 const MoveContentSchema = v.object({
   what: v.number(),

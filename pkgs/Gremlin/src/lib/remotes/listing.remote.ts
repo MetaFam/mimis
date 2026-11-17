@@ -1,11 +1,11 @@
 import * as v from 'valibot'
 import { query } from '$app/server'
 import { error, isHttpError } from '@sveltejs/kit'
-import settings from '$lib/settings.svelte'
-import { writeLayer } from '$lib/server/janusgraph'
-import { assembleListing, listingTraversal } from '$lib/server/listing'
+import settings from '#lib/settings.svelte.js'
+import { writeLayer } from '#lib/server/janusgraph.js'
+import { assembleListing, listingTraversal } from '#lib/server/listing.js'
 
-export type { Child, Content, Listing } from '$lib/server/listing'
+export type { Child, Content, Listing } from '#lib/server/listing.js'
 
 const ListingSchema = v.object({
   path: v.array(v.string()),

@@ -5,10 +5,10 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import { type ByteView } from 'multiformats'
 import type { KuboRPCClient } from 'kubo-rpc-client'
 import { signTypedData } from '@wagmi/core'
-import { settings } from '$lib/settings.svelte'
-import { nodeInfo } from '$lib/remotes/nodeInfo.remote'
-import { getIPFS, blocksToCAR } from '$lib/ipfs'
-import { toHTTP } from '$lib/index'
+import { settings } from '#lib/settings.svelte.js'
+import { nodeInfo } from '#lib/remotes/nodeInfo.remote.js'
+import { getIPFS, blocksToCAR } from '#lib/ipfs.js'
+import { toHTTP } from '#lib'
 import type { Logger } from '../types'
 
 type Options = {
@@ -104,8 +104,11 @@ export class Serializer {
   }
 
   async node(rootId?: number | null): Promise<CID> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { edges, id, properties, ...props } = await nodeInfo(rootId)
+    const info = await nodeInfo(rootId)
+    if(info == null) {
+      throw new Error('Sign in to export your graph.')
+    }
+    const { edges, id, properties, ...props } = info
 
     console.debug({ edges, id, properties, props })
 
@@ -165,7 +168,7 @@ export class Serializer {
 }
 
 export async function signCID(cid: string) {
-  const { getWagmiAdapter } = await import('$lib/appkit')
+  const { getWagmiAdapter } = await import('#lib/appkit.js')
   const adapter = getWagmiAdapter()
 
   const sig = await signTypedData(adapter.wagmiConfig, {
@@ -195,7 +198,9 @@ export async function janusToDAG(
     const serializer = new Serializer({
       log, batchSize, encoder, generateCAR, insertInIPFS,
     })
-    serializer.log?.(`Exporting tree rooted at ${rootId} to \`${encoder.name}\`…`)
+    serializer.log?.(
+      `Exporting tree rooted at ${rootId} to \`${encoder.name}\`…`
+    )
     const rootCID = await serializer.node(rootId)
 
     let signature: string | null = null
