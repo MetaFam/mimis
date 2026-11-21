@@ -42,7 +42,12 @@
 
   function load() {
     wallet = getConnection(config()).address ?? null
-    if(me && wallet) lists = pending()
+    if(!me || !wallet) return
+    // `pending()` answers from the cache, as it stood when the dialog
+    // last opened, & the tree may have changed since.
+    const fresh = pending()
+    void fresh.refresh()
+    lists = fresh
   }
 
   async function restage(change: Parameters<typeof stage>[0]) {
@@ -96,6 +101,12 @@
       busy = false
     }
   }
+
+  const titleCase = (s: string): string => (
+    s.toLowerCase()
+    .replace(/[_-]+/, ' ')
+    .replace(/\b\p{L}/gu, c => c.toUpperCase())
+  )
 </script>
 
 <dialog
@@ -104,15 +115,39 @@
     if((evt as ToggleEvent).newState === 'open') load()
   }}
 >
-  <h2>Publish</h2>
+  <header>
+    <h2>Publish</h2>
+    <button command="close" commandfor="publish">✘</button>
+  </header>
   {#if ready && lists}
     {#await lists}
       <img src={spinner} alt="Loading…"/>
     {:then { staged, unstaged }}
-      {#each [['Staged', staged], ['Not staged', unstaged]] as const as [name, spots] (name)}
+      {#each Object.entries({ staged, unstaged }) as [id, spots] (id)}
+        {@const name = titleCase(id)}
         <section aria-label={name}>
           <h3>{name}</h3>
           <ul>
+            {#if id === 'unstaged'}
+              <label id="mass-select">
+                <input
+                  type="checkbox"
+                  checked={false}
+                  id="check-all"
+                  class:betwixt={staged.length > 0 && unstaged.length > 0}
+                  onchange={() => {
+                    const list = staged.length === 0 ? unstaged : staged
+                    const ids = list.map(({ id }) => id)
+                    restage({ ids, staged: staged.length === 0})
+                  }}
+                />
+                {#if staged.length === 0}
+                  <span>↑↑↑ Stage Everything ↑↑↑</span>
+                {:else}
+                  <span>↓↓↓ Unstage Everything ↓↓↓</span>
+                {/if}
+              </label>
+            {/if}
             {#each spots as spot (spot.id)}
               <li>
                 <label>
@@ -129,25 +164,28 @@
           </ul>
         </section>
       {/each}
+      <form onsubmit={(evt) => { evt.preventDefault(); publish() }}>
+        <label>
+          Comment (optional, unsigned)
+          <input name="comment" bind:value={comment}/>
+        </label>
+        <menu>
+          <button
+            disabled={!ready || busy || staged.length === 0}
+            class="add"
+          >Publish</button>
+          <button
+            type="button"
+            command="close"
+            commandfor="publish"
+            class="cancel"
+          >Close</button>
+        </menu>
+      </form>
     {:catch err}
       <p>{messageOf(err)}</p>
     {/await}
   {/if}
-  <form onsubmit={(evt) => { evt.preventDefault(); publish() }}>
-    <label>
-      Comment (optional, unsigned)
-      <input name="comment" bind:value={comment}/>
-    </label>
-    <menu>
-      <button
-        type="button"
-        disabled={!ready}
-        onclick={() => restage({ all: true })}
-      >Stage all</button>
-      <button disabled={!ready || busy}>Publish</button>
-      <button type="button" command="close" commandfor="publish">Close</button>
-    </menu>
-  </form>
   <output aria-live="polite">
     {#if !ready}
       Connect a wallet to publish.
@@ -180,9 +218,46 @@
 </dialog>
 
 <style>
+  #check-all + span {
+    font-style: italic;
+    font-weight: bolder;
+  }
+
+  #check-all::before {
+    content: "";
+    width: 0.7em;
+    height: 0.7em;
+    transform: scale(0);
+    transition: transform 120ms ease-in-out;
+    background: currentColor;
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  }
+
+  #check-all:checked::before { transform: scale(1); }
+
+  #check-all:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+
+    & h2 {
+      margin: 0;
+    }
+
+    & button {
+      background: transparent;
+      border: none;
+    }
+  }
+
   dialog {
     max-height: 90dvh;
     overflow-y: auto;
+    min-width: 33dvw;
   }
 
   section ul {
@@ -198,7 +273,7 @@
 
   menu {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     gap: 0.5rem;
     padding: 0;
   }

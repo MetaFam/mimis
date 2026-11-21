@@ -92,9 +92,9 @@ describe('PublishDialog', () => {
   it('lists staged & unstaged Spots by path, with a summary', async () => {
     await open()
     await vi.waitFor(() => expect(rows('Staged')).toEqual(['/ new']))
-    expect(rows('Not staged')).toEqual(['icon/hat/ +2 −1'])
-    const [staged] = document.querySelectorAll<HTMLInputElement>('section[aria-label="Staged"] input[type="checkbox"]')
-    const [unstaged] = document.querySelectorAll<HTMLInputElement>('section[aria-label="Not staged"] input[type="checkbox"]')
+    expect(rows('Unstaged')).toEqual(['icon/hat/ +2 −1'])
+    const [staged] = document.querySelectorAll<HTMLInputElement>('section[aria-label="Staged"] li input[type="checkbox"]')
+    const [unstaged] = document.querySelectorAll<HTMLInputElement>('section[aria-label="Unstaged"] li input[type="checkbox"]')
     expect(staged.checked).toBe(true)
     expect(unstaged.checked).toBe(false)
   })
@@ -102,7 +102,7 @@ describe('PublishDialog', () => {
   it('asks for a wallet without a session, & won’t publish', async () => {
     await open(null)
     await vi.waitFor(() => expect(status()).toBe('Connect a wallet to publish.'))
-    expect(button('Publish').disabled).toBe(true)
+    expect(button('Publish')).toBeUndefined()
     expect(pending).not.toHaveBeenCalled()
   })
 
@@ -110,23 +110,36 @@ describe('PublishDialog', () => {
     getConnection.mockReturnValue({ address: undefined })
     await open()
     await vi.waitFor(() => expect(status()).toBe('Connect a wallet to publish.'))
-    expect(button('Publish').disabled).toBe(true)
+    expect(button('Publish')).toBeUndefined()
   })
 
   it('stages & unstages a Spot by its checkbox', async () => {
     await open()
-    await vi.waitFor(() => expect(rows('Not staged')).toHaveLength(1))
-    document.querySelector<HTMLInputElement>('section[aria-label="Not staged"] input')!.click()
+    await vi.waitFor(() => expect(rows('Unstaged')).toHaveLength(1))
+    document.querySelector<HTMLInputElement>('section[aria-label="Unstaged"] li input')!.click()
     await vi.waitFor(() => expect(stage).toHaveBeenCalledWith({ ids: [2], staged: true }))
-    document.querySelector<HTMLInputElement>('section[aria-label="Staged"] input')!.click()
+    document.querySelector<HTMLInputElement>('section[aria-label="Staged"] li input')!.click()
     await vi.waitFor(() => expect(stage).toHaveBeenCalledWith({ ids: [1], staged: false }))
   })
 
-  it('stages everything with “Stage all”', async () => {
+  it('stages every unstaged Spot with “Stage Everything”, while none are staged', async () => {
+    pending.mockImplementation(() => Object.assign(
+      Promise.resolve({ staged: [], unstaged: [...lists.unstaged, spot(3, ['b'])] }),
+      { refresh: vi.fn() },
+    ))
+    await open()
+    await vi.waitFor(() => expect(rows('Unstaged')).toHaveLength(2))
+    expect(document.querySelector('#mass-select')!.textContent).toContain('Stage Everything')
+    document.querySelector<HTMLInputElement>('#check-all')!.click()
+    await vi.waitFor(() => expect(stage).toHaveBeenCalledWith({ ids: [2, 3], staged: true }))
+  })
+
+  it('unstages every staged Spot with “Unstage Everything”', async () => {
     await open()
     await vi.waitFor(() => expect(rows('Staged')).toHaveLength(1))
-    button('Stage all').click()
-    await vi.waitFor(() => expect(stage).toHaveBeenCalledWith({ all: true }))
+    expect(document.querySelector('#mass-select')!.textContent).toContain('Unstage Everything')
+    document.querySelector<HTMLInputElement>('#check-all')!.click()
+    await vi.waitFor(() => expect(stage).toHaveBeenCalledWith({ ids: [1], staged: false }))
   })
 
   it('says when nothing is staged, without asking the wallet', async () => {
@@ -197,17 +210,17 @@ describe('PublishDialog', () => {
 })
 
 describe('PublishDialog, publishing part of the changes', () => {
-  it('moves an unchecked row to “Not staged” after the refresh', async () => {
+  it('moves an unchecked row to “Unstaged” after the refresh', async () => {
     await open()
     await vi.waitFor(() => expect(rows('Staged')).toEqual(['/ new']))
     pending.mockImplementation(() => Object.assign(
       Promise.resolve({ staged: [], unstaged: [{ ...lists.staged[0], staged: false }, ...lists.unstaged] }),
       { refresh: vi.fn() },
     ))
-    document.querySelector<HTMLInputElement>('section[aria-label="Staged"] input')!.click()
+    document.querySelector<HTMLInputElement>('section[aria-label="Staged"] li input')!.click()
     await vi.waitFor(() => expect(rows('Staged')).toEqual([]))
     expect(stage).toHaveBeenCalledWith({ ids: [1], staged: false })
-    expect(rows('Not staged')).toEqual(['/ new', 'icon/hat/ +2 −1'])
+    expect(rows('Unstaged')).toEqual(['/ new', 'icon/hat/ +2 −1'])
   })
 
   it('labels what was included by why, before asking the wallet', async () => {
@@ -226,6 +239,37 @@ describe('PublishDialog, publishing part of the changes', () => {
     await vi.waitFor(() => expect(status()).toContain('Waiting for your wallet…'))
     expect([...document.querySelectorAll('dialog#publish output li')].map((li) => li.textContent?.replace(/\s+/g, ' ').trim()))
     .toEqual(['a/ to connect', 'a/new/ new', 'b/ moved'])
+  })
+})
+
+describe('PublishDialog, reopened', () => {
+  it('lists Spots changed while it was closed', async () => {
+    // Like a remote query’s, every call’s answer is the one cached,
+    // which only `refresh` replaces.
+    const cache = { lists, answer: Promise.resolve(lists) }
+    pending.mockImplementation(() => ({
+      then: (
+        resolve: (value: typeof lists) => unknown,
+        reject: (err: unknown) => unknown,
+      ) => (
+        cache.answer.then(resolve, reject)
+      ),
+      refresh: () => (cache.answer = Promise.resolve(cache.lists)),
+    }))
+    const listed = () => (
+      [...document.querySelectorAll('dialog#publish section li')]
+      .map((row) => row.textContent?.replace(/\s+/g, ' ').trim())
+    )
+    await open()
+    await vi.waitFor(() => expect(listed()).toEqual(['/ new', 'icon/hat/ +2 −1']))
+    const dialog = document.querySelector<HTMLDialogElement>('dialog#publish')!
+    dialog.close()
+    cache.lists = {
+      ...lists,
+      unstaged: [...lists.unstaged, spot(3, ['icon', 'cap'], { isNew: true })],
+    }
+    dialog.showModal()
+    await vi.waitFor(() => expect(listed()).toEqual(['/ new', 'icon/hat/ +2 −1', 'icon/cap/ new']))
   })
 })
 

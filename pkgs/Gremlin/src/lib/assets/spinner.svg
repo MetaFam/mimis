@@ -1,5 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
   <title>Icon from SVG Spinners by Utkarsh Verma</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+    circle {
+      fill: light-dark(#04084B, #EED5CA);
+    }
+  </style>
   <defs>
     <filter id="blur">
       <feGaussianBlur in="SourceGraphic" result="y" stdDeviation="1" />
