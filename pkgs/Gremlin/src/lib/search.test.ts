@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { PAGE_SIZE, partsOf } from '#lib/search.js'
 
 describe('partsOf', () => {
-  it.each(['', '   ', '/', '//', ' / '])(
+  it.each(['', '   ', '/', '//', ' / ', '""', '" "', '"'])(
     'finds nothing to search for in %j',
     (query) => {
       expect(partsOf(query)).toEqual([])
@@ -14,16 +14,35 @@ describe('partsOf', () => {
     ['/emma', ['emma']],
     ['austen//emma', ['austen', 'emma']],
     ['/austen/emma/', ['austen', 'emma']],
+    ['austen  emma ', ['austen', 'emma']],
   ])('drops the empty parts of %j', (query, parts) => {
     expect(partsOf(query)).toEqual(parts)
   })
 
   it.each([
-    ['publication date', ['publication date']],
-    ['a / b', ['a ', ' b']],
-    ['Émma ✨', ['Émma ✨']],
+    ['publication date', ['publication', 'date']],
+    ['a / b', ['a', 'b']],
+    ['Émma ✨', ['Émma', '✨']],
+    ['austen\temma', ['austen', 'emma']],
+  ])('splits %j at its spaces', (query, parts) => {
+    expect(partsOf(query)).toEqual(parts)
+  })
+
+  it.each([
+    ['"publication date"', ['publication date']],
+    ['austen/"publication date" emma', ['austen', 'publication date', 'emma']],
+    ['"a "/" b"', ['a ', ' b']],
+    ['"Émma ✨"', ['Émma ✨']],
+    ['"AC/DC"', ['AC/DC']],
     ['a.b(c)[d]\\E', ['a.b(c)[d]\\E']],
-  ])('keeps %j exactly as typed', (query, parts) => {
+  ])('keeps the parts of %j exactly as typed', (query, parts) => {
+    expect(partsOf(query)).toEqual(parts)
+  })
+
+  it.each([
+    ['"publication da', ['publication da']],
+    ['austen "collected em', ['austen', 'collected em']],
+  ])('holds the rest of %j in an unclosed quote', (query, parts) => {
     expect(partsOf(query)).toEqual(parts)
   })
 })

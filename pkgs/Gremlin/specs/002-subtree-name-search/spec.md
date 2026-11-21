@@ -19,6 +19,10 @@
 - Q: How should a `/` in the query be treated? → A: It splits the query into parts that must match, in order, the names of Spots at successive (not necessarily adjacent) levels; `austen/em` finds `…/Austen/…/Emma/`.
 - Q: What happens to dual panes while results are showing? → A: The split is temporarily turned off, so the results fill the whole view; it returns when the search ends.
 
+### Session 2026-11-21
+
+- Q: How should spaces in the query be treated? → A: Like `/`s, except between `"`s: `austen emma` means `austen/emma`, while `"publication date"` is one part. Quoted text, `/`s included, is matched exactly as typed, and an unclosed `"` holds the rest of the query, so a quoted part searches as it's being typed.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Find Spots below here by name as you type (Priority: P1)
@@ -60,10 +64,11 @@ From the results in the file view, the user picks a Spot and the view navigates 
 ### Edge Cases
 
 - Matching is case-insensitive: `emma` finds `Emma/` and `GEMMA/`. Accents are not folded: `emma` does not find `Émma/`.
-- Each part of a query is matched exactly as typed, spaces and punctuation included, so `publication date` matches `ordered by publication date/`. A query that is empty, only whitespace, or only `/`s leaves the normal listing in place.
-- Blank parts (empty or only spaces) are ignored, so `emma/`, `/emma`, and `austen//emma` mean the same as `emma` and `austen/emma`, and ` / ` searches for nothing.
+- Spaces split a query as `/`s do, except between `"`s, so `publication date` looks for `date/` below `publication/`, while `"publication date"` matches `ordered by publication date/`. Each part is matched exactly as typed, punctuation included, and a quoted part keeps its spaces too, even at its ends. A query that is empty, only whitespace, or only `/`s leaves the normal listing in place.
+- An unclosed `"` holds the rest of the query, so `austen "collected em` looks for `collected em` below `austen/` while the closing `"` is yet to be typed.
+- Blank parts (empty or only spaces) are ignored, so `emma/`, `/emma`, `austen//emma`, and `austen  emma` mean the same as `emma` and `austen/emma`, and ` / ` and `" "` search for nothing.
 - In a multi-part query, the first part must match a Spot below the current position, not the current Spot itself; the last part matches the Spot that is listed.
-- A Spot whose name itself contains `/` can't be found by typing that `/`, because the `/` splits the query.
+- A Spot whose name itself contains `/` is found by quoting it, as `"AC/DC"`; unquoted, the `/` splits the query. A name’s `"`s can’t be typed, because they quote.
 - Names and queries in any script, including accented and non-Latin characters and emoji, match correctly.
 - A Spot reachable by more than one path is listed once, at its shallowest path.
 - At the root, the search covers the user's whole tree.
@@ -86,7 +91,7 @@ From the results in the file view, the user picks a Spot and the view navigates 
 - **FR-002**: A Spot's name, for matching and display, MUST be the name it has in its parent Spot (the name its containing Spot gives it).
 - **FR-003**: The search MUST cover every depth below the current position and MUST exclude the current Spot itself.
 - **FR-004**: Each part of the query MUST be matched as a case-insensitive substring of a name, exactly as typed; accented and unaccented letters MUST NOT be treated as equal.
-- **FR-016**: The query MUST be split on `/` into parts, ignoring blank ones (empty or only whitespace). A Spot MUST be a result when its name matches the last part and the names of Spots on its path below the current position match the earlier parts in order, at any depths, each part matched by a different Spot. A one-part query matches only the Spot's own name.
+- **FR-016**: The query MUST be split into parts at `/`s and whitespace, except between a pair of `"`s, or after an unclosed `"`, which MUST stay in one part, ignoring blank ones (empty or only whitespace). A Spot MUST be a result when its name matches the last part and the names of Spots on its path below the current position match the earlier parts in order, at any depths, each part matched by a different Spot. A one-part query matches only the Spot's own name.
 - **FR-005**: The search MUST start from the Spot the current position resolves to, as browsing resolves it, and from there follow only the Spots each Spot contains, never mounts.
 - **FR-006**: Each matching Spot MUST be listed once, at its shallowest path, and the search MUST finish even if a Spot is reachable by more than one path.
 - **FR-007**: Each result MUST show its path relative to the current position, and results MUST be ordered shallowest first, then alphabetically.
@@ -105,7 +110,7 @@ From the results in the file view, the user picks a Spot and the view navigates 
 
 - **Spot**: A location in the tree. It can contain other Spots, each under a name given by the containing Spot. The same Spot may be reachable by more than one path.
 - **Current position**: The Spot shown in the main view, whose subtree the search covers.
-- **Query**: The text typed into the actions menu's search field, split on `/` into one or more parts.
+- **Query**: The text typed into the actions menu's search field, split at `/`s and unquoted spaces into one or more parts.
 - **Result**: A matching Spot together with its path relative to the current position.
 
 ## Success Criteria *(mandatory)*

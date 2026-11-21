@@ -15,7 +15,7 @@ This feature reads the existing graph and writes nothing. For the stored schema,
 | Concept | Rule |
 | --- | --- |
 | `query` | The raw text of the search field, owned by `+page.svelte` |
-| `parts` | `partsOf(query)`: `query.split('/')` with blank (empty or whitespace-only) parts dropped, so `''`, `'   '`, `'//'` and `' / '` all give `[]` (FR-010) |
+| `parts` | `partsOf(query)`: `query.split('"')`, whose even pieces, outside quotes, split again at `/`s & whitespace, while the odd ones, inside, stay whole, with blank (empty or whitespace-only) parts dropped, so `''`, `'   '`, `'//'`, `' / '` and `'" "'` all give `[]` (FR-010, FR-016) |
 | Searching | `parts.length > 0`. This switches the first pane to results and suspends the split (FR-017) |
 | `settled` | `parts` as it stands 150 ms after the last keystroke; it's what gets sent to the server (research R7) |
 

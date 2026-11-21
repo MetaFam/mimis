@@ -6,7 +6,7 @@
 
 ## Summary
 
-Typing in the actions menu's search field replaces the main file view's listing with the Spots below the current position whose names match the query, where a `/` splits the query into parts matched against successive levels.
+Typing in the actions menu's search field replaces the main file view's listing with the Spots below the current position whose names match the query, where a `/` or a space outside `"`s splits the query into parts matched against successive levels.
 
 The search runs in Gremlin. A `searchSpots({ path, parts, offset })` query remote resolves the current position the way browsing does, then runs one traversal from there over `CONTAINS` edges only. The traversal:
 
