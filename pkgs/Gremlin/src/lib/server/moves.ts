@@ -1,10 +1,10 @@
 import gremlin from 'gremlin'
+import { retire } from '#lib/server/edits.js'
+import {
+  edgeId, type GraphTraversal, type GraphTraversalSource, type Id,
+} from '#lib/server/janusgraph.js'
 
 const { statics: __ } = gremlin.process
-type GraphTraversalSource = (
-  InstanceType<typeof gremlin.process.GraphTraversalSource>
-)
-type Id = string | number
 
 interface Move {
   source: GraphTraversalSource
@@ -16,53 +16,77 @@ interface Move {
 
 /**
  * Re-points the `AS` edge from `from` to `to`, keeping its `order`.
- * The new edge’s id, or nothing if `from` doesn’t hold `what`.
+ * The new edge’s id, or `null` if `from` doesn’t hold `what`.
  */
-export const moveContentTraversal = (
-  { source, what, from, to, now }: Move
-) => (
-  source.V(from)
-  .hasLabel('Spot')
-  .outE('AS')
-  .where(__.inV().hasId(what).hasLabel('Content'))
-  .as('old')
-  .inV()
-  .addE('AS')
-  .from_(__.V(to))
-  .property('createdAt', now)
-  .property(
-    'order',
-    __.select('old').coalesce(__.values('order'), __.constant('-1')),
-  )
-  .sideEffect(__.select('old').drop())
-  .id()
+export const relinkContent = ({ source, what, from, to, now }: Move) => (
+  relink({
+    source,
+    now,
+    added: (
+      source.V(from)
+      .hasLabel('Spot')
+      .outE('AS')
+      .where(__.inV().hasId(what).hasLabel('Content'))
+      .as('old')
+      .inV()
+      .addE('AS')
+      .from_(__.V(to))
+      .property('createdAt', now)
+      .property(
+        'order',
+        __.select('old').coalesce(__.values('order'), __.constant(-1)),
+      )
+    ),
+  })
 )
 
 /**
  * Re-points the `CONTAINS` edge from `from` to `to`, keeping its
- * `path` & `uuid`. The new edge’s id, or nothing if `from` doesn’t
+ * `path` & `uuid`. The new edge’s id, or `null` if `from` doesn’t
  * contain `what`.
  */
-export const moveSpotTraversal = (
+export const relinkSpot = (
   { source, what, from, to, now, uuid }: Move & { uuid: string }
 ) => (
-  source.V(from)
-  .hasLabel('Spot')
-  .outE('CONTAINS')
-  .where(__.inV().hasId(what))
-  .as('old')
-  .inV()
-  .addE('CONTAINS')
-  .from_(__.V(to))
-  .property('path', __.select('old').values('path'))
-  .property(
-    'uuid',
-    __.select('old').coalesce(__.values('uuid'), __.constant(uuid)),
-  )
-  .property('createdAt', now)
-  .sideEffect(__.select('old').drop())
-  .id()
+  relink({
+    source,
+    now,
+    added: (
+      source.V(from)
+      .hasLabel('Spot')
+      .outE('CONTAINS')
+      .where(__.inV().hasId(what))
+      .as('old')
+      .inV()
+      .addE('CONTAINS')
+      .from_(__.V(to))
+      .property('path', __.select('old').values('path'))
+      .property(
+        'uuid',
+        __.select('old').coalesce(__.values('uuid'), __.constant(uuid)),
+      )
+      .property('createdAt', now)
+    ),
+  })
 )
+
+/** Adds the new edge, then retires the old one it was copied from. */
+async function relink(
+  { source, now, added }:
+  { source: GraphTraversalSource, now: string, added: GraphTraversal },
+) {
+  const { value } = await (
+    added
+    .project('new', 'old')
+    .by(__.id())
+    .by(__.select('old').id())
+    .next()
+  )
+  if(!value) return null
+  const ids = value as Map<'new' | 'old', unknown>
+  await retire({ source, edge: edgeId(ids.get('old')), now })
+  return edgeId(ids.get('new'))
+}
 
 /** The `type` of `what` if `to` already holds a current one. */
 export const typeClash = (

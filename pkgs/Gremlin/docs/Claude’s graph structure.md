@@ -125,7 +125,7 @@ A `MOUNT` edge leads to a `Mount` node and has an `order` property specifying wh
 
 ## Updates
 
-The graph is propagated by creating CBOR-DAG representations of graph sections in IPFS.
+The graph is propagated by creating CBOR-DAG representations of partial graph sections in IPFS.
 
 ### Update Nodes
 
@@ -133,14 +133,14 @@ The first node acts to contextualize the graph segments. It is a CBOR object con
 
 ```js
 Update {
-  device,    // uuid identifying the device
-  sequence,  // count of updates from this user on this device
-  spots,     // Merkle search tree of uuid → Spot cid
-  contents,  // Merkle search tree of uuid → Contents cid
-  previous,  // cid of the prior Update from this device
-  signature, // over: device, sequence, spots, contents, & previous
-  timestamp, // creation time of the update
-  comment,   // optional description of the update
+  device: UUID,               // uuid identifying the device
+  sequence: number,           // count of updates from this user on this device
+  spots: MerkleSearchTree,    // tree of uuid → updated Spot cid
+  contents: MerkleSearchTree, // tree of uuid → updated Contents cid
+  previous?: CID,             // cid of the prior Update from this device
+  signature: ETHSig,          // over: device, sequence, spots, contents, & previous
+  createdAt: string,          // creation time of the update
+  comment?: string,           // optional description of the update
 }
 ```
 
@@ -152,32 +152,38 @@ The `User` an Update should be assigned to is derived by analyzing the signature
 
 Each version of a `Spot` is a DAG-CBOR document:
 
-```
+```js
 Spot {
-  uuid,
-  previous:    [ <cid of prior version> ],
-  dot:         { device, sequence },
-  depth,
-  contains:    { <path>: <uuid> | <Spot cid> | null },
-  mounts:      { <mount key>: { order, target: <version> | <path>, creator?, processing } | null },
-  masks:       { <path or mimetype>: true | null },
-  contents?:   <uuid> | null,
-  mergedInto?: <uuid>,
+  uuid: UUID,
+  previous?: CID, // cid of prior partial update if it exists
+  contains?: Array<
+    {uuid: uuid, path: string, target: CID}
+    | {tombstone: UUID}
+  >
+  mounts?: Array<
+    {target: UUID, creator?: ETHAddy, order: number}
+    | {tombstone: UUID}
+  >
+  contents?: Array<
+    {uuid: UUID, order: number, type: string}
+    | {tombstone: UUID}
+  >
 }
 ```
 
-The `uuid` is a UUIDv7 set at the point of creation which stays the same across updates, renames, & moves.
+If the mount is within this user's tree, no `creator` is needed.
 
-`previous` lists the CID(s) of the version(s) of this `Spot` it replaces. There is more than one entry when concurrent versions from different devices were merged.
-
-`dot` records the device & `sequence` of the `Update` that wrote this version.
-
-`contents` references a `Contents` document by UUID. A `Spot` with no representations, such as most folders, has none.
-
-`mergedInto` is set only on the final version of a `Spot` that was merged into another (see **Merging**).
-
-
-
+### Content Nodes
+```js
+Content {
+  uuid: UUID,
+  previous?: CID, // cid of prior partial update if it exists
+  blobs?: Array<
+    {uuid: UUID, cid: CID, size: number, type: Mimetype}
+    | {tombstone: UUID}
+  >
+}
+```
 
 For example, if all the nodes in the previous `WRITES` graph were included in the Update, its structure would be something like:
 

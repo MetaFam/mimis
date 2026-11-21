@@ -68,7 +68,7 @@ export const compareKeys = (a: Key, b: Key) => {
 }
 
 /** A Spot & everything it mounts, transitively, without cycles. */
-const withMounts = (
+export const withMounts = (
   { traversal, label, maxDepth }:
   { traversal: GraphTraversal, label: string, maxDepth: number }
 ) => (
@@ -85,19 +85,22 @@ const withMounts = (
 )
 
 /**
- * Current (unsuperseded) `Content`s with their `Blob`s, newest first
- * within each `order`.
+ * Current (unsuperseded) `Content`s with their `Blob`s, by the `order`
+ * of the `AS` edge holding each, & newest first within an `order`.
  */
 export const contentsOf = () => (
   __.outE('AS')
+  .order()
+  .by(__.coalesce(__.values('order'), __.constant(0)))
+  .by(
+    __.inV().coalesce(__.values('createdAt'), __.constant('')),
+    Order.desc,
+  )
   .inV()
   .hasLabel('Content')
   .has('type')
   .not(__.inE('PREVIOUS'))
   .where(__.out('IS').hasLabel('Blob'))
-  .order()
-  .by(__.coalesce(__.values('order'), __.constant(0)))
-  .by(__.coalesce(__.values('createdAt'), __.constant('')), Order.desc)
   .project('id', 'type', 'cid', 'size')
   .by(__.id())
   .by('type')

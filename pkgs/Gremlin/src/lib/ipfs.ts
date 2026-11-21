@@ -1,9 +1,7 @@
-import type { CID, Version } from 'multiformats'
+import type { Version } from 'multiformats'
 import { create as ipfsFactory } from 'kubo-rpc-client'
-import { CAREncoderStream } from 'ipfs-car'
 import { addFiles as filesToSpot } from '#lib/remotes/addFiles.remote.js'
 import settings from '#lib/settings.svelte.js'
-import type { Logger } from "../types.ts";
 
 export interface Spot {
   cid: string
@@ -49,50 +47,6 @@ export async function kuboUpload(
     idx++
   }
   return infos
-}
-
-type Block = { cid: CID}
-
-export async function blocksToCAR(
-  blocks: Array<Block>,
-  { log = null }: { log?: Logger } = {}
-) {
-  log?.('Generating CAR URL…')
-
-  const blks = [...blocks]
-  const blockStream = new ReadableStream({
-    pull(controller) {
-      if(blks.length > 0) {
-        controller.enqueue(blks.shift())
-      } else {
-        controller.close()
-      }
-    }
-  })
-
-  if(!blks || blks.length === 0) {
-    throw new Error('No blocks generated.')
-  }
-
-  const rootBlock = blks.at(-1)
-  if(!rootBlock) {
-    throw new Error('No root block found.')
-  }
-
-  type Chunk = ArrayBuffer
-  const chunks: Array<Chunk> = []
-  await (
-    blockStream
-    .pipeThrough(new CAREncoderStream([rootBlock.cid]))
-    .pipeTo(new WritableStream({
-      write(chunk) { chunks.push(chunk) },
-    }))
-  )
-
-  return {
-    url: URL.createObjectURL(new Blob(chunks)),
-    cid: rootBlock.cid,
-  }
 }
 
 export async function addFiles(

@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { isHttpError } from '@sveltejs/kit'
   import { resolve } from '$app/paths'
+  import { deleteSpot } from '#lib/remotes/deleteSpot.remote.js'
   import {
     listing, type Child, type Content,
   } from '#lib/remotes/listing.remote.js'
@@ -9,25 +11,30 @@
   import Folder from '#lib/assets/folder.svg'
   import SearchResults from './SearchResults.svelte'
 
-  let { path = $bindable([]), query = $bindable('') }: {
+  let { path = $bindable([]), query = $bindable(''), onerror }: {
     path: Array<string>
     query?: string
+    onerror?: (msg: string) => void
   } = $props()
 
   const { source: dropSource, target: dropTarget } = (
     dropGenerator({ path: () => path })
   )
 
+  type Id = Child['ids'][number]
+  type Tile = { name: string, id: Id, from: Id }
+  type MenuTarget = { target: Array<string>, tile?: Tile }
+
   let contextMenu = $state<HTMLElement>()
   let contextPath = $state<Array<string>>([])
+  let contextTile = $state<Tile | null>(null)
   let pressTimer: ReturnType<typeof setTimeout> | null = null
 
-  function openMenu(
-    evt: MouseEvent, { target }: { target: Array<string> }
-  ) {
+  function openMenu(evt: MouseEvent, { target, tile }: MenuTarget) {
     evt.preventDefault()
     evt.stopPropagation()
     contextPath = target
+    contextTile = tile ?? null
     if(!contextMenu) return
     contextMenu.style.left = `${evt.clientX}px`
     contextMenu.style.top = `${evt.clientY}px`
@@ -35,9 +42,7 @@
   }
 
   /** iOS Safari never fires `contextmenu`, so long-press by hand. */
-  function pressStart(
-    evt: PointerEvent, entry: { target: Array<string> }
-  ) {
+  function pressStart(evt: PointerEvent, entry: MenuTarget) {
     if(evt.pointerType === 'mouse') return
     pressTimer = setTimeout(() => openMenu(evt, entry), 600)
   }
@@ -75,6 +80,21 @@
       opened.location.href = url
     } else {
       window.open(url, '_blank')
+    }
+  }
+
+  /** Takes the menu’s tile out of this folder, once confirmed. */
+  async function deleteTile() {
+    contextMenu?.hidePopover()
+    if(!contextTile) return
+    const { name, id, from } = contextTile
+    if(!confirm(`Delete “${name}” from /${path.join('/')}?`)) return
+    try {
+      await deleteSpot({ what: Number(id), from: Number(from), name })
+      listing({ path }).refresh()
+    } catch(err) {
+      if(!onerror) throw err
+      onerror(isHttpError(err) ? err.body.message : (err as Error).message)
     }
   }
 
@@ -126,6 +146,7 @@
           )}
           {@const editable = {
             target: type === 'spot' ? [...path, name] : path,
+            tile: { name, id, from },
           }}
           <li
             use:target
@@ -217,6 +238,11 @@
     <li><button onclick={editInVSCode}>
       Edit /{contextPath.join('/')} in VS Code
     </button></li>
+    {#if contextTile}
+      <li><button onclick={deleteTile}>
+        Delete “{contextTile.name}”
+      </button></li>
+    {/if}
   </menu>
 </nav>
 

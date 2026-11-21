@@ -38,6 +38,9 @@ export default defineConfig({
 				test: {
 					name: 'server',
 					environment: 'node',
+					// The graph tests share one BerkeleyDB-backed JanusGraph,
+					// whose locks deadlock transactions from parallel files.
+					fileParallelism: false,
 					include: ['src/**/*.{test,spec}.{js,ts}'],
 					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
 				}

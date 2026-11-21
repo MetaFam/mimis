@@ -3,9 +3,10 @@ import { error, json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import { getSessionAddress } from '#lib/server/auth.js'
 import {
-  fileTarget, findRep, listEntries, renameEntry, statEntry,
+  deleteEntry, fileTarget, findRep, listEntries, renameEntry, statEntry,
 } from '#lib/server/fsEntries.js'
 import { addBytes, catBytes, pin } from '#lib/server/ipfs.js'
+import { inTransaction } from '#lib/server/janusgraph.js'
 import { addFiles } from '#lib/remotes/addFiles.remote.js'
 import { spotId } from '#lib/remotes/spotId.remote.js'
 
@@ -122,9 +123,17 @@ export const POST: RequestHandler = async ({ params, request, url }) => {
   }
 }
 
-export const DELETE: RequestHandler = async () => {
-  throw error(
-    405,
-    'Deletion is unsupported: the Mïmis graph is append-only.',
-  )
+/**
+ * Takes what the path names out of the user’s tree. A directory that
+ * isn’t empty needs `?recursive=true`.
+ */
+export const DELETE: RequestHandler = async ({ params, url }) => {
+  const address = (await getSessionAddress({ throw: true }))!
+  const path = segments(params.path)
+  const recursive = url.searchParams.get('recursive') === 'true'
+  const now = new Date().toISOString()
+  await inTransaction((source) => (
+    deleteEntry({ source, address, path, recursive, now })
+  ))
+  return new Response(null, { status: 204 })
 }

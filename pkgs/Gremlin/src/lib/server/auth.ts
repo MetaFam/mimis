@@ -28,7 +28,7 @@ function toHex(buffer: ArrayBuffer): string {
   )
 }
 
-async function sign(payload: string): Promise<string> {
+export async function seal(payload: string): Promise<string> {
   const key = await getKey()
   const sig = await crypto.subtle.sign(
     'HMAC',
@@ -38,12 +38,12 @@ async function sign(payload: string): Promise<string> {
   return `${payload}.${toHex(sig)}`
 }
 
-async function verify(token: string): Promise<string | null> {
+export async function unseal(token: string): Promise<string | null> {
   const lastDot = token.lastIndexOf('.')
   if(lastDot === -1) return null
 
   const payload = token.slice(0, lastDot)
-  const expected = await sign(payload)
+  const expected = await seal(payload)
   if(token !== expected) return null
 
   return payload
@@ -54,14 +54,14 @@ export async function createSessionCookie(address: string): Promise<string> {
   const payload = JSON.stringify({
     address: address.toLowerCase(), expires,
   })
-  const token = await sign(payload)
+  const token = await seal(payload)
   return (
     `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_MAX_AGE}`
   )
 }
 
 export async function parseToken(token: string) {
-  const payload = await verify(token)
+  const payload = await unseal(token)
   if(!payload) return null
 
   try {
@@ -97,7 +97,7 @@ export async function createSessionToken(address: string) {
   const payload = JSON.stringify({
     address: address.toLowerCase(), expires,
   })
-  return { token: await sign(payload), expires }
+  return { token: await seal(payload), expires }
 }
 
 /**
@@ -129,12 +129,12 @@ export async function createExchangeCode(address: string) {
     expires,
     nonce: crypto.randomUUID(),
   })
-  return { code: await sign(payload), expires }
+  return { code: await seal(payload), expires }
 }
 
 /** The address the code was issued to, & only once. */
 export async function redeemExchangeCode(code: string) {
-  const payload = await verify(code)
+  const payload = await unseal(code)
   if(!payload) return null
 
   try {

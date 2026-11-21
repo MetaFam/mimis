@@ -1,5 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte'
+  import { isHttpError } from '@sveltejs/kit'
   import { page } from '$app/state'
   import { afterNavigate, goto } from '$app/navigation'
   import { resolve } from '$app/paths'
@@ -8,17 +9,18 @@
   import CSSRange from '#lib/components/CSSRange.svelte'
   import SIWE from '#lib/components/SIWE.svelte'
   import NewSpot from '#lib/components/NewSpot.svelte'
+  import NewFiles from '#lib/components/NewFiles.svelte'
   import ImportDirectoryDialog, {
   } from '#lib/components/ImportDirectoryDialog.svelte'
   import FileView from '#lib/components/FileView.svelte'
+  import PublishDialog from '#lib/components/PublishDialog.svelte'
   import settings from '#lib/settings.svelte.js'
-  import { janusToDAG } from '#lib/janus2DAG.js'
   import { graphToCSV } from '#lib/janus2CSV.js'
-  import { toHTTP, logHeader, within } from '#lib'
+  import { receiveUpdate } from '#lib/remotes/receiveUpdate.remote.js'
+  import { logHeader, within } from '#lib'
   import { partsOf } from '#lib/search.js'
   import Eyes from '#lib/assets/infinity eyes.svg'
   import Background from '#lib/assets/background.svg'
-    import NewFiles from '#lib/components/NewFiles.svelte';
 
   let errorMsg = $state<string | null>(null)
   let path = $state(
@@ -68,6 +70,34 @@
     )
   })
 
+  // The log renders HTML, & an Update’s fields are whatever its sender
+  // wrote.
+  const escaped = (text: string) => (
+    text.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`)
+  )
+
+  async function record(evt: SubmitEvent) {
+    evt.preventDefault()
+    const form = evt.currentTarget as HTMLFormElement
+    const cid = String(new FormData(form).get('cid') ?? '').trim()
+    try {
+      const { recorded, author, device, sequence } = (
+        await receiveUpdate({ cid })
+      )
+      logs.unshift(escaped(
+        recorded ? (
+          `Recorded Update ${sequence} from ${author} (device ${device}).`
+        ) : (
+          'Already recorded.'
+        )
+      ))
+      logDialog?.showModal()
+      form.reset()
+    } catch(err) {
+      errorMsg = isHttpError(err) ? err.body.message : (err as Error).message
+    }
+  }
+
   async function copyEditorToken() {
     try {
       const res = await fetch('/api/auth/token')
@@ -79,42 +109,6 @@
     } catch(err) {
       errorMsg = (err as Error).message
     }
-  }
-
-  async function buildDAG() {
-    const { cid, log } = await build(
-      { generateCAR: false, insertInIPFS: true }
-    )
-    log(
-      'Update built with root CID:'
-      + ` <a href="${toHTTP({ cid })}" target="_blank">`
-      + cid.toString()
-      + '</a>'
-    )
- }
-
-  async function buildCAR() {
-    const { car: { url } = {}, log } = await build(
-      { generateCAR: true, insertInIPFS: false }
-    )
-    log(
-      'Update built to CAR:'
-      + ` <a href="${url}" target="_blank" download>`
-      + url
-      + '</a>'
-    )
-   }
-
-  async function build(opts: unknown) {
-    logDialog?.showModal()
-    const log = (msg: unknown) => {
-      logs.unshift(msg as string)
-    }
-    if(typeof opts !== 'object' || opts == null) {
-      throw new Error('Invalid build options.')
-    }
-    const result = await janusToDAG({ log, ...opts })
-    return { ...result, log }
   }
 </script>
 
@@ -155,11 +149,24 @@
         Copy Editor Token
       </button></li>
       <li><button
-        aria-disabled={!whoAmI}
-        onclick={buildCAR}
-      >Export to CAR</button></li>
-      <li><button onclick={buildDAG}>Export to CBOR-DAG</button></li>
+        disabled={!whoAmI}
+        commandfor="publish"
+        command="show-modal"
+      >
+        Publish…
+      </button></li>
       <li><button onclick={graphToCSV}>Export to CSV</button></li>
+      <li>
+        <form class="record" onsubmit={record}>
+          <input
+            name="cid"
+            aria-label="Update CID"
+            placeholder="Update CID"
+            required
+          />
+          <button disabled={!whoAmI}>Record Update</button>
+        </form>
+      </li>
       <li class="search">
         <form onsubmit={(evt) => { evt.preventDefault() }}>
           <input
@@ -239,13 +246,18 @@
       <li><button type="button">➕</button></li>
     </ul>
   </nav>
-  <FileView bind:path bind:query me={whoAmI}/>
+  <FileView
+    bind:path
+    bind:query
+    me={whoAmI}
+    onerror={(msg: string) => (errorMsg = msg)}
+  />
   {#if dualPanes}
-    <!-- Hidden, not unmounted, so it keeps its own position. -->
     <FileView
       path={untrack(() => [...path])}
       me={whoAmI}
       hidden={partsOf(query).length > 0}
+      onerror={(msg: string) => (errorMsg = msg)}
     />
   {/if}
   <nav>
@@ -278,16 +290,12 @@
   <NewSpot
     bind:self={addSpotDialog}
     {path}
-    onerror={(msg: string) => (
-      errorMsg = msg
-    )}
+    onerror={(msg: string) => (errorMsg = msg)}
   />
   <NewFiles
     bind:self={addFilesDialog}
     {path}
-    onerror={(msg: string) => (
-      errorMsg = msg
-    )}
+    onerror={(msg: string) => (errorMsg = msg)}
   />
 
   <dialog id="logs" bind:this={logDialog}>
@@ -313,6 +321,7 @@
     bind:self={importDirectoryDialog}
     {path}
   />
+  <PublishDialog me={whoAmI}/>
   <ConfigDialog bind:self={configDialog}/>
   <ErrorDialog bind:error={errorMsg}/>
 </main>
@@ -346,7 +355,7 @@
     }
   }
 
-  button[disabled], button[aria-disabled="true"] {
+  button[disabled] {
     opacity: 0.5;
     pointer-events: none;
   }
@@ -506,6 +515,16 @@
     & li {
       display: flex;
       justify-content: center;
+    }
+  }
+
+  .record {
+    display: flex;
+    gap: 0.25rem;
+
+    & input {
+      field-sizing: content;
+      min-width: 12ch;
     }
   }
 

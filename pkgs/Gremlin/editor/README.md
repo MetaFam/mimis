@@ -50,4 +50,4 @@ If you see it anyway, the extension isn’t answering at all: check that the bun
 - `mimis.apiURL` — base URL of the app serving `/api/fs` (default `http://localhost:5173`)
 - `mimis.commitMode` — `explicit` (default: saves stage until commit) or `onSave` (write through to the graph)
 
-Deletion is intentionally unsupported — the graph is append-only.
+Deleting takes the file or folder out of the graph at once, without waiting for a commit, as Delete in the app does, & drops anything staged under it. A file’s Spot goes with it once it holds nothing else. Readers of the published tree see the removal after the next publish.

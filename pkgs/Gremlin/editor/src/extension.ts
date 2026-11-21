@@ -375,10 +375,35 @@ export class MimisFS implements vscode.FileSystemProvider {
     ])
   }
 
-  delete(): void {
-    throw vscode.FileSystemError.NoPermissions(
-      'Deletion is unsupported: the Mïmis graph is append-only.'
-    )
+  /**
+   * Deletes from the graph at once, rather than staging, as the app
+   * does, & drops whatever was staged at or under `uri`.
+   */
+  async delete(uri: vscode.Uri, { recursive }: { recursive: boolean }) {
+    const staged = this.staged
+    const under = Object.keys(staged).filter((key) => (
+      key === uri.path || key.startsWith(`${uri.path}/`)
+    ))
+    try {
+      await this.request(uri.path, {
+        method: 'DELETE',
+        query: recursive ? { recursive: 'true' } : {},
+      })
+    } catch(err) {
+      const missing = (
+        err instanceof vscode.FileSystemError && err.code === 'FileNotFound'
+      )
+      // A file that’s only staged was never in the graph.
+      if(!missing || !under.includes(uri.path)) throw err
+    }
+    if(under.length > 0) {
+      const remaining = { ...staged }
+      for(const key of under) {
+        delete remaining[key]
+      }
+      await this.setStaged(remaining)
+    }
+    this.emitter.fire([{ type: vscode.FileChangeType.Deleted, uri }])
   }
 }
 
