@@ -86,7 +86,7 @@ describe('cleanStaged', () => {
     const [a, s, b] = [ids.get('a')!, ids.get('a/s')!, ids.get('b')!]
     await stageSpots({ source, address, ids: [a, s, b], staged: true })
     await markPublished(source, { ids: [s, b], address })
-    await link(source, { from: b, to: await addSpot(source), name: 'new' })
+    await link(source, { from: b, to: s, name: 'again' })
     await cleanStaged({ source, address })
     expect(await flagged(a)).toEqual([true])
     expect(await flagged(s)).toEqual([])

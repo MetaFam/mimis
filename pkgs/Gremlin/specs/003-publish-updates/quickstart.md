@@ -27,7 +27,7 @@ Graph tests run inside `g().tx()` and roll back. The one exception is scenario 8
 | `src/lib/server/auth.test.ts` | `seal`/`unseal` round-trip; a tampered token unseals to `null` |
 | `src/lib/server/edits.test.ts` | `retire` drops unpublished edges and leaves markers for published ones, for all four kinds; `putRepresentation` replaces a blob in the same Content |
 | `src/lib/server/changes.test.ts` | Pending detection for each kind of change; an edited published entry is pending under its old key; a child's new version doesn't make its parent pending; moving away and back cancels out; added-then-removed leaves nothing (FR-010); each malformed shape (an `IS` or `CONTAINS` without `uuid`, a non-numeric `order`, two same-type Contents on one Spot) throws |
-| `src/lib/server/selection.test.ts` | US2-1 to US2-3, US3-1, US3-5, and the closure rules: never-published targets come along, published children with changes don't, mounts aren't followed, and a Spot with two parents appears once |
+| `src/lib/server/selection.test.ts` | US2-1 to US2-3, US3-1, US3-5, and the closure rules: new files come along while new folders wait, published children with changes don't, mounts aren't followed, and a Spot with two parents appears once |
 | `src/lib/server/publish.test.ts` | US1-1 to US1-6, US3-1 to US3-4, US4-3, FR-014 to FR-016, FR-027, FR-032, SC-003, SC-004, and every prepare and commit error in contracts/remotes.md (details below) |
 | `src/lib/server/received.test.ts` | US5-1 to US5-4, the 400 for an invalid CID, and the 504 for a missing block |
 | `src/lib/server/rebuild.test.ts` | SC-007: five Updates mixing additions, moves, and removals; `rebuild(latest)` deep-equals `snapshot(root)` |

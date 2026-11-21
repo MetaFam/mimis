@@ -50,7 +50,7 @@ export async function cleanStaged(
   const { spots, contents } = await treeOf({ source, address })
   const stale = (
     [...spots.values()]
-    .filter((spot) => spot.staged && !spotIsPending(spot, contents))
+    .filter((spot) => spot.staged && !spotIsPending(spot, { spots, contents }))
     .map(({ id }) => id)
   )
   await writeAll(source, stale.map((id) => flag(id, false)))

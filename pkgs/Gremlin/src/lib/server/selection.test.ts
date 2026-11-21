@@ -8,8 +8,8 @@ import { relinkContent, relinkSpot } from '#lib/server/moves.js'
 import { v7 as uuidV7 } from 'uuid'
 import { edgeId } from '#lib/server/janusgraph.js'
 import {
-  addSpot, link, markPublished, mount, seedTree, seedUser, testAccount,
-  transaction, type Id,
+  addSpot, attach, link, markPublished, mount, seedTree, seedUser,
+  testAccount, transaction, type Id,
 } from '#lib/server/testing.js'
 
 const { statics: __ } = gremlin.process
@@ -56,31 +56,43 @@ const reasons = (selected: Map<Id, { reason: string }>) => (
 )
 
 describe('select', () => {
-  it('brings along a new tree under a staged root, once each (rule 2)', async () => {
+  it('leaves a staged Spot’s links to new folders for those folders (FR-030)', async () => {
+    const { spots, contents, clean } = await select({ source, address, staged: [root] })
+    expect(reasons(spots)).toEqual({ [root]: 'staged' })
+    expect(spots.get(root)).toMatchObject({ root: true, entries: [] })
+    expect(contents.size).toBe(0)
+    expect(clean).toEqual([])
+  })
+
+  it('brings along a staged Spot’s new files, with their Content (rule 2)', async () => {
+    const { spots, contents } = await select({ source, address, staged: [at('icon/hat')] })
+    expect(reasons(spots)).toEqual({
+      [at('icon/hat')]: 'staged',
+      [at('icon/hat/top')]: 'new',
+      [at('icon')]: 'connect',
+      [root]: 'connect',
+    })
+    expect(reasons(contents)).toEqual({ [at('icon/hat/top.svg')]: 'new' })
+    expect(spots.get(at('icon/hat'))!.entries)
+    .toEqual([expect.objectContaining({ kind: 'CONTAINS', to: at('icon/hat/top') })])
+  })
+
+  it('links new Spots staged together, once each', async () => {
     const shared = await addSpot(source)
     await link(source, { from: at('a'), to: shared, name: 'one' })
     await link(source, { from: at('b'), to: shared, name: 'two' })
-    const { spots, contents, clean } = await select({ source, address, staged: [root] })
-    expect(reasons(spots)).toEqual({
-      [root]: 'staged',
-      [at('icon')]: 'new',
-      [at('icon/hat')]: 'new',
-      [at('icon/hat/top')]: 'new',
-      [at('a')]: 'new',
-      [at('a/s')]: 'new',
-      [at('b')]: 'new',
-      [shared]: 'new',
-    })
-    expect(reasons(contents)).toEqual({ [at('icon/hat/top.svg')]: 'new' })
+    const { spots } = await select({ source, address, staged: [...spotIds(), shared] })
+    expect(new Set(Object.values(reasons(spots)))).toEqual(new Set(['staged']))
+    expect(spots.size).toBe(spotIds().length + 1)
     expect(spots.get(root)).toMatchObject({ root: true })
     expect(spots.get(at('a'))).toMatchObject({ root: false })
     expect(spots.get(at('a'))!.entries.map(({ kind }) => kind)).toEqual(['CONTAINS', 'CONTAINS'])
-    expect(clean).toEqual([])
   })
 
   it('selects a staged Spot’s pending entries & its Contents’ representations (rule 1)', async () => {
     await publishAll()
     const fedora = await addSpot(source)
+    await attach(source, { to: fedora, type: 'image/svg+xml', cid: await file(3) })
     await link(source, { from: at('icon/hat/top'), to: fedora, name: 'fedora' })
     await putRepresentation({
       source, spot: at('icon/hat/top'), type: 'image/svg+xml', cid: await file(2), size: 2, now,
@@ -97,8 +109,9 @@ describe('select', () => {
 
   it('doesn’t bring along a published child with changes of its own (FR-030)', async () => {
     await publishAll()
-    await link(source, { from: at('a/s'), to: await addSpot(source), name: 'deeper' })
+    await link(source, { from: at('a/s'), to: at('b'), name: 'again' })
     const fresh = await addSpot(source)
+    await attach(source, { to: fresh, type: 'text/plain', cid: await file(3) })
     await link(source, { from: at('a'), to: fresh, name: 'fresh' })
     const { spots } = await select({ source, address, staged: [at('a')] })
     expect(reasons(spots)).toEqual({ [at('a')]: 'staged', [fresh]: 'new' })
@@ -129,7 +142,7 @@ describe('select', () => {
   it('takes the staged Spots from the graph by default', async () => {
     await source.V(at('b')).property('staged', true).toList()
     await publishAll()
-    await link(source, { from: at('b'), to: await addSpot(source), name: 'new' })
+    await link(source, { from: at('b'), to: at('a/s'), name: 'again' })
     const { spots } = await select({ source, address })
     expect(spots.get(at('b'))).toMatchObject({ reason: 'staged' })
   })

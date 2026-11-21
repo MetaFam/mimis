@@ -424,7 +424,8 @@ describe('partial', () => {
     .toEqual(['one'])
     expect(ready.included).toEqual([{ path: ['a'], reason: 'connect' }])
     const pending = await pendingSpots({ source, address })
-    expect(pending.map(({ id }) => id).sort()).toEqual([ids.get('a')!, ids.get('b')!, ids.get('two')!, ids.get('other')!].sort())
+    // A new folder’s link is the folder’s change, not its parent’s.
+    expect(pending.map(({ id }) => id).sort()).toEqual([ids.get('two')!, ids.get('other')!].sort())
     expect(pending.every(({ staged }) => !staged)).toBe(true)
   })
 
@@ -444,7 +445,28 @@ describe('partial', () => {
     const pending = await pendingSpots({ source, address })
     expect(pending.filter(({ staged }) => staged).map(({ id }) => id)).toEqual([ids.get('one')])
     expect(pending.filter(({ staged }) => !staged).map(({ id }) => id).sort())
-    .toEqual([ids.get('a')!, ids.get('b')!, ids.get('other')!, ids.get('two')!].sort())
+    .toEqual([ids.get('other')!, ids.get('two')!].sort())
+  })
+
+  it('publishes a staged folder’s new files, & leaves its new folders for later (FR-030)', async () => {
+    ids = new Map([...ids, ...await seedTree(source, {
+      root: ids.get('a')!, tree: { 'note.txt': { file: await file('note') } },
+    })])
+    await stage(ids.get('a')!)
+    const blocks = memoryBlocks()
+    const contained = async () => (
+      ((await read(blocks, (await cidOf(ids.get('a')!))!)).contains as Array<{ path: string }>)
+      .map(({ path }) => path)
+    )
+    const { ready } = await publish({ blocks })
+    expect(await contained()).toEqual(['note'])
+    expect(ready.included).toEqual([{ path: ['a', 'note'], reason: 'new' }])
+    expect((await pendingSpots({ source, address })).map(({ path }) => path.join('/')))
+    .toEqual(['a/one', 'a/other', 'b/two'])
+
+    await stage(ids.get('one')!)
+    await publish({ blocks })
+    expect(await contained()).toEqual(['one'])
   })
 })
 
@@ -547,8 +569,9 @@ describe('removals', () => {
     await relinkSpot({ source, what: ids.get('a/s')!, from: ids.get('a')!, to: ids.get('b')!, now, uuid: uuidV7() })
     await stage(ids.get('a')!)
     await relinkSpot({ source, what: ids.get('a/s')!, from: ids.get('b')!, to: ids.get('a')!, now, uuid: uuidV7() })
-    await link(source, { from: ids.get('b')!, to: await addSpot(source), name: 'other' })
-    await stage(ids.get('b')!)
+    const other = await addSpot(source)
+    await link(source, { from: ids.get('b')!, to: other, name: 'other' })
+    await stage(other)
     await publish({ blocks })
     expect(await cidOf(ids.get('a')!)).toBe(before)
     expect(await source.V(ids.get('a')!).values('staged').toList()).toEqual([])

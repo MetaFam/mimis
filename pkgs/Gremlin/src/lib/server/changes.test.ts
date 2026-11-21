@@ -81,13 +81,13 @@ describe('rootOf', () => {
 })
 
 describe('pendingSpots', () => {
-  it('lists a new tree, sorted by path, with its counts', async () => {
+  it('lists a new tree, sorted by path, with its counts, a new folder’s link as its own', async () => {
     expect(await pendingSpots({ source, address })).toEqual([
-      { id: root, uuid: expect.any(String), path: [], isNew: true, staged: false, added: 3, removed: 0 },
-      { id: ids.get('a'), uuid: expect.any(String), path: ['a'], isNew: true, staged: false, added: 1, removed: 0 },
+      { id: root, uuid: expect.any(String), path: [], isNew: true, staged: false, added: 0, removed: 0 },
+      { id: ids.get('a'), uuid: expect.any(String), path: ['a'], isNew: true, staged: false, added: 0, removed: 0 },
       { id: ids.get('a/s'), uuid: expect.any(String), path: ['a', 's'], isNew: true, staged: false, added: 0, removed: 0 },
       { id: ids.get('b'), uuid: expect.any(String), path: ['b'], isNew: true, staged: false, added: 0, removed: 0 },
-      { id: ids.get('icon'), uuid: expect.any(String), path: ['icon'], isNew: true, staged: false, added: 1, removed: 0 },
+      { id: ids.get('icon'), uuid: expect.any(String), path: ['icon'], isNew: true, staged: false, added: 0, removed: 0 },
       { id: ids.get('icon/hat'), uuid: expect.any(String), path: ['icon', 'hat'], isNew: true, staged: false, added: 1, removed: 0 },
       { id: ids.get('icon/hat/top'), uuid: expect.any(String), path: ['icon', 'hat', 'top'], isNew: true, staged: false, added: 2, removed: 0 },
     ])
@@ -115,8 +115,17 @@ describe('pendingSpots', () => {
     })
 
     it('an entry has no `published`', async () => {
-      await link(source, { from: ids.get('b')!, to: await addSpot(source), name: 'new' })
-      expect(await pending()).toEqual(['b', 'b/new'])
+      await link(source, { from: ids.get('b')!, to: ids.get('a/s')!, name: 'again' })
+      expect(await pending()).toEqual(['b'])
+    })
+
+    it('it holds a new file, but not a new folder, which has the link as its change', async () => {
+      const [folder, note] = [await addSpot(source), await addSpot(source)]
+      await link(source, { from: ids.get('a')!, to: folder, name: 'folder' })
+      expect(await pending()).toEqual(['a/folder'])
+      await attach(source, { to: note, type: 'text/plain', cid: await file(2) })
+      await link(source, { from: ids.get('b')!, to: note, name: 'note' })
+      expect(await pending()).toEqual(['a/folder', 'b', 'b/note'])
     })
 
     it('a link is renamed, under its old key & with no marker', async () => {

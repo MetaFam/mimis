@@ -83,10 +83,41 @@ export const isPending = (holder: Holder) => (
   || holder.markers.some(({ pending }) => pending)
 )
 
+/**
+ * Whether a Spot is only files: it holds Content, but no Spots or
+ * mounts. Both listings (`listing`, `fsEntries`) show any other Spot
+ * as a folder.
+ */
+export const isFile = (spot: SpotState) => (
+  spot.contents.length > 0
+  && !spot.entries.some(({ kind }) => kind === 'CONTAINS' || kind === 'MOUNT')
+)
+
+/**
+ * A pending link to a folder that has never been published. It goes
+ * out only in the same Update as that folder, which gives it a version
+ * to point at, so it’s the folder’s change rather than its parent’s.
+ * A new file comes along with its parent instead (FR-030).
+ */
+export const awaitsChild = (entry: Entry, spots: Map<Id, SpotState>) => {
+  if(!entry.pending || entry.kind !== 'CONTAINS' || entry.toCid != null) {
+    return false
+  }
+  const child = spots.get(entry.to)
+  return !(child && isFile(child))
+}
+
 export const spotIsPending = (
-  spot: SpotState, contents: Map<Id, ContentState>,
+  spot: SpotState,
+  { spots, contents }: {
+    spots: Map<Id, SpotState>
+    contents: Map<Id, ContentState>
+  },
 ) => (
-  isPending(spot) || spot.contents.some((id) => isPending(contents.get(id)!))
+  spot.cid == null
+  || spot.entries.some((entry) => entry.pending && !awaitsChild(entry, spots))
+  || spot.markers.some(({ pending }) => pending)
+  || spot.contents.some((id) => isPending(contents.get(id)!))
 )
 
 export async function rootOf(
@@ -407,16 +438,9 @@ export async function pendingSpots(
   { source, address }: { source: GraphTraversalSource, address: string },
 ) {
   const { spots, contents, pathOf } = await treeOf({ source, address })
-  const count = (holders: Array<Holder>, which: 'entries' | 'markers') => (
-    holders.reduce((sum, holder) => (
-      sum + (holder[which] as Array<{ pending: boolean }>).filter(
-        ({ pending }) => pending
-      ).length
-    ), 0)
-  )
   return (
     [...spots.values()]
-    .filter((spot) => spotIsPending(spot, contents))
+    .filter((spot) => spotIsPending(spot, { spots, contents }))
     .map((spot): PendingSpot => {
       const holders = [spot, ...spot.contents.map((id) => contents.get(id)!)]
       return {
@@ -425,8 +449,12 @@ export async function pendingSpots(
         path: pathOf(spot.id),
         isNew: spot.cid == null,
         staged: spot.staged,
-        added: count(holders, 'entries'),
-        removed: count(holders, 'markers'),
+        added: holders.flatMap(({ entries }) => entries).filter((entry) => (
+          entry.pending && !awaitsChild(entry, spots)
+        )).length,
+        removed: holders.flatMap(({ markers }) => markers).filter(({ pending }) => (
+          pending
+        )).length,
       }
     })
     .sort((a, b) => comparePaths(a.path, b.path))

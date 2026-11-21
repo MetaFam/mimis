@@ -1,5 +1,5 @@
 import {
-  isPending, spotIsPending, treeOf,
+  awaitsChild, isFile, isPending, spotIsPending, treeOf,
   type ContentState, type Entry, type Marker, type SpotState,
 } from '#lib/server/changes.js'
 import type { GraphTraversalSource, Id } from '#lib/server/janusgraph.js'
@@ -88,7 +88,7 @@ export async function select(
   for(const id of staged) {
     const spot = spots.get(id)
     if(!spot) continue
-    if(!spotIsPending(spot, contents)) {
+    if(!spotIsPending(spot, { spots, contents })) {
       clean.push(id)
       continue
     }
@@ -179,7 +179,7 @@ export async function select(
     for(const { kind, to } of selected.entries) {
       if(kind === 'CONTAINS') {
         const child = spots.get(to)
-        if(child && child.cid == null && !chosen.spots.has(to)) {
+        if(child && child.cid == null && isFile(child) && !chosen.spots.has(to)) {
           takeAll(child, 'spots', 'new')
         }
       } else if(kind === 'AS') {
@@ -189,6 +189,14 @@ export async function select(
         }
       }
     }
+  }
+
+  // A link to a never-published Spot waits for that Spot, rather than
+  // bringing it along (FR-030).
+  for(const selected of chosen.spots.values()) {
+    selected.entries = selected.entries.filter((entry) => (
+      !awaitsChild(entry, spots) || chosen.spots.has(entry.to)
+    ))
   }
 
   const holders = { spots, contents } as const
