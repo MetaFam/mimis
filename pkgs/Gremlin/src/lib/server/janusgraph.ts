@@ -84,7 +84,9 @@ export async function inTransaction<T>(
     await tx.commit()
     return result
   } catch(err) {
-    await tx.rollback()
+    // A failed commit has already closed the session, which then
+    // refuses the rollback with “Connection has been closed.”
+    await tx.rollback().catch(() => {})
     throw err
   }
 }
