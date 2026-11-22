@@ -7,3 +7,5 @@ allowBuilds:
   sharp: true
   utf-8-validate: true
   workerd: true
+  '@ipshipyard/node-datachannel': true
+  iso-constants: true
