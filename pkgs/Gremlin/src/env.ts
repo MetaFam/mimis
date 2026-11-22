@@ -14,7 +14,7 @@ export const variables = defineEnvVars({
     public: false,
   },
   PUBLIC_EDITOR_URL: {
-    schema: v.string(),
+    schema: v.optional(v.string()),
     description: 'Base URL for embedded VS Code',
     public: true,
   },
