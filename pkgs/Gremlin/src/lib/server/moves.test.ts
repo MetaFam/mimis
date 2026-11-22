@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import gremlin from 'gremlin'
 import { v7 as uuidV7 } from 'uuid'
+import { holdingsOf } from '#lib/server/edits.js'
 import { relinkContent, relinkSpot } from '#lib/server/moves.js'
 import {
   addSpot, attach, link, transaction, type Id,
@@ -79,14 +80,33 @@ describe('relinkSpot', () => {
 describe('relinkContent', () => {
   let content: Id
   beforeEach(async () => {
-    ;({ content } = await attach(source, { to: from, type: 'image/png', cid: 'bafyPNG', order: 2 }))
+    ;({ content } = await attach(source, { to: from, type: 'image/png', cid: 'bafyPNG' }))
   })
   const move = () => relinkContent({ source, what: content, from, to, now })
+  const ranked = async (spot: Id) => (
+    (await holdingsOf({ source, spot })).map(({ id }) => id)
+  )
 
-  it('keeps `order`, as a number', async () => {
+  it('moves the `AS`, ranked first in an empty Spot', async () => {
     expect(await move()).toEqual(expect.any(String))
-    expect(await edges(to, 'AS')).toEqual([{ order: 2, createdAt: now, to: content }])
+    expect(await edges(to, 'AS')).toEqual([{ createdAt: now, to: content }])
     expect(await edges(from, 'AS')).toEqual([])
+  })
+
+  it('ranks it last beside a Content of its type (FR-020)', async () => {
+    const { content: there } = await attach(source, { to, type: 'image/png', cid: 'bafyThere' })
+    await move()
+    expect(await ranked(to)).toEqual([there, content])
+  })
+
+  it('relinks what followed it in the source', async () => {
+    const { content: next } = await attach(source, { to: from, type: 'text/plain', cid: 'bafyNext' })
+    const { content: last } = await attach(source, { to: from, type: 'text/plain', cid: 'bafyLast' })
+    await move()
+    expect(await ranked(from)).toEqual([next, last])
+    const [first] = await holdingsOf({ source, spot: from })
+    expect(first).toEqual(expect.objectContaining({ id: next }))
+    expect(first.after).toBeUndefined()
   })
 
   it('leaves no marker for an unpublished `AS`', async () => {
@@ -95,11 +115,11 @@ describe('relinkContent', () => {
   })
 
   it('leaves a marker for a published `AS`', async () => {
-    await source.V(from).outE('AS').property('published', '["c",2,"image/png"]').toList()
+    await source.V(from).outE('AS').property('published', '["c",null,"image/png"]').toList()
     const uuid = (await source.V(content).values('uuid').next()).value
     await move()
     expect(await edges(from, 'REMOVED')).toEqual([{
-      kind: 'AS', entry: uuid, published: '["c",2,"image/png"]', createdAt: now, to: content,
+      kind: 'AS', entry: uuid, published: '["c",null,"image/png"]', createdAt: now, to: content,
     }])
   })
 

@@ -50,9 +50,11 @@ export async function kuboUpload(
 }
 
 export async function addFiles(
-  { files, path }: {
+  { files, path, alternative = false, onto = false }: {
   files: Array<File>,
   path: Array<string>,
+  alternative?: boolean,
+  onto?: boolean,
 }) {
   const cids = await kuboUpload({ files }) as Array<Spot>
   const entries = cids.map((entry, idx) => {
@@ -61,5 +63,5 @@ export async function addFiles(
     return { ...entry, cid: entry.cid, name, size }
   })
   if(settings.debugging) console.debug({ entries, path } )
-  return await filesToSpot({ path, files: entries })
+  return await filesToSpot({ path, files: entries, alternative, onto })
 }

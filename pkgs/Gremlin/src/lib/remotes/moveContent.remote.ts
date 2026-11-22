@@ -2,7 +2,7 @@ import * as v from 'valibot'
 import { error, isHttpError } from '@sveltejs/kit'
 import { command } from '$app/server'
 import { assertOwned, inTransaction } from '#lib/server/janusgraph.js'
-import { relinkContent, typeClash } from '#lib/server/moves.js'
+import { relinkContent } from '#lib/server/moves.js'
 
 const MoveContentSchema = v.object({
   what: v.number(),
@@ -23,16 +23,6 @@ export const moveContent = command(
       await assertOwned({ ids: { source: from, destination: to } })
 
       return await inTransaction(async (source) => {
-        const { value: type = null } = (
-          await typeClash({ source, what, to }).next()
-        )
-        if(type != null) {
-          throw error(
-            409,
-            `The destination already has “${type}” Content.`,
-          )
-        }
-
         const id = await relinkContent({ source, what, from, to, now })
         if(id == null) {
           throw error(400, `Spot #${from} doesn’t hold Content #${what}.`)

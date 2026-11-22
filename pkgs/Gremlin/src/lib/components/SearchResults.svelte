@@ -3,7 +3,7 @@
   import { navigateOnClick, toHTTP } from '#lib'
   import { searchSpots } from '#lib/remotes/searchSpots.remote.js'
   import { PAGE_SIZE, partsOf } from '#lib/search.js'
-  import Folder from '#lib/assets/folder.svg'
+  import Folder from '#assets/folder.svg'
 
   let {
     path = $bindable([]),
@@ -143,13 +143,22 @@
   }
 
   li {
-    padding: 0.15em 0;
+    padding: 0em;
   }
 
   a {
-    display: inline-flex;
+    display: flex;
     align-items: center;
+    padding: 0.1em;
+    border-radius: 0.1em;
     gap: 1ch;
+    transition-property: color, background-color;
+    transition-duration: 0.25s;
+
+    &:hover {
+      color: light-dark(#09308b, #a9efc5);
+      background-color: light-dark(#ffda06, #890089);
+    }
   }
 
   .thumb {

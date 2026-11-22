@@ -68,6 +68,36 @@ describe('reading', () => {
   })
 })
 
+describe('several Contents of a type (FR-019)', () => {
+  beforeEach(async () => {
+    await attach(source, { to: photo, type: 'image/png', cid: 'bafyPNG2' })
+  })
+
+  it('names one file per type, the best Content of it', async () => {
+    expect(await listed(['docs'])).toEqual(['md.md', 'notes.md', 'photo.jpg', 'photo.png'])
+    expect(await statEntry({ source, address, path: ['docs', 'photo.png'] }))
+    .toMatchObject({ cid: 'bafyPNG' })
+  })
+
+  it('skips a proxy for the best of its type', async () => {
+    const other = await addSpot(source)
+    const { content: target } = await attach(source, { to: other, type: 'image/jpeg', cid: 'bafyTheirs' })
+    const shot = await addSpot(source)
+    await link(source, { from: docs, to: shot, name: 'shot' })
+    await attach(source, { to: shot, type: 'image/jpeg', mounts: target })
+    await attach(source, { to: shot, type: 'image/jpeg', cid: 'bafyMine' })
+    expect(await findRep({ source, address, path: ['docs', 'shot.jpg'] }))
+    .toMatchObject({ cid: 'bafyMine' })
+  })
+
+  it('deletes the best of a type & lists the next one, relinking it', async () => {
+    await deleteEntry({ source, address, path: ['docs', 'photo.png'], now })
+    expect(await statEntry({ source, address, path: ['docs', 'photo.png'] }))
+    .toMatchObject({ cid: 'bafyPNG2' })
+    expect(await listed(['docs'])).toEqual(['md.md', 'notes.md', 'photo.jpg', 'photo.png'])
+  })
+})
+
 describe('deleteEntry', () => {
   const remove = (path: Array<string>, { recursive = false } = {}) => (
     deleteEntry({ source, address, path, recursive, now })

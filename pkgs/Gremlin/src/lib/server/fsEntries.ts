@@ -1,11 +1,13 @@
 import gremlin from 'gremlin'
 import { error } from '@sveltejs/kit'
 import { extFor, nameFor, splitName, typeForName } from '#lib/mimetypes.js'
-import { retire, unlinkSpot } from '#lib/server/edits.js'
+import { rank } from '#lib/rank.js'
+import { release, unlinkSpot } from '#lib/server/edits.js'
 import {
-  assertOwned, edgeId, g, layerOf, type GraphTraversalSource, type Id,
+  assertOwned, edgeId, g, layerOf,
+  type GraphTraversal, type GraphTraversalSource, type Id,
 } from '#lib/server/janusgraph.js'
-import { resolvePath, withMounts } from '#lib/server/listing.js'
+import { currentBlob, resolvePath, withMounts } from '#lib/server/listing.js'
 
 const { statics: __ } = gremlin.process
 
@@ -36,36 +38,64 @@ interface Where {
   path: Array<string>
 }
 
-/** The incoming Spot’s `Content`s, each with its `Blob`. */
+/** The incoming Spot’s `Content`s, each with its current Blob. */
 const currentReps = () => (
   __.outE('AS')
-  .order()
-  .by(__.coalesce(__.values('order'), __.constant(0)))
   .as('holding')
   .inV()
   .hasLabel('Content')
   .has('type')
-  .where(__.out('IS').hasLabel('Blob'))
-  .project('type', 'cid', 'size', 'createdAt', 'spot', 'holding')
-  .by(__.values('type'))
-  .by(__.out('IS').hasLabel('Blob').values('cid'))
+  .project('uuid', 'after', 'type', 'proxy', 'blob', 'spot', 'holding')
+  .by('uuid')
+  .by(__.select('holding').values('after').fold())
+  .by('type')
+  .by(__.outE('MOUNT').count())
   .by(
-    __.out('IS').hasLabel('Blob')
-    .coalesce(__.values('size'), __.constant(0))
-  )
-  .by(
-    __.coalesce(
-      __.out('IS').hasLabel('Blob').values('createdAt'),
-      __.values('createdAt'),
-      __.constant(''),
-    )
+    currentBlob()
+    .project('cid', 'size', 'createdAt')
+    .by('cid')
+    .by(__.coalesce(__.values('size'), __.constant(0)))
+    .by(__.coalesce(__.values('createdAt'), __.constant('')))
+    .fold()
   )
   .by(__.select('holding').outV().id())
   .by(__.select('holding').id())
+  .fold()
 )
 
-const repFromMap = (map: Map<keyof Rep, unknown>) => (
-  Object.fromEntries(map) as unknown as Rep
+/**
+ * A Spot’s best Content of each type, as a file is named by its type
+ * (FR-019). Proxies are left out, since writes can’t version them.
+ */
+const bestOfEachType = (rows: Array<Map<string, unknown>>) => {
+  const types = new Set<string>()
+  return rank(rows.map((row) => {
+    const [after] = row.get('after') as Array<string>
+    return {
+      uuid: row.get('uuid') as string,
+      ...(after == null ? {} : { after }),
+      row,
+    }
+  }))
+  .flatMap(({ row }): Array<Rep> => {
+    const type = row.get('type') as string
+    const [blob] = row.get('blob') as Array<Map<string, unknown>>
+    if(!blob || Number(row.get('proxy')) > 0 || types.has(type)) return []
+    types.add(type)
+    return [{
+      type,
+      cid: blob.get('cid') as string,
+      size: Number(blob.get('size')),
+      createdAt: blob.get('createdAt') as string,
+      spot: row.get('spot') as Id,
+      holding: row.get('holding'),
+    }]
+  })
+}
+
+const repsAt = async (traversal: GraphTraversal) => (
+  ((await traversal.map(currentReps()).toList()) as Array<Array<Map<string, unknown>>>)
+  .flatMap(bestOfEachType)
 )
 
 const times = (createdAt?: string) => {
@@ -107,11 +137,7 @@ export function fileTarget(path: Array<string>) {
  */
 export async function findRep({ path, ...where }: Where) {
   const { spotPath, type } = fileTarget(path)
-  const reps = (
-    (await spotTraversal({ ...where, path: spotPath })
-    .flatMap(currentReps()).toList()) as
-    Array<Map<keyof Rep, unknown>>
-  ).map(repFromMap)
+  const reps = await repsAt(spotTraversal({ ...where, path: spotPath }))
   return (
     reps.find((rep) => rep.type === type)
     ?? (reps.length === 1 ? reps[0] : null)
@@ -123,7 +149,7 @@ export async function listEntries(where: Where) {
     name: string
     children: number
     created: string
-    reps: Array<Map<keyof Rep, unknown>>
+    reps: Array<Map<string, unknown>>
   }
   const children = layersAt(where)
   const rows = (
@@ -137,14 +163,14 @@ export async function listEntries(where: Where) {
     .by(__.select('name'))
     .by(__.select('child').outE('CONTAINS', 'MOUNT').count())
     .by(__.select('child').coalesce(__.values('createdAt'), __.constant('')))
-    .by(__.select('child').flatMap(currentReps()).fold())
+    .by(__.select('child').map(currentReps()))
     .dedup()
     .toList()) as Array<Map<keyof Row, unknown>>
   ).map((row) => Object.fromEntries(row) as unknown as Row)
 
   const entries: Array<FSEntry> = []
   for(const { name, children, created, reps } of rows) {
-    const files = reps.map(repFromMap)
+    const files = bestOfEachType(reps)
     if(Number(children) > 0 || files.length === 0) {
       entries.push({ name, kind: 'directory', ...times(created) })
     }
@@ -162,12 +188,7 @@ export async function listEntries(where: Where) {
 
   // Representations on the listed Spot itself appear as `ext.ext`
   // files, mirroring how `addFiles` handles context-free names.
-  const own = spotTraversal(where)
-  const ownReps = (
-    (await own.flatMap(currentReps()).toList()) as
-    Array<Map<keyof Rep, unknown>>
-  ).map(repFromMap)
-  for(const rep of ownReps) {
+  for(const rep of await repsAt(spotTraversal(where))) {
     const ext = extFor(rep.type)
     if(ext == null) continue
     entries.push({
@@ -272,7 +293,7 @@ export async function deleteEntry(
   const rep = await findRep(where)
   if(rep == null) throw error(404, `Nothing at “/${path.join('/')}”.`)
   await assertOwned({ source, ids: { file: rep.spot }, address })
-  await retire({ source, edge: edgeId(rep.holding), now })
+  await release({ source, edge: edgeId(rep.holding), now })
 
   const { title, ext, spotPath } = fileTarget(path)
   if(title === ext) return

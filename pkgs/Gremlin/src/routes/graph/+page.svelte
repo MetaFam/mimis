@@ -3,7 +3,7 @@
   import { resolve } from '$app/paths'
   import type ForceGraph from 'force-graph'
   import { graphData, type GraphData, type GraphNode, type GraphLink } from '#lib/remotes/graphData.remote.js'
-  import Eyes from '#lib/assets/infinity eyes.svg'
+  import Eyes from '#assets/infinity eyes.svg'
   import { metricize, toHTTP } from '#lib'
 
   let container = $state<HTMLDivElement>()

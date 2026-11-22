@@ -1,8 +1,8 @@
 <script lang="ts">
   import { filter, isDirNode, metricize, walk } from '#lib'
   import type { DirNode, Node } from '../../types'
-  import Eraser from '#lib/assets/erase.svg'
-  import Filter from '#lib/assets/filter.svg'
+  import Eraser from '#assets/erase.svg'
+  import Filter from '#assets/filter.svg'
 
   let { tree = $bindable(), onsubmit, oncancel } = $props()
   let regexDialog = $state<HTMLDialogElement>()

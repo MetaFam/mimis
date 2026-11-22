@@ -19,8 +19,8 @@
   import { receiveUpdate } from '#lib/remotes/receiveUpdate.remote.js'
   import { logHeader, within } from '#lib'
   import { partsOf } from '#lib/search.js'
-  import Eyes from '#lib/assets/infinity eyes.svg'
-  import Background from '#lib/assets/background.svg'
+  import Eyes from '#assets/infinity eyes.svg'
+  import Background from '#assets/background.svg'
 
   let errorMsg = $state<string | null>(null)
   let path = $state(
@@ -59,6 +59,11 @@
     )
   })
 
+  function log(msg: unknown) {
+    logs.unshift(String(msg))
+    logDialog?.showModal()
+  }
+
   $effect(() => {
     const current = (
       page.url.pathname.split('/').map(decodeURI).filter(Boolean)
@@ -84,7 +89,7 @@
       const { recorded, author, device, sequence } = (
         await receiveUpdate({ cid })
       )
-      logs.unshift(escaped(
+      log(escaped(
         recorded ? (
           `Recorded Update ${sequence} from ${author} (device ${device}).`
         ) : (
@@ -251,6 +256,7 @@
     bind:query
     me={whoAmI}
     onerror={(msg: string) => (errorMsg = msg)}
+    {log}
   />
   {#if dualPanes}
     <FileView
@@ -258,6 +264,7 @@
       me={whoAmI}
       hidden={partsOf(query).length > 0}
       onerror={(msg: string) => (errorMsg = msg)}
+      {log}
     />
   {/if}
   <nav>
@@ -311,6 +318,7 @@
           type="button"
           command="close"
           commandfor="logs"
+          class="cancel"
         >Close</button>
         <span class="spacer"></span>
       </menu>

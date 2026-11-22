@@ -7,13 +7,15 @@
     query = $bindable(''),
     me = null,
     hidden = false,
-    onerror,
+    onerror = () => {},
+    log = () => {},
   }: {
     path?: Array<string>
     query?: string
     me?: string | null
     hidden?: boolean
     onerror?: (msg: string) => void
+    log?: (msg: unknown) => void
   } = $props()
 </script>
 
@@ -22,7 +24,7 @@
     <Breadcrumbs bind:path address={me}/>
   </nav>
   <section id="files">
-    <FileBrowser bind:path bind:query {onerror}/>
+    <FileBrowser bind:path bind:query {onerror} {log}/>
   </section>
 </section>
 

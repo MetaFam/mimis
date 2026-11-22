@@ -24,7 +24,7 @@
 
 | State | Shown |
 | --- | --- |
-| loading `pending()` | a spinner (`#lib/assets/spinner.svg`) |
+| loading `pending()` | a spinner (`#assets/spinner.svg`) |
 | no session or wallet | “Connect a wallet to publish.”, with Publish disabled |
 | nothing staged | Publish enabled. Pressing it calls `preparePublish`, which returns `nothing: true`, and shows “Nothing is staged to publish.” The wallet isn't asked. |
 | wallet ≠ session | “Your wallet is connected as 0x…, but you’re signed in as 0x….”, and nothing is called (FR-007) |

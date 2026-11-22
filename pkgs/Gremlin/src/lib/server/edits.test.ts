@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import gremlin from 'gremlin'
-import { putRepresentation, retire, unlinkSpot } from '#lib/server/edits.js'
+import {
+  arrange, holdingsOf, putRepresentation, release, retire, unlinkSpot,
+} from '#lib/server/edits.js'
 import { edgeId } from '#lib/server/janusgraph.js'
 import {
   addSpot, attach, link, mount, transaction, type Id,
@@ -100,19 +102,29 @@ describe('retire', () => {
   })
 })
 
+const ranked = async (spot: Id) => (
+  (await holdingsOf({ source, spot })).map(({ id }) => id)
+)
+const afters = async (spot: Id) => (
+  Object.fromEntries((await holdingsOf({ source, spot })).map(({ id, after }) => [id, after]))
+)
+
 describe('putRepresentation', () => {
   const held = async (spot: Id) => (
     (await (
       source.V(spot).outE('AS')
-      .project('order', 'content', 'uuid', 'type', 'blobs')
-      .by('order')
+      .project('after', 'content', 'uuid', 'type', 'blobs')
+      .by(__.values('after').fold())
       .by(__.inV().id())
       .by(__.inV().values('uuid'))
       .by(__.inV().values('type'))
       .by(
         __.inV().outE('IS')
-        .project('uuid', 'cid', 'size')
-        .by('uuid').by(__.inV().values('cid')).by(__.inV().values('size'))
+        .project('uuid', 'cid', 'size', 'previous')
+        .by('uuid')
+        .by(__.inV().values('cid'))
+        .by(__.inV().values('size'))
+        .by(__.inV().out('PREVIOUS').values('cid').fold())
         .fold()
       )
       .toList()
@@ -120,59 +132,222 @@ describe('putRepresentation', () => {
       const entry = Object.fromEntries(row as Map<string, unknown>)
       entry.blobs = (entry.blobs as Array<Map<string, unknown>>).map(
         (blob) => Object.fromEntries(blob)
-      )
+      ).sort((a, b) => (String(a.uuid) < String(b.uuid) ? -1 : 1))
       return entry
     })
+  )
+  const svg = { type: 'image/svg+xml', size: 12, now }
+  const publish = (content: Id) => (
+    source.V(content).outE('IS').property('published', '["published"]').toList()
   )
 
   it('creates a Content, its `AS`, & an `IS` to a Blob', async () => {
     const spot = await addSpot(source)
-    const content = await putRepresentation({
-      source, spot, type: 'image/svg+xml', cid: 'bafySVG', size: 12, now,
-    })
+    const content = await putRepresentation({ source, spot, ...svg, cid: 'bafySVG' })
     expect(await held(spot)).toEqual([{
-      order: -1,
+      after: [],
       content,
       uuid: expect.stringMatching(/^[0-9a-f-]{36}$/),
       type: 'image/svg+xml',
-      blobs: [{ uuid: expect.stringMatching(/^[0-9a-f-]{36}$/), cid: 'bafySVG', size: 12 }],
+      blobs: [{
+        uuid: expect.stringMatching(/^[0-9a-f-]{36}$/),
+        cid: 'bafySVG',
+        size: 12,
+        previous: [],
+      }],
     }])
   })
 
-  it('changes nothing for the same type & CID', async () => {
+  it('changes nothing for the current data (FR-009)', async () => {
     const spot = await addSpot(source)
-    const args = { source, spot, type: 'image/svg+xml', cid: 'bafySVG', size: 12, now }
+    const args = { source, spot, ...svg, cid: 'bafySVG' }
     const content = await putRepresentation(args)
+    await publish(content)
     const before = await held(spot)
     expect(await putRepresentation(args)).toBe(content)
     expect(await held(spot)).toEqual(before)
   })
 
-  it('replaces the blob within the same Content (FR-031)', async () => {
+  it('adds a version over a published Blob, naming it `previous` (FR-006)', async () => {
     const spot = await addSpot(source)
-    const args = { source, spot, type: 'image/svg+xml', size: 12, now }
-    const content = await putRepresentation({ ...args, cid: 'bafyOld' })
-    const [{ uuid, blobs: [old] }] = await held(spot) as Array<{ uuid: string, blobs: Array<{ uuid: string }> }>
-    await source.V(content).outE('IS').property('published', '["old"]').toList()
-
-    expect(await putRepresentation({ ...args, cid: 'bafyNew', size: 13 })).toBe(content)
-    const after = await held(spot)
-    expect(after).toEqual([expect.objectContaining({
-      content, uuid, blobs: [expect.objectContaining({ cid: 'bafyNew', size: 13 })],
-    })])
-    expect((after[0].blobs as Array<{ uuid: string }>)[0].uuid).not.toBe(old.uuid)
-    expect(await markers(content)).toEqual([expect.objectContaining(
-      { kind: 'IS', key: old.uuid, published: '["old"]' }
-    )])
+    const content = await putRepresentation({ source, spot, ...svg, cid: 'bafyOld' })
+    await publish(content)
+    expect(await putRepresentation({ source, spot, ...svg, cid: 'bafyNew', size: 13 }))
+    .toBe(content)
+    const [{ blobs }] = await held(spot)
+    expect(blobs).toEqual([
+      expect.objectContaining({ cid: 'bafyOld', size: 12, previous: [] }),
+      expect.objectContaining({ cid: 'bafyNew', size: 13, previous: ['bafyOld'] }),
+    ])
+    expect(await markers(content)).toEqual([])
   })
 
-  it('keeps another type in a separate Content', async () => {
+  it('overwrites an unpublished Blob in place (FR-007)', async () => {
     const spot = await addSpot(source)
-    const svg = await putRepresentation({ source, spot, type: 'image/svg+xml', cid: 'bafySVG', size: 1, now })
+    const content = await putRepresentation({ source, spot, ...svg, cid: 'bafyOld' })
+    const [{ blobs: [before] }] = await held(spot) as Array<{ blobs: Array<{ uuid: string }> }>
+    await putRepresentation({ source, spot, ...svg, cid: 'bafyNew', size: 13, now: '2026-11-22T00:00:00.000Z' })
+    const [{ blobs }] = await held(spot)
+    expect(blobs).toEqual([{ uuid: before.uuid, cid: 'bafyNew', size: 13, previous: [] }])
+    expect(await source.V(content).out('IS').values('createdAt').toList())
+    .toEqual(['2026-11-22T00:00:00.000Z'])
+  })
+
+  it('overwrites only the newest version once it’s unpublished', async () => {
+    const spot = await addSpot(source)
+    const content = await putRepresentation({ source, spot, ...svg, cid: 'bafyV1' })
+    await publish(content)
+    await putRepresentation({ source, spot, ...svg, cid: 'bafyV2' })
+    await putRepresentation({ source, spot, ...svg, cid: 'bafyV3' })
+    const [{ blobs }] = await held(spot)
+    expect(blobs).toEqual([
+      expect.objectContaining({ cid: 'bafyV1', previous: [] }),
+      expect.objectContaining({ cid: 'bafyV3', previous: ['bafyV1'] }),
+    ])
+  })
+
+  it('chains five published versions (SC-005)', async () => {
+    const spot = await addSpot(source)
+    let content: Id | undefined
+    for(const n of [1, 2, 3, 4, 5, 6]) {
+      content = await putRepresentation({ source, spot, ...svg, cid: `bafyV${n}` })
+      await publish(content)
+    }
+    const chain = await (
+      source.V(content!).out('IS').not(__.inE('PREVIOUS'))
+      .emit().repeat(__.out('PREVIOUS')).values('cid').toList()
+    )
+    expect(chain).toEqual(['bafyV6', 'bafyV5', 'bafyV4', 'bafyV3', 'bafyV2', 'bafyV1'])
+  })
+
+  it('versions the best Content of the type, not a later one (FR-018)', async () => {
+    const spot = await addSpot(source)
+    const first = await putRepresentation({ source, spot, ...svg, cid: 'bafyA' })
+    const second = await putRepresentation({ source, spot, ...svg, cid: 'bafyB', alternative: true })
+    expect(second).not.toBe(first)
+    expect(await putRepresentation({ source, spot, ...svg, cid: 'bafyC' })).toBe(first)
+    expect(await ranked(spot)).toEqual([first, second])
+  })
+
+  it('makes a new Content of another type, ranked last', async () => {
+    const spot = await addSpot(source)
     const png = await putRepresentation({ source, spot, type: 'image/png', cid: 'bafyPNG', size: 1, now })
-    expect(png).not.toBe(svg)
-    expect((await held(spot)).map(({ type }) => type).sort())
-    .toEqual(['image/png', 'image/svg+xml'])
+    const svgId = await putRepresentation({ source, spot, ...svg, cid: 'bafySVG' })
+    expect(svgId).not.toBe(png)
+    expect(await ranked(spot)).toEqual([png, svgId])
+  })
+
+  it('adds an alternative of the same type, ranked last (FR-001, FR-017)', async () => {
+    const spot = await addSpot(source)
+    const ids = []
+    for(const cid of ['bafyA', 'bafyB', 'bafyA']) {
+      ids.push(await putRepresentation({ source, spot, ...svg, cid, alternative: true }))
+    }
+    expect(new Set(ids).size).toBe(3)
+    expect(await ranked(spot)).toEqual(ids)
+    expect((await held(spot)).map(({ type }) => type))
+    .toEqual(['image/svg+xml', 'image/svg+xml', 'image/svg+xml'])
+  })
+
+  it('doesn’t version a proxy of the type', async () => {
+    const spot = await addSpot(source)
+    const other = await addSpot(source)
+    const { content: target } = await attach(source, { to: other, type: 'image/svg+xml', cid: 'bafyT' })
+    const { content: proxy } = await attach(source, { to: spot, type: 'image/svg+xml', mounts: target })
+    const made = await putRepresentation({ source, spot, ...svg, cid: 'bafyNew' })
+    expect(made).not.toBe(proxy)
+    expect(await ranked(spot)).toEqual([proxy, made])
+    expect(await source.V(proxy).outE('IS').count().next()).toMatchObject({ value: 0 })
+  })
+})
+
+describe('hold & release', () => {
+  let spot: Id
+  let contents: Array<Id>
+  beforeEach(async () => {
+    spot = await addSpot(source)
+    contents = []
+    for(const cid of ['bafyA', 'bafyB', 'bafyC']) {
+      contents.push((await attach(source, { to: spot, type: 'text/plain', cid })).content)
+    }
+  })
+  const edgeTo = async (content: Id) => (
+    edgeId((await source.V(spot).outE('AS').where(__.inV().hasId(content)).id().next()).value)
+  )
+
+  it('ranks each held Content after the last (FR-004)', async () => {
+    expect(await ranked(spot)).toEqual(contents)
+    const uuids = await Promise.all(contents.map(uuidOf))
+    expect(await afters(spot)).toEqual({
+      [contents[0]]: undefined, [contents[1]]: uuids[0], [contents[2]]: uuids[1],
+    })
+  })
+
+  it.each([
+    { removed: 0, left: [1, 2] },
+    { removed: 1, left: [0, 2] },
+    { removed: 2, left: [0, 1] },
+  ])('relinks what followed Content $removed when it’s released (FR-021)', async ({ removed, left }) => {
+    await release({ source, edge: await edgeTo(contents[removed]), now })
+    expect(await ranked(spot)).toEqual(left.map((n) => contents[n]))
+    const uuids = await Promise.all(contents.map(uuidOf))
+    expect(await afters(spot)).toEqual({
+      [contents[left[0]]]: undefined, [contents[left[1]]]: uuids[left[0]],
+    })
+  })
+
+  it('leaves a marker for a published `AS` it releases', async () => {
+    const edge = await edgeTo(contents[1])
+    await source.E(edge).property('published', '["p"]').toList()
+    await release({ source, edge, now })
+    expect(await markers(spot)).toEqual([expect.objectContaining({ kind: 'AS', key: await uuidOf(contents[1]) })])
+  })
+
+  it('throws on an edge that isn’t an `AS`', async () => {
+    const { edge } = await kinds.CONTAINS()
+    await expect(release({ source, edge, now })).rejects.toThrow(`There’s no AS ${edge}.`)
+  })
+})
+
+describe('arrange', () => {
+  let spot: Id
+  let contents: Array<Id>
+  let uuids: Array<string>
+  beforeEach(async () => {
+    spot = await addSpot(source)
+    contents = []
+    for(const cid of ['bafyA', 'bafyB', 'bafyC', 'bafyD']) {
+      contents.push((await attach(source, { to: spot, type: 'text/plain', cid })).content)
+    }
+    uuids = await Promise.all(contents.map(uuidOf))
+  })
+  const changed = async (order: Array<number>) => {
+    const before = await afters(spot)
+    await arrange({ source, spot, order: order.map((n) => uuids[n]) })
+    expect(await ranked(spot)).toEqual(order.map((n) => contents[n]))
+    const after = await afters(spot)
+    return contents.flatMap((id, n) => (before[id] === after[id] ? [] : [n]))
+  }
+
+  it('changes only the moved Content & its new follower, moving the last to the top', async () => {
+    expect(await changed([3, 0, 1, 2])).toEqual([0, 3])
+  })
+
+  it('changes three entries moving one down a place (FR-003)', async () => {
+    expect(await changed([0, 2, 1, 3])).toEqual([1, 2, 3])
+  })
+
+  it('changes nothing for the order it already has', async () => {
+    expect(await changed([0, 1, 2, 3])).toEqual([])
+  })
+
+  it.each([
+    { given: 'a missing Content', order: () => uuids.slice(1) },
+    { given: 'a duplicate', order: () => [uuids[0], ...uuids.slice(0, 3)] },
+    { given: 'a stranger', order: () => [...uuids.slice(1), 'nope'] },
+  ])('throws on $given', async ({ order }) => {
+    await expect(arrange({ source, spot, order: order() }))
+    .rejects.toThrow(`That order isn’t of Spot #${spot}’s Contents.`)
   })
 })
 

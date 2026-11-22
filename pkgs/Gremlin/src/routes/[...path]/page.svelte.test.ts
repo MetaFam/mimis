@@ -64,6 +64,8 @@ const moveSecondPaneToRoot = async () => {
 
 beforeEach(async () => {
   await render(Page)
+  // The first render waits on the listing, so it lands a tick later.
+  await vi.waitFor(() => expect(field()).not.toBeNull())
 })
 
 afterEach(() => {
@@ -93,7 +95,9 @@ describe('searching from the actions menu', () => {
     expect(panes()[1].hidden).toBe(true)
     expect(getComputedStyle(panes()[1]).display).toBe('none')
     type('')
-    expect(panes()[1].hidden).toBe(false)
+    // Leaving the search re-awaits the listing, & Svelte holds the
+    // whole update, this pane’s `hidden` included, until it settles.
+    await vi.waitFor(() => expect(panes()[1].hidden).toBe(false))
     expect(crumbs(panes()[1])).toBe(1)
     expect(crumbs(panes()[0])).toBe(2)
   })
@@ -158,7 +162,7 @@ describe('the actions menu', () => {
     session.me = null
     try {
       await render(Page)
-      expect(item('Publish…')!.disabled).toBe(true)
+      await vi.waitFor(() => expect(item('Publish…')!.disabled).toBe(true))
     } finally {
       session.me = '0xabc'
     }
@@ -167,7 +171,7 @@ describe('the actions menu', () => {
 
 describe('recording an Update', () => {
   const submit = (cid: string) => {
-    const input = document.querySelector<HTMLInputElement>('input[aria-label="Update address"]')!
+    const input = document.querySelector<HTMLInputElement>('input[aria-label="Update CID"]')!
     input.value = cid
     input.form!.requestSubmit()
   }

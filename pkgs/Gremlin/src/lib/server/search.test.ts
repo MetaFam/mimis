@@ -211,10 +211,10 @@ describe('previews', () => {
     expect((await thumbs(['emma']))['b/c/Gemma']).toBeNull()
   })
 
-  it('lists each result’s content types, in listing order', async () => {
+  it('lists each result’s content types, best first', async () => {
     const to = ids.get('b/emma')!
-    await attach(source, { to, type: 'image/png', cid: 'bafyPNG', order: 1 })
-    await attach(source, { to, type: 'text/plain', cid: 'bafyTXT', order: 0 })
+    await attach(source, { to, type: 'text/plain', cid: 'bafyTXT' })
+    await attach(source, { to, type: 'image/png', cid: 'bafyPNG' })
     const types = Object.fromEntries(
       (await search(['emma'])).results.map(({ names, types }) => (
         [names.join('/'), types]
@@ -224,13 +224,19 @@ describe('previews', () => {
     expect(types['b/c/Gemma']).toEqual([])
   })
 
-  it('previews the first displayable content in listing order', async () => {
+  it('previews the best content, of several of one type (FR-015)', async () => {
     const to = ids.get('b/emma')!
-    await attach(source, { to, type: 'text/plain', cid: 'bafyTXT', order: -1 })
-    await attach(source, { to, type: 'image/svg+xml', cid: 'bafySVG', order: 1 })
-    await attach(source, { to, type: 'image/png', cid: 'bafyPNG', order: 0 })
+    await attach(source, { to, type: 'image/png', cid: 'bafyPNG1' })
+    await attach(source, { to, type: 'image/png', cid: 'bafyPNG2' })
     expect((await thumbs(['emma']))['b/emma'])
-    .toEqual({ type: 'image/png', cid: 'bafyPNG' })
+    .toEqual({ type: 'image/png', cid: 'bafyPNG1' })
+  })
+
+  it('gives no preview when the best content can’t be shown', async () => {
+    const to = ids.get('b/emma')!
+    await attach(source, { to, type: 'text/plain', cid: 'bafyTXT' })
+    await attach(source, { to, type: 'image/png', cid: 'bafyPNG' })
+    expect((await thumbs(['emma']))['b/emma']).toBeNull()
   })
 })
 

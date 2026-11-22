@@ -3,9 +3,12 @@ import svelte from 'eslint-plugin-svelte'
 import { defineConfig, globalIgnores } from 'eslint/config'
 import globals from 'globals'
 import ts from 'typescript-eslint'
+import json from '@eslint/json'
+import md from '@eslint/markdown'
+import css from '@eslint/css'
 
 export default defineConfig(
-	globalIgnores(['.svelte-kit/', 'sk/', 'build/', 'editor/dist/']),
+	globalIgnores(['.svelte-kit/', 'build/', 'editor/dist/']),
 	js.configs.recommended,
 	...ts.configs.recommended,
 	...svelte.configs.recommended,
@@ -30,3 +33,14 @@ export default defineConfig(
 		}
 	}
 )
+
+
+// export default defineConfig([
+//   { files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], plugins: { js }, extends: ["js/recommended"], languageOptions: { globals: globals.browser } },
+//   tseslint.configs.recommended,
+//   { files: ["**/*.json"], plugins: { json }, language: "json/json", extends: ["json/recommended"] },
+//   { files: ["**/*.jsonc"], plugins: { json }, language: "json/jsonc", extends: ["json/recommended"] },
+//   { files: ["**/*.json5"], plugins: { json }, language: "json/json5", extends: ["json/recommended"] },
+//   { files: ["**/*.md"], plugins: { markdown }, language: "markdown/gfm", extends: ["markdown/recommended"] },
+//   { files: ["**/*.css"], plugins: { css }, language: "css/css", extends: ["css/recommended"] },
+// ]);

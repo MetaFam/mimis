@@ -58,7 +58,7 @@ The rules are in [data-model.md](../data-model.md) (*Query → Parts*). Matching
 | Empty | `#search-results [role="status"]`, text "Nothing matched" | The first page has 0 results (FR-010) |
 | Results | `#search-results ol > li > a[href]`, text `names.join('/') + '/'` | Every loaded page, in order |
 | Preview | The link's first child: `img.thumb[alt=""]` for an image, or `video.thumb[muted]` for a video, with `src` = `toHTTP({ cid })` | A result with a `thumb` (FR-018) |
-| Folder | The link's first child: `img.thumb.folder[alt=""]`, with `src` = `#lib/assets/folder.svg` | A result with no `thumb` and empty `types` (FR-018) |
+| Folder | The link's first child: `img.thumb.folder[alt=""]`, with `src` = `#assets/folder.svg` | A result with no `thumb` and empty `types` (FR-018) |
 | Show more | `#search-results button.more` | While the last loaded page has `more` (FR-011) |
 
 **Behaviour:**

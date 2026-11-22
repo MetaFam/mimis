@@ -3,7 +3,7 @@ import { render } from 'vitest-browser-svelte'
 import { userEvent } from 'vitest/browser'
 import { flushSync } from 'svelte'
 import { toHTTP } from '#lib'
-import Folder from '#lib/assets/folder.svg'
+import Folder from '#assets/folder.svg'
 import SearchResults from './SearchResults.svelte'
 
 const CID_A = 'bafkreigh2akiscaildcqabsyg3dfr6chu3fgpregiymsck7e7aqa4s52zy'

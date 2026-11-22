@@ -62,8 +62,12 @@ describe('fingerprint', () => {
     [{ kind: 'CONTAINS', path: 'hat', child: 'u1' }, '["hat","u1"]'],
     [{ kind: 'MOUNT', target: 't1', order: 2 }, '["t1",null,2]'],
     [{ kind: 'MOUNT', target: 't1', creator: '0xabc', order: 2 }, '["t1","0xabc",2]'],
-    [{ kind: 'AS', content: 'c1', order: -1, type: 'image/png' }, '["c1",-1,"image/png"]'],
+    [{ kind: 'MOUNT', target: 'c2' }, '["c2",null]'],
+    [{ kind: 'MOUNT', target: 'c2', creator: '0xabc' }, '["c2","0xabc"]'],
+    [{ kind: 'AS', content: 'c1', type: 'image/png' }, '["c1",null,"image/png"]'],
+    [{ kind: 'AS', content: 'c1', type: 'image/png', after: 'c0' }, '["c1","c0","image/png"]'],
     [{ kind: 'IS', uuid: 'i1', cid: 'bafy', size: 3 }, '["i1","bafy",3]'],
+    [{ kind: 'IS', uuid: 'i2', cid: 'bafz', size: 4, previous: 'i1' }, '["i2","bafz",4,"i1"]'],
   ] as const)('fingerprints %o as %s', (fields, expected) => {
     expect(fingerprint(fields)).toBe(expected)
   })
@@ -139,9 +143,18 @@ describe('pendingSpots', () => {
       expect(a.markers).toEqual([])
     })
 
-    it('a Content’s `AS.order` changes', async () => {
-      await source.V(ids.get('icon/hat/top')).outE('AS').property('order', 3).toList()
+    it('a Content’s place changes', async () => {
+      await source.V(ids.get('icon/hat/top')).outE('AS').property('after', 'elsewhere').toList()
       expect(await pending()).toEqual(['icon/hat/top'])
+    })
+
+    it('it holds an alternative of a type it already holds (FR-001)', async () => {
+      await putRepresentation({
+        source, spot: ids.get('icon/hat/top')!, type: 'image/svg+xml', cid: await file(2), size: 5, now, alternative: true,
+      })
+      expect(await pendingSpots({ source, address })).toEqual([
+        expect.objectContaining({ path: ['icon', 'hat', 'top'], added: 2, removed: 0 }),
+      ])
     })
 
     it('it has a `REMOVED` out-edge', async () => {
@@ -156,13 +169,18 @@ describe('pendingSpots', () => {
       expect(await pending()).toEqual(['icon/hat/top'])
     })
 
-    it('a Content it holds has a pending representation', async () => {
+    it('a Content it holds has a new version, & nothing is removed (FR-006)', async () => {
       await putRepresentation({
         source, spot: ids.get('icon/hat/top')!, type: 'image/svg+xml', cid: await file(2), size: 5, now,
       })
       expect(await pendingSpots({ source, address })).toEqual([
-        expect.objectContaining({ path: ['icon', 'hat', 'top'], added: 1, removed: 1 }),
+        expect.objectContaining({ path: ['icon', 'hat', 'top'], added: 1, removed: 0 }),
       ])
+      const content = ids.get('icon/hat/top.svg')!
+      const { contents } = await entriesOf({ source, ids: [ids.get('icon/hat/top')!], address })
+      const [old, made] = [...contents.get(content)!.entries].sort((a, b) => (a.key < b.key ? -1 : 1))
+      expect(old.pending).toBe(false)
+      expect(made).toMatchObject({ pending: true, fields: { previous: old.key, size: 5 } })
     })
   })
 
@@ -240,20 +258,63 @@ describe('entriesOf', () => {
     await expect(entriesOfA()).rejects.toThrow(`IS ${is} has no uuid.`)
   })
 
-  it('throws for a holding without an order', async () => {
+  it('throws for a Spot mount without an order', async () => {
     // The graph’s schema makes `order` an Integer, so a missing one is
     // the only kind that isn’t a number.
-    await attach(source, { to: ids.get('a')!, type: 'text/plain', cid: await file(3) })
-    const edge = await edgeFrom(ids.get('a')!, 'AS')
+    await mount(source, { from: ids.get('a')!, to: ids.get('b')! })
+    const edge = await edgeFrom(ids.get('a')!, 'MOUNT')
     await source.E(edge).properties('order').drop().toList()
-    await expect(entriesOfA()).rejects.toThrow(`AS ${edge} has no numeric order.`)
+    await expect(entriesOfA()).rejects.toThrow(`MOUNT ${edge} has no numeric order.`)
   })
 
-  it('throws for two current Contents of one type', async () => {
+  it('reads several Contents of one type (FR-001)', async () => {
     await attach(source, { to: ids.get('a')!, type: 'text/plain', cid: await file(3) })
     await attach(source, { to: ids.get('a')!, type: 'text/plain', cid: await file(4) })
-    await expect(entriesOfA())
-    .rejects.toThrow(`Spot #${ids.get('a')} holds two Contents of type “text/plain”.`)
+    const { spots } = await entriesOfA()
+    expect(spots.get(ids.get('a')!)!.contents).toHaveLength(2)
+  })
+
+  it('reads a proxy’s mount, with its target’s owner, & no order', async () => {
+    const other = newAddress()
+    const { root: theirs } = await seedUser(source, { address: other })
+    const { content: target } = await attach(source, { to: theirs, type: 'text/plain', cid: await file(5) })
+    const { content: proxy } = await attach(source, { to: ids.get('a')!, type: 'text/plain', mounts: target })
+    const targetUuid = (await source.V(target).values('uuid').next()).value as string
+    const { contents } = await entriesOfA()
+    expect(contents.get(proxy)!.entries).toEqual([expect.objectContaining({
+      kind: 'MOUNT',
+      key: targetUuid,
+      fields: { kind: 'MOUNT', target: targetUuid, creator: other },
+      fingerprint: `["${targetUuid}","${other}"]`,
+    })])
+  })
+
+  it('throws for a proxy that also holds a Blob', async () => {
+    const { content: target } = await attach(source, { to: ids.get('b')!, type: 'text/plain', cid: await file(5) })
+    const { content: proxy } = await attach(source, { to: ids.get('a')!, type: 'text/plain', mounts: target })
+    await (
+      source.V(proxy).as('c').addV('Blob').property('cid', await file(6)).property('size', 1)
+      .addE('IS').from_('c').property('uuid', 'u-extra').toList()
+    )
+    await expect(entriesOfA()).rejects.toThrow(`Content #${proxy} is neither one file nor one proxy.`)
+  })
+
+  it('throws for a Blob that replaced two', async () => {
+    const { content, is } = await attach(source, { to: ids.get('a')!, type: 'text/plain', cid: await file(5) })
+    const blobOf = async (n: number) => (
+      (await (
+        source.V(content).as('c')
+        .addV('Blob').property('cid', await file(n)).property('size', 1).as('b')
+        .addE('IS').from_('c').property('uuid', `u-${n}`)
+        .select('b').id().next()
+      )).value as Id
+    )
+    const first = (await source.E(is).inV().id().next()).value as Id
+    const [second, third] = [await blobOf(6), await blobOf(7)]
+    for(const replaced of [first, second]) {
+      await source.V(third).addE('PREVIOUS').to(__.V(replaced)).toList()
+    }
+    await expect(entriesOfA()).rejects.toThrow(`Blob #${third} replaced 2 Blobs.`)
   })
 
   it('throws a 400 for two mounts of one target', async () => {
@@ -325,7 +386,7 @@ describe('entriesOf', () => {
     expect(top.contents).toEqual([content.id])
     expect(top.entries).toEqual([expect.objectContaining({
       kind: 'AS', key: content.uuid,
-      fields: { kind: 'AS', content: content.uuid, order: 0, type: 'image/svg+xml' },
+      fields: { kind: 'AS', content: content.uuid, type: 'image/svg+xml' },
     })])
     expect(content.entries).toEqual([expect.objectContaining({
       kind: 'IS', fields: { kind: 'IS', uuid: content.entries[0].key, cid: await file(1), size: 1 },

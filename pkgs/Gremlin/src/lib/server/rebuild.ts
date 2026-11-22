@@ -1,15 +1,18 @@
 import * as dagCBOR from '@ipld/dag-cbor'
 import type { CID } from 'multiformats/cid'
 import { compareBytes, list } from '#lib/mst.js'
+import { rank } from '#lib/rank.js'
 import { validateUpdate } from '#lib/updates.js'
 import type { Blocks } from '#lib/server/blocks.js'
 
 export interface Tree {
+  /** In rank order. */
   contents: Array<{
     uuid: string
-    order: number
     type: string
-    blobs: Array<{ cid: string, size: number }>
+    after?: string
+    blobs: Array<{ uuid: string, cid: string, size: number, previous?: string }>
+    mounts: Array<{ target: string, creator?: string }>
   }>
   mounts: Array<{ target: string, creator?: string, order: number }>
   children: Record<string, Tree>
@@ -90,17 +93,31 @@ export async function rebuild(
       latest.spots.get(uuid) ?? target, ['contains', 'mounts', 'contents'],
     )
     const tree: Tree = { contents: [], mounts: [], children: {} }
-    for(const { uuid: content, order, type } of entries('contents')) {
+    for(const { uuid: content, type, after } of entries('contents')) {
       const newest = latest.contents.get(content as string)
       if(!newest) throw new Error(`No version of Content ${content}.`)
+      const held = await fold(newest, ['blobs', 'mounts'])
       tree.contents.push({
         uuid: content as string,
-        order: order as number,
         type: type as string,
+        ...(after == null ? {} : { after: after as string }),
         blobs: (
-          (await fold(newest, ['blobs']))('blobs')
-          .map(({ cid, size }) => ({ cid: String(cid), size: size as number }))
-          .sort(byKey(({ cid }) => cid))
+          held('blobs')
+          .map(({ uuid, cid, size, previous }) => ({
+            uuid: uuid as string,
+            cid: String(cid),
+            size: size as number,
+            ...(previous == null ? {} : { previous: previous as string }),
+          }))
+          .sort(byKey(({ uuid }) => uuid))
+        ),
+        mounts: (
+          held('mounts')
+          .map(({ target, creator }) => ({
+            target: target as string,
+            ...(creator == null ? {} : { creator: creator as string }),
+          }))
+          .sort(byKey(({ target }) => target))
         ),
       })
     }
@@ -115,7 +132,7 @@ export async function rebuild(
       const { uuid: childUuid } = await read<Version>(child as CID)
       tree.children[path as string] = await spotAt(childUuid, child as CID)
     }
-    tree.contents.sort(byKey(({ uuid }) => uuid))
+    tree.contents = rank(tree.contents)
     tree.mounts.sort(byKey(({ target }) => target))
     return tree
   }

@@ -277,17 +277,35 @@ type NewDataTransferItem = (
 let drug: DroppableElement | null = null
 let dropSource: Array<string> | null = null
 
+/**
+ * Where files dropped on a target go: `nest`, into Spots named for
+ * them, or onto the target’s Spot itself, as a new `version` of its
+ * best Content of their type or as a new `alternative` (FR-017,
+ * FR-018). Folders dropped on a target nest whatever its placement.
+ */
+export type Placement = 'nest' | 'version' | 'alternative'
+
+/** The type a table row carries while it’s dragged to a new rank. */
+export const RANK_DRAG = 'application/x-mimis-rank'
+
 export function dropGenerator(
-  { path: currentPath }: { path: () => Array<string> }
+  { path: currentPath, log = () => {}, placement = () => 'nest' }:
+  {
+    path: () => Array<string>
+    log?: (msg: unknown) => void
+    placement?: () => Placement | Promise<Placement>
+  }
 ) {
   async function process(
     entries: Array<FileSystemIntrospection> | null = null,
     destination: Array<string> = [],
   ) {
+    const placed = await placement()
     const dispatch = (
       async (
         entry: FileSystemIntrospection | null,
         path: Array<string>,
+        top = false,
       ) => {
         if(!entry) return
 
@@ -300,9 +318,14 @@ export function dropGenerator(
         } else {
           const file = await fileOf(entry as FileSystemFileEntry)
           if(settings.debugging) {
-            console.debug({ Adding: { file, path } })
+            log?.(`Adding: ${file.type} @ /${path.join('/')}.`)
           }
-          await addFiles({ files: [file], path })
+          await addFiles({
+            files: [file],
+            path,
+            onto: top && placed !== 'nest',
+            alternative: top && placed === 'alternative',
+          })
         }
       }
     )
@@ -332,7 +355,7 @@ export function dropGenerator(
     }
 
     for(const entry of entries ?? []) {
-      await dispatch(entry, destination)
+      await dispatch(entry, destination, true)
     }
   }
 
@@ -353,6 +376,8 @@ export function dropGenerator(
       }
     )
     const onDrop = async (evt: DragEvent) => {
+      // A rank drag missed its table, so it moves nothing.
+      if(evt.dataTransfer?.types.includes(RANK_DRAG)) return
       evt.preventDefault()
       evt.stopPropagation()
       const items = (

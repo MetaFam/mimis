@@ -17,10 +17,17 @@ export function assertLocalGraph(
   }
 }
 
+const numeric = (value: unknown) => (
+  typeof value === 'number' ? value
+  : Number.isFinite(Number(value)) && value != null ? Number(value)
+  : -1
+)
+
 /**
- * Gives every `IS` a uuid, moves each Content’s `order` onto its `AS`
- * edge as a number, & copies each `User`’s address onto its `INCLUDES`
- * as `author`. How many of each it changed.
+ * Gives every `IS` a uuid, turns each Spot’s numeric Content `order`s
+ * into a ranking by `after`, in the order they listed in, & copies each
+ * `User`’s address onto its `INCLUDES` as `author`. How many of each it
+ * changed.
  */
 export async function backfillRepresentations(
   { source }: { source: GraphTraversalSource },
@@ -30,39 +37,57 @@ export async function backfillRepresentations(
     await source.E(relationId(id)).property('uuid', uuidV7()).next()
   }
 
-  const holdings = await (
-    source.E().hasLabel('AS')
-    .project('edge', 'order', 'held')
-    .by(__.id())
-    .by(__.values('order').fold())
-    .by(__.inV().values('order').fold())
+  const numbered = await (
+    source.V().hasLabel('Spot')
+    .where(__.outE('AS').or(__.has('order'), __.inV().has('order')))
+    .id()
     .toList()
-  ) as Array<Map<string, unknown>>
-  let orders = 0
-  for(const row of holdings) {
-    const edge = relationId(row.get('edge'))
-    const [order] = row.get('order') as Array<unknown>
-    const [held] = row.get('held') as Array<unknown>
-    const wanted = (
-      typeof held === 'number' ? held
-      : Number.isFinite(Number(order)) ? Number(order)
-      : -1
-    )
-    if(order === wanted && held === undefined) continue
-    if(order !== wanted) {
-      await source.E(edge).property('order', wanted).next()
+  )
+  let ranks = 0
+  for(const spot of numbered) {
+    const holdings = (await (
+      source.V(spot).outE('AS')
+      .project('edge', 'order', 'held', 'createdAt', 'uuid')
+      .by(__.id())
+      .by(__.values('order').fold())
+      .by(__.inV().values('order').fold())
+      .by(__.inV().coalesce(__.values('createdAt'), __.constant('')))
+      .by(__.inV().values('uuid'))
+      .toList()
+    ) as Array<Map<string, unknown>>).map((row) => {
+      const [held] = row.get('held') as Array<unknown>
+      const [order] = row.get('order') as Array<unknown>
+      return {
+        edge: relationId(row.get('edge')),
+        order: numeric(held ?? order),
+        createdAt: row.get('createdAt') as string,
+        uuid: row.get('uuid') as string,
+      }
+    })
+    // As listings ordered them: by `order`, then newest first.
+    holdings.sort((a, b) => (
+      a.order - b.order
+      || (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0)
+      || (a.uuid < b.uuid ? -1 : 1)
+    ))
+    for(const [idx, { edge }] of holdings.entries()) {
+      const holding = () => source.E(edge)
+      if(idx === 0) {
+        await holding().properties('after').drop().toList()
+      } else {
+        await holding().property('after', holdings[idx - 1].uuid).next()
+      }
+      await holding().properties('order').drop().toList()
+      await holding().inV().properties('order').drop().toList()
+      ranks++
     }
-    if(held !== undefined) {
-      await source.E(edge).inV().properties('order').drop().toList()
-    }
-    orders++
   }
 
   const anonymous = () => source.E().hasLabel('INCLUDES').hasNot('author')
   const { value: authors } = await anonymous().count().next()
   await anonymous().property('author', __.inV().values('address')).toList()
 
-  return { representations: unnamed.length, orders, authors: Number(authors) }
+  return { representations: unnamed.length, ranks, authors: Number(authors) }
 }
 
 // With the database cache on, a read can be stale & takes no lock, so

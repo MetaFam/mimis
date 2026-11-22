@@ -4,18 +4,18 @@ import * as dagCBOR from '@ipld/dag-cbor'
 import { v7 as uuidV7 } from 'uuid'
 import { hexToBytes } from 'viem'
 import { CID } from 'multiformats/cid'
-import { build } from '#lib/mst.js'
+import { build, list } from '#lib/mst.js'
 import {
   cidFor, encodeSpot, encodeUpdate, typedDataFor, type Signed,
 } from '#lib/updates.js'
-import { putRepresentation, retire } from '#lib/server/edits.js'
+import { arrange, putRepresentation, retire } from '#lib/server/edits.js'
 import { edgeId } from '#lib/server/janusgraph.js'
 import { relinkSpot } from '#lib/server/moves.js'
 import { commit, prepare } from '#lib/server/publish.js'
 import { rebuild } from '#lib/server/rebuild.js'
 import { stageSpots } from '#lib/server/staging.js'
 import {
-  memoryBlocks, mount, seedTree, seedUser, seedWide, signUpdate, snapshot,
+  attach, memoryBlocks, mount, seedTree, seedUser, seedWide, signUpdate, snapshot,
   testAccount, transaction, type Id,
 } from '#lib/server/testing.js'
 
@@ -107,6 +107,70 @@ describe('rebuild (SC-007)', () => {
 
     await publish()
     expect(await rebuilt()).toEqual(await snapshot({ source, root }))
+  })
+
+  it('rebuilds alternatives, their ranks, versions, & proxies (FR-024)', { timeout: 120_000 }, async () => {
+    const blocks = memoryBlocks()
+    let head: CID
+    const publish = async () => {
+      await stageSpots({ source, address, all: true })
+      const ready = await prepare({ source, blocks, address, now })
+      if(ready.nothing) throw new Error('Nothing was prepared.')
+      const signature = await signUpdate(account, {
+        ...ready.typedData,
+        message: { ...ready.typedData.message, sequence: BigInt(ready.typedData.message.sequence) },
+      })
+      head = CID.parse((await commit({ source, blocks, address, plan: ready.plan, signature, now })).cid)
+    }
+    const rebuilt = () => rebuild({ head, blocks })
+    const ids = await seedTree(source, { root, tree: { hat: {} } })
+    const hat = ids.get('hat')!
+    const hatUuid = (await source.V(hat).values('uuid').next()).value as string
+    const put = (cid: string, alternative = true) => putRepresentation({
+      source, spot: hat, type: 'image/svg+xml', cid, size: cid.length, now, alternative,
+    })
+    const alternatives = []
+    for(const name of ['a', 'b', 'c', 'd']) alternatives.push(await put(await file(name)))
+    const uuids = await Promise.all(alternatives.map(async (id) => (
+      (await source.V(id).values('uuid').next()).value as string
+    )))
+    const order = async () => (await rebuilt()).children.hat.contents.map(({ uuid }) => uuid)
+
+    await publish()
+    expect(await rebuilt()).toEqual(await snapshot({ source, root }))
+    expect(await order()).toEqual(uuids)
+
+    await put(await file('a v2'), false)
+    await publish()
+    const versioned = await rebuilt()
+    expect(versioned).toEqual(await snapshot({ source, root }))
+    const [best] = versioned.children.hat.contents
+    expect(best.blobs).toHaveLength(2)
+    const older = best.blobs.find(({ previous }) => previous == null)!
+    expect(best.blobs.find(({ previous }) => previous != null)).toEqual(expect.objectContaining({ cid: await file('a v2'), previous: older.uuid }))
+
+    await arrange({ source, spot: hat, order: [uuids[3], uuids[0], uuids[1], uuids[2]] })
+    await publish()
+    expect(await rebuilt()).toEqual(await snapshot({ source, root }))
+    expect(await order()).toEqual([uuids[3], uuids[0], uuids[1], uuids[2]])
+    const update = dagCBOR.decode(await blocks.get(head!)) as { spots: CID }
+    const [[, hatVersion]] = (await list(update.spots, blocks)).filter(([uuid]) => (
+      uuid === hatUuid
+    ))
+    const { contents } = dagCBOR.decode(await blocks.get(hatVersion)) as { contents: Array<{ uuid: string }> }
+    expect(contents.map(({ uuid }) => uuid).sort()).toEqual([uuids[0], uuids[3]].sort())
+
+    const other = testAccount().address.toLowerCase()
+    const { root: theirs } = await seedUser(source, { address: other })
+    const { content: target } = await attach(source, { to: theirs, type: 'image/svg+xml', cid: await file('theirs') })
+    await attach(source, { to: hat, type: 'image/svg+xml', mounts: target })
+    await publish()
+    const proxied = await rebuilt()
+    expect(proxied).toEqual(await snapshot({ source, root }))
+    expect(proxied.children.hat.contents.at(-1)).toEqual(expect.objectContaining({
+      blobs: [],
+      mounts: [{ target: (await source.V(target).values('uuid').next()).value, creator: other }],
+    }))
   })
 
   it('throws on a missing block', async () => {

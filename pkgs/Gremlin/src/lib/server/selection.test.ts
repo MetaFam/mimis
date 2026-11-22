@@ -103,8 +103,10 @@ describe('select', () => {
     expect(top.entries).toEqual([expect.objectContaining({ kind: 'CONTAINS', to: fedora })])
     const content = contents.get(at('icon/hat/top.svg'))!
     expect(content.reason).toBe('staged')
-    expect(content.entries).toEqual([expect.objectContaining({ kind: 'IS', fields: expect.objectContaining({ cid: await file(2) }) })])
-    expect(content.markers).toEqual([expect.objectContaining({ kind: 'IS', pending: true })])
+    expect(content.entries).toEqual([expect.objectContaining({
+      kind: 'IS', fields: expect.objectContaining({ cid: await file(2), previous: expect.any(String) }),
+    })])
+    expect(content.markers).toEqual([])
   })
 
   it('doesn’t bring along a published child with changes of its own (FR-030)', async () => {

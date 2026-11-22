@@ -6,7 +6,7 @@
   import { expandLevels, selectAll } from '#lib'
   import { cidTreeToJanus } from '#lib/cidTree2Janus.js'
   import FileTree from './FileTree.svelte'
-  import Spinner from '#lib/assets/spinner.svg'
+  import Spinner from '#assets/spinner.svg'
   import { type DirNode } from '../../types'
 
   let { self = $bindable(), path } = $props()

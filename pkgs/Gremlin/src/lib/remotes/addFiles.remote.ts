@@ -9,6 +9,10 @@ import { g, mergePath, type Id } from '#lib/server/janusgraph.js'
 
 const NewSpotsSchema = v.object({
   path: v.array(v.string()),
+  /** Each file is a new Content, ranked last, not a new version (FR-017). */
+  alternative: v.optional(v.boolean(), false),
+  /** Every file goes onto the Spot at `path`, whatever its name. */
+  onto: v.optional(v.boolean(), false),
   files: v.array(v.object({
     cid: v.string(),
     type: v.string(),
@@ -19,7 +23,7 @@ const NewSpotsSchema = v.object({
 
 export const addFiles = command(
   NewSpotsSchema,
-  async ({ path, files }) => {
+  async ({ path, files, alternative, onto }) => {
     const now = new Date().toISOString()
 
     console.debug({ addFiles: { path, files } })
@@ -31,10 +35,10 @@ export const addFiles = command(
 
       // A file’s title, its name sans extension, is a Spot in the
       // container, except for `ext.ext`, which names no Spot & so
-      // attaches to the container itself.
+      // attaches to the container itself, as every file does `onto` it.
       const subpathFor = (name: string) => {
         const { title, ext } = splitName(name)
-        return title === ext ? [] : [title]
+        return (onto || title === ext) ? [] : [title]
       }
 
       // Resolved one at a time so files sharing a title, like
@@ -80,7 +84,7 @@ export const addFiles = command(
           }
 
           return putRepresentation({
-            source: g(), spot: spotId as Id, type, cid, size, now,
+            source: g(), spot: spotId as Id, type, cid, size, now, alternative,
           })
         })
       )

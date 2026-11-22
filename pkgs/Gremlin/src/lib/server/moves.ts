@@ -1,5 +1,5 @@
 import gremlin from 'gremlin'
-import { retire } from '#lib/server/edits.js'
+import { hold, release, retire } from '#lib/server/edits.js'
 import {
   edgeId, type GraphTraversal, type GraphTraversalSource, type Id,
 } from '#lib/server/janusgraph.js'
@@ -15,30 +15,24 @@ interface Move {
 }
 
 /**
- * Re-points the `AS` edge from `from` to `to`, keeping its `order`.
- * The new edge’s id, or `null` if `from` doesn’t hold `what`.
+ * Moves `what` from `from`’s Contents to the end of `to`’s, relinking
+ * what followed it in `from`. The new `AS` edge’s id, or `null` if
+ * `from` doesn’t hold `what`.
  */
-export const relinkContent = ({ source, what, from, to, now }: Move) => (
-  relink({
-    source,
-    now,
-    added: (
-      source.V(from)
-      .hasLabel('Spot')
-      .outE('AS')
-      .where(__.inV().hasId(what).hasLabel('Content'))
-      .as('old')
-      .inV()
-      .addE('AS')
-      .from_(__.V(to))
-      .property('createdAt', now)
-      .property(
-        'order',
-        __.select('old').coalesce(__.values('order'), __.constant(-1)),
-      )
-    ),
-  })
-)
+export async function relinkContent({ source, what, from, to, now }: Move) {
+  const { value } = await (
+    source.V(from)
+    .hasLabel('Spot')
+    .outE('AS')
+    .where(__.inV().hasId(what).hasLabel('Content'))
+    .id()
+    .next()
+  )
+  if(value == null) return null
+  const added = await hold({ source, spot: to, content: what, now })
+  await release({ source, edge: edgeId(value), now })
+  return added
+}
 
 /**
  * Re-points the `CONTAINS` edge from `from` to `to`, keeping its
@@ -87,24 +81,6 @@ async function relink(
   await retire({ source, edge: edgeId(ids.get('old')), now })
   return edgeId(ids.get('new'))
 }
-
-/** The `type` of `what` if `to` already holds a current one. */
-export const typeClash = (
-  { source, what, to }: Omit<Move, 'from' | 'now'>
-) => (
-  source.V(what)
-  .values('type')
-  .as('type')
-  .V(to)
-  .outE('AS')
-  .inV()
-  .hasLabel('Content')
-  .not(__.hasId(what))
-  .not(__.inE('PREVIOUS'))
-  .where(gremlin.process.P.eq('type')).by('type').by()
-  .select('type')
-  .limit(1)
-)
 
 /** The `path` of `what`’s `CONTAINS` edge if `to` already has it. */
 export const nameClash = (

@@ -211,16 +211,16 @@ export const layerOf = (address: string, source = g()) => (
 )
 
 /**
- * The `INCLUDES.author` of each `User` whose tree holds `spot`, by
- * `CONTAINS` alone, as opposed to through a mount.
+ * The `INCLUDES.author` of each `User` whose tree holds `spot`, a Spot
+ * or Content, by `CONTAINS` & `AS` alone, as opposed to through a mount.
  */
 export async function ownersOf(
   { source, spot }: { source: GraphTraversalSource, spot: Id },
 ) {
   const users = await (
     source.V(spot)
-    .hasLabel('Spot')
-    .repeat(__.in_('CONTAINS', 'WRITES').simplePath())
+    .hasLabel('Spot', 'Content')
+    .repeat(__.in_('CONTAINS', 'WRITES', 'AS').simplePath())
     .until(__.hasLabel('User'))
     .dedup()
     .project('id', 'authors')

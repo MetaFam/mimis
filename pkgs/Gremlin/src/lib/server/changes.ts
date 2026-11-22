@@ -8,22 +8,33 @@ import {
 
 const { statics: __ } = gremlin.process
 
+/** A Spot’s mounts have an `order`; a proxy Content’s one doesn’t. */
 export type Fields =
   | { kind: 'CONTAINS', path: string, child: string }
-  | { kind: 'MOUNT', target: string, creator?: string, order: number }
-  | { kind: 'AS', content: string, order: number, type: string }
-  | { kind: 'IS', uuid: string, cid: string, size: number }
+  | { kind: 'MOUNT', target: string, creator?: string, order?: number }
+  | { kind: 'AS', content: string, type: string, after?: string }
+  | { kind: 'IS', uuid: string, cid: string, size: number, previous?: string }
 
 /**
  * An entry as published, to compare with its edge later. A link’s
  * leaves out the child’s version: republishing the child doesn’t
- * change the link.
+ * change the link. A first version’s leaves out `previous`, so
+ * representations published before versions existed stay published.
  */
 export const fingerprint = (fields: Fields) => JSON.stringify(
   fields.kind === 'CONTAINS' ? [fields.path, fields.child]
-  : fields.kind === 'MOUNT' ? [fields.target, fields.creator ?? null, fields.order]
-  : fields.kind === 'AS' ? [fields.content, fields.order, fields.type]
-  : [fields.uuid, fields.cid, fields.size]
+  : fields.kind === 'MOUNT' ? [
+    fields.target,
+    fields.creator ?? null,
+    ...(fields.order == null ? [] : [fields.order]),
+  ]
+  : fields.kind === 'AS' ? [fields.content, fields.after ?? null, fields.type]
+  : [
+    fields.uuid,
+    fields.cid,
+    fields.size,
+    ...(fields.previous == null ? [] : [fields.previous]),
+  ]
 )
 
 export interface Entry {
@@ -162,8 +173,8 @@ const edgeRows = (
   source.V(...ids)
   .outE(...labels)
   .project(
-    'edge', 'from', 'label', 'uuid', 'path', 'order', 'published', 'kind',
-    'entry', 'to', 'toUuid', 'toType', 'toCid', 'toSize',
+    'edge', 'from', 'label', 'uuid', 'path', 'order', 'after', 'published',
+    'kind', 'entry', 'to', 'toUuid', 'toType', 'toCid', 'toSize', 'previous',
   )
   .by(__.id())
   .by(__.outV().id())
@@ -171,6 +182,7 @@ const edgeRows = (
   .by(optional('uuid'))
   .by(optional('path'))
   .by(optional('order'))
+  .by(optional('after'))
   .by(optional('published'))
   .by(optional('kind'))
   .by(optional('entry'))
@@ -179,6 +191,7 @@ const edgeRows = (
   .by(__.inV().values('type').fold())
   .by(__.inV().values('cid').fold())
   .by(__.inV().values('size').fold())
+  .by(__.inV().out('PREVIOUS').inE('IS').values('uuid').fold())
   .toList()
 ) as Promise<Array<Row>>
 
@@ -218,7 +231,7 @@ export async function entriesOf(
     return found[0]
   }
 
-  const entryOf = async (row: Row): Promise<Entry> => {
+  const entryOf = async (row: Row, ofSpot: boolean): Promise<Entry> => {
     const edge = edgeId(row.get('edge'))
     const kind = row.get('label') as Kind
     const to = row.get('to') as Id
@@ -240,23 +253,29 @@ export async function entriesOf(
         kind,
         target: key,
         ...(creator ? { creator } : {}),
-        order: numeric(kind, edge, first(row, 'order')),
+        ...(ofSpot ? { order: numeric(kind, edge, first(row, 'order')) } : {}),
       }
     } else if(kind === 'AS') {
       key = target()
+      const after = first<string>(row, 'after')
       fields = {
         kind,
         content: key,
-        order: numeric(kind, edge, first(row, 'order')),
         type: required(first<string>(row, 'toType'), `Content #${to} has no type`),
+        ...(after == null ? {} : { after }),
       }
     } else {
       key = required(first<string>(row, 'uuid'), `IS ${edge} has no uuid`)
+      const previous = row.get('previous') as Array<string>
+      if(previous.length > 1) {
+        throw new Error(`Blob #${to} replaced ${previous.length} Blobs.`)
+      }
       fields = {
         kind,
         uuid: key,
         cid: required(first<string>(row, 'toCid'), `Blob #${to} has no cid`),
         size: required(first<number>(row, 'toSize'), `Blob #${to} has no size`),
+        ...(previous.length === 0 ? {} : { previous: previous[0] }),
       }
     }
     return {
@@ -283,11 +302,12 @@ export async function entriesOf(
   })
 
   const collect = async (
-    { ids: some, labels, add }:
+    { ids: some, labels, add, ofSpot }:
     {
       ids: Array<Id>
       labels: Array<string>
       add: (row: Row) => Holder
+      ofSpot: boolean
     },
   ) => {
     for(const batch of batches(some)) {
@@ -300,7 +320,7 @@ export async function entriesOf(
         if(row.get('label') === 'REMOVED') {
           holder.markers.push(markerOf(row))
         } else {
-          holder.entries.push(await entryOf(row))
+          holder.entries.push(await entryOf(row, ofSpot))
         }
       }
     }
@@ -308,6 +328,7 @@ export async function entriesOf(
 
   await collect({
     ids,
+    ofSpot: true,
     labels: ['CONTAINS', 'MOUNT', 'AS'],
     add: (row) => {
       const id = row.get('id') as Id
@@ -326,16 +347,9 @@ export async function entriesOf(
   })
 
   for(const spot of spots.values()) {
-    const types = new Set<string>()
     const mounted = new Set<Id>()
-    for(const { kind, to, fields } of spot.entries) {
-      if(kind === 'AS' && fields.kind === 'AS') {
-        if(types.has(fields.type)) {
-          throw new Error(
-            `Spot #${spot.id} holds two Contents of type “${fields.type}”.`
-          )
-        }
-        types.add(fields.type)
+    for(const { kind, to } of spot.entries) {
+      if(kind === 'AS') {
         spot.contents.push(to)
       } else if(kind === 'MOUNT') {
         if(mounted.has(to)) {
@@ -348,7 +362,8 @@ export async function entriesOf(
 
   await collect({
     ids: [...new Set([...spots.values()].flatMap(({ contents }) => contents))],
-    labels: ['IS'],
+    ofSpot: false,
+    labels: ['IS', 'MOUNT'],
     add: (row) => {
       const id = row.get('id') as Id
       const content: ContentState = {
@@ -363,6 +378,13 @@ export async function entriesOf(
       return content
     },
   })
+
+  for(const content of contents.values()) {
+    const proxied = content.entries.filter(({ kind }) => kind === 'MOUNT').length
+    if(proxied > 1 || (proxied === 1 && content.entries.length > 1)) {
+      throw new Error(`Content #${content.id} is neither one file nor one proxy.`)
+    }
+  }
 
   for(const holder of [...spots.values(), ...contents.values()]) {
     for(const marker of holder.markers) {

@@ -3,7 +3,8 @@ import { error, isHttpError } from '@sveltejs/kit'
 import settings from '#lib/settings.svelte.js'
 import { PAGE_SIZE } from '#lib/search.js'
 import {
-  compareKeys, contentsOf, precedence, resolvePath, type Key,
+  compareKeys, contentsOf, precedence, rankedContents, resolvePath,
+  type Content, type Key,
 } from '#lib/server/listing.js'
 import type { GraphTraversal } from '#lib/server/janusgraph.js'
 
@@ -23,7 +24,7 @@ export interface Result {
   id: Id
   names: Array<string>
   thumb: Thumb | null
-  /** The types of its current `Content`s, in listing order. */
+  /** The types of its `Content`s, best first. */
   types: Array<string>
 }
 
@@ -33,16 +34,10 @@ const displayable = (type: string) => (
   type.startsWith('image/') || type.startsWith('video/')
 )
 
-/** The first displayable of a Spot’s contents, in listing order. */
-const thumbOf = (contents: Array<Map<string, unknown>>): Thumb | null => {
-  const shown = contents.find((content) => (
-    displayable(String(content.get('type')))
-  ))
-  return shown ? {
-    type: String(shown.get('type')),
-    cid: String(shown.get('cid')),
-  } : null
-}
+/** A Spot’s best Content, if it can be shown (FR-015). */
+const thumbOf = ([best]: Array<Content>): Thumb | null => (
+  best && displayable(best.type) ? { type: best.type, cid: best.cid } : null
+)
 
 /** Java’s `Pattern.quote`: `text` as a regex matching only itself. */
 export const quote = (text: string) => (
@@ -153,12 +148,15 @@ export async function searchSpots(
       searchTraversal({ source, start, parts, offset }).toList()
     ) as Array<Row>
     const results = rows.map((row): Result => {
-      const contents = row.get('contents') as Array<Map<string, unknown>>
+      const id = row.get('id') as Id
+      const contents = rankedContents(
+        row.get('contents') as Array<Map<string, unknown>>, id,
+      )
       return {
-        id: row.get('id') as Id,
+        id,
         names: row.get('names') as Array<string>,
         thumb: thumbOf(contents),
-        types: contents.map((content) => String(content.get('type'))),
+        types: contents.map(({ type }) => type),
       }
     })
     return {

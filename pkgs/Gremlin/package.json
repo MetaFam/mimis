@@ -5,7 +5,8 @@
 	"type": "module",
 	"imports": {
 		"#lib": "./src/lib/index.js",
-		"#lib/*": "./src/lib/*"
+		"#lib/*": "./src/lib/*",
+		"#assets/*": "./src/assets/*"
 	},
 	"scripts": {
 		"dev": "vite dev",
@@ -21,11 +22,14 @@
 		"gh:help": "gh-pages --help",
 		"deploy": "pnpm run build && wrangler pages deploy",
 		"test:unit": "vitest",
-		"test": "npm run test:unit -- --run && npm run test:e2e",
+		"test": "pnpm run test:unit -- --run && pnpm run test:e2e",
 		"test:e2e": "playwright install && playwright test --pass-with-no-tests",
 		"cf-typegen": "wrangler types src/worker-configuration.d.ts"
 	},
 	"dependencies": {
+		"@eslint/css": "^2.0.1",
+		"@eslint/json": "^2.1.1",
+		"@eslint/markdown": "^8.0.3",
 		"@ipld/dag-cbor": "^9.2.5",
 		"@reown/appkit": "^1.8.17",
 		"@reown/appkit-adapter-wagmi": "^1.8.17",

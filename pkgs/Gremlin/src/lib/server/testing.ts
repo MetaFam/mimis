@@ -5,9 +5,11 @@ import type { CID } from 'multiformats/cid'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 import settings from '#lib/settings.svelte.js'
 import { splitName, typeForName } from '#lib/mimetypes.js'
+import { rank } from '#lib/rank.js'
 import { cidFor, MAX_BLOCK } from '#lib/updates.js'
 import type { Blocks } from '#lib/server/blocks.js'
 import { entriesOf, treeOf } from '#lib/server/changes.js'
+import { hold } from '#lib/server/edits.js'
 import { byKey, type Tree as Snapshot } from '#lib/server/rebuild.js'
 import { edgeAt, edgeId, g, writeAll } from '#lib/server/janusgraph.js'
 
@@ -85,42 +87,54 @@ export const mount = (
   )
 )
 
-/** Gives `to` a current `Content` of `type`, backed by a `Blob`. */
+/**
+ * Gives `to` a `Content` of `type`, backed by a `Blob`, ranked last.
+ * `mounts` makes it a proxy of that Content instead, with no Blob.
+ */
 export async function attach(
   source: GraphTraversalSource,
-  { to, type, cid, order = 0, size = 1 }:
-  { to: Id, type: string, cid: string, order?: number, size?: number },
+  { to, type, cid, size = 1, mounts }:
+  { to: Id, type: string, cid?: string, size?: number, mounts?: Id },
 ) {
-  const { value } = await (
-    source.V(to)
-    .as('spot')
-    .addV('Content')
+  const createdAt = new Date().toISOString()
+  let added = (
+    source.addV('Content')
     .property('type', type)
     .property('uuid', uuidV7())
+    .property('createdAt', createdAt)
     .as('content')
-    .addE('AS')
-    .from_('spot')
-    .to('content')
-    .property('order', order)
-    .addV('Blob')
-    .property('cid', cid)
-    .property('size', size)
-    .as('blob')
-    .addE('IS')
-    .from_('content')
-    .to('blob')
-    .property('uuid', uuidV7())
-    .as('is')
-    .project('content', 'is')
+  )
+  if(mounts != null) {
+    added = added.addE('MOUNT').to(__.V(mounts)).property('createdAt', createdAt)
+  } else {
+    if(cid == null) throw new Error('A Content that isn’t a proxy needs a cid.')
+    added = (
+      added
+      .addV('Blob')
+      .property('cid', cid)
+      .property('size', size)
+      .property('createdAt', createdAt)
+      .addE('IS')
+      .from_('content')
+      .property('uuid', uuidV7())
+      .property('createdAt', createdAt)
+    )
+  }
+  const { value } = await (
+    added
+    .project('content', 'link')
     .by(__.select('content').id())
-    .by(__.select('is').id())
+    .by(__.id())
     .next()
   )
   const ids = value as Map<string, unknown>
+  const content = ids.get('content') as Id
+  const holding = await hold({ source, spot: to, content, now: createdAt })
   return {
-    content: ids.get('content') as Id,
-    is: edgeId(ids.get('is')),
-  }
+    content,
+    holding,
+    ...(mounts == null ? { is: edgeId(ids.get('link')) } : { mount: edgeId(ids.get('link')) }),
+  } as { content: Id, holding: string, is: string, mount: string }
 }
 
 /**
@@ -342,20 +356,32 @@ export async function snapshot(
         tree.children[fields.path] = grow(to)
       } else if(fields.kind === 'MOUNT') {
         const { target, creator, order } = fields
-        tree.mounts.push({ target, ...(creator ? { creator } : {}), order })
+        tree.mounts.push({ target, ...(creator ? { creator } : {}), order: order! })
       } else if(fields.kind === 'AS') {
         const content = contents.get(to)!
+        const held = content.entries.map(({ fields }) => fields)
         tree.contents.push({
           uuid: fields.content,
-          order: fields.order,
           type: fields.type,
-          blobs: content.entries.flatMap(({ fields: blob }) => (
-            blob.kind === 'IS' ? [{ cid: blob.cid, size: blob.size }] : []
-          )).sort(byKey(({ cid }) => cid)),
+          ...(fields.after == null ? {} : { after: fields.after }),
+          blobs: held.flatMap((blob) => (
+            blob.kind === 'IS' ? [{
+              uuid: blob.uuid,
+              cid: blob.cid,
+              size: blob.size,
+              ...(blob.previous == null ? {} : { previous: blob.previous }),
+            }] : []
+          )).sort(byKey(({ uuid }) => uuid)),
+          mounts: held.flatMap((proxied) => (
+            proxied.kind === 'MOUNT' ? [{
+              target: proxied.target,
+              ...(proxied.creator == null ? {} : { creator: proxied.creator }),
+            }] : []
+          )).sort(byKey(({ target }) => target)),
         })
       }
     }
-    tree.contents.sort(byKey(({ uuid }) => uuid))
+    tree.contents = rank(tree.contents)
     tree.mounts.sort(byKey(({ target }) => target))
     return tree
   }

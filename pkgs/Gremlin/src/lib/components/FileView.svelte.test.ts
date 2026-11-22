@@ -22,12 +22,14 @@ const browse = () => document.querySelector<HTMLElement>('section#browse')!
 describe('FileView', () => {
   it('hides itself, despite its flex layout', async () => {
     await render(FileView, { props: { path: [], me: null, hidden: true } })
+    await vi.waitFor(() => expect(browse()).not.toBeNull())
     expect(browse().hidden).toBe(true)
     expect(getComputedStyle(browse()).display).toBe('none')
   })
 
   it('shows itself by default', async () => {
     await render(FileView, { props: { path: [], me: null } })
+    await vi.waitFor(() => expect(browse()).not.toBeNull())
     expect(browse().hidden).toBe(false)
     expect(getComputedStyle(browse()).display).toBe('flex')
   })

@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import { cidFor, MAX_BLOCK, validateUpdate } from '#lib/updates.js'
 import { list as mstEntries } from '#lib/mst.js'
 import { commit, prepare, type Prepared } from '#lib/server/publish.js'
-import { pendingSpots } from '#lib/server/changes.js'
+import { entriesOf, pendingSpots } from '#lib/server/changes.js'
 import { putRepresentation, retire } from '#lib/server/edits.js'
 import { edgeId } from '#lib/server/janusgraph.js'
 import { assembleListing, listingTraversal } from '#lib/server/listing.js'
@@ -120,7 +120,7 @@ describe('a first publish (US1-1)', () => {
     const top = linkTarget(await read(blocks, hat), 'top')
     expect(await read(blocks, top)).toEqual({
       uuid: await uuidOf(ids.get('icon/hat/top')!),
-      contents: [{ uuid: await uuidOf(content), order: 0, type: 'image/svg+xml' }],
+      contents: [{ uuid: await uuidOf(content), type: 'image/svg+xml' }],
     })
     const contentVersion = await read(blocks, contents[0][1])
     expect(contentVersion).toEqual({
@@ -288,11 +288,14 @@ describe('one file in a big tree (SC-004)', () => {
     const contents = await mstEntries(update.contents, blocks)
     expect(contents.map(([key]) => key)).toEqual([await uuidOf(ids.get('icon/top.svg')!)])
     const version = await read(blocks, contents[0][1])
-    expect(version.blobs).toHaveLength(2)
-    expect(version.blobs).toEqual(expect.arrayContaining([
-      expect.objectContaining({ cid: CID.parse(await file('v2')) }),
-      { tombstone: expect.any(String) },
-    ]))
+    const v1 = await file('v1')
+    const [{ key: replaced }] = (await entriesOf({ source, ids: [ids.get('icon/top')!], address }))
+    .contents.get(ids.get('icon/top.svg')!)!.entries.filter(({ fields }) => (
+      fields.kind === 'IS' && fields.cid === v1
+    ))
+    expect(version.blobs).toEqual([
+      expect.objectContaining({ cid: CID.parse(await file('v2')), previous: replaced }),
+    ])
     expect(await cids()).toEqual(before)
   })
 })

@@ -134,9 +134,19 @@ export async function prepare(
               cid: CID.parse(fields.cid),
               size: fields.size,
               type: content.type!,
+              ...(fields.previous ? { previous: fields.previous } : {}),
             }] : []
           )),
           ...tombstones(content, 'IS'),
+        ],
+        mounts: [
+          ...content.entries.flatMap(({ fields }) => (
+            fields.kind === 'MOUNT' ? [{
+              target: fields.target,
+              ...(fields.creator ? { creator: fields.creator } : {}),
+            }] : []
+          )),
+          ...tombstones(content, 'MOUNT'),
         ],
       },
       `#${content.id}`,
@@ -163,14 +173,14 @@ export async function prepare(
         mounts: [
           ...fieldsOf('MOUNT').map(({ fields }) => {
             const { target, creator, order } = fields as Extract<typeof fields, { kind: 'MOUNT' }>
-            return { target, ...(creator ? { creator } : {}), order }
+            return { target, ...(creator ? { creator } : {}), order: order! }
           }),
           ...tombstones(spot, 'MOUNT'),
         ],
         contents: [
           ...fieldsOf('AS').map(({ fields }) => {
-            const { content, order, type } = fields as Extract<typeof fields, { kind: 'AS' }>
-            return { uuid: content, order, type }
+            const { content, type, after } = fields as Extract<typeof fields, { kind: 'AS' }>
+            return { uuid: content, type, ...(after ? { after } : {}) }
           }),
           ...tombstones(spot, 'AS'),
         ],

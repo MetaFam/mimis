@@ -19,6 +19,8 @@ import {
   PUBLIC_EDITOR_URL,
 } from '$app/env/public'
 
+export type DetailsView = 'icons' | 'table'
+
 export class Settings {
   static keys = {
     ipfsURLPattern: 'mimis-setting-ipfs-url-pattern',
@@ -36,6 +38,7 @@ export class Settings {
     storachaEmail: 'mimis-setting-storacha-email',
     storachaSpace: 'mimis-setting-storacha-space',
     detailsZoom: 'mimis-setting-details-zoom',
+    detailsView: 'mimis-setting-details-view',
     janusGraphURL: 'mimis-setting-janusgraph-url',
     janusGraphUsername: 'mimis-setting-janusgraph-username',
     janusGraphPassword: 'mimis-setting-janusgraph-password',
@@ -76,6 +79,7 @@ export class Settings {
     [Settings.keys.detailsZoom]: (
       PUBLIC_DETAILS_ZOOM ? Number(PUBLIC_DETAILS_ZOOM) : 1
     ),
+    [Settings.keys.detailsView]: 'icons',
     [Settings.keys.janusGraphURL]: (
       PUBLIC_JANUSGRAPH_URL || 'wss://janus.mimis.dhappy.org/gremlin'
     ),
@@ -169,6 +173,8 @@ export class Settings {
   storachaEmail = $state(this.valueOf('storachaEmail'))
   storachaSpace = $state(this.valueOf('storachaSpace'))
   detailsZoom = $state(this.valueOf('detailsZoom'))
+  /** Whether a folder’s entries show as `icons` or as a `table`. */
+  detailsView = $state(this.valueOf('detailsView') as DetailsView)
   janusGraphURL = $state(this.valueOf('janusGraphURL'))
   janusGraphUsername = $state(this.valueOf('janusGraphUsername'))
   janusGraphPassword = $state(this.valueOf('janusGraphPassword'))

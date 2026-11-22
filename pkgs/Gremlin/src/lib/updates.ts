@@ -14,10 +14,14 @@ export const MAX_BLOCK = 1_048_576
 
 export interface Link { uuid: string, path: string, target: CID }
 export interface Mounting { target: string, creator?: string, order: number }
-export interface Holding { uuid: string, order: number, type: string }
+/** `after`: the Content it’s ranked after; absent for the first. */
+export interface Holding { uuid: string, type: string, after?: string }
+/** `previous`: the representation it replaced, by its uuid. */
 export interface Representation {
-  uuid: string, cid: CID, size: number, type: string
+  uuid: string, cid: CID, size: number, type: string, previous?: string
 }
+/** A proxy’s Content, & its owner when outside the publisher’s tree. */
+export interface Proxying { target: string, creator?: string }
 export interface Tombstone { tombstone: string }
 
 export interface SpotVersion {
@@ -33,6 +37,7 @@ export interface ContentVersion {
   uuid: string
   previous?: CID
   blobs?: Array<Representation | Tombstone>
+  mounts?: Array<Proxying | Tombstone>
 }
 
 export interface Signed {
@@ -153,7 +158,7 @@ export const encodeSpot = (version: SpotVersion, label = version.uuid) => (
 export const encodeContent = (
   version: ContentVersion, label = version.uuid,
 ) => (
-  chain({ version, fields: ['blobs'], label: `Content ${label}` })
+  chain({ version, fields: ['blobs', 'mounts'], label: `Content ${label}` })
 )
 
 export async function encodeUpdate(update: Update): Promise<Block> {

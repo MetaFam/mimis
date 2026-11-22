@@ -7,7 +7,7 @@
   import { stage } from '#lib/remotes/stage.remote.js'
   import { preparePublish } from '#lib/remotes/preparePublish.remote.js'
   import { commitPublish } from '#lib/remotes/commitPublish.remote.js'
-  import spinner from '#lib/assets/spinner.svg'
+  import spinner from '#assets/spinner.svg'
 
   let { me = null }: { me?: string | null } = $props()
 

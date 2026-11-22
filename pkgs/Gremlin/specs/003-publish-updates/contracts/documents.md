@@ -2,6 +2,8 @@
 
 This is the public interface of this feature. Anyone holding an Update's CID can read these documents from IPFS without the local graph. They are implemented in `src/lib/updates.ts` (types, typed data, encoding) and `src/lib/mst.ts` (index trees), so the same code serves the browser, the server, and the rebuild reader.
 
+> **Revised by 004** ([contracts/documents.md](../../004-candidate-contents/contracts/documents.md)): Spot `contents` entries rank by `after` instead of `order`, a Spot may hold several Contents of one type, `blobs` entries may name the representation they replaced as `previous`, and a proxy Content's version lists `mounts`.
+
 ## Common rules
 
 - **Codec**: DAG-CBOR (`0x71`), CIDv1, sha2-256. Each document's CID is computed locally and compared with the one Kubo returns, throwing on a mismatch.

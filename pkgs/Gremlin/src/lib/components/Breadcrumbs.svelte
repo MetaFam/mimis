@@ -1,7 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths'
   import { dropGenerator, navigateOnClick } from '#lib'
-  import root from '#lib/assets/root.svg'
+  import root from '#assets/root.svg'
 
   let { path = $bindable([]), address = null }: {
     path: string[]

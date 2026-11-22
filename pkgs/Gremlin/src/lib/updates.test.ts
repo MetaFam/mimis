@@ -49,9 +49,11 @@ describe('encodeSpot', () => {
     const contains = [uuidV7(), uuidV7(), uuidV7()].map((uuid, i) => (
       { uuid, path: `n${i}`, target }
     ))
-    const contents = [uuidV7(), uuidV7()].map((uuid) => (
-      { uuid, order: 0, type: 'text/plain' }
-    ))
+    const first = uuidV7()
+    const contents = [
+      { uuid: first, type: 'text/plain' },
+      { uuid: uuidV7(), type: 'text/plain', after: first },
+    ]
     const uuid = uuidV7()
     const [a] = await encodeSpot({ uuid, contains, contents })
     const [b] = await encodeSpot({
@@ -91,7 +93,7 @@ describe('encodeSpot', () => {
     const uuid = uuidV7()
     await expect(encodeSpot({
       uuid: uuidV7(),
-      contents: [{ uuid, order: 0, type: 'text/plain' }, { tombstone: uuid }],
+      contents: [{ uuid, type: 'text/plain' }, { tombstone: uuid }],
     }))
     .rejects.toThrow(`Two contents entries have the key “${uuid}”.`)
   })
@@ -170,6 +172,41 @@ describe('encodeContent', () => {
     const { blobs } = decoded(link.bytes) as { blobs: Array<Record<string, unknown>> }
     expect(blobs[0]).toEqual({ tombstone: uuids[0] })
     expect((blobs[1].cid as CID).toString()).toBe(cid.toString())
+  })
+
+  it('encodes a version naming the representation it replaced', async () => {
+    const cid = await cidOf({ file: 2 })
+    const [replaced, uuid] = [uuidV7(), uuidV7()]
+    const [link] = await encodeContent({
+      uuid: uuidV7(),
+      blobs: [{ uuid, cid, size: 3, type: 'text/plain', previous: replaced }],
+    })
+    const { blobs } = decoded(link.bytes) as { blobs: Array<Record<string, unknown>> }
+    expect(blobs).toEqual([expect.objectContaining({ uuid, previous: replaced })])
+  })
+
+  it('encodes a proxy’s mount by target, & its creator, with no blobs', async () => {
+    const [target, gone] = [uuidV7(), uuidV7()]
+    const [link] = await encodeContent({
+      uuid: uuidV7(),
+      mounts: [{ target, creator: '0xabc' }, { tombstone: gone }],
+    })
+    const version = decoded(link.bytes)
+    expect(version.blobs).toBeUndefined()
+    // v7 uuids made in turn sort in turn.
+    expect(version.mounts).toEqual([{ target, creator: '0xabc' }, { tombstone: gone }])
+  })
+
+  it('leaves out an absent `previous` & `after`', async () => {
+    const cid = await cidOf({ file: 1 })
+    const [content] = await encodeContent({
+      uuid: uuidV7(), blobs: [{ uuid: uuidV7(), cid, size: 1, type: 'text/plain' }],
+    })
+    expect(Object.keys((decoded(content.bytes).blobs as Array<object>)[0]).sort())
+    .toEqual(['cid', 'size', 'type', 'uuid'])
+    const [spot] = await encodeSpot({ uuid: uuidV7(), contents: [{ uuid: uuidV7(), type: 'text/plain' }] })
+    expect(Object.keys((decoded(spot.bytes).contents as Array<object>)[0]).sort())
+    .toEqual(['type', 'uuid'])
   })
 
   it('throws a 400 for an entry too large for any block', async () => {
