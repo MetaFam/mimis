@@ -266,7 +266,7 @@
     }
 
     & .directory > details:open > summary > dl > dd[data-for="view"]::before {
-      background-image: url('../assets/folder.open.svg');
+      background-image: url('/folder.open.svg');
     }
   }
 
