@@ -89,8 +89,8 @@ if(!dir) {
   Deno.exit(1)
 }
 
+// eslint-disable-next-line no-useless-assignment
 let changes = false
 do {
-  changes = false
   changes = await pass({ dryRun, dir })
 } while(changes && --passes > 0)

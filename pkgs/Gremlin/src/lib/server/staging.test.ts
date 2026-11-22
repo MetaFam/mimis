@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { cleanStaged, stageSpots } from '#lib/server/staging.js'
 import { pendingSpots } from '#lib/server/changes.js'
 import {
-  addSpot, link, markPublished, seedTree, seedUser, testAccount,
+  link, markPublished, seedTree, seedUser, testAccount,
   transaction, type Id,
 } from '#lib/server/testing.js'
 

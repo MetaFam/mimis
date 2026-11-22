@@ -1,12 +1,8 @@
-import gremlin from 'gremlin'
 import * as v from 'valibot'
 import { isHttpError, error } from '@sveltejs/kit'
 import { command } from '$app/server'
-import { spotId } from './spotId.remote'
 import { mergePath, writeLayer } from '#lib/server/janusgraph.js'
 import { listing } from './listing.remote'
-
-const { statics: __ } = gremlin.process
 
 const NewSpotSchema = v.object({
   containerId: v.optional(v.nullable(v.number())),

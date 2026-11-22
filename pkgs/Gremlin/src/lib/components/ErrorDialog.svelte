@@ -5,7 +5,7 @@
   let janusGraphURL = $state(settings.publicJanusGraphURL)
   let dialog = $state<HTMLDialogElement>()
 
-  $effect(() => { if(!!error) dialog?.showModal() })
+  $effect(() => { if(error) dialog?.showModal() })
 </script>
 
 <dialog bind:this={dialog}>
@@ -17,7 +17,7 @@
     <p>Currently attempting to connect to <code>{settings.janusGraphURL}</code>.</p>
     <form
       id="janus-graph-url"
-      onsubmit={(evt) => {
+      onsubmit={() => {
         settings.janusGraphURL = janusGraphURL
       }}
     >
