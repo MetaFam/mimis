@@ -9,12 +9,16 @@ import { commit, prepare, type Prepared } from '#lib/server/publish.js'
 import { entriesOf, pendingSpots } from '#lib/server/changes.js'
 import { putRepresentation, retire } from '#lib/server/edits.js'
 import { edgeId } from '#lib/server/janusgraph.js'
-import { assembleListing, listingTraversal } from '#lib/server/listing.js'
+import { listingAt } from '#lib/server/listing.js'
 import { relinkSpot } from '#lib/server/moves.js'
+import { rebuild } from '#lib/server/rebuild.js'
+import {
+  followMount, keepMount, noticesFor, removeMount, renameSpot,
+} from '#lib/server/renames.js'
 import { stageSpots } from '#lib/server/staging.js'
 import {
   attach, link, addSpot, markPublished, memoryBlocks, mount, seedTree,
-  seedUser, seedWide, signUpdate, testAccount, transaction, type Id,
+  seedUser, seedWide, signUpdate, snapshot, testAccount, transaction, type Id,
 } from '#lib/server/testing.js'
 
 const { statics: __ } = gremlin.process
@@ -167,7 +171,7 @@ describe('a first publish (US1-1)', () => {
   it('leaves every listing as it was (US1-6, SC-003)', async () => {
     const listings = async () => Promise.all(
       [[], ['icon'], ['icon', 'hat'], ['icon', 'hat', 'top']].map(async (path) => (
-        assembleListing(await listingTraversal({ from: source.V(root), path }).toList() as Parameters<typeof assembleListing>[0])
+        await listingAt({ source, from: source.V(root), path })
       ))
     )
     const before = await listings()
@@ -617,5 +621,192 @@ describe('removals', () => {
         body: { message: `Can’t tell who owns mount target Spot #${orphan}.` },
       })
     })
+  })
+})
+
+describe('renames (US5)', () => {
+  const S = '0x5555555555555555555555555555555555555555'
+  let ids: Map<string, Id>
+  let theirs: Map<string, Id>
+  let blocks: Blocks
+  let hatzLink: string
+  const versionOf = async (id: Id) => read(blocks, (await cidOf(id))!)
+  const rename = (from: string, to: string) => (
+    renameSpot({ source, address, path: ['image'], from, to, now })
+  )
+  const mountOf = async (path: string) => ({
+    uuid: hatzLink, path, target: await uuidOf(theirs.get('image/hatz')!), creator: S,
+  })
+
+  beforeEach(async () => {
+    ids = await seedTree(source, { root, tree: { image: { hat: {} } } })
+    const { root: sRoot } = await seedUser(source, { address: S })
+    theirs = await seedTree(source, { root: sRoot, tree: { image: { hatz: {} } } })
+    await mount(source, { from: root, to: sRoot })
+    hatzLink = (await source.V(theirs.get('image')!).outE('CONTAINS').values('uuid').next()).value as string
+    await stageAll()
+    blocks = memoryBlocks()
+    await publish({ blocks })
+  })
+
+  it('publishes an own rename as one entry under its uuid (US5-1)', async () => {
+    const uuid = (await source.V(ids.get('image')!).outE('CONTAINS').values('uuid').next()).value
+    await rename('hat', 'cap')
+    await stageAll()
+    await publish({ blocks })
+    expect((await versionOf(ids.get('image')!)).contains).toEqual([
+      { uuid, path: 'cap', target: CID.parse((await cidOf(ids.get('image/hat')!))!) },
+    ])
+  })
+
+  it('publishes a mount of their link as it was, then as renamed (US5-2, FR-020)', async () => {
+    const before = await cidOf(ids.get('image')!)
+    await rename('hatz', 'hats')
+    await stageAll()
+    const { update } = await publish({ blocks })
+    const version = await versionOf(ids.get('image')!)
+    expect(version.mounts).toEqual([await mountOf('hats')])
+    const prelude = await read(blocks, version.previous as CID)
+    expect(prelude).toEqual({
+      uuid: await uuidOf(ids.get('image')!),
+      previous: CID.parse(before!),
+      mounts: [await mountOf('hatz')],
+    })
+    const indexed = new Map(await mstEntries(update.spots, blocks))
+    expect(indexed.get(await uuidOf(ids.get('image')!))!.toString()).toBe(await cidOf(ids.get('image')!))
+  })
+
+  it('preludes a new Spot’s first version, which its parent links to', async () => {
+    await source.V(root).outE('CONTAINS').drop().toList()
+    await rename('hatz', 'hats')
+    const image = (await source.V(root).out('CONTAINS').id().next()).value as Id
+    await stageAll()
+    await publish({ blocks })
+    const version = await versionOf(image)
+    const prelude = await read(blocks, version.previous as CID)
+    expect(prelude).toEqual({ uuid: await uuidOf(image), mounts: [await mountOf('hatz')] })
+    expect(linkTarget(await versionOf(root), 'image').toString()).toBe(await cidOf(image))
+  })
+
+  it('publishes a later rename of the mount as one edit (US5-3)', async () => {
+    await rename('hatz', 'hats')
+    await stageAll()
+    await publish({ blocks })
+    const was = await cidOf(ids.get('image')!)
+    await rename('hats', 'caps')
+    await stageAll()
+    await publish({ blocks })
+    const version = await versionOf(ids.get('image')!)
+    expect(version.mounts).toEqual([await mountOf('caps')])
+    expect(version.previous!.toString()).toBe(was)
+  })
+
+  it('publishes nothing for a rename undone (US5-5)', async () => {
+    await rename('hat', 'cap')
+    await rename('cap', 'hat')
+    await stageAll()
+    expect(await prepare({ source, blocks, address, now })).toMatchObject({ nothing: true })
+  })
+
+  it('publishes no prelude for a mount named as its link is', async () => {
+    const before = await cidOf(ids.get('image')!)
+    await rename('hatz', 'hats')
+    await rename('hats', 'hatz')
+    await stageAll()
+    await publish({ blocks })
+    const version = await versionOf(ids.get('image')!)
+    expect(version.mounts).toEqual([await mountOf('hatz')])
+    expect(version.previous!.toString()).toBe(before)
+  })
+})
+
+describe('resolving a moved mount (FR-024)', () => {
+  const S = '0x5555555555555555555555555555555555555555'
+  let theirs: Map<string, Id>
+  let blocks: Blocks
+  let hatzLink: string
+  let head: string
+  const spotAt = async (name: string) => (
+    (await source.V(root).outE('CONTAINS').has('path', name).inV().id().next()).value as Id
+  )
+  const versionOf = async (id: Id) => read(blocks, (await cidOf(id))!)
+  const publishAll = async () => {
+    await stageAll()
+    ;({ cid: head } = await publish({ blocks }))
+  }
+  const resolve = async (how: typeof removeMount) => {
+    const [notice] = await noticesFor({ source, address })
+    return how({ source, address, mount: notice.mount, now })
+  }
+  const linkOf = async (path: string) => ({
+    uuid: hatzLink, path, target: await uuidOf(theirs.get('image/hatz')!), creator: S,
+  })
+  const rebuilds = async () => {
+    expect(await rebuild({ head: CID.parse(head), blocks })).toEqual(await snapshot({ source, root }))
+  }
+
+  beforeEach(async () => {
+    const { root: sRoot } = await seedUser(source, { address: S })
+    theirs = await seedTree(source, { root: sRoot, tree: { image: { hatz: {} }, old: {} } })
+    await mount(source, { from: root, to: sRoot })
+    hatzLink = (await source.V(theirs.get('image')!).outE('CONTAINS').values('uuid').next()).value as string
+    blocks = memoryBlocks()
+    await renameSpot({ source, address, path: ['image'], from: 'hatz', to: 'hats', now })
+  })
+
+  const moveTheirs = () => relinkSpot({
+    source, what: theirs.get('image/hatz')!, from: theirs.get('image')!, to: theirs.get('old')!,
+    now, uuid: uuidV7(),
+  })
+
+  describe('once published', () => {
+    beforeEach(async () => {
+      await publishAll()
+      await moveTheirs()
+    })
+
+    it('publishes Remove as a tombstone under the uuid', async () => {
+      await resolve(removeMount)
+      await publishAll()
+      expect((await versionOf(await spotAt('image'))).mounts).toEqual([{ tombstone: hatzLink }])
+      await rebuilds()
+    })
+
+    it('publishes Follow as the uuid leaving one version & joining the next, with no prelude', async () => {
+      await resolve(followMount)
+      await stage(await spotAt('old'))
+      ;({ cid: head } = await publish({ blocks }))
+      expect((await versionOf(await spotAt('image'))).mounts).toEqual([{ tombstone: hatzLink }])
+      const old = await versionOf(await spotAt('old'))
+      expect(old.mounts).toEqual([await linkOf('hats')])
+      expect(old.previous).toBeUndefined()
+      await rebuilds()
+    })
+
+    it('publishes Keep as a tombstone, a new link, & its Spot’s layer mount', async () => {
+      await resolve(keepMount)
+      await publishAll()
+      const image = await versionOf(await spotAt('image'))
+      expect(image.mounts).toEqual([{ tombstone: hatzLink }])
+      expect(image.contains).toEqual([expect.objectContaining({ path: 'hats' })])
+      const kept = (await source.V(await spotAt('image')).out('CONTAINS').id().next()).value as Id
+      expect((await versionOf(kept)).mounts).toEqual([
+        { target: await uuidOf(theirs.get('image/hatz')!), creator: S, order: 0 },
+      ])
+      await rebuilds()
+    })
+  })
+
+  it('publishes a Follow of an unpublished mount from its new place alone, after a prelude', async () => {
+    await moveTheirs()
+    await resolve(followMount)
+    await publishAll()
+    expect((await versionOf(await spotAt('image'))).mounts ?? []).toEqual([])
+    const old = await versionOf(await spotAt('old'))
+    expect(old.mounts).toEqual([await linkOf('hats')])
+    expect(await read(blocks, old.previous as CID)).toEqual({
+      uuid: await uuidOf(await spotAt('old')), mounts: [await linkOf('hatz')],
+    })
+    await rebuilds()
   })
 })

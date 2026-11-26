@@ -114,7 +114,10 @@ export const POST: RequestHandler = async ({ params, request, url }) => {
     }
     case 'rename': {
       const { to } = v.parse(RenameSchema, await request.json())
-      await renameEntry({ address, from: path, to: segments(to) })
+      const now = new Date().toISOString()
+      await inTransaction((source) => (
+        renameEntry({ source, address, from: path, to: segments(to), now })
+      ))
       return json({ renamed: to })
     }
     default: {

@@ -8,7 +8,7 @@ import {
 import { putRepresentation, retire } from '#lib/server/edits.js'
 import { edgeId } from '#lib/server/janusgraph.js'
 import {
-  addSpot, attach, link, markPublished, mount, seedTree, seedUser,
+  addSpot, attach, link, markPublished, mount, mountLink, seedTree, seedUser,
   testAccount, transaction, type Id,
 } from '#lib/server/testing.js'
 
@@ -64,6 +64,8 @@ describe('fingerprint', () => {
     [{ kind: 'MOUNT', target: 't1', creator: '0xabc', order: 2 }, '["t1","0xabc",2]'],
     [{ kind: 'MOUNT', target: 'c2' }, '["c2",null]'],
     [{ kind: 'MOUNT', target: 'c2', creator: '0xabc' }, '["c2","0xabc"]'],
+    [{ kind: 'MOUNT', target: 't1', uuid: 'u1', path: 'hats' }, '["t1",null,"hats"]'],
+    [{ kind: 'MOUNT', target: 't1', creator: '0xs', uuid: 'u1', path: 'hats' }, '["t1","0xs","hats"]'],
     [{ kind: 'AS', content: 'c1', type: 'image/png' }, '["c1",null,"image/png"]'],
     [{ kind: 'AS', content: 'c1', type: 'image/png', after: 'c0' }, '["c1","c0","image/png"]'],
     [{ kind: 'IS', uuid: 'i1', cid: 'bafy', size: 3 }, '["i1","bafy",3]'],
@@ -324,6 +326,67 @@ describe('entriesOf', () => {
     await expect(entriesOfA()).rejects.toMatchObject({
       status: 400,
       body: { message: `Spot #${ids.get('a')} mounts Spot #${target} twice.` },
+    })
+  })
+
+  describe('link MOUNTs (R10)', () => {
+    let other: string
+    let hatz: Id
+    const linkUuid = '01900000-0000-7000-8000-00000000000a'
+    const uuidOf = async (id: Id) => (await source.V(id).values('uuid').next()).value as string
+    const mountHatz = (path = 'hats') => mountLink(source, {
+      from: ids.get('a')!, to: hatz, uuid: linkUuid, path, base: 'hatz', parent: 'u-parent',
+    })
+    const linkEntry = async () => {
+      const { spots } = await entriesOfA()
+      return spots.get(ids.get('a')!)!.entries.find(({ kind, fields }) => (
+        kind === 'MOUNT' && 'path' in fields
+      ))!
+    }
+
+    beforeEach(async () => {
+      other = newAddress()
+      const { root: theirs } = await seedUser(source, { address: other })
+      hatz = (await seedTree(source, { root: theirs, tree: { image: { hatz: {} } } })).get('image/hatz')!
+    })
+
+    it('keys one by the uuid of the link it mounts, with its owner & path', async () => {
+      await mountHatz()
+      const entry = await linkEntry()
+      const target = await uuidOf(hatz)
+      expect(entry).toMatchObject({
+        key: linkUuid,
+        fields: { kind: 'MOUNT', target, creator: other, uuid: linkUuid, path: 'hats' },
+        fingerprint: `["${target}","${other}","hats"]`,
+      })
+    })
+
+    it('lets a layer MOUNT & a link MOUNT of one target share a Spot', async () => {
+      await mountHatz()
+      await mount(source, { from: ids.get('a')!, to: hatz, order: 1 })
+      const { spots } = await entriesOfA()
+      expect(spots.get(ids.get('a')!)!.entries.filter(({ kind }) => kind === 'MOUNT').map(({ key }) => key).sort())
+      .toEqual([linkUuid, await uuidOf(hatz)].sort())
+    })
+
+    it('throws a 409 for two mounts of one link in one Spot', async () => {
+      await mountHatz()
+      await mountHatz('caps')
+      await expect(entriesOfA()).rejects.toMatchObject({
+        status: 409, body: { message: 'This Spot already mounts that link.' },
+      })
+    })
+
+    it('is pending under its key once renamed, & not once renamed back (FR-018)', async () => {
+      await mountHatz()
+      await publishAll()
+      expect(await pending()).toEqual([])
+      const edge = (await linkEntry()).edge
+      await source.E(edge).property('path', 'caps').toList()
+      expect(await pending()).toEqual(['a'])
+      expect(await linkEntry()).toMatchObject({ key: linkUuid, pending: true })
+      await source.E(edge).property('path', 'hats').toList()
+      expect(await pending()).toEqual([])
     })
   })
 

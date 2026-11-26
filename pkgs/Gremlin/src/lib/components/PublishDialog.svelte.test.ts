@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import { error } from '@sveltejs/kit'
+import { userEvent } from 'vitest/browser'
 import PublishDialog from './PublishDialog.svelte'
 
 const ME = '0xB0B0000000000000000000000000000000000001'
@@ -78,7 +79,7 @@ const status = () => (
   (document.querySelector('dialog#publish output')!.textContent ?? '').replace(/\s+/g, ' ').trim()
 )
 const rows = (section: string) => (
-  [...document.querySelectorAll(`section[aria-label="${section}"] li`)]
+  [...document.querySelectorAll(`section[aria-label="${section}"] li > .row`)]
   .map((row) => row.textContent?.replace(/\s+/g, ' ').trim())
 )
 
@@ -92,7 +93,7 @@ describe('PublishDialog', () => {
   it('lists staged & unstaged Spots by path, with a summary', async () => {
     await open()
     await vi.waitFor(() => expect(rows('Staged')).toEqual(['/ new']))
-    expect(rows('Unstaged')).toEqual(['icon/hat/ +2 −1'])
+    expect(rows('Unstaged')).toEqual(['icon/', 'hat/ +2 −1'])
     const [staged] = document.querySelectorAll<HTMLInputElement>('section[aria-label="Staged"] li input[type="checkbox"]')
     const [unstaged] = document.querySelectorAll<HTMLInputElement>('section[aria-label="Unstaged"] li input[type="checkbox"]')
     expect(staged.checked).toBe(true)
@@ -115,7 +116,7 @@ describe('PublishDialog', () => {
 
   it('stages & unstages a Spot by its checkbox', async () => {
     await open()
-    await vi.waitFor(() => expect(rows('Unstaged')).toHaveLength(1))
+    await vi.waitFor(() => expect(rows('Unstaged')).toHaveLength(2))
     document.querySelector<HTMLInputElement>('section[aria-label="Unstaged"] li input')!.click()
     await vi.waitFor(() => expect(stage).toHaveBeenCalledWith({ ids: [2], staged: true }))
     document.querySelector<HTMLInputElement>('section[aria-label="Staged"] li input')!.click()
@@ -128,7 +129,7 @@ describe('PublishDialog', () => {
       { refresh: vi.fn() },
     ))
     await open()
-    await vi.waitFor(() => expect(rows('Unstaged')).toHaveLength(2))
+    await vi.waitFor(() => expect(rows('Unstaged')).toHaveLength(3))
     expect(document.querySelector('#mass-select')!.textContent).toContain('Stage Everything')
     document.querySelector<HTMLInputElement>('#check-all')!.click()
     await vi.waitFor(() => expect(stage).toHaveBeenCalledWith({ ids: [2, 3], staged: true }))
@@ -220,7 +221,7 @@ describe('PublishDialog, publishing part of the changes', () => {
     document.querySelector<HTMLInputElement>('section[aria-label="Staged"] li input')!.click()
     await vi.waitFor(() => expect(rows('Staged')).toEqual([]))
     expect(stage).toHaveBeenCalledWith({ ids: [1], staged: false })
-    expect(rows('Unstaged')).toEqual(['/ new', 'icon/hat/ +2 −1'])
+    expect(rows('Unstaged')).toEqual(['/ new', 'icon/', 'hat/ +2 −1'])
   })
 
   it('labels what was included by why, before asking the wallet', async () => {
@@ -257,11 +258,11 @@ describe('PublishDialog, reopened', () => {
       refresh: () => (cache.answer = Promise.resolve(cache.lists)),
     }))
     const listed = () => (
-      [...document.querySelectorAll('dialog#publish section li')]
+      [...document.querySelectorAll('dialog#publish section li > .row')]
       .map((row) => row.textContent?.replace(/\s+/g, ' ').trim())
     )
     await open()
-    await vi.waitFor(() => expect(listed()).toEqual(['/ new', 'icon/hat/ +2 −1']))
+    await vi.waitFor(() => expect(listed()).toEqual(['/ new', 'icon/', 'hat/ +2 −1']))
     const dialog = document.querySelector<HTMLDialogElement>('dialog#publish')!
     dialog.close()
     cache.lists = {
@@ -269,7 +270,7 @@ describe('PublishDialog, reopened', () => {
       unstaged: [...lists.unstaged, spot(3, ['icon', 'cap'], { isNew: true })],
     }
     dialog.showModal()
-    await vi.waitFor(() => expect(listed()).toEqual(['/ new', 'icon/hat/ +2 −1', 'icon/cap/ new']))
+    await vi.waitFor(() => expect(listed()).toEqual(['/ new', 'icon/', 'hat/ +2 −1', 'cap/ new']))
   })
 })
 
@@ -293,5 +294,208 @@ describe('PublishDialog, checking the account (US4-3)', () => {
     await vi.waitFor(() => expect(button('Publish').disabled).toBe(false))
     button('Publish').click()
     await vi.waitFor(() => expect(preparePublish).toHaveBeenCalled())
+  })
+})
+
+describe('PublishDialog, nesting by path (US1)', () => {
+  const showing = (staged: Array<ReturnType<typeof spot>>, unstaged: Array<ReturnType<typeof spot>>) => {
+    pending.mockImplementation(() => Object.assign(Promise.resolve({ staged, unstaged }), { refresh: vi.fn() }))
+    return open()
+  }
+  const section = (name: string) => document.querySelector(`section[aria-label="${name}"]`)!
+  /** The section’s top-level rows, each with what’s nested in it. */
+  type Tree = Array<string | [string, Tree]>
+  const tree = (list: Element | null): Tree => (
+    [...(list?.children ?? [])].map((li) => {
+      const line = li.querySelector(':scope > .row')!.textContent!.replace(/\s+/g, ' ').trim()
+      const nested = li.querySelector(':scope > ul')
+      return nested ? [line, tree(nested)] : line
+    })
+  )
+  const listOf = (name: string) => section(name).querySelector(':scope > ul:last-of-type')
+
+  it('nests rows under their parents, named by their own names (US1-1)', async () => {
+    await showing([], [spot(2, ['icon']), spot(3, ['icon', 'hat']), spot(4, ['icon', 'cap'])])
+    await vi.waitFor(() => expect(rows('Unstaged')).toHaveLength(3))
+    expect(tree(listOf('Unstaged'))).toEqual([['icon/ +1 −0', ['hat/ +1 −0', 'cap/ +1 −0']]])
+  })
+
+  it('shows parents that aren’t pending as context, without a checkbox (US1-2)', async () => {
+    await showing([], [spot(5, ['icon', 'hat', 'top'], { isNew: true })])
+    await vi.waitFor(() => expect(rows('Unstaged')).toEqual(['icon/', 'hat/', 'top/ new']))
+    const lines = [...section('Unstaged').querySelectorAll('li > .row')]
+    expect(lines.map((line) => line.querySelector('input') != null)).toEqual([false, false, true])
+    expect(lines.map((line) => line.querySelector('.context') != null)).toEqual([true, true, false])
+  })
+
+  it('shows a staged parent in Staged & its unstaged child under it in Unstaged (US1-3)', async () => {
+    await showing([spot(2, ['icon'], { staged: true })], [spot(3, ['icon', 'hat'])])
+    await vi.waitFor(() => expect(rows('Staged')).toEqual(['icon/ +1 −0']))
+    expect(section('Staged').querySelector<HTMLInputElement>('li input')!.checked).toBe(true)
+    expect(tree(listOf('Unstaged'))).toEqual([['icon/', ['hat/ +1 −0']]])
+  })
+
+  it('stages only the Spot whose checkbox is clicked (US1-4, FR-004)', async () => {
+    await showing([spot(2, ['icon'], { staged: true })], [spot(3, ['icon', 'hat'])])
+    await vi.waitFor(() => expect(rows('Unstaged')).toHaveLength(2))
+    section('Unstaged').querySelector<HTMLInputElement>('li input')!.click()
+    await vi.waitFor(() => expect(stage).toHaveBeenCalled())
+    expect(stage.mock.calls).toEqual([[{ ids: [3], staged: true }]])
+  })
+
+  it('heads a section with the root, labelled “/” (US1-5)', async () => {
+    await showing([spot(1, [], { staged: true, isNew: true }), spot(2, ['docs'], { staged: true })], [])
+    await vi.waitFor(() => expect(rows('Staged')).toHaveLength(2))
+    expect(tree(listOf('Staged'))).toEqual([['/ new', ['docs/ +1 −0']]])
+  })
+
+  it('keeps siblings in the order they came (US1-6)', async () => {
+    await showing([], [spot(2, ['docs']), spot(3, ['Icon']), spot(4, ['art'])])
+    await vi.waitFor(() => expect(rows('Unstaged')).toEqual(['docs/ +1 −0', 'Icon/ +1 −0', 'art/ +1 −0']))
+  })
+})
+
+describe('PublishDialog, folding (US2)', () => {
+  const showing = (staged: Array<ReturnType<typeof spot>>, unstaged: Array<ReturnType<typeof spot>>) => {
+    pending.mockImplementation(() => Object.assign(Promise.resolve({ staged, unstaged }), { refresh: vi.fn() }))
+  }
+  const rowOf = (section: string, label: string) => (
+    [...document.querySelectorAll(`section[aria-label="${section}"] li`)]
+    .find((li) => li.querySelector(':scope > .row')!.textContent!.trim().startsWith(label))!
+  )
+  const foldOf = (section: string, label: string) => (
+    rowOf(section, label).querySelector<HTMLButtonElement>(':scope > .row button.fold')
+  )
+  const nestedOf = (section: string, label: string) => rowOf(section, label).querySelector(':scope > ul')
+  const imported = [
+    spot(2, ['import']), spot(3, ['import', 'a']), spot(4, ['import', 'b', 'c']), spot(5, ['import', 'd']),
+  ]
+
+  it('folds a row, hiding what’s in it & showing how many (US2-1, FR-007)', async () => {
+    showing([], imported)
+    await open()
+    await vi.waitFor(() => expect(foldOf('Unstaged', 'import/')).not.toBeNull())
+    foldOf('Unstaged', 'import/')!.click()
+    await vi.waitFor(() => expect(nestedOf('Unstaged', 'import/')).toBeNull())
+    expect(rows('Unstaged')).toEqual(['import/ (3) +1 −0'])
+  })
+
+  it('unfolds it as it was, nested folds & all (US2-2)', async () => {
+    showing([], imported)
+    await open()
+    await vi.waitFor(() => expect(foldOf('Unstaged', 'b/')).not.toBeNull())
+    foldOf('Unstaged', 'b/')!.click()
+    foldOf('Unstaged', 'import/')!.click()
+    await vi.waitFor(() => expect(nestedOf('Unstaged', 'import/')).toBeNull())
+    foldOf('Unstaged', 'import/')!.click()
+    await vi.waitFor(() => expect(nestedOf('Unstaged', 'import/')).not.toBeNull())
+    expect(rows('Unstaged')).toEqual(['import/ +1 −0', 'a/ +1 −0', 'b/ (1)', 'd/ +1 −0'])
+  })
+
+  it('offers no fold on a row with nothing in it (US2-3, FR-006)', async () => {
+    showing([], imported)
+    await open()
+    await vi.waitFor(() => expect(rows('Unstaged')).toHaveLength(5))
+    expect(foldOf('Unstaged', 'a/')).toBeNull()
+    expect(foldOf('Unstaged', 'c/')).toBeNull()
+  })
+
+  it('keeps a fold through staging another row (US2-4, FR-008)', async () => {
+    showing([], [...imported, spot(6, ['docs'])])
+    await open()
+    await vi.waitFor(() => expect(foldOf('Unstaged', 'import/')).not.toBeNull())
+    foldOf('Unstaged', 'import/')!.click()
+    await vi.waitFor(() => expect(nestedOf('Unstaged', 'import/')).toBeNull())
+    showing([spot(6, ['docs'], { staged: true })], imported)
+    rowOf('Unstaged', 'docs/').querySelector('input')!.click()
+    await vi.waitFor(() => expect(rows('Staged')).toEqual(['docs/ +1 −0']))
+    expect(nestedOf('Unstaged', 'import/')).toBeNull()
+  })
+
+  it('folds each section on its own (US2-5)', async () => {
+    showing(
+      [spot(2, ['import'], { staged: true }), spot(7, ['import', 'x'], { staged: true })],
+      imported.slice(1),
+    )
+    await open()
+    await vi.waitFor(() => expect(foldOf('Unstaged', 'import/')).not.toBeNull())
+    foldOf('Unstaged', 'import/')!.click()
+    await vi.waitFor(() => expect(nestedOf('Unstaged', 'import/')).toBeNull())
+    expect(nestedOf('Staged', 'import/')).not.toBeNull()
+  })
+
+  it('folds from the keyboard, & says whether it’s expanded (US2-6, FR-010)', async () => {
+    showing([], imported)
+    await open()
+    await vi.waitFor(() => expect(foldOf('Unstaged', 'import/')).not.toBeNull())
+    const fold = foldOf('Unstaged', 'import/')!
+    expect(fold.getAttribute('aria-expanded')).toBe('true')
+    expect(document.getElementById(fold.getAttribute('aria-controls')!)).toBe(nestedOf('Unstaged', 'import/'))
+    fold.focus()
+    await userEvent.keyboard('{Enter}')
+    await vi.waitFor(() => expect(fold.getAttribute('aria-expanded')).toBe('false'))
+    await userEvent.keyboard(' ')
+    await vi.waitFor(() => expect(fold.getAttribute('aria-expanded')).toBe('true'))
+    expect(fold.getAttribute('aria-label')).toBe('import/')
+  })
+
+  it('opens again with nothing folded (R4)', async () => {
+    showing([], imported)
+    await open()
+    await vi.waitFor(() => expect(foldOf('Unstaged', 'import/')).not.toBeNull())
+    foldOf('Unstaged', 'import/')!.click()
+    await vi.waitFor(() => expect(nestedOf('Unstaged', 'import/')).toBeNull())
+    const dialog = document.querySelector<HTMLDialogElement>('dialog#publish')!
+    dialog.close()
+    dialog.showModal()
+    await vi.waitFor(() => expect(nestedOf('Unstaged', 'import/')).not.toBeNull())
+  })
+})
+
+describe('PublishDialog, large imports (US3)', () => {
+  const under = (count: number, first = 100) => [
+    spot(first, ['import']),
+    ...Array.from({ length: count }, (_, idx) => spot(first + 1 + idx, ['import', `f${idx}`])),
+  ]
+  const showing = (staged: Array<ReturnType<typeof spot>>, unstaged: Array<ReturnType<typeof spot>>) => {
+    pending.mockImplementation(() => Object.assign(Promise.resolve({ staged, unstaged }), { refresh: vi.fn() }))
+  }
+  const top = () => rows('Unstaged')[0]
+
+  it('opens a row with more than 50 inside folded (US3-1, FR-009)', async () => {
+    showing([], under(51))
+    await open()
+    await vi.waitFor(() => expect(top()).toBe('import/ (51) +1 −0'))
+    expect(rows('Unstaged')).toHaveLength(1)
+  })
+
+  it('opens a row with 50 inside unfolded (US3-2)', async () => {
+    showing([], under(50))
+    await open()
+    await vi.waitFor(() => expect(rows('Unstaged')).toHaveLength(51))
+    expect(top()).toBe('import/ +1 −0')
+  })
+
+  it('keeps a row unfolded by hand unfolded through a restage (US3-3)', async () => {
+    showing([], [...under(51), spot(9, ['docs'])])
+    await open()
+    await vi.waitFor(() => expect(top()).toBe('import/ (51) +1 −0'))
+    document.querySelector<HTMLButtonElement>('section[aria-label="Unstaged"] button.fold')!.click()
+    await vi.waitFor(() => expect(rows('Unstaged')).toHaveLength(53))
+    showing([spot(9, ['docs'], { staged: true })], under(51))
+    ;[...document.querySelectorAll('section[aria-label="Unstaged"] li')]
+    .find((li) => li.textContent?.includes('docs/'))!
+    .querySelector('input')!.click()
+    await vi.waitFor(() => expect(rows('Staged')).toEqual(['docs/ +1 −0']))
+    expect(rows('Unstaged')).toHaveLength(52)
+  })
+
+  it('opens 10,000 pending Spots in one folder as one folded row, quickly (SC-002)', async () => {
+    showing([], under(10_000))
+    const start = performance.now()
+    await open()
+    await vi.waitFor(() => expect(top()).toBe('import/ (10000) +1 −0'))
+    expect(performance.now() - start).toBeLessThan(2000)
+    expect(document.querySelectorAll('section[aria-label="Unstaged"] li').length).toBeLessThan(5)
   })
 })

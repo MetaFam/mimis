@@ -2,8 +2,8 @@ import * as v from 'valibot'
 import { query } from '$app/server'
 import { error, isHttpError } from '@sveltejs/kit'
 import settings from '#lib/settings.svelte.js'
-import { writeLayer } from '#lib/server/janusgraph.js'
-import { assembleListing, listingTraversal } from '#lib/server/listing.js'
+import { g, writeLayer } from '#lib/server/janusgraph.js'
+import { listingAt } from '#lib/server/listing.js'
 
 export type { Child, Content, Listing } from '#lib/server/listing.js'
 
@@ -24,15 +24,12 @@ export const listing = query(
   async ({ path = [], options: { maxMountDepth = 10 } = {} }) => {
     try {
       path = path.filter(Boolean)
-      const rows = await (
-        listingTraversal({
-          from: await writeLayer(),
-          path,
-          maxDepth: maxMountDepth,
-        })
-        .toList()
-      ) as Parameters<typeof assembleListing>[0]
-      const result = assembleListing(rows)
+      const result = await listingAt({
+        source: g(),
+        from: await writeLayer(),
+        path,
+        maxDepth: maxMountDepth,
+      })
       if(settings.debugging) {
         console.debug({ Listing: { result, path } })
       }

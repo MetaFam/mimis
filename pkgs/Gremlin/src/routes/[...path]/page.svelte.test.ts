@@ -4,7 +4,8 @@ import { userEvent } from 'vitest/browser'
 import { flushSync } from 'svelte'
 import { error } from '@sveltejs/kit'
 
-const { listing, searchSpots, receiveUpdate } = vi.hoisted(() => ({
+const { listing, searchSpots, receiveUpdate, moved } = vi.hoisted(() => ({
+  moved: { count: 0 },
   receiveUpdate: vi.fn(),
   listing: vi.fn(() => Object.assign(
     Promise.resolve({ layers: [1], contents: [], children: [] }),
@@ -23,6 +24,17 @@ vi.mock('#lib/components/SIWE.svelte', () => import('./SIWE.stub.svelte'))
 vi.mock('#lib/remotes/listing.remote.js', () => ({ listing }))
 vi.mock('#lib/remotes/searchSpots.remote.js', () => ({ searchSpots }))
 vi.mock('#lib/remotes/receiveUpdate.remote.js', () => ({ receiveUpdate }))
+vi.mock('#lib/remotes/notices.remote.js', () => ({
+  notices: vi.fn(() => Object.assign(
+    Promise.resolve(Array.from({ length: moved.count }, (_, idx) => ({
+      mount: `m${idx}`, uuid: `u${idx}`, name: `n${idx}`, from: [], to: ['old'], ownerPath: ['old'], owner: '0xs',
+    }))),
+    { refresh: vi.fn() },
+  )),
+}))
+vi.mock('#lib/remotes/resolveMount.remote.js', () => ({
+  removeMount: vi.fn(), followMount: vi.fn(), keepMount: vi.fn(),
+}))
 vi.mock('#lib/components/PublishDialog.svelte', () => import('./PublishDialog.stub.svelte'))
 vi.mock('#lib/janus2CSV.js', () => ({ graphToCSV: vi.fn() }))
 vi.mock('#lib/ipfs.js', () => ({ addFiles: vi.fn(), kuboUpload: vi.fn() }))
@@ -206,5 +218,32 @@ describe('recording an Update', () => {
     await vi.waitFor(() => expect(
       [...document.querySelectorAll('dialog p')].map((p) => p.textContent)
     ).toContain('“x” isn’t a CID.'))
+  })
+})
+
+describe('moved links (FR-022)', () => {
+  const action = () => (
+    [...document.querySelectorAll<HTMLButtonElement>('#actions button')]
+    .find((button) => button.textContent?.includes('Moved links'))
+  )
+
+  afterEach(() => {
+    moved.count = 0
+  })
+
+  it('offers no action when no link has moved', async () => {
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(action()).toBeUndefined()
+  })
+
+  it('counts the moved links, & opens their notices', async () => {
+    document.body.innerHTML = ''
+    moved.count = 2
+    await render(Page)
+    await vi.waitFor(() => expect(action()?.textContent?.trim()).toBe('Moved links (2)'))
+    action()!.click()
+    await vi.waitFor(() => (
+      expect(document.querySelectorAll('dialog[open] li.notice')).toHaveLength(2)
+    ))
   })
 })

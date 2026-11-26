@@ -60,7 +60,7 @@ export async function addFiles(
   const entries = cids.map((entry, idx) => {
     if(entry.cid == null) throw new Error('No CID.')
     const { name, size } = files[idx]
-    return { ...entry, cid: entry.cid, name, size }
+    return { ...entry, name, size }
   })
   if(settings.debugging) console.debug({ entries, path } )
   return await filesToSpot({ path, files: entries, alternative, onto })

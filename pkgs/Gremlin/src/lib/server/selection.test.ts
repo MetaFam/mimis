@@ -7,6 +7,7 @@ import { putRepresentation, retire } from '#lib/server/edits.js'
 import { relinkContent, relinkSpot } from '#lib/server/moves.js'
 import { v7 as uuidV7 } from 'uuid'
 import { edgeId } from '#lib/server/janusgraph.js'
+import { followMount, renameSpot } from '#lib/server/renames.js'
 import {
   addSpot, attach, link, markPublished, mount, seedTree, seedUser,
   testAccount, transaction, type Id,
@@ -236,5 +237,31 @@ describe('moves', () => {
     const { spots } = await select({ source, address, staged: [at('a')] })
     expect(reasons(spots)).toEqual({ [at('a')]: 'staged', [fresh]: 'move', [at('b')]: 'connect' })
     expect(spots.get(fresh)!.entries).toEqual([expect.objectContaining({ to: at('a/s') })])
+  })
+})
+
+describe('a followed mount (FR-024)', () => {
+  it('brings the mount’s old Spot along with its new one, by its uuid', async () => {
+    const S = newAddress()
+    const { root: sRoot } = await seedUser(source, { address: S })
+    const theirs = await seedTree(source, { root: sRoot, tree: { a: { hatz: {} }, old: {} } })
+    await mount(source, { from: root, to: sRoot })
+    await renameSpot({ source, address, path: ['a'], from: 'hatz', to: 'hats', now })
+    await publishAll()
+    const mounted = edgeId((await source.V(at('a')).outE('MOUNT').has('path').id().next()).value)
+    const uuid = (await source.E(mounted).values('uuid').next()).value
+    await relinkSpot({
+      source, what: theirs.get('a/hatz')!, from: theirs.get('a')!, to: theirs.get('old')!,
+      now, uuid: uuidV7(),
+    })
+    await followMount({ source, address, mount: mounted, now })
+    const old = (await source.V(root).outE('CONTAINS').has('path', 'old').inV().id().next()).value as Id
+    const { spots } = await select({ source, address, staged: [old] })
+    expect(spots.get(at('a'))).toMatchObject({
+      reason: 'move', markers: [expect.objectContaining({ kind: 'MOUNT', key: uuid })],
+    })
+    expect(spots.get(old)!.entries).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: 'MOUNT', key: uuid }),
+    ]))
   })
 })

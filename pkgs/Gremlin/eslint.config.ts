@@ -5,7 +5,7 @@ import globals from 'globals'
 import ts from 'typescript-eslint'
 
 export default defineConfig(
-	globalIgnores(['.svelte-kit/', 'build/', 'editor/dist/']),
+	globalIgnores(['.svelte-kit/', '.wrangler/', 'build/', 'editor/dist/']),
 	js.configs.recommended,
 	...ts.configs.recommended,
 	...svelte.configs.recommended,

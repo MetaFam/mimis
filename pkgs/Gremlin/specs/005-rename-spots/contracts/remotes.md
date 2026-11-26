@@ -27,7 +27,7 @@ Renaming to the current name returns without writing (FR-008).
 | Function | Effect | Errors |
 | --- | --- | --- |
 | `removeMount` | `retire()` the mount | `404` if there is no such mount |
-| `followMount` | Recompute the notice. Relink the mount onto `spotAt(notice.to)`, keeping `uuid`, `path`, and `base`. | `404` if there is no such mount; `409` if it isn't moved (the notice is stale); `400` if `to` is `null`; `409` on a clash at `to` |
+| `followMount` | Recompute the notice. Relink the mount onto `spotAt(notice.to)`, keeping `uuid`, `path`, and `base`, with `parent` set to the new holder's `uuid`. | `404` if there is no such mount; `409` if it isn't moved (the notice is stale); `400` if `to` is `null`; `409` on a clash at `to` |
 | `keepMount` | New Spot plus `MOUNT{order: 0}` to the target, plus `CONTAINS{path, uuid: v7}` from the mount's Spot, then `retire()` the mount | `404` if there is no such mount |
 
 Each returns `{ from: Array<string>, to: Array<string> | null }`, the full view paths before and after, for `relocate()`.

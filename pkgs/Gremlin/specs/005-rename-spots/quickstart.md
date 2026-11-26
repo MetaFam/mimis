@@ -32,6 +32,7 @@ Graph tests run in a rolled-back `g().tx()`, seeding two users with `seedUser` a
 | `src/lib/components/RenameDialog.svelte.test.ts` (new) | Rename is disabled with the reason for each invalid name. Cancel and the unchanged name make no call. Success calls `onrenamed` with the new path. A refusal calls `onerror` (FR-007, FR-008, FR-010). |
 | `src/lib/components/FileBrowser.svelte.test.ts` | The menu offers Rename only when signed in, in both views. A moved child shows the badge and Resolve move. |
 | `src/lib/components/NoticesDialog.svelte.test.ts` (new) | It lists notices, disables Follow when `to` is `null`, and calls each command and then `relocate` |
+| `src/lib/remotes/renameSpot.test.ts`, `resolveMount.test.ts`, `notices.test.ts` (new) | `401` without a session, `HttpError`s passed through, others wrapped as `500`; `notices()` is `[]` signed out |
 | `src/lib/relocations.test.ts` (new) | `follow` rewrites paths under `from`, leaves others alone, and handles the root's direct children and deeper prefixes (FR-016) |
 
 ### Key scenarios in `renames.test.ts`
@@ -42,7 +43,7 @@ Graph tests run in a rolled-back `g().tx()`, seeding two users with `seedUser` a
 4. **Merged name (US2-6, FR-005)**: B's own `hat` and S's `hat` become one `cap`, which is B's `CONTAINS` renamed plus one link `MOUNT`.
 5. **Rename again (US2-7)**: the mount's `path` changes, and no second mount is made.
 6. **Refusals (US4)**: a clash gives `409`, an invalid name `400`, and a stale name `404`, each with the tree unchanged. The same name makes no write.
-7. **Moved (US6-1, US6-2, US6-7)**: S moves `hatz` into `/old/`. `noticesFor(B)` gives one notice, with `from: ['image']`, `to: ['old']`, and `name: 'hats'`. A second move updates `to`, and moving back clears the notice.
+7. **Moved (US6-1, US6-2, US6-7)**: S moves `hatz` into `/old/`. `noticesFor(B)` gives one notice, with `from: ['image']`, `to: ['old']`, and `name: 'hats'`. A second move updates `to`, and moving back clears the notice. B unmounting S's root raises no notice.
 8. **Resolutions (US6-3 to US6-5)**: each runs from a fresh seed.
    - **Remove**: `/old/` lists `hatz`.
    - **Follow**: `/old/` lists `hats` and `/image/` no longer does.

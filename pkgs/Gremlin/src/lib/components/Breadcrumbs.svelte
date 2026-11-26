@@ -1,13 +1,17 @@
 <script lang="ts">
   import { resolve } from '$app/paths'
+  import RenameDialog from './RenameDialog.svelte'
   import { dropGenerator, navigateOnClick } from '#lib'
   import root from '#assets/root.svg'
 
-  let { path = $bindable([]), address = null }: {
+  let { path = $bindable([]), address = null, onerror = () => {} }: {
     path: string[]
     address: string | null
+    onerror?: (msg: string) => void
   } = $props()
   let selected = $state<number | null>(null)
+  /** The crumbs, the root’s & those after it, up to the one renamed. */
+  let renaming = $state<Array<string> | null>(null)
 </script>
 
 <ol>
@@ -43,9 +47,24 @@
           >{decoded}/</span>
         {/if}
       </a>
+      {#if idx > 0 && address}
+        <button
+          class="rename"
+          title="Rename “{decoded}”"
+          onclick={() => renaming = toHere}
+        >✎</button>
+      {/if}
     </li>
   {/each}
 </ol>
+{#if renaming}
+  <RenameDialog
+    path={renaming.slice(0, -1)}
+    name={renaming.at(-1)!}
+    {onerror}
+    onclose={() => renaming = null}
+  />
+{/if}
 
 <style>
   ol {
@@ -68,7 +87,16 @@
       height: 1.5em;
     }
 
-    button {
+    button.rename {
+      opacity: 0;
+      margin-inline: 0.5ch 0;
+
+      li:hover &, &:focus-visible {
+        opacity: 1;
+      }
+    }
+
+    button:not(.rename) {
       margin-inline-end: 0.5ch;
       transition: rotate 0.2s ease-in-out;
 

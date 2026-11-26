@@ -3,11 +3,14 @@ import { error } from '@sveltejs/kit'
 import { extFor, nameFor, splitName, typeForName } from '#lib/mimetypes.js'
 import { rank } from '#lib/rank.js'
 import { release, unlinkSpot } from '#lib/server/edits.js'
+import { renameSpot } from '#lib/server/renames.js'
 import {
   assertOwned, edgeId, g, layerOf,
-  type GraphTraversal, type GraphTraversalSource, type Id,
+  type GraphTraversalSource, type Id,
 } from '#lib/server/janusgraph.js'
-import { currentBlob, resolvePath, withMounts } from '#lib/server/listing.js'
+import {
+  assembleListing, currentBlob, layerRows, resolveSpots,
+} from '#lib/server/listing.js'
 
 const { statics: __ } = gremlin.process
 
@@ -93,8 +96,10 @@ const bestOfEachType = (rows: Array<Map<string, unknown>>) => {
   })
 }
 
-const repsAt = async (traversal: GraphTraversal) => (
-  ((await traversal.map(currentReps()).toList()) as Array<Array<Map<string, unknown>>>)
+const repsAt = async (source: GraphTraversalSource, ids: Array<Id>) => (
+  ids.length === 0 ? [] : (
+    (await source.V(...ids).map(currentReps()).toList()) as Array<Array<Map<string, unknown>>>
+  )
   .flatMap(bestOfEachType)
 )
 
@@ -105,14 +110,19 @@ const times = (createdAt?: string) => {
 }
 
 /** The Spots `path` resolves to, through mounts, as the app resolves it. */
-const spotTraversal = ({ source = g(), address, path }: Where) => (
-  resolvePath({ from: layerOf(address, source), path })
+const resolve = ({ source = g(), address, path }: Where) => (
+  resolveSpots({ source, from: layerOf(address, source), path })
+)
+const spotsAt = async (where: Where) => (
+  (await resolve(where)).map(({ id }) => id)
 )
 
-/** Those Spots & the layers they mount, whose entries they list. */
-const layersAt = (where: Where) => (
-  withMounts({ traversal: spotTraversal(where), label: 'listed', maxDepth: 10 })
-)
+/** The Spots `path` resolves to, & what the app lists there. */
+const listingOf = async (where: Where) => {
+  const starts = await resolve(where)
+  const rows = await layerRows({ source: where.source ?? g(), starts })
+  return { spots: starts.map(({ id }) => id), listing: assembleListing(rows) }
+}
 
 /**
  * The Spot & representation type a filename resolves to, following
@@ -137,7 +147,8 @@ export function fileTarget(path: Array<string>) {
  */
 export async function findRep({ path, ...where }: Where) {
   const { spotPath, type } = fileTarget(path)
-  const reps = await repsAt(spotTraversal({ ...where, path: spotPath }))
+  const { source = g() } = where
+  const reps = await repsAt(source, await spotsAt({ ...where, path: spotPath }))
   return (
     reps.find((rep) => rep.type === type)
     ?? (reps.length === 1 ? reps[0] : null)
@@ -146,30 +157,32 @@ export async function findRep({ path, ...where }: Where) {
 
 export async function listEntries(where: Where) {
   interface Row {
-    name: string
+    id: Id
     children: number
     created: string
     reps: Array<Map<string, unknown>>
   }
-  const children = layersAt(where)
-  const rows = (
-    (await children
-    .outE('CONTAINS')
-    .as('contains')
-    .values('path').as('name')
-    .select('contains')
-    .inV().as('child')
-    .project('name', 'children', 'created', 'reps')
-    .by(__.select('name'))
-    .by(__.select('child').outE('CONTAINS', 'MOUNT').count())
-    .by(__.select('child').coalesce(__.values('createdAt'), __.constant('')))
-    .by(__.select('child').map(currentReps()))
-    .dedup()
-    .toList()) as Array<Map<keyof Row, unknown>>
-  ).map((row) => Object.fromEntries(row) as unknown as Row)
+  const { source = g() } = where
+  const { spots, listing } = await listingOf(where)
+  const ids = listing.children.flatMap(({ ids }) => ids)
+  const rows = new Map(
+    (ids.length === 0 ? [] : (
+      (await source.V(...new Set(ids))
+      .project('id', 'children', 'created', 'reps')
+      .by(__.id())
+      .by(__.outE('CONTAINS', 'MOUNT').count())
+      .by(__.coalesce(__.values('createdAt'), __.constant('')))
+      .by(__.map(currentReps()))
+      .toList()) as Array<Map<keyof Row, unknown>>
+    ))
+    .map((row) => Object.fromEntries(row) as unknown as Row)
+    .map((row) => [row.id, row])
+  )
 
   const entries: Array<FSEntry> = []
-  for(const { name, children, created, reps } of rows) {
+  for(const { name, children, created, reps } of listing.children.flatMap(({ name, ids }) => (
+    ids.map((id) => ({ name, ...rows.get(id)! }))
+  ))) {
     const files = bestOfEachType(reps)
     if(Number(children) > 0 || files.length === 0) {
       entries.push({ name, kind: 'directory', ...times(created) })
@@ -188,7 +201,7 @@ export async function listEntries(where: Where) {
 
   // Representations on the listed Spot itself appear as `ext.ext`
   // files, mirroring how `addFiles` handles context-free names.
-  for(const rep of await repsAt(spotTraversal(where))) {
+  for(const rep of await repsAt(source, spots)) {
     const ext = extFor(rep.type)
     if(ext == null) continue
     entries.push({
@@ -216,12 +229,12 @@ export async function statEntry(where: Where) {
     return { name: '', kind: 'directory' } as FSEntry
   }
 
-  const { value: created } = await (
-    spotTraversal(where)
-    .coalesce(__.values('createdAt'), __.constant(''))
-    .next()
-  )
-  if(created != null) {
+  const { source = g() } = where
+  const [spot] = await spotsAt(where)
+  if(spot != null) {
+    const { value: created } = await (
+      source.V(spot).coalesce(__.values('createdAt'), __.constant('')).next()
+    )
     return {
       name: path.at(-1)!,
       kind: 'directory',
@@ -242,27 +255,19 @@ export async function statEntry(where: Where) {
 }
 
 /**
- * The `CONTAINS` link `path` names, from its parent or a layer the
- * parent mounts, & whether the Spot it leads to holds anything.
+ * The highest link `path` names, from its parent or a layer the parent
+ * mounts, & whether the Spot it leads to holds anything.
  */
 async function linkAt({ path, ...where }: Where) {
-  const { value } = await (
-    layersAt({ ...where, path: path.slice(0, -1) })
-    .outE('CONTAINS')
-    .has('path', path.at(-1)!)
-    .project('from', 'what', 'held')
-    .by(__.outV().id())
-    .by(__.inV().id())
-    .by(__.inV().outE('CONTAINS', 'MOUNT', 'AS').limit(1).count())
-    .next()
+  const { source = g() } = where
+  const { listing: { children } } = await listingOf({ ...where, path: path.slice(0, -1) })
+  const child = children.find(({ name }) => name === path.at(-1))
+  if(!child) return null
+  const [what] = child.ids
+  const { value: held } = await (
+    source.V(what).outE('CONTAINS', 'MOUNT', 'AS').limit(1).count().next()
   )
-  if(value == null) return null
-  const row = value as Map<'from' | 'what' | 'held', unknown>
-  return {
-    from: row.get('from') as Id,
-    what: row.get('what') as Id,
-    empty: Number(row.get('held')) === 0,
-  }
+  return { from: child.parents[0], what, empty: Number(held) === 0 }
 }
 
 /**
@@ -305,24 +310,26 @@ export async function deleteEntry(
 }
 
 /**
- * Renames a Spot within its parent by relabeling the `CONTAINS`
- * edge’s `path`. Filenames rename their underlying title Spot, so
- * the extension (& thereby MIME type) must be preserved.
+ * Renames a Spot within its parent as the app does (FR-017). Filenames
+ * rename their underlying title Spot, so the extension (& thereby MIME
+ * type) must be preserved.
  */
 export async function renameEntry(
-  { address, from, to }: {
+  { source = g(), address, from, to, now }: {
+    source?: GraphTraversalSource
     address: string
     from: Array<string>
     to: Array<string>
+    now: string
   }
 ) {
   if(from.slice(0, -1).join('/') !== to.slice(0, -1).join('/')) {
     throw error(400, 'Moving between directories isn’t supported here — drag & drop in the Mïmis app instead.')
   }
 
-  const [source, destination] = [from, to].map((path) => path.at(-1)!)
-  const [splitFrom, splitTo] = [source, destination].map(splitName)
-  let [edgeFrom, edgeTo] = [source, destination]
+  const [named, renamed] = [from, to].map((path) => path.at(-1)!)
+  const [splitFrom, splitTo] = [named, renamed].map(splitName)
+  let [edgeFrom, edgeTo] = [named, renamed]
   if(splitFrom.ext != null || splitTo.ext != null) {
     if(splitFrom.ext !== splitTo.ext) {
       throw error(400, 'Changing a file’s extension would change its representation type — unsupported.')
@@ -333,15 +340,7 @@ export async function renameEntry(
     ;[edgeFrom, edgeTo] = [splitFrom.title!, splitTo.title!]
   }
 
-  const { value } = await (
-    spotTraversal({ address, path: from.slice(0, -1) })
-    .outE('CONTAINS')
-    .has('path', edgeFrom)
-    .property('path', edgeTo)
-    .id()
-    .next()
-  )
-  if(value == null) {
-    throw error(404, `No entry named “${source}” to rename.`)
-  }
+  await renameSpot({
+    source, address, path: from.slice(0, -1), from: edgeFrom, to: edgeTo, now,
+  })
 }

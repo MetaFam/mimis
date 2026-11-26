@@ -3,7 +3,8 @@ import { error, isHttpError } from '@sveltejs/kit'
 import { PAGE_SIZE } from '#lib/search.js'
 import { quote, searchSpots } from '#lib/server/search.js'
 import {
-  addSpot, attach, link, mount, seed, seedWide, transaction,
+  addSpot, attach, link, mount, mountLink, seed, seedTree, seedUser, seedWide,
+  transaction,
   type Id, type Tree,
 } from '#lib/server/testing.js'
 
@@ -363,4 +364,49 @@ describe('performance', () => {
     expect(times).toHaveLength(10)
     expect(Math.max(...times)).toBeLessThan(1_000)
   }, 60_000)
+})
+
+describe('mounted links (FR-013)', () => {
+  let b: Id
+  let theirs: Map<string, Id>
+
+  beforeEach(async () => {
+    ;({ root: b } = await seedUser(source, { address: '0xb' }))
+    const { root: s } = await seedUser(source, { address: '0xs' })
+    theirs = await seedTree(source, {
+      root: s, tree: { image: { hatz: { top: {}, bowler: {} } } },
+    })
+    await mount(source, { from: b, to: s })
+    const image = (await seedTree(source, { root: b, tree: { image: {} } })).get('image')!
+    const { value: uuid } = await (
+      source.V(theirs.get('image')!).outE('CONTAINS').values('uuid').next()
+    )
+    const { value: parent } = await source.V(theirs.get('image')!).values('uuid').next()
+    await mountLink(source, {
+      from: image,
+      to: theirs.get('image/hatz')!,
+      uuid: uuid as string,
+      path: 'hats',
+      parent: parent as string,
+    })
+  })
+
+  const under = async (path: Array<string>, parts: Array<string>) => (
+    (await searchSpots({ source, from: source.V(b), path, parts }))
+    .results.map(({ names }) => names.join('/'))
+  )
+
+  it('finds a mounted link by its mount’s name', async () => {
+    expect(await under([], ['hat'])).toEqual(['image/hats'])
+  })
+
+  it('starts below a mounted link', async () => {
+    expect(await under(['image', 'hats'], ['top'])).toEqual(['top'])
+    await expect(under(['image', 'hatz'], ['top'])).rejects.toMatchObject({ status: 404 })
+  })
+
+  it('finishes when a mounted link’s target links back up', async () => {
+    await link(source, { from: theirs.get('image/hatz')!, to: b, name: 'up' })
+    expect(await under([], ['hats'])).toEqual(['image/hats'])
+  })
 })

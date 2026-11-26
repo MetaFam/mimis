@@ -14,6 +14,8 @@ export const MAX_BLOCK = 1_048_576
 
 export interface Link { uuid: string, path: string, target: CID }
 export interface Mounting { target: string, creator?: string, order: number }
+/** A mount of the link `uuid`, listed as `path`. */
+export interface Linking { uuid: string, path: string, target: string, creator?: string }
 /** `after`: the Content it’s ranked after; absent for the first. */
 export interface Holding { uuid: string, type: string, after?: string }
 /** `previous`: the representation it replaced, by its uuid. */
@@ -29,7 +31,7 @@ export interface SpotVersion {
   previous?: CID
   root?: true
   contains?: Array<Link | Tombstone>
-  mounts?: Array<Mounting | Tombstone>
+  mounts?: Array<Mounting | Linking | Tombstone>
   contents?: Array<Holding | Tombstone>
 }
 

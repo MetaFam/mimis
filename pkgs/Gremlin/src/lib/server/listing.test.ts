@@ -1,15 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { putRepresentation } from '#lib/server/edits.js'
 import {
-  assembleListing, listingTraversal, overlay, resolvePath, stack,
+  layerRows, listingAt as listed, overlay, resolveSpots, stack,
   type Content,
 } from '#lib/server/listing.js'
 import {
-  addSpot, attach, link, mount, seed, transaction, type Id,
+  addSpot, attach, link, mount, mountLink, seed, seedTree, seedUser,
+  transaction, type FileTree, type Id,
 } from '#lib/server/testing.js'
 
 type Source = ReturnType<typeof transaction>['source']
-type Rows = Parameters<typeof assembleListing>[0]
 
 let source: Source
 let rollback: () => Promise<void>
@@ -32,12 +32,9 @@ afterEach(async () => {
 
 const root = () => source.V(ids.get('')!)
 
-describe('listingTraversal', () => {
+describe('listingAt', () => {
   it('lists a mounted layer’s children under the mounting Spot', async () => {
-    const rows = await (
-      listingTraversal({ from: root(), path: ['x'] }).toList()
-    ) as Rows
-    const listing = assembleListing(rows)
+    const listing = await listed({ source, from: root(), path: ['x'] })
     expect(listing.layers).toEqual([ids.get('x'), other])
     expect(listing.contents).toEqual([])
     expect(listing.children).toEqual([{
@@ -50,9 +47,9 @@ describe('listingTraversal', () => {
   })
 })
 
-describe('resolvePath', () => {
-  const resolved = (path: Array<string>) => (
-    resolvePath({ from: root(), path }).id().toList()
+describe('resolveSpots', () => {
+  const resolved = async (path: Array<string>) => (
+    (await resolveSpots({ source, from: root(), path })).map(({ id }) => id)
   )
 
   it('reaches a Spot through a mount on the way', async () => {
@@ -141,8 +138,8 @@ describe('stack', () => {
 
 describe('ranked listings', () => {
   const now = '2026-11-22T00:00:00.000Z'
-  const listingAt = async (from: Id, path: Array<string>) => (
-    assembleListing(await listingTraversal({ from: source.V(from), path }).toList() as Rows)
+  const listingAt = (from: Id, path: Array<string>) => (
+    listed({ source, from: source.V(from), path })
   )
   const cids = (contents: Array<Content>) => contents.map(({ cid }) => cid)
 
@@ -208,8 +205,7 @@ describe('ranked listings', () => {
     const shown = async (n: number) => {
       const spot = await addSpot(source)
       await attach(source, { to: spot, type: 'image/png', mounts: chain[n] })
-      const rows = await listingTraversal({ from: source.V(spot), path: [] }).toList() as Rows
-      return cids(assembleListing(rows).contents)
+      return cids((await listingAt(spot, [])).contents)
     }
     expect(await shown(8)).toEqual(['bafyDeep'])
     expect(await shown(10)).toEqual([])
@@ -248,5 +244,187 @@ describe('ranked listings', () => {
     await attach(source, { to: spot, type: 'image/png', cid: 'bafy1' })
     await attach(source, { to: spot, type: 'image/png', cid: 'bafy2' })
     expect(cids((await listingAt(ids.get('')!, ['x', '帽子 🎩'])).contents)).toEqual(['bafy1', 'bafy2'])
+  })
+})
+
+describe('mounted links (FR-012, FR-013)', () => {
+  let b: Awaited<ReturnType<typeof seedUser>>
+  let s: Awaited<ReturnType<typeof seedUser>>
+  let theirs: Map<string, Id>
+  let image: Id
+  let hatz: string
+
+  const uuidOf = async (from: Id, name: string) => (
+    (await source.V(from).outE('CONTAINS').has('path', name).values('uuid').next()).value as string
+  )
+  const spotUuid = async (id: Id) => (
+    (await source.V(id).values('uuid').next()).value as string
+  )
+  const resolved = async (from: Id, path: Array<string>) => (
+    (await resolveSpots({ source, from: source.V(from), path })).map(({ id }) => id)
+  )
+  const at = (from: Id, path: Array<string>) => (
+    listed({ source, from: source.V(from), path })
+  )
+  const names = async (from: Id, path: Array<string>) => (
+    (await at(from, path)).children.map(({ name }) => name).sort()
+  )
+  const renameAsB = async (path = 'hats') => {
+    await mountLink(source, {
+      from: image,
+      to: theirs.get('image/hatz')!,
+      uuid: hatz,
+      path,
+      base: 'hatz',
+      parent: await spotUuid(theirs.get('image')!),
+    })
+  }
+
+  beforeEach(async () => {
+    b = await seedUser(source, { address: '0xb' })
+    s = await seedUser(source, { address: '0xs' })
+    theirs = await seedTree(source, {
+      root: s.root, tree: { image: { hatz: { top: {}, bowler: {} } } },
+    })
+    await mount(source, { from: b.root, to: s.root })
+    image = (await seedTree(source, { root: b.root, tree: { image: {} } })).get('image')!
+    hatz = await uuidOf(theirs.get('image')!, 'hatz')
+  })
+
+  it('resolves trees without link mounts as before, best first', async () => {
+    const t = await seedUser(source, { address: '0xt' })
+    const tImage = await seedTree(source, { root: t.root, tree: { image: { deep: { er: {} } } } })
+    await mount(source, { from: b.root, to: t.root, order: 1 })
+    expect(await resolveSpots({ source, from: source.V(b.root), path: [] }))
+    .toEqual([{ id: b.root, key: [], own: true }])
+    expect(await resolveSpots({ source, from: source.V(b.root), path: ['image'] }))
+    .toEqual([
+      { id: image, key: ['/'], own: true },
+      { id: theirs.get('image'), key: [0, '/'], own: false },
+      { id: tImage.get('image'), key: [1, '/'], own: false },
+    ])
+    expect(await resolved(b.root, ['image', 'deep', 'er'])).toEqual([tImage.get('image/deep/er')])
+  })
+
+  it('follows a link mount, & not the link it shadows (FR-013)', async () => {
+    await renameAsB()
+    expect(await resolved(b.root, ['image', 'hats'])).toEqual([theirs.get('image/hatz')])
+    expect(await resolved(b.root, ['image', 'hatz'])).toEqual([])
+    expect(await resolved(s.root, ['image', 'hatz'])).toEqual([theirs.get('image/hatz')])
+  })
+
+  it('lets a higher layer’s own link outrank a lower layer’s mount of it', async () => {
+    const t = await seedUser(source, { address: '0xt' })
+    const tImage = (await seedTree(source, { root: t.root, tree: { image: {} } })).get('image')!
+    await mount(source, { from: b.root, to: t.root, order: 1 })
+    await mountLink(source, {
+      from: tImage,
+      to: theirs.get('image/hatz')!,
+      uuid: hatz,
+      path: 'caps',
+      parent: await spotUuid(theirs.get('image')!),
+    })
+    expect(await resolved(b.root, ['image', 'hatz'])).toEqual([theirs.get('image/hatz')])
+    expect(await resolved(b.root, ['image', 'caps'])).toEqual([])
+    expect(await names(b.root, ['image'])).toEqual(['hatz'])
+    expect(await resolved(t.root, ['image', 'caps'])).toEqual([theirs.get('image/hatz')])
+  })
+
+  it('lists a link mount as one entry, not as a layer (R4)', async () => {
+    await renameAsB()
+    const listing = await at(b.root, ['image'])
+    expect(listing.layers).toEqual([image, theirs.get('image')])
+    expect(listing.children).toEqual([{
+      name: 'hats',
+      ids: [theirs.get('image/hatz')],
+      parents: [image],
+      contents: [],
+      container: true,
+    }])
+    expect(await names(b.root, ['image', 'hats'])).toEqual(['bowler', 'top'])
+    expect(await names(s.root, ['image'])).toEqual(['hatz'])
+  })
+
+  it('still merges same-named links of different uuids', async () => {
+    const own = (await seedTree(source, { root: b.root, tree: { image: { hatz: {} } } })).get('image/hatz')!
+    const [child] = (await at(b.root, ['image'])).children
+    expect(child).toMatchObject({ name: 'hatz', ids: [own, theirs.get('image/hatz')] })
+  })
+
+  it('keeps listing a mount whose link is gone, or whose layer is (FR-014)', async () => {
+    await renameAsB()
+    await source.V(theirs.get('image')!).outE('CONTAINS').drop().toList()
+    expect(await names(b.root, ['image'])).toEqual(['hats'])
+    expect(await names(b.root, ['image', 'hats'])).toEqual(['bowler', 'top'])
+    await source.V(b.root).outE('MOUNT').drop().toList()
+    const [child] = (await at(b.root, ['image'])).children
+    expect(child).toEqual(expect.objectContaining({ name: 'hats' }))
+    expect(child.moved).toBeUndefined()
+  })
+
+  it('finishes when a mounted link’s target mounts the tree above it', async () => {
+    await renameAsB()
+    await mount(source, { from: theirs.get('image/hatz')!, to: b.root })
+    expect(await resolved(b.root, ['image', 'hats', 'image', 'hats']))
+    .toEqual([theirs.get('image/hatz')])
+    const listing = await at(b.root, ['image', 'hats'])
+    const images = listing.children.filter(({ name }) => name === 'image')
+    expect(images).toHaveLength(1)
+    expect(images[0].ids.filter((id) => id === image)).toHaveLength(1)
+  })
+
+  it('lists a Unicode-named link mount (FR-012)', async () => {
+    await renameAsB('帽子 🎩')
+    expect(await names(b.root, ['image'])).toEqual(['帽子 🎩'])
+    expect(await names(b.root, ['image', '帽子 🎩'])).toEqual(['bowler', 'top'])
+  })
+
+  it('refuses a Spot holding two mounts of one link', async () => {
+    await renameAsB()
+    await renameAsB('caps')
+    await expect(at(b.root, ['image'])).rejects.toThrow(/mounts the link .* twice/)
+  })
+
+  it('refuses a mount that is both a link & a layer', async () => {
+    await renameAsB()
+    await source.V(image).outE('MOUNT').property('order', 0).toList()
+    await expect(at(b.root, ['image'])).rejects.toThrow(/both a link & a layer/)
+  })
+
+  it('gives every layer row the key of its start', async () => {
+    const starts = await resolveSpots({ source, from: source.V(b.root), path: ['image'] })
+    const rows = await layerRows({ source, starts })
+    expect(rows.map((row) => row.get('key'))).toEqual([['/'], [0, '/']])
+  })
+})
+
+describe('listing deep through mounts & mounted links (plan.md)', () => {
+  const listingAt = listed
+  it('lists at depth 10 through 3 layers & a mounted link per level in under 150 ms', { timeout: 120_000 }, async () => {
+    const { renameSpot } = await import('#lib/server/renames.js')
+    const b = await seedUser(source, { address: '0xb' })
+    const chain = (depth: number): FileTree => (
+      depth === 0 ? {} : { d: chain(depth - 1), [`leaf${depth}`]: {} }
+    )
+    for(const [order, address] of ['0x1', '0x2', '0x3'].entries()) {
+      const other = await seedUser(source, { address })
+      await seedTree(source, { root: other.root, tree: chain(11) })
+      await mount(source, { from: b.root, to: other.root, order })
+    }
+    const path: Array<string> = []
+    for(let level = 0; level < 10; level++) {
+      await renameSpot({ source, address: '0xb', path, from: 'd', to: `e${level}`, now: new Date().toISOString() })
+      path.push(`e${level}`)
+    }
+    const listed = () => listingAt({ source, from: source.V(b.root), path })
+    expect((await listed()).children.map(({ name }) => name).sort()).toEqual(['d', 'leaf1'])
+    const times = []
+    for(let run = 0; run < 5; run++) {
+      const start = performance.now()
+      await listed()
+      times.push(performance.now() - start)
+    }
+    times.sort((x, y) => x - y)
+    expect(times[2]).toBeLessThan(150)
   })
 })

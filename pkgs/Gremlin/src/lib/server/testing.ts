@@ -67,12 +67,13 @@ const addedOne = async (
 
 export const link = (
   source: GraphTraversalSource,
-  { from, to, name }: { from: Id, to: Id, name: string },
+  { from, to, name, uuid = uuidV7() }:
+  { from: Id, to: Id, name: string, uuid?: string },
 ) => (
   addedOne(
     source.V(from).addE('CONTAINS').to(__.V(to))
     .property('path', name)
-    .property('uuid', uuidV7())
+    .property('uuid', uuid)
     .count()
   )
 )
@@ -83,6 +84,26 @@ export const mount = (
 ) => (
   addedOne(
     source.V(from).addE('MOUNT').to(__.V(to)).property('order', order)
+    .count()
+  )
+)
+
+/**
+ * Mounts the link `uuid`, held by the Spot `parent`, as `path`:
+ * `from −MOUNT→ to`, where `to` is that link’s target.
+ */
+export const mountLink = (
+  source: GraphTraversalSource,
+  { from, to, uuid, path, base = path, parent }:
+  { from: Id, to: Id, uuid: string, path: string, base?: string, parent: string },
+) => (
+  addedOne(
+    source.V(from).addE('MOUNT').to(__.V(to))
+    .property('uuid', uuid)
+    .property('path', path)
+    .property('base', base)
+    .property('parent', parent)
+    .property('createdAt', new Date().toISOString())
     .count()
   )
 )
@@ -350,10 +371,13 @@ export async function snapshot(
   )
   const { spots, contents } = await treeOf({ source, address: value as string })
   const grow = (id: Id): Snapshot => {
-    const tree: Snapshot = { contents: [], mounts: [], children: {} }
+    const tree: Snapshot = { contents: [], mounts: [], linked: [], children: {} }
     for(const { fields, to } of spots.get(id)!.entries) {
       if(fields.kind === 'CONTAINS') {
         tree.children[fields.path] = grow(to)
+      } else if(fields.kind === 'MOUNT' && 'path' in fields) {
+        const { uuid, path, target, creator } = fields
+        tree.linked.push({ uuid, path, target, ...(creator ? { creator } : {}) })
       } else if(fields.kind === 'MOUNT') {
         const { target, creator, order } = fields
         tree.mounts.push({ target, ...(creator ? { creator } : {}), order: order! })
@@ -383,6 +407,7 @@ export async function snapshot(
     }
     tree.contents = rank(tree.contents)
     tree.mounts.sort(byKey(({ target }) => target))
+    tree.linked.sort(byKey(({ uuid }) => uuid))
     return tree
   }
   return grow(root)

@@ -153,15 +153,42 @@ export async function prepare(
     ))
   }
 
+  // A link `MOUNT` that moves has published its prelude already.
+  const leaving = new Set(spots.flatMap(({ markers }) => (
+    markers.filter(({ kind }) => kind === 'MOUNT').map(({ key }) => key)
+  )))
   for(const spot of childrenFirst(spots)) {
     const fieldsOf = (kind: Kind) => (
       spot.entries.filter((entry) => entry.kind === kind)
     )
+    // A mount of another’s link is first published as it was mounted,
+    // under `base`, so history shows the rename as a change. Their
+    // link’s path now would carry any rename of theirs since instead.
+    const prelude = spot.entries.flatMap(({ key, fields, baseline, base }) => (
+      fields.kind === 'MOUNT' && 'path' in fields && baseline == null
+      && !leaving.has(key) && base != null && base !== fields.path ? [{
+        uuid: fields.uuid,
+        path: base,
+        target: fields.target,
+        ...(fields.creator ? { creator: fields.creator } : {}),
+      }] : []
+    ))
+    let before: { previous?: CID } = previous(spot)
+    let root = spot.root
+    if(prelude.length > 0) {
+      const links = await encodeSpot(
+        { uuid: spot.uuid, ...before, ...(root ? { root: true } : {}), mounts: prelude },
+        `#${spot.id}`,
+      )
+      stored.push(...links)
+      before = { previous: links.at(-1)!.cid }
+      root = false
+    }
     keep(spot.id, await encodeSpot(
       {
         uuid: spot.uuid,
-        ...previous(spot),
-        ...(spot.root ? { root: true } : {}),
+        ...before,
+        ...(root ? { root: true } : {}),
         contains: [
           ...fieldsOf('CONTAINS').map(({ key, fields, to, toCid }) => ({
             uuid: key,
@@ -172,8 +199,11 @@ export async function prepare(
         ],
         mounts: [
           ...fieldsOf('MOUNT').map(({ fields }) => {
-            const { target, creator, order } = fields as Extract<typeof fields, { kind: 'MOUNT' }>
-            return { target, ...(creator ? { creator } : {}), order: order! }
+            const mounting = fields as Extract<typeof fields, { kind: 'MOUNT' }>
+            const { target, creator } = mounting
+            return 'path' in mounting ? {
+              uuid: mounting.uuid, path: mounting.path, target, ...(creator ? { creator } : {}),
+            } : { target, ...(creator ? { creator } : {}), order: mounting.order! }
           }),
           ...tombstones(spot, 'MOUNT'),
         ],

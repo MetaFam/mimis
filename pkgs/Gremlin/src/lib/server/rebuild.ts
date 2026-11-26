@@ -15,6 +15,8 @@ export interface Tree {
     mounts: Array<{ target: string, creator?: string }>
   }>
   mounts: Array<{ target: string, creator?: string, order: number }>
+  /** Mounted links, by the uuid of the link each mounts. */
+  linked: Array<{ uuid: string, path: string, target: string, creator?: string }>
   children: Record<string, Tree>
 }
 
@@ -92,7 +94,7 @@ export async function rebuild(
     const entries = await fold(
       latest.spots.get(uuid) ?? target, ['contains', 'mounts', 'contents'],
     )
-    const tree: Tree = { contents: [], mounts: [], children: {} }
+    const tree: Tree = { contents: [], mounts: [], linked: [], children: {} }
     for(const { uuid: content, type, after } of entries('contents')) {
       const newest = latest.contents.get(content as string)
       if(!newest) throw new Error(`No version of Content ${content}.`)
@@ -121,12 +123,15 @@ export async function rebuild(
         ),
       })
     }
-    for(const { target: mounted, creator, order } of entries('mounts')) {
-      tree.mounts.push({
-        target: mounted as string,
-        ...(creator ? { creator: creator as string } : {}),
-        order: order as number,
-      })
+    for(const { uuid, path, target: mounted, creator, order } of entries('mounts')) {
+      const by = creator ? { creator: creator as string } : {}
+      if(path == null) {
+        tree.mounts.push({ target: mounted as string, ...by, order: order as number })
+      } else {
+        tree.linked.push({
+          uuid: uuid as string, path: path as string, target: mounted as string, ...by,
+        })
+      }
     }
     for(const { path, target: child } of entries('contains')) {
       const { uuid: childUuid } = await read<Version>(child as CID)
@@ -134,6 +139,7 @@ export async function rebuild(
     }
     tree.contents = rank(tree.contents)
     tree.mounts.sort(byKey(({ target }) => target))
+    tree.linked.sort(byKey(({ uuid }) => uuid))
     return tree
   }
 

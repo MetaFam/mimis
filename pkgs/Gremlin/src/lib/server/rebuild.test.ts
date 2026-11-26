@@ -13,6 +13,7 @@ import { edgeId } from '#lib/server/janusgraph.js'
 import { relinkSpot } from '#lib/server/moves.js'
 import { commit, prepare } from '#lib/server/publish.js'
 import { rebuild } from '#lib/server/rebuild.js'
+import { renameSpot } from '#lib/server/renames.js'
 import { stageSpots } from '#lib/server/staging.js'
 import {
   attach, memoryBlocks, mount, seedTree, seedUser, seedWide, signUpdate, snapshot,
@@ -197,5 +198,49 @@ describe('rebuild (SC-007)', () => {
     })
     const head = await blocks.put(bytes)
     await expect(rebuild({ head, blocks })).rejects.toThrow(`No root in Update ${head}.`)
+  })
+})
+
+describe('rebuilding renames (FR-021)', () => {
+  it('rebuilds own renames & mounted links as the graph holds them', { timeout: 120_000 }, async () => {
+    const blocks = memoryBlocks()
+    let head: CID
+    const publish = async () => {
+      await stageSpots({ source, address, all: true })
+      const ready = await prepare({ source, blocks, address, now })
+      if(ready.nothing) throw new Error('Nothing was prepared.')
+      const signature = await signUpdate(account, {
+        ...ready.typedData,
+        message: { ...ready.typedData.message, sequence: BigInt(ready.typedData.message.sequence) },
+      })
+      head = CID.parse((await commit({ source, blocks, address, plan: ready.plan, signature, now })).cid)
+    }
+    const rename = (from: string, to: string) => (
+      renameSpot({ source, address, path: ['image'], from, to, now })
+    )
+    const S = '0x5555555555555555555555555555555555555555'
+    await seedTree(source, { root, tree: { image: { hat: {} } } })
+    const { root: sRoot } = await seedUser(source, { address: S })
+    const theirs = await seedTree(source, { root: sRoot, tree: { image: { hatz: {} } } })
+    await mount(source, { from: root, to: sRoot })
+    await publish()
+
+    await rename('hat', 'cap')
+    await rename('hatz', 'hats')
+    await publish()
+    const rebuilt = await rebuild({ head: head!, blocks })
+    expect(rebuilt).toEqual(await snapshot({ source, root }))
+    expect(rebuilt.children.image.linked).toEqual([{
+      uuid: (await source.V(theirs.get('image')!).outE('CONTAINS').values('uuid').next()).value,
+      path: 'hats',
+      target: (await source.V(theirs.get('image/hatz')!).values('uuid').next()).value,
+      creator: S,
+    }])
+
+    await rename('hats', 'caps')
+    await publish()
+    expect(await rebuild({ head: head!, blocks })).toEqual(await snapshot({ source, root }))
+    expect((await rebuild({ head: head!, blocks })).children.image.linked.map(({ path }) => path))
+    .toEqual(['caps'])
   })
 })

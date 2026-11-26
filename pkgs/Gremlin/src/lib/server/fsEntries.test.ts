@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
-  deleteEntry, findRep, listEntries, statEntry,
+  deleteEntry, findRep, listEntries, renameEntry, statEntry,
 } from '#lib/server/fsEntries.js'
 import {
-  addSpot, attach, link, mount, seedUser, testAccount, transaction,
+  addSpot, attach, link, mount, mountLink, seedUser, testAccount, transaction,
   type Id,
 } from '#lib/server/testing.js'
 
@@ -163,5 +163,93 @@ describe('deleteEntry', () => {
     })
     await expect(remove(['shared.txt'])).rejects.toMatchObject({ status: 403 })
     expect(await listed([])).toEqual(['docs.md', 'docs/', 'empty/', 'shared.txt'])
+  })
+})
+
+describe('mounted links (FR-013)', () => {
+  beforeEach(async () => {
+    const { root: theirs } = await seedUser(source, { address: testAccount().address.toLowerCase() })
+    const image = await addSpot(source)
+    const hatz = await addSpot(source)
+    await link(source, { from: theirs, to: image, name: 'image' })
+    await link(source, { from: image, to: hatz, name: 'hatz' })
+    await link(source, { from: hatz, to: await addSpot(source), name: 'top' })
+    await mount(source, { from: root, to: theirs })
+    const mine = await addSpot(source)
+    await link(source, { from: root, to: mine, name: 'image' })
+    const { value: uuid } = await source.V(image).outE('CONTAINS').values('uuid').next()
+    const { value: parent } = await source.V(image).values('uuid').next()
+    await mountLink(source, {
+      from: mine, to: hatz, uuid: uuid as string, path: 'hats', parent: parent as string,
+    })
+  })
+
+  it('lists a mounted link by its mount’s name, & not the link it shadows', async () => {
+    expect(await listed(['image'])).toEqual(['hats/'])
+    expect(await listed(['image', 'hats'])).toEqual(['top/'])
+  })
+
+  it('describes a mounted link as a directory', async () => {
+    expect(await statEntry({ source, address, path: ['image', 'hats'] }))
+    .toMatchObject({ name: 'hats', kind: 'directory' })
+    expect(await statEntry({ source, address, path: ['image', 'hatz'] })).toBeNull()
+  })
+})
+
+describe('renameEntry (FR-017)', () => {
+  const rename = (from: Array<string>, to: Array<string>) => (
+    renameEntry({ source, address, from, to, now })
+  )
+  const uuidOf = async (from: Id, name: string) => (
+    (await source.V(from).outE('CONTAINS').has('path', name).values('uuid').next()).value
+  )
+
+  it('renames a directory in place, keeping its link’s uuid', async () => {
+    const uuid = await uuidOf(root, 'docs')
+    await rename(['docs'], ['papers'])
+    expect(await listed([])).toEqual(['empty/', 'papers.md', 'papers/'])
+    expect(await uuidOf(root, 'papers')).toBe(uuid)
+  })
+
+  it('renames a file by its Spot, keeping its extension', async () => {
+    await rename(['docs', 'notes.md'], ['docs', 'memo.md'])
+    expect(await listed(['docs'])).toEqual(['md.md', 'memo.md', 'photo.jpg', 'photo.png'])
+  })
+
+  it('mounts someone else’s link under the new name, as the app does', async () => {
+    const { root: theirs } = await seedUser(source, { address: testAccount().address.toLowerCase() })
+    await link(source, { from: theirs, to: await addSpot(source), name: 'shared' })
+    await mount(source, { from: root, to: theirs })
+    await rename(['shared'], ['common'])
+    expect(await listed([])).toEqual(['common/', 'docs.md', 'docs/', 'empty/'])
+    expect(await source.V(root).outE('MOUNT').has('path', 'common').count().next())
+    .toMatchObject({ value: 1 })
+    expect(await source.V(theirs).outE('CONTAINS').values('path').toList()).toEqual(['shared'])
+  })
+
+  it('refuses a name the directory already holds', async () => {
+    await expect(rename(['docs', 'notes.md'], ['docs', 'photo.md'])).rejects.toMatchObject({
+      status: 409, body: { message: '/docs/ already contains “photo”' },
+    })
+  })
+
+  it('refuses a name that isn’t one', async () => {
+    await expect(rename(['docs', 'notes'], ['docs', '..'])).rejects.toMatchObject({
+      status: 400, body: { message: '“..” isn’t a name: it’s reserved.' },
+    })
+  })
+
+  it('refuses a name nothing is listed under', async () => {
+    await expect(rename(['docs', 'gone'], ['docs', 'here'])).rejects.toMatchObject({
+      status: 404, body: { message: 'No entry named “gone” at /docs/' },
+    })
+  })
+
+  it.each([
+    { what: 'another directory', from: ['docs', 'notes.md'], to: ['empty', 'notes.md'], message: 'Moving between directories isn’t supported here — drag & drop in the Mïmis app instead.' },
+    { what: 'another extension', from: ['docs', 'notes.md'], to: ['docs', 'notes.txt'], message: 'Changing a file’s extension would change its representation type — unsupported.' },
+    { what: 'a context-free name', from: ['docs', 'md.md'], to: ['docs', 'x.md'], message: 'Context-free names (like `md.md`) label their parent Spot & can’t be renamed.' },
+  ])('still refuses $what', async ({ from, to, message }) => {
+    await expect(rename(from, to)).rejects.toMatchObject({ status: 400, body: { message } })
   })
 })

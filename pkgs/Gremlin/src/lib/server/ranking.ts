@@ -4,7 +4,7 @@ import {
   layerOf, ownersOf, type GraphTraversalSource, type Id,
 } from '#lib/server/janusgraph.js'
 import {
-  layerContents, listingTraversal, overlay, stack, type Content, type Rows,
+  layerContents, layerRows, overlay, resolveSpots, stack, type Content,
 } from '#lib/server/listing.js'
 
 interface Where {
@@ -15,10 +15,8 @@ interface Where {
 
 /** The layers at `path`, & the user’s own Spot there, if it has one. */
 async function layersAt({ source, address, path }: Where) {
-  const rows = await (
-    listingTraversal({ from: layerOf(address, source), path }).toList()
-  ) as Rows
-  const layers = layerContents(rows)
+  const starts = await resolveSpots({ source, from: layerOf(address, source), path })
+  const layers = layerContents(await layerRows({ source, starts }))
   const [first] = layers
   const own = (
     first && (await ownersOf({ source, spot: first.id })).includes(address)

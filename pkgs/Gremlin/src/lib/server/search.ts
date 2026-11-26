@@ -3,8 +3,7 @@ import { error, isHttpError } from '@sveltejs/kit'
 import settings from '#lib/settings.svelte.js'
 import { PAGE_SIZE } from '#lib/search.js'
 import {
-  compareKeys, contentsOf, precedence, rankedContents, resolvePath,
-  type Content, type Key,
+  contentsOf, rankedContents, resolveSpots, type Content,
 } from '#lib/server/listing.js'
 import type { GraphTraversal } from '#lib/server/janusgraph.js'
 
@@ -67,14 +66,15 @@ export function searchTraversal(
     offset?: number
   }
 ) {
-  const descend = () => __.inV().outE('CONTAINS').simplePath()
+  const links = () => __.outE('CONTAINS', 'MOUNT').has('path')
+  const descend = () => __.inV().flatMap(links()).simplePath()
   let traversal = source.V(start)
   // The first match on a branch suffices: any later one lies further
   // along the same path, so stopping there loses no result.
   for(const part of parts.slice(0, -1)) {
     traversal = (
       traversal
-      .outE('CONTAINS')
+      .flatMap(links())
       .until(named(part))
       .repeat(descend())
       .inV()
@@ -82,14 +82,14 @@ export function searchTraversal(
   }
   return (
     traversal
-    .outE('CONTAINS')
+    .flatMap(links())
     .emit(named(parts.at(-1)!))
     .repeat(descend())
     .inV()
     .project('spot', 'id', 'names')
     .by(__.identity())
     .by(__.id())
-    .by(__.path().unfold().hasLabel('CONTAINS').values('path').fold())
+    .by(__.path().unfold().hasLabel('CONTAINS', 'MOUNT').values('path').fold())
     .order()
     .by(__.select('names').count(Scope.local))
     .by(lowercased(__.select('names').unfold()).fold())
@@ -109,21 +109,15 @@ export function searchTraversal(
 
 /** The highest-precedence Spot `path` resolves to, if any. */
 async function startOf(
-  { from, path, maxDepth }:
-  { from: GraphTraversal, path: Array<string>, maxDepth: number }
+  { source, from, path, maxDepth }:
+  {
+    source: GraphTraversalSource
+    from: GraphTraversal
+    path: Array<string>
+    maxDepth: number
+  }
 ) {
-  const candidates = await (
-    resolvePath({ from, path, maxDepth })
-    .project('id', 'key')
-    .by(__.id())
-    .by(precedence())
-    .toList()
-  ) as Array<Map<'id' | 'key', unknown>>
-  const [best] = (
-    candidates
-    .map((row) => ({ id: row.get('id') as Id, key: row.get('key') as Key }))
-    .sort((a, b) => compareKeys(a.key, b.key))
-  )
+  const [best] = await resolveSpots({ source, from, path, maxDepth })
   return best?.id ?? null
 }
 
@@ -140,7 +134,7 @@ export async function searchSpots(
   }
 ) {
   try {
-    const start = await startOf({ from, path, maxDepth })
+    const start = await startOf({ source, from, path, maxDepth })
     if(start == null) {
       error(404, `No Spot at /${path.map((elem) => `${elem}/`).join('')}.`)
     }

@@ -1,8 +1,12 @@
 import gremlin from 'gremlin'
 import { rank } from '#lib/rank.js'
+import { edgeId } from '#lib/server/janusgraph.js'
 
-const { statics: __, order: Order } = gremlin.process
+const { statics: __, order: Order, P } = gremlin.process
 type GraphTraversal = InstanceType<typeof gremlin.process.GraphTraversal>
+type GraphTraversalSource = (
+  InstanceType<typeof gremlin.process.GraphTraversalSource>
+)
 type Id = string | number
 
 export interface Content {
@@ -21,7 +25,7 @@ export interface Content {
 }
 
 export interface Child {
-  /** The `path` of the `CONTAINS` edge(s) leading to it. */
+  /** The `path` of the links, `CONTAINS` or `MOUNT`, leading to it. */
   name: string
   /** Every Spot with this name, highest precedence first. */
   ids: Array<Id>
@@ -31,6 +35,11 @@ export interface Child {
   contents: Array<Content>
   /** Has `CONTAINS` or `MOUNT` edges, so it can be browsed into. */
   container: boolean
+  /**
+   * The user’s own link `MOUNT` behind this name, by edge id, when the
+   * link it mounts has since moved (R7).
+   */
+  moved?: string
 }
 
 export interface Listing {
@@ -43,8 +52,10 @@ export interface Listing {
 }
 
 /**
- * A traversal’s precedence: the `order` of each `MOUNT` taken, with
- * a `CONTAINS` boundary between path segments. Sorting these
+ * A traversal’s precedence: the `order` of each layer `MOUNT` taken,
+ * with a boundary between path segments at each link, a `CONTAINS`
+ * or a `MOUNT` with a `path`, since a mounted link is an entry, not a
+ * layer. Sorting these
  * lexicographically is a depth-first walk by `order`, which
  * `repeat()` doesn’t give, since it runs breadth-first.
  */
@@ -56,7 +67,7 @@ export const precedence = () => (
   .unfold()
   .hasLabel('MOUNT', 'CONTAINS')
   .choose(
-    __.hasLabel('MOUNT'),
+    __.hasLabel('MOUNT').hasNot('path'),
     __.coalesce(__.values('order'), __.constant(0)),
     __.constant(SEGMENT),
   )
@@ -84,6 +95,7 @@ export const withMounts = (
   .emit()
   .repeat(
     __.outE('MOUNT')
+    .hasNot('path')
     .inV()
     .simplePath()
     .from_(label)
@@ -194,66 +206,209 @@ export const stack = (lists: Array<Array<Content>>) => (
   lists.reduceRight<Array<Content>>((below, own) => overlay(own, below), [])
 )
 
+/**
+ * For a link `MOUNT`, whether the link it mounts is now held by a Spot
+ * other than its `parent`, the one it was mounted under (R7).
+ */
+const movedLink = () => (
+  __.as('mount')
+  .hasLabel('MOUNT')
+  .inV()
+  .inE('CONTAINS')
+  .where(P.eq('mount')).by('uuid')
+  .outV()
+  .values('uuid')
+  .where(P.neq('mount')).by().by('parent')
+  .limit(1)
+  .count()
+)
+
 const childrenOf = () => (
-  __.outE('CONTAINS')
-  .project('name', 'id', 'container', 'contents')
+  __.outE('CONTAINS', 'MOUNT')
+  .has('path')
+  .project('edge', 'uuid', 'order', 'name', 'id', 'moved', 'container', 'contents')
+  .by(__.id())
+  .by(__.values('uuid').fold())
+  .by(__.values('order').fold())
   .by('path')
   .by(__.inV().id())
+  .by(movedLink())
   .by(__.inV().outE('CONTAINS', 'MOUNT').limit(1).count())
   .by(__.inV().flatMap(contentsOf()))
   .fold()
 )
 
-/**
- * Every Spot a path could resolve to, following the mounts along the
- * way but not those of the Spots it ends at. Since resolution
- * backtracks, a path names a set of Spots, ranked by `precedence()`.
- */
-export function resolvePath(
-  { from, path, maxDepth = 10 }:
-  { from: GraphTraversal, path: Array<string>, maxDepth?: number }
-) {
-  let traversal = from
-  for(const [idx, element] of path.entries()) {
-    traversal = (
-      withMounts({ traversal, label: `segment:${idx}`, maxDepth })
-      .outE('CONTAINS')
-      .has('path', element)
-      .inV()
-    )
+/** A Spot a path resolves to. */
+export interface Located {
+  id: Id
+  key: Key
+  /** Reached from the user’s root by `CONTAINS` alone, so it’s theirs. */
+  own: boolean
+}
+
+type Map_ = Map<string, unknown>
+
+/** The holders of the edges sharing the incoming link’s uuid. */
+const holdersOfLink = () => (
+  __.as('link')
+  .inV()
+  .inE('CONTAINS', 'MOUNT')
+  .where(P.eq('link')).by('uuid')
+  .outV()
+  .id()
+  .fold()
+)
+
+const best = (spots: Iterable<Located>) => {
+  const kept = new Map<Id, Located>()
+  for(const spot of spots) {
+    const known = kept.get(spot.id)
+    if(!known || compareKeys(spot.key, known.key) < 0) kept.set(spot.id, spot)
   }
-  return traversal
+  return [...kept.values()].sort((a, b) => compareKeys(a.key, b.key))
 }
 
 /**
- * Every Spot a path could resolve to, each expanded into its mounted
- * layers, with each layer’s own `Content`s & `CONTAINS` children.
+ * Every Spot `path` resolves to from `from`, the user’s root, best
+ * first, following mounts along the way but not those of the Spots it
+ * ends at. A link isn’t followed where a higher layer holds an edge of
+ * the same uuid, under any name (FR-013). That compares precedence
+ * keys, which Gremlin can’t do mid-traversal, so each segment is its
+ * own traversal.
  */
-export function listingTraversal(
-  { from, path, maxDepth = 10 }:
-  { from: GraphTraversal, path: Array<string>, maxDepth?: number }
-) {
-  return (
+export async function resolveSpots(
+  { source, from, path, maxDepth = 10 }:
+  {
+    source: GraphTraversalSource
+    from: GraphTraversal
+    path: Array<string>
+    maxDepth?: number
+  },
+): Promise<Array<Located>> {
+  if(path.length === 0) {
+    const ids = await from.id().toList() as Array<Id>
+    return best(ids.map((id) => ({ id, key: [], own: true })))
+  }
+  let starts = new Map<Id, Located>()
+  let traversal = from
+  for(const segment of path) {
+    const rows = await (
+      withMounts({ traversal: traversal.as('start'), label: 'layer', maxDepth })
+      .project('start', 'id', 'key', 'links')
+      .by(__.select('start').id())
+      .by(__.id())
+      .by(precedence())
+      .by(
+        __.outE('CONTAINS', 'MOUNT').has('path', segment)
+        .project('label', 'target', 'holders')
+        .by(__.label())
+        .by(__.inV().id())
+        .by(holdersOfLink())
+        .fold()
+      )
+      .toList()
+    ) as Array<Map_>
+    const layers = rows.map((row) => {
+      const start = starts.get(row.get('start') as Id) ?? { key: [], own: true }
+      const relative = row.get('key') as Key
+      return {
+        id: row.get('id') as Id,
+        key: [...start.key, ...relative],
+        own: start.own && relative.length === 0,
+        links: row.get('links') as Array<Map_>,
+      }
+    })
+    const ranks = new Map(best(layers).map(({ id, key }) => [id, key]))
+    const outranks = (holder: Id, key: Key) => {
+      const rank = ranks.get(holder)
+      return rank != null && compareKeys(rank, key) < 0
+    }
+    const next: Array<Located> = []
+    for(const layer of layers) {
+      for(const link of layer.links) {
+        const holders = link.get('holders') as Array<Id>
+        if(holders.some((holder) => holder !== layer.id && outranks(holder, layer.key))) {
+          continue
+        }
+        next.push({
+          id: link.get('target') as Id,
+          key: [...layer.key, SEGMENT],
+          own: layer.own && link.get('label') === 'CONTAINS',
+        })
+      }
+    }
+    starts = new Map(best(next).map((spot) => [spot.id, spot]))
+    if(starts.size === 0) return []
+    traversal = source.V(...starts.keys())
+  }
+  return [...starts.values()]
+}
+
+/**
+ * Each of `starts` & the layers it mounts, with its own `Content`s &
+ * children, keyed after its start.
+ */
+export async function layerRows(
+  { source, starts, maxDepth = 10 }:
+  { source: GraphTraversalSource, starts: Array<Located>, maxDepth?: number },
+): Promise<Rows> {
+  if(starts.length === 0) return []
+  const known = new Map(starts.map((start) => [start.id, start]))
+  const rows = await (
     withMounts({
-      traversal: resolvePath({ from, path, maxDepth }),
+      traversal: source.V(...known.keys()).as('start'),
       label: 'cursor',
       maxDepth,
     })
-    .project('id', 'key', 'contents', 'children')
+    .project('start', 'id', 'key', 'contents', 'children')
+    .by(__.select('start').id())
     .by(__.id())
     .by(precedence())
     .by(contentsOf())
     .by(childrenOf())
-  )
+    .toList()
+  ) as Array<Map_>
+  for(const row of rows) {
+    const start = known.get(row.get('start') as Id)!
+    const relative = row.get('key') as Key
+    row.set('key', [...start.key, ...relative])
+    row.set('own', start.own && relative.length === 0)
+    row.delete('start')
+  }
+  return rows as Rows
+}
+
+/**
+ * Everything shown at `path`: the Spots it resolves to & their mounted
+ * layers, merged by precedence.
+ */
+export async function listingAt(
+  { source, from, path, maxDepth = 10 }:
+  {
+    source: GraphTraversalSource
+    from: GraphTraversal
+    path: Array<string>
+    maxDepth?: number
+  },
+) {
+  const starts = await resolveSpots({ source, from, path, maxDepth })
+  return assembleListing(await layerRows({ source, starts, maxDepth }))
 }
 
 type Row<T> = Map<keyof T, unknown>
 interface Layer {
   id: Id
   key: Key
+  own: boolean
   contents: Array<Map<string, unknown>>
-  children: Array<Row<Omit<Child, 'ids' | 'parents' | 'contents'> & {
+  children: Array<Row<{
+    edge: unknown
+    uuid: Array<string>
+    order: Array<number>
+    name: string
     id: Id
+    moved: number
+    container: number
     contents: Array<Map<string, unknown>>
   }>>
 }
@@ -264,7 +419,7 @@ const fromRow = <T>(row: Row<T>) => (
 
 export type Rows = Array<Row<Layer>>
 
-/** `listingTraversal()`’s rows, once each, highest precedence first. */
+/** `layerRows()`’s rows, once each, highest precedence first. */
 const layersOf = (rows: Rows) => {
   const seen = new Set<Id>()
   return (
@@ -284,6 +439,59 @@ export const layerContents = (rows: Rows) => (
   layersOf(rows).map(({ id, contents }) => ({ id, contents: rankedContents(contents, id) }))
 )
 
+/** A link a listing shows: the highest layer’s of its uuid (FR-013). */
+export interface VisibleLink {
+  edge: string
+  uuid?: string
+  name: string
+  /** Its target. */
+  id: Id
+  /** The Spot holding it. */
+  layer: Id
+  /** Whether `layer` is in the user’s own tree, by `CONTAINS` alone. */
+  own: boolean
+  moved: boolean
+  container: boolean
+  contents: Array<Content>
+}
+
+/** The links of `rows`’ layers a listing shows, highest layer first. */
+export function visibleLinks(rows: Rows) {
+  const listed = new Set<string>()
+  const links: Array<VisibleLink> = []
+  for(const layer of layersOf(rows)) {
+    const held = new Set<string>()
+    for(const row of layer.children) {
+      const {
+        edge, uuid: [uuid], order, name, id, moved, container, contents,
+      } = fromRow(row)
+      if(order.length > 0) {
+        throw new Error(`MOUNT ${edgeId(edge)} is both a link & a layer.`)
+      }
+      if(uuid != null) {
+        if(held.has(uuid)) {
+          throw new Error(`Spot #${layer.id} mounts the link ${uuid} twice.`)
+        }
+        held.add(uuid)
+        if(listed.has(uuid)) continue
+        listed.add(uuid)
+      }
+      links.push({
+        edge: edgeId(edge),
+        ...(uuid == null ? {} : { uuid }),
+        name,
+        id,
+        layer: layer.id,
+        own: layer.own,
+        moved: Number(moved) > 0,
+        container: Number(container) > 0,
+        contents: rankedContents(contents, id),
+      })
+    }
+  }
+  return links
+}
+
 /**
  * Merges layers in precedence order, as with a union mount: each
  * layer’s Contents are placed over the layers below (`overlay()`), &
@@ -291,24 +499,22 @@ export const layerContents = (rows: Rows) => (
  */
 export function assembleListing(rows: Rows): Listing {
   const layers = layersOf(rows)
-
   const children = new Map<string, Child & { lists: Array<Array<Content>> }>()
-  for(const layer of layers) {
-    for(const row of layer.children) {
-      const { name, id, container, contents } = fromRow(row)
-      let child = children.get(name)
-      if(!child) {
-        child = {
-          name, ids: [], parents: [], contents: [], container: false, lists: [],
-        }
-        children.set(name, child)
+  for(const link of visibleLinks(rows)) {
+    const { name, id } = link
+    let child = children.get(name)
+    if(!child) {
+      child = {
+        name, ids: [], parents: [], contents: [], container: false, lists: [],
       }
-      if(child.ids.includes(id)) continue
-      child.ids.push(id)
-      child.parents.push(layer.id)
-      child.container ||= Number(container) > 0
-      child.lists.push(rankedContents(contents, id))
+      children.set(name, child)
     }
+    if(child.ids.includes(id)) continue
+    child.ids.push(id)
+    child.parents.push(link.layer)
+    child.container ||= link.container
+    if(link.own && link.moved) child.moved = link.edge
+    child.lists.push(link.contents)
   }
 
   return {

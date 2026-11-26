@@ -2,6 +2,8 @@
   import { isHttpError } from '@sveltejs/kit'
   import { resolve } from '$app/paths'
   import ChoicesTable from './ChoicesTable.svelte'
+  import NoticesDialog from './NoticesDialog.svelte'
+  import RenameDialog from './RenameDialog.svelte'
   import SearchResults from './SearchResults.svelte'
   import { deleteSpot } from '#lib/remotes/deleteSpot.remote.js'
   import {
@@ -11,17 +13,19 @@
   import settings, { type DetailsView } from '#lib/settings.svelte.js'
   import { sizeOf } from '#lib/size.js'
   import { partsOf } from '#lib/search.js'
-  import Folder from '#assets/folder.svg'
-  import PDF from '#assets/pdf.svg'
+  import { iconFor, type KnownTypes } from '#lib/icons.js'
 
   let {
     path = $bindable([]),
     query = $bindable(''),
+    me = null,
     onerror = () => {},
     log = () => {},
    }: {
     path: Array<string>
     query?: string
+    /** The signed-in user’s address. */
+    me?: string | null
     onerror?: (msg: string) => void
     log?: (msg: unknown) => void
   } = $props()
@@ -45,12 +49,15 @@
   }
 
   type Id = Child['ids'][number]
-  type Tile = { name: string, id: Id, from: Id }
+  /** `moved`: the user’s mount behind it, if its link has moved. */
+  type Tile = { name: string, id: Id, from: Id, moved?: string }
   type MenuTarget = { target: Array<string>, tile?: Tile }
 
   let contextMenu = $state<HTMLElement>()
   let contextPath = $state<Array<string>>([])
   let contextTile = $state<Tile | null>(null)
+  let renaming = $state<string | null>(null)
+  let resolving = $state<string | null>(null)
   let pressTimer: ReturnType<typeof setTimeout> | null = null
 
   function openMenu(evt: MouseEvent, { target, tile }: MenuTarget) {
@@ -121,48 +128,52 @@
     }
   }
 
-  /** The best Content, if it can be shown inline (FR-015). */
-  function shown(contents?: Array<Content>) {
-    if(!Array.isArray(contents)) throw new Error('`contents` is not an array.')
-    const [best] = contents
-    return best && (
-      best.type.startsWith('image/')
-      || best.type.startsWith('video/')
-      || best.type === 'application/pdf'
-    ) ? best : null
+  function renameTile() {
+    contextMenu?.hidePopover()
+    renaming = contextTile?.name ?? null
   }
 
-  /** A child as a tile: a folder, or its best Content & how many it has. */
+  function resolveMove() {
+    contextMenu?.hidePopover()
+    resolving = contextTile?.moved ?? null
+  }
+
+  function viewable(contents: Array<Content>) {
+    return contents.filter(({ type }) => visible(type))
+  }
+
+  function visible(type?: string | null) {
+    return (
+      type?.startsWith('image/')
+      || type?.startsWith('video/')
+    )
+  }
+
   function tileFor(
-    { name, ids: [id], parents: [from], contents, container }: Child
+    { name, ids: [id], parents: [from], contents, moved }: Child
   ) {
-    const shownBest = shown(contents)
-    const cid = shownBest?.type.startsWith('image/') ? shownBest.cid : null
-    const type = (container || contents.length === 0) ? 'spot' : 'image'
-    const best = contents[0]?.type ?? null
-    const [src, alt] = ((cid != null) ? (
+    const best = contents.at(0)
+    const type = best?.type as KnownTypes
+    const cid = best?.cid
+    const [src, alt] = ((visible(type) && cid != null) ? (
       [toHTTP({ cid }), name]
-    ) : ((best === 'application/pdf') ? (
-      [PDF, '🗊']
-    ) : ((type === 'spot') ? (
-      [Folder, '📁']
     ) : (
-      [null, '🗎']
-    ))))
+      iconFor(type))
+    )
     return {
       name,
       id,
       from,
       cid,
-      type,
-      best,
       size: contents[0]?.size ?? null,
       choices: contents.length,
       src,
       alt,
+      type,
+      moved,
       editable: {
-        target: type === 'spot' ? [...path, name] : path,
-        tile: { name, id, from },
+        target: name ? [...path, name] : path,
+        tile: { name, id, from, ...(moved ? { moved } : {}) },
       },
     }
   }
@@ -210,14 +221,15 @@
             </thead>
             <tbody>
               {#each tiles as {
-                name, type, id, from, best, choices, size, src, alt, editable,
+                name, id, from, choices, size, src, alt, type, moved, editable,
               } (name)}
                 {@const { target } = dropGenerator({
                   path: () => [...path, name],
                   log,
-                  placement: () => type === 'spot' ? 'nest' : 'version',
+                  placement: () => 'nest',
                 })}
                 <tr
+                  class:moved
                   use:target
                   use:dropSource
                   draggable="true"
@@ -245,9 +257,11 @@
                         target: [...path, name],
                         set: (next) => path = next,
                       })}
-                    >{name}</a>
-                  </td>
-                  <td class="type">{type === 'spot' ? 'folder' : best}</td>
+                    >{name}</a>{#if moved}<b
+                      class="moved-badge"
+                      title="Moved by its owner"
+                    >⚠</b>{/if}</td>
+                  <td class="type">{type ?? 'folder'}</td>
                   <td class="count">{choices}</td>
                   <td class="count">{size == null ? '' : sizeOf(size)}</td>
                 </tr>
@@ -259,15 +273,16 @@
     {:else}
       <ul>
         {#each tiles as {
-          name, type, cid, id, from, best, choices, src, alt, editable,
+          name, type, cid, id, from, choices, src, alt, moved, editable,
         } (name)}
           <!-- A file dropped on a file’s tile is its new version. -->
           {@const { target } = dropGenerator({
             path: () => [...path, name],
             log,
-            placement: () => type === 'spot' ? 'nest' : 'version',
+            placement: () => 'nest',
           })}
           <li
+            class:moved
             use:target
             oncontextmenu={(evt) => {
               if(evt.ctrlKey) {
@@ -286,11 +301,7 @@
                 set: (next) => path = next,
               })}
             >
-              {#if (
-                cid
-                || type === 'spot'
-                || best === 'application/pdf'
-              )}
+              {#if (cid)}
                 <img
                   src={src!}
                   {alt}
@@ -298,26 +309,30 @@
                   data-kind="spot"
                   data-id={id}
                   data-from={from}
-                  class:folder={type === 'spot'}
+                  class:folder={!!type}
                   draggable="true"
                 />
               {:else}
-                <aside>{best}</aside>
+                <aside>{type}</aside>
               {/if}
               <span class="resource">{name}</span>
               {#if choices > 1}
                 <b class="choices" title="{choices} choices">{choices}</b>
               {/if}
+              {#if moved}
+                <b class="moved-badge" title="Moved by its owner">⚠</b>
+              {/if}
             </a>
           </li>
         {/each}
       </ul>
-      {@const sole = shown(contents)}
+      {@const available = viewable(contents)}
+      {@const first = available.at(0)}
       {@const title = path.at(-1) ?? 'file'}
-      {#if sole}
-        {@const { cid, type, id, spot } = sole}
+      {#if first}
+        {@const { cid, type, id, spot } = first}
         <figure id="media">
-          {#if sole.type.startsWith('image/')}
+          {#if first.type.startsWith('image/')}
             <img
               src={toHTTP({ cid })}
               alt={path.at(-1) ?? ''}
@@ -327,7 +342,7 @@
               data-id={id}
               data-from={spot}
             />
-          {:else if sole.type.startsWith('video/')}
+          {:else if first.type.startsWith('video/')}
             <!-- svelte-ignore a11y_media_has_caption -->
             <video src={toHTTP({ cid })} controls></video>
           {:else}
@@ -352,12 +367,35 @@
     <li><button onclick={editInVSCode}>
       Edit /{contextPath.join('/')} in VS Code
     </button></li>
+    {#if contextTile && me}
+      <li><button onclick={renameTile}>
+        Rename “{contextTile.name}”…
+      </button></li>
+    {/if}
+    {#if contextTile?.moved && me}
+      <li><button onclick={resolveMove}>Resolve move…</button></li>
+    {/if}
     {#if contextTile}
       <li><button onclick={deleteTile}>
         Delete “{contextTile.name}”
       </button></li>
     {/if}
   </menu>
+  {#if resolving != null}
+    <NoticesDialog
+      focus={resolving}
+      {onerror}
+      onclose={() => resolving = null}
+    />
+  {/if}
+  {#if renaming != null}
+    <RenameDialog
+      {path}
+      name={renaming}
+      {onerror}
+      onclose={() => renaming = null}
+    />
+  {/if}
 </nav>
 
 <style>
@@ -438,6 +476,15 @@
           border-radius: 1em;
         }
       }
+    }
+
+    .moved-badge {
+      color: goldenrod;
+      cursor: help;
+    }
+
+    .moved > a, tr.moved {
+      outline: 1px dashed goldenrod;
     }
 
     & #media {

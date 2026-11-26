@@ -136,7 +136,8 @@ export async function select(
   }
 
   // A move’s two halves, the old parent’s marker & the new parent’s
-  // entry, share a kind & key, & always travel together.
+  // entry, share a kind & key, & always travel together. Links move,
+  // `CONTAINS` & `MOUNT`s with a `path`, & so do `AS` holdings.
   const moved = (kind: string, key: string) => JSON.stringify([kind, key])
   const halves = {
     entries: new Map<string, Array<{ holder: SpotState, entry: Entry }>>(),
@@ -146,14 +147,19 @@ export async function select(
     if(!map.has(at)) map.set(at, [])
     map.get(at)!.push(item)
   }
+  const moves = (entry: Entry) => (
+    entry.kind === 'CONTAINS' || entry.kind === 'AS' || 'path' in entry.fields
+  )
   for(const holder of spots.values()) {
     for(const entry of holder.entries) {
-      if(entry.pending && (entry.kind === 'CONTAINS' || entry.kind === 'AS')) {
+      if(entry.pending && moves(entry)) {
         index(halves.entries, moved(entry.kind, entry.key), { holder, entry })
       }
     }
     for(const marker of holder.markers) {
-      if(marker.pending && (marker.kind === 'CONTAINS' || marker.kind === 'AS')) {
+      // Only entries that move look markers up, & a layer `MOUNT`’s is
+      // keyed by its target, which no link `MOUNT`’s uuid key matches.
+      if(marker.pending && marker.kind !== 'IS') {
         index(halves.markers, moved(marker.kind, marker.key), { holder, marker })
       }
     }
@@ -164,7 +170,7 @@ export async function select(
         take({ holder, kind: 'spots', reason: 'move', entries: [entry], markers: [] })
       }
     }
-    for(const { kind, key } of selected.entries) {
+    for(const { kind, key } of selected.entries.filter(moves)) {
       for(const { holder, marker } of halves.markers.get(moved(kind, key)) ?? []) {
         take({ holder, kind: 'spots', reason: 'move', entries: [], markers: [marker] })
       }

@@ -1,9 +1,11 @@
 <script lang="ts">
   import { isHttpError } from '@sveltejs/kit'
   import { getConnection, signTypedData } from '@wagmi/core'
+  import FoldingList from './FoldingList.svelte'
   import { toHTTP } from '#lib'
+  import { FOLD_OVER, nest, type Row } from '#lib/pendingTree.js'
   import { getWagmiAdapter } from '#lib/appkit.js'
-  import { pending, type PendingSpot } from '#lib/remotes/pending.remote.js'
+  import { pending } from '#lib/remotes/pending.remote.js'
   import { stage } from '#lib/remotes/stage.remote.js'
   import { preparePublish } from '#lib/remotes/preparePublish.remote.js'
   import { commitPublish } from '#lib/remotes/commitPublish.remote.js'
@@ -23,14 +25,20 @@
   let comment = $state('')
   let busy = $state(false)
   let status = $state<Status>({ kind: 'idle' })
+  /** Rows the user folded or unfolded, by section & path. */
+  let folds = $state<Record<string, boolean>>({})
+  const keyOf = (section: string, { path }: Row) => JSON.stringify([section, path])
+  const folded = (section: string) => (row: Row) => (
+    folds[keyOf(section, row)] ?? row.pending > FOLD_OVER
+  )
+  const toggle = (section: string) => (row: Row) => {
+    folds[keyOf(section, row)] = !folded(section)(row)
+  }
   const ready = $derived(!!me && !!wallet)
 
   const config = () => getWagmiAdapter().wagmiConfig
   const label = (path: Array<string>) => (
     path.length === 0 ? '/' : `${path.join('/')}/`
-  )
-  const summary = ({ isNew, added, removed }: PendingSpot) => (
-    isNew ? 'new' : `+${added} −${removed}`
   )
   const say = (text: string): Status => ({ kind: 'message', text })
   const why: Record<string, string> = {
@@ -41,6 +49,7 @@
   )
 
   function load() {
+    folds = {}
     wallet = getConnection(config()).address ?? null
     if(!me || !wallet) return
     // `pending()` answers from the cache, as it stood when the dialog
@@ -127,41 +136,33 @@
         {@const name = titleCase(id)}
         <section aria-label={name}>
           <h3>{name}</h3>
-          <ul>
-            {#if id === 'unstaged'}
-              <label id="mass-select">
-                <input
-                  type="checkbox"
-                  checked={false}
-                  id="check-all"
-                  class:betwixt={staged.length > 0 && unstaged.length > 0}
-                  onchange={() => {
-                    const list = staged.length === 0 ? unstaged : staged
-                    const ids = list.map(({ id }) => id)
-                    restage({ ids, staged: staged.length === 0})
-                  }}
-                />
-                {#if staged.length === 0}
-                  <span>↑↑↑ Stage Everything ↑↑↑</span>
-                {:else}
-                  <span>↓↓↓ Unstage Everything ↓↓↓</span>
-                {/if}
-              </label>
-            {/if}
-            {#each spots as spot (spot.id)}
-              <li>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={spot.staged}
-                    onchange={() => restage({ ids: [spot.id], staged: !spot.staged })}
-                  />
-                  {label(spot.path)}
-                </label>
-                <span>{summary(spot)}</span>
-              </li>
-            {/each}
-          </ul>
+          {#if id === 'unstaged'}
+            <label id="mass-select">
+              <input
+                type="checkbox"
+                checked={false}
+                id="check-all"
+                class:betwixt={staged.length > 0 && unstaged.length > 0}
+                onchange={() => {
+                  const list = staged.length === 0 ? unstaged : staged
+                  const ids = list.map(({ id }) => id)
+                  restage({ ids, staged: staged.length === 0})
+                }}
+              />
+              {#if staged.length === 0}
+                <span>↑↑↑ Stage Everything ↑↑↑</span>
+              {:else}
+                <span>↓↓↓ Unstage Everything ↓↓↓</span>
+              {/if}
+            </label>
+          {/if}
+          <FoldingList
+            rows={nest(spots)}
+            section={id}
+            folded={folded(id)}
+            ontoggle={toggle(id)}
+            onstage={(spot) => restage({ ids: [spot.id], staged: !spot.staged })}
+          />
         </section>
       {/each}
       <form onsubmit={(evt) => { evt.preventDefault(); publish() }}>
@@ -258,11 +259,6 @@
     max-height: 90dvh;
     overflow-y: auto;
     min-width: 33dvw;
-  }
-
-  section ul {
-    padding-inline-start: 0;
-    list-style: none;
   }
 
   li {

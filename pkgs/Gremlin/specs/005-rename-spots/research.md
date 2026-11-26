@@ -4,7 +4,7 @@ Decisions are numbered R1–R12. Each gives the decision, why, and what else was
 
 ## R1. A mounted link is a `MOUNT` edge with a `path`
 
-**Decision**: B's rename of S's link `U` is `B's Spot −MOUNT{uuid: U, path, base, createdAt}→ S's target Spot`, from B's Spot at the parent's path. A `MOUNT` with a `path` is a link. A `MOUNT` without one is a layer, as now, with its `order`.
+**Decision**: B's rename of S's link `U` is `B's Spot −MOUNT{uuid: U, path, base, parent, createdAt}→ S's target Spot`, from B's Spot at the parent's path. A `MOUNT` with a `path` is a link. A `MOUNT` without one is a layer, as now, with its `order`.
 
 **Rationale**: This is the user's model: the mount of the edge, with `path` changed, its uuid the only immutable attribute. JanusGraph edges can't point at edges, but the uuid names the edge, and the target Spot is the same. One label keeps "mounting" one concept, so a mounted link is to links what 004's `Content −MOUNT→ Content` proxy is to Contents.
 
@@ -77,7 +77,7 @@ If `path === base`, there is no prelude.
 **Decision**: A mount is *moved* when three things hold:
 
 - its target has an incoming `CONTAINS` with the mount's uuid (`target.inE('CONTAINS').has('uuid', U)`);
-- that edge's parent isn't among the layers at the mount's path;
+- that edge's out-vertex `uuid` isn't the mount's `parent`, the holder recorded when the mount was made;
 - the mount sits in the user's own Spot.
 
 If there's no such edge, the link was removed, and nothing is shown (FR-014). The checks are:
@@ -87,7 +87,7 @@ If there's no such edge, the link was removed, and nothing is shown (FR-014). Th
 - each notice's `to` is the user's view path to the new parent, found by walking up from it through `CONTAINS`, path-bearing `MOUNT`s, and layer `MOUNT`s to the user's root, shortest first, up to 20 steps;
 - when no such path exists, `to` is `null`, Follow isn't offered, and `ownerPath` gives the new place in the owner's tree.
 
-**Rationale**: `relinkSpot` keeps a link's uuid and target, so the moved link is always an incoming edge of the same Spot. That makes the lookup vertex-centric, with no global edge index. A derived notice is withdrawn when S moves the link back, and always names the latest place, with nothing to keep in sync (FR-022). S's transaction never writes into B's tree (Principle I).
+**Rationale**: `relinkSpot` keeps a link's uuid and target, so the moved link is always an incoming edge of the same Spot. That makes the lookup vertex-centric, with no global edge index. A derived notice is withdrawn when S moves the link back, and always names the latest place, with nothing to keep in sync (FR-022). S's transaction never writes into B's tree (Principle I). Comparing with the recorded parent, not the current layers, means unmounting the owner's layer isn't mistaken for a move, and `childrenOf()` needs no layer set to decide it.
 
 **Alternatives considered**:
 

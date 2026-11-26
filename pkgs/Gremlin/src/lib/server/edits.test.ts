@@ -5,7 +5,7 @@ import {
 } from '#lib/server/edits.js'
 import { edgeId } from '#lib/server/janusgraph.js'
 import {
-  addSpot, attach, link, mount, transaction, type Id,
+  addSpot, attach, link, mount, mountLink, transaction, type Id,
 } from '#lib/server/testing.js'
 
 const { statics: __ } = gremlin.process
@@ -81,6 +81,17 @@ describe('retire', () => {
     expect(await source.E(edge).count().next()).toMatchObject({ value: 0 })
     expect(await markers(from)).toEqual([
       { kind, key, published: '["fingerprint"]', createdAt: now, to },
+    ])
+  })
+
+  it('keys a published link MOUNT’s marker by its uuid, not its target', async () => {
+    const [from, to] = [await addSpot(source), await addSpot(source)]
+    await mountLink(source, { from, to, uuid: 'u-link', path: 'hats', parent: 'u-parent' })
+    const edge = await edgeOf(from, 'MOUNT')
+    await source.E(edge).property('published', '["fingerprint"]').toList()
+    await retire({ source, edge, now })
+    expect(await markers(from)).toEqual([
+      { kind: 'MOUNT', key: 'u-link', published: '["fingerprint"]', createdAt: now, to },
     ])
   })
 
@@ -385,6 +396,15 @@ describe('unlinkSpot', () => {
     await link(source, { from, to: what, name: 'z' })
     await unlinkSpot({ source, from, what, name: 'x', now })
     expect(await names(from)).toEqual(['z'])
+  })
+
+  it('takes out a link MOUNT by its name, & leaves a layer MOUNT of the same Spot', async () => {
+    await mountLink(source, { from, to: what, uuid: 'u-link', path: 'hats', parent: 'u-parent' })
+    await mount(source, { from, to: what })
+    expect(await unlinkSpot({ source, from, what, name: 'hats', now })).toBe(true)
+    expect(await source.V(from).outE('MOUNT').has('path').count().next()).toMatchObject({ value: 0 })
+    expect(await source.V(from).outE('MOUNT').count().next()).toMatchObject({ value: 1 })
+    expect(await names(from)).toEqual(['x'])
   })
 
   it.each([

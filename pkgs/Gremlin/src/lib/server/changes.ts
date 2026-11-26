@@ -8,10 +8,14 @@ import {
 
 const { statics: __ } = gremlin.process
 
-/** A Spot’s mounts have an `order`; a proxy Content’s one doesn’t. */
+/**
+ * A Spot’s layer mounts have an `order`; a proxy Content’s one doesn’t.
+ * A link `MOUNT` names the link it mounts by `uuid`, & lists as `path`.
+ */
 export type Fields =
   | { kind: 'CONTAINS', path: string, child: string }
   | { kind: 'MOUNT', target: string, creator?: string, order?: number }
+  | { kind: 'MOUNT', target: string, creator?: string, uuid: string, path: string }
   | { kind: 'AS', content: string, type: string, after?: string }
   | { kind: 'IS', uuid: string, cid: string, size: number, previous?: string }
 
@@ -26,7 +30,8 @@ export const fingerprint = (fields: Fields) => JSON.stringify(
   : fields.kind === 'MOUNT' ? [
     fields.target,
     fields.creator ?? null,
-    ...(fields.order == null ? [] : [fields.order]),
+    ...('path' in fields ? [fields.path]
+    : fields.order == null ? [] : [fields.order]),
   ]
   : fields.kind === 'AS' ? [fields.content, fields.after ?? null, fields.type]
   : [
@@ -45,6 +50,8 @@ export interface Entry {
   to: Id
   /** For a link, the child’s latest version, if it has one. */
   toCid?: string
+  /** For a link `MOUNT`, its lower link’s `path` when it was made. */
+  base?: string
   fields: Fields
   fingerprint: string
   /** The edge’s own mark. */
@@ -173,14 +180,16 @@ const edgeRows = (
   source.V(...ids)
   .outE(...labels)
   .project(
-    'edge', 'from', 'label', 'uuid', 'path', 'order', 'after', 'published',
-    'kind', 'entry', 'to', 'toUuid', 'toType', 'toCid', 'toSize', 'previous',
+    'edge', 'from', 'label', 'uuid', 'path', 'base', 'order', 'after',
+    'published', 'kind', 'entry', 'to', 'toUuid', 'toType', 'toCid', 'toSize',
+    'previous',
   )
   .by(__.id())
   .by(__.outV().id())
   .by(__.label())
   .by(optional('uuid'))
   .by(optional('path'))
+  .by(optional('base'))
   .by(optional('order'))
   .by(optional('after'))
   .by(optional('published'))
@@ -247,13 +256,24 @@ export async function entriesOf(
         child: target(),
       }
     } else if(kind === 'MOUNT') {
-      key = target()
       const creator = await creatorOf(to)
-      fields = {
-        kind,
-        target: key,
-        ...(creator ? { creator } : {}),
-        ...(ofSpot ? { order: numeric(kind, edge, first(row, 'order')) } : {}),
+      const path = first<string>(row, 'path')
+      if(path != null) {
+        if(first(row, 'order') != null) {
+          throw new Error(`MOUNT ${edge} is both a link & a layer.`)
+        }
+        key = required(first<string>(row, 'uuid'), `MOUNT ${edge} has no uuid`)
+        fields = {
+          kind, target: target(), ...(creator ? { creator } : {}), uuid: key, path,
+        }
+      } else {
+        key = target()
+        fields = {
+          kind,
+          target: key,
+          ...(creator ? { creator } : {}),
+          ...(ofSpot ? { order: numeric(kind, edge, first(row, 'order')) } : {}),
+        }
       }
     } else if(kind === 'AS') {
       key = target()
@@ -284,6 +304,7 @@ export async function entriesOf(
       key,
       to,
       ...(kind === 'CONTAINS' && first(row, 'toCid') ? { toCid: first<string>(row, 'toCid') } : {}),
+      ...(kind === 'MOUNT' && first(row, 'base') != null ? { base: first<string>(row, 'base') } : {}),
       fields,
       fingerprint: fingerprint(fields),
       published: first<string>(row, 'published'),
@@ -348,9 +369,13 @@ export async function entriesOf(
 
   for(const spot of spots.values()) {
     const mounted = new Set<Id>()
-    for(const { kind, to } of spot.entries) {
+    const linked = new Set<string>()
+    for(const { kind, to, key, fields } of spot.entries) {
       if(kind === 'AS') {
         spot.contents.push(to)
+      } else if('path' in fields && kind === 'MOUNT') {
+        if(linked.has(key)) throw error(409, 'This Spot already mounts that link.')
+        linked.add(key)
       } else if(kind === 'MOUNT') {
         if(mounted.has(to)) {
           throw error(400, `Spot #${spot.id} mounts Spot #${to} twice.`)

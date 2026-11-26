@@ -4,7 +4,9 @@ import FileBrowser from './FileBrowser.svelte'
 import type { Listing } from '#lib/remotes/listing.remote.js'
 import settings from '#lib/settings.svelte.js'
 
-const { listing, refresh, searchSpots, deleteSpot, drops } = vi.hoisted(() => {
+const {
+  listing, refresh, searchSpots, deleteSpot, renameSpot, drops,
+} = vi.hoisted(() => {
   const refresh = vi.fn()
   return {
     refresh,
@@ -25,12 +27,24 @@ const { listing, refresh, searchSpots, deleteSpot, drops } = vi.hoisted(() => {
     )),
     searchSpots: vi.fn(() => new Promise(() => {})),
     deleteSpot: vi.fn(async () => true),
+    renameSpot: vi.fn(async ({ path, to }: { path: Array<string>, to: string }) => (
+      { path: [...path, to] }
+    )),
   }
 })
 
 vi.mock('#lib/remotes/listing.remote.js', () => ({ listing }))
 vi.mock('#lib/remotes/searchSpots.remote.js', () => ({ searchSpots }))
 vi.mock('#lib/remotes/deleteSpot.remote.js', () => ({ deleteSpot }))
+vi.mock('#lib/remotes/renameSpot.remote.js', () => ({ renameSpot }))
+vi.mock('#lib/remotes/notices.remote.js', () => ({
+  notices: vi.fn(() => Object.assign(Promise.resolve([{
+    mount: 'm1', uuid: 'u1', name: 'listed', from: ['a'], to: ['old'], ownerPath: ['old'], owner: '0xs',
+  }]), { refresh: vi.fn() })),
+}))
+vi.mock('#lib/remotes/resolveMount.remote.js', () => ({
+  removeMount: vi.fn(), followMount: vi.fn(), keepMount: vi.fn(),
+}))
 vi.mock('#lib/remotes/ranking.remote.js', () => ({
   ranking: vi.fn(() => Object.assign(Promise.resolve([]), { refresh: vi.fn() })),
   place: vi.fn(),
@@ -56,6 +70,7 @@ afterEach(() => {
   vi.restoreAllMocks()
   refresh.mockClear()
   deleteSpot.mockClear()
+  renameSpot.mockClear()
 })
 
 const showing = async (query: string) => {
@@ -146,9 +161,9 @@ describe('tiles (FR-015)', () => {
 describe('the context menu', () => {
   const onerror = vi.fn()
 
-  const menuOn = async (selector: string) => {
+  const menuOn = async (selector: string, { me = '0xme' as string | null } = {}) => {
     onerror.mockClear()
-    await render(FileBrowser, { props: { path: ['a'], onerror } })
+    await render(FileBrowser, { props: { path: ['a'], onerror, me } })
     const target = await vi.waitFor(() => {
       const found = document.querySelector(selector)
       expect(found).not.toBeNull()
@@ -174,8 +189,67 @@ describe('the context menu', () => {
   it('offers to delete a tile', async () => {
     const { items } = await menuOn('nav.details li')
     await vi.waitFor(() => (
-      expect(items()).toEqual(['Edit /a/listed in VS Code', 'Delete “listed”'])
+      expect(items()).toEqual([
+        'Edit /a/listed in VS Code', 'Rename “listed”…', 'Delete “listed”',
+      ])
     ))
+  })
+
+  it('renames a tile through the dialog, & refreshes the listing (FR-001)', async () => {
+    const { button } = await menuOn('nav.details li')
+    button('Rename').click()
+    const dialog = await vi.waitFor(() => {
+      const found = document.querySelector<HTMLDialogElement>('dialog')
+      expect(found?.open).toBe(true)
+      return found!
+    })
+    const input = dialog.querySelector('input')!
+    expect(input.value).toBe('listed')
+    input.value = 'renamed'
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    ;[...dialog.querySelectorAll('button')].find(({ textContent }) => textContent === 'Rename')!.click()
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalled())
+    expect(renameSpot).toHaveBeenCalledWith({ path: ['a'], from: 'listed', to: 'renamed' })
+    await vi.waitFor(() => expect(document.querySelector('dialog')).toBeNull())
+  })
+
+  it('marks a moved tile, & offers to resolve its move (FR-022)', async () => {
+    listing.mockImplementationOnce(() => Object.assign(
+      Promise.resolve<Listing>({
+        layers: [1],
+        contents: [],
+        children: [{
+          name: 'listed', ids: [2], parents: [1], contents: [], container: true, moved: 'm1',
+        }],
+      }),
+      { refresh },
+    ))
+    const { items, button } = await menuOn('nav.details li')
+    const tile = document.querySelector('nav.details li')!
+    expect(tile.classList.contains('moved')).toBe(true)
+    expect(tile.querySelector<HTMLElement>('.moved-badge')!.title).toBe('Moved by its owner')
+    await vi.waitFor(() => expect(items()).toContain('Resolve move…'))
+    button('Resolve move').click()
+    const dialog = await vi.waitFor(() => {
+      const found = document.querySelector<HTMLDialogElement>('dialog')
+      expect(found?.open).toBe(true)
+      expect(found!.textContent).toContain('0xs moved “listed”')
+      return found!
+    })
+    expect(dialog.querySelectorAll('li.notice')).toHaveLength(1)
+  })
+
+  it('offers no move to resolve on a tile that hasn’t moved', async () => {
+    const { items } = await menuOn('nav.details li')
+    await vi.waitFor(() => expect(items()).toContain('Delete “listed”'))
+    expect(items()).not.toContain('Resolve move…')
+    expect(document.querySelector('nav.details li.moved')).toBeNull()
+  })
+
+  it('offers no rename when signed out (FR-009)', async () => {
+    const { items } = await menuOn('nav.details li', { me: null })
+    await vi.waitFor(() => expect(items()).toContain('Delete “listed”'))
+    expect(items().some((item) => item?.startsWith('Rename'))).toBe(false)
   })
 
   it('offers no delete on the folder’s background', async () => {
@@ -276,6 +350,24 @@ describe('the table view (FR-016)', () => {
     .toEqual([['docs', 'folder', '0', ''], ['hat', 'image/svg+xml', '2', '1.5 KiB']])
     expect(rows[1].querySelector('img')!.getAttribute('src')).toContain('bafyHat')
     expect(rows.map((row) => row.getAttribute('data-kind'))).toEqual(['spot', 'spot'])
+  })
+
+  it('offers a row’s rename in its context menu (FR-001)', async () => {
+    await render(FileBrowser, { props: { path: ['a'], me: '0xme' } })
+    const table = await toTable()
+    const row = await vi.waitFor(() => {
+      const found = table.querySelector('table.entries tbody tr')
+      expect(found).not.toBeNull()
+      return found!
+    })
+    row.dispatchEvent(new MouseEvent('contextmenu', {
+      ctrlKey: true, bubbles: true, cancelable: true, clientX: 5, clientY: 5,
+    }))
+    const menu = document.querySelector<HTMLElement>('menu.context')!
+    await vi.waitFor(() => (
+      expect([...menu.querySelectorAll('button')].map(({ textContent }) => textContent?.trim()))
+      .toContain('Rename “listed”…')
+    ))
   })
 
   it('heads a file’s page with its choices', async () => {

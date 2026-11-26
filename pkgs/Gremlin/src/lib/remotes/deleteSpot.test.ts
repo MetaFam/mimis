@@ -5,7 +5,8 @@ import type * as v from 'valibot'
 import { deleteSpot } from '#lib/remotes/deleteSpot.remote.js'
 import { createSessionToken } from '#lib/server/auth.js'
 import {
-  addSpot, link, seedTree, seedUser, testAccount, transaction, type Id,
+  addSpot, link, mount, mountLink, seedTree, seedUser, testAccount,
+  transaction, type Id,
 } from '#lib/server/testing.js'
 
 type Source = ReturnType<typeof transaction>['source']
@@ -119,6 +120,19 @@ describe('deleteSpot', () => {
     expect(await deleteSpot(valid())).toBe(true)
     expect(await names(from)).toEqual([])
     expect(await names(theirs)).toEqual(['shared'])
+  })
+
+  it('takes out the user’s rename of someone else’s Spot, & leaves theirs', async () => {
+    const { root: theirs } = await seedUser(source, { address: newAddress() })
+    const their = await seedTree(source, { root: theirs, tree: { dir: { hatz: {} } } })
+    await mount(source, { from: Number(from), to: theirs })
+    await mountLink(source, {
+      from, to: their.get('dir/hatz')!, uuid: 'u-hatz', path: 'hats', parent: 'u-dir',
+    })
+    expect(await deleteSpot({ what: Number(their.get('dir/hatz')), from: Number(from), name: 'hats' }))
+    .toBe(true)
+    expect(await source.V(from).outE('MOUNT').has('path').count().next()).toMatchObject({ value: 0 })
+    expect(await names(their.get('dir')!)).toEqual(['hatz'])
   })
 
   it('gives a 404 for a name the Spot isn’t under', async () => {

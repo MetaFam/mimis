@@ -14,9 +14,11 @@
   } from '#lib/components/ImportDirectoryDialog.svelte'
   import FileView from '#lib/components/FileView.svelte'
   import PublishDialog from '#lib/components/PublishDialog.svelte'
+  import NoticesDialog from '#lib/components/NoticesDialog.svelte'
   import settings from '#lib/settings.svelte.js'
   import { graphToCSV } from '#lib/janus2CSV.js'
   import { receiveUpdate } from '#lib/remotes/receiveUpdate.remote.js'
+  import { notices } from '#lib/remotes/notices.remote.js'
   import { logHeader, within } from '#lib'
   import { partsOf } from '#lib/search.js'
   import Eyes from '#assets/infinity eyes.svg'
@@ -35,6 +37,7 @@
   let configDialog = $state<HTMLDialogElement>()
   let logs = $state<Array<string>>([])
   let whoAmI = $state<string | null>(null)
+  let showNotices = $state(false)
 
   logHeader()
 
@@ -160,6 +163,14 @@
       >
         Publish…
       </button></li>
+      {#if whoAmI}
+        {@const moved = (await notices()).length}
+        {#if moved > 0}
+          <li><button onclick={() => showNotices = true}>
+            Moved links ({moved})
+          </button></li>
+        {/if}
+      {/if}
       <li><button onclick={graphToCSV}>Export to CSV</button></li>
       <li>
         <form class="record" onsubmit={record}>
@@ -330,6 +341,12 @@
     {path}
   />
   <PublishDialog me={whoAmI}/>
+  {#if showNotices}
+    <NoticesDialog
+      onerror={(msg: string) => (errorMsg = msg)}
+      onclose={() => showNotices = false}
+    />
+  {/if}
   <ConfigDialog bind:self={configDialog}/>
   <ErrorDialog bind:error={errorMsg}/>
 </main>

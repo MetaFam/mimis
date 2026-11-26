@@ -12,7 +12,11 @@ type Id = string | number
 export const ENTRIES = ['CONTAINS', 'MOUNT', 'AS', 'IS'] as const
 export type Kind = typeof ENTRIES[number]
 
-/** The key a tombstone names: the link’s own uuid, or its target’s. */
+/**
+ * Whether a tombstone names the entry by its own uuid. Otherwise it’s
+ * its target’s, but for a link `MOUNT`, which is keyed by the uuid of
+ * the link it mounts.
+ */
 const ownKey = (kind: Kind) => kind === 'CONTAINS' || kind === 'IS'
 
 /**
@@ -42,7 +46,9 @@ export async function retire(
   }
   const [published] = row.get('published') as Array<string>
   if(published != null) {
-    const [key] = row.get(ownKey(kind) ? 'uuid' : 'target') as Array<string>
+    const [uuid] = row.get('uuid') as Array<string>
+    const [target] = row.get('target') as Array<string>
+    const key = ownKey(kind) ? uuid : (uuid ?? target)
     if(key == null) throw new Error(`${kind} ${edge} has no key.`)
     await (
       source.E(edge).as('old')
@@ -61,9 +67,10 @@ export async function retire(
 }
 
 /**
- * Takes `what`, listed as `name`, out of the Spot `from`. `what`
- * & everything under it stay, since other links & published versions
- * can still name them. `false` if `from` has no such link.
+ * Takes `what`, listed as `name` by a `CONTAINS` or a link `MOUNT`, out
+ * of the Spot `from`. `what` & everything under it stay, since other
+ * links & published versions can still name them. `false` if `from`
+ * has no such link.
  */
 export async function unlinkSpot(
   { source, from, what, name, now }:
@@ -78,7 +85,7 @@ export async function unlinkSpot(
   const edges = await (
     source.V(from)
     .hasLabel('Spot')
-    .outE('CONTAINS')
+    .outE('CONTAINS', 'MOUNT')
     .has('path', name)
     .where(__.inV().hasId(what))
     .id()
